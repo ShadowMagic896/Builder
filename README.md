@@ -3,3 +3,4 @@ I'm very bored, so this exists now. Too lazy to fix code mismatching, don't ment
 
 # Usage
 If you want to edit code and have it run, download the newest version of discord.py (https://github.com/Rapptz/discord.py)
+If I trust you enough, message me and I'll give you the current bot key.
