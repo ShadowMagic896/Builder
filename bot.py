@@ -1,4 +1,6 @@
+from dotenv import load_dotenv
 from client_container import *
+
 load_dotenv()
 
 intents = discord.Intents.all()

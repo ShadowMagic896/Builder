@@ -20,7 +20,6 @@ import inspect
 import importlib
 import pyfiglet
 
-from dotenv import load_dotenv
 from typing import *
 from pyfiglet import Figlet
 
