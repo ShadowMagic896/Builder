@@ -8,7 +8,7 @@ class Utility(discord.ext.commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
     
-    @commands.command(aliases = ["pong", "lat", "latency", "delay"])
+    @app_commands.command(name = "ping", description = "Returns the bot's latency, in milliseconds")
     async def ping(self, ctx):
         ping=self.bot.latency
         emt="`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"
@@ -17,4 +17,4 @@ class Utility(discord.ext.commands.Cog):
         await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
 
 async def setup(bot):
-  await bot.add_cog(Utility(bot))
+    await bot.add_cog(Utility(bot))

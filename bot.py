@@ -1,43 +1,45 @@
 from client_container import *
-# import sys
 load_dotenv()
 
 intents = discord.Intents.all()
 activity = discord.Activity(type=discord.ActivityType.listening, name=">>help")
 
-# def func():
-#     print(also_a_func())
-# def also_a_func():
-#     return "something"
-# func()
-# sys.exit()
 
 bot = discord.ext.commands.Bot(
     command_prefix=when_mentioned_or(">>",),
     case_insensitive=True,
     intents=intents,
-    activity=activity
+    activity=activity,
+    help_command = None,
+    application_id = "963411905018466314"
 )
 
-# Load all initial cogs
-async def load_extensions():
-    for cog in os.listdir("./cogs"):
-        try:
-            if cog.endswith(".py") and not cog.startswith("_"):
-                await bot.load_extension(f"cogs.{cog[:-3]}")
-                print(f"Loaded file: \"{cog}\"")
-        except Exception as err:
-            print(f"Cannot load file: \"{cog}\" [{err}]")
 
-# @bot.command()
-# async def load(ctx, cog="*", log_level = 0):
-#     if cog != "*":
-#         try:
-#             await bot.
+
+async def load_extensions(logging = True):
+        log = ""
+        for cog in os.listdir("./cogs"):
+            try:
+                if cog.endswith(".py") and not cog.startswith("_"):
+                    await bot.load_extension(f"cogs.{cog[:-3]}")
+                    log += f"✅ {cog}\n" if logging else ""
+                    
+            except discord.ext.commands.errors.ExtensionAlreadyLoaded:
+                await bot.load_extension(f"cogs.{cog[:-3]}")
+                log += f"✅ {cog} [Reloaded]\n" if logging else ""
+
+            except Exception as err:
+                print(err)
+                log += f"❌ {cog} [{err}]\n" if logging else ""
+        print(log)
+
 
 @bot.event
 async def on_ready():
     print(f"Client online [User: {bot.user}, ID: {bot.user.id}]")
+
+    
+
 
 async def main():
     await load_extensions()
