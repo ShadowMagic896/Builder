@@ -10,8 +10,6 @@ bot = discord.ext.commands.Bot(
     case_insensitive=True,
     intents=intents,
     activity=activity,
-    help_command = None,
-    application_id = "963411905018466314"
 )
 
 

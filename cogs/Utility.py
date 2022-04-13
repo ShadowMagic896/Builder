@@ -1,6 +1,6 @@
 from client_container import *
 
-class Utility(discord.ext.commands.Cog):
+class Utility(commands.Cog):
     """
     This cog is for any commands that help users find information about other users, this bot, the server, etc.
     """
@@ -8,7 +8,7 @@ class Utility(discord.ext.commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
     
-    @app_commands.command(name = "ping", description = "Returns the bot's latency, in milliseconds")
+    @commands.command(name = "ping", description = "Returns the bot's latency, in milliseconds")
     async def ping(self, ctx):
         ping=self.bot.latency
         emt="`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"
