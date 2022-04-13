@@ -38,7 +38,7 @@ async def load_extensions(logging = True):
 async def on_ready():
     print(f"Client online [User: {bot.user}, ID: {bot.user.id}]")
 
-    
+
 
 
 async def main():
