@@ -4,6 +4,9 @@ import discord
 from discord.ext import commands
 import _aux
 
+from datetime import datetime, timezone
+import pytz
+
 from _aux.embeds import fmte
 from SQL.timers import Timer
 
@@ -32,12 +35,7 @@ class Utility(commands.Cog):
     async def timer(self, ctx):
         timer = Timer()
         if timer.get_user_exists(ctx.author.id):
-            embed = fmte(
-                ctx = ctx,
-                t = "You have already initialized a timer.",
-                d = "Maybe you meant `>>timer check`?",
-            )
-            await ctx.send(embed = embed)
+            await self.check(ctx)
         else:
             timer.new_user(ctx.author.id)
             embed = fmte(
@@ -47,23 +45,17 @@ class Utility(commands.Cog):
             )
             await ctx.send(embed = embed)
     
-    @timer.command()
+    @timer.command(aliases = ["restart"])
     async def new(self, ctx):
         timer = Timer()
-        if timer.get_user_exists(ctx.author.id):
-            embed = fmte(
-                ctx = ctx,
-                t = "You have already initialized a timer.",
-                d = "Maybe you meant `>>timer check`?",
-            )
-        else:
-            timer.new_user(ctx.author.id)
-            embed = fmte(
-                ctx = ctx,
-                t = "Timer created!",
-                d = "You can use `>>timer check` to check your time, or `>>timer clear` to delete your timer.",
-            )
-        await ctx.send(embed = embed)
+        timer.delete_user(ctx.author.id)
+        timer.new_user(ctx.author.id)
+        embed = fmte(
+            ctx = ctx,
+            t = "New timer made!",
+            d = "You can use `>>timer check` to check your time, or `>>timer del` to delete your timer."
+        )
+        await ctx.send(fmte)
     
     @timer.command()
     async def check(self, ctx, user: discord.Member = None):
@@ -78,15 +70,29 @@ class Utility(commands.Cog):
         else:
             timer.update_user(_user.id)
             seconds = timer.get_user_current(_user.id)
+            t = _aux.embeds.getReadableValues(seconds)
+            h = str(t[0])
+            m = str(t[1])
+            s = str(t[2])
+            d = str(t[3])
 
             embed = fmte(
                 ctx = ctx,
-                t = "Current timer value",
-                d = _aux.embeds.makeReadable(seconds)
+                t = "Time: `{}:{}:{}.{}`".format(
+                    "0"*(2-len(h)) + h, 
+                    "0"*(2-len(m)) + m, 
+                    "0"*(2-len(s)) + s,
+                    d),
+                d = "```{} {}\n{} {}\n{} {}\n{} {}\n```".format(
+                    "0"*(2-len(h)) + h, "hour" if h == "1" else "hours",
+                    "0"*(2-len(m)) + m, "minute" if m == "1" else "minutes",
+                    "0"*(2-len(s)) + s, "second" if s == "1" else "seconds", 
+                    d, "microseconds"
+                    )
             )
         await ctx.send(embed=embed)
     
-    @timer.command()
+    @timer.command(aliases = ["del", "d", "stop", "destroy"])
     async def clear(self, ctx):
         timer = Timer()
         if not timer.get_user_exists(ctx.author.id):
@@ -99,11 +105,27 @@ class Utility(commands.Cog):
             timer.delete_user(ctx.author.id)
             embed = fmte(
                 ctx = ctx, 
-                t = "Timer cleared!",
+                t = "Timer stopped!",
                 d = "You can use `>>timer` to create a new one."
             )
         await ctx.send(embed=embed)
-        
+    
+    @commands.hybrid_command()
+    async def time(self, ctx, zone: str = "UTC"):
+        lowered = [x.lower() for x in pytz.all_timezones]
+        if not lowered.__contains__(zone.lower()):
+            embed = fmte(
+                ctx = ctx,
+                t = "Sorry, I can't find that timezone."
+            )
+        else:
+            time = pytz.timezone(zone)
+            embed = fmte(
+                ctx = ctx,
+                t = "Current datetime in zone {}:".format(time.zone),
+                d = "```{}```".format(datetime.now(pytz.timezone(zone)))
+            )
+        await ctx.send(embed=embed)
     
 
 

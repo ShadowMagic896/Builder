@@ -5,6 +5,8 @@ class Constants:
         FORBIDDEN_COGS = ["None", "OwnerManagement", "ExampleCog"]
 
     class FunConstants:
+
+
         ALL_FONTS = [
             "1943____", "3-d", "acrobatic", "advenger", "alligator", "alligator2", "alphabet", "aquaplan",
             "arrows", "ascii___", "asc_____", "assalt_m", "asslt__m", "atc_gran", "atc_____", "avatar", "a_zooloo", "banner", "banner3-D", "banner3", "banner4", "barbwire", "basic", 
@@ -40,4 +42,44 @@ class Constants:
             "3-d", "ascii___", "banner3-D", "charset_", "finalass", "gothic", "hollywood", "linux", "lockergnome", "lexible_", 
             "platoon2", "platoon_", "mike", "mini", "mirror", "mnemonic",  "modern__", "morse", "moscow", "slant", "trek", 
             "wavy", "weird", "tomahawk", "usaflag", 
+        ]
+
+    class TimeConstants:
+        TIMEZONES = [
+            'America/Adak',
+            'Africa/Abidjan',
+            'Atlantic/Azores',
+            'GB',
+            'America/Anchorage',
+            'Africa/Accra',
+            'Atlantic/Bermuda',
+            'GB-Eire',
+            'America/Anguilla',
+            'Africa/Addis_Ababa',
+            'Atlantic/Canary',
+            'GMT',
+            'America/Antigua',
+            'Africa/Algiers',
+            'Atlantic/Cape_Verde',
+            'GMT+0',
+            'America/Araguaina',
+            'Africa/Asmara',
+            'Atlantic/Faeroe',
+            'GMT-0',
+            'America/Argentina/Buenos_Aires',
+            'Africa/Asmera',
+            'Atlantic/Faroe',
+            'GMT0',
+            'America/Argentina/Catamarca',
+            'Africa/Bamako',
+            'Atlantic/Jan_Mayen',
+            'Greenwich',
+            'America/Argentina/ComodRivadavia',
+            'Africa/Bangui',
+            'Atlantic/Madeira',
+            'HST',
+            'America/Argentina/Cordoba',
+            'Africa/Banjul',
+            'Atlantic/Reykjavik',                    
+            'Hongkong'
         ]

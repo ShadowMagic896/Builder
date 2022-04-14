@@ -31,7 +31,6 @@ class Timer:
             WHERE author_id = ?
         """
         result = self.cur.execute(command, (user_id,)).fetchall()
-        print(result)
         return user_id in [v[0] for v in result]
 
     def get_user_current(self, user_id: int):
@@ -48,7 +47,6 @@ class Timer:
             WHERE author_id = ?
         """
         result = self.cur.execute(command, (user_id,)).fetchone()
-        print(result[2])
         return round(result[2], 4)
     
     def update_user(self, user_id):
@@ -68,7 +66,6 @@ class Timer:
         """
         self.cur.execute(command, (new_time, user_id,))
         self.con.commit()
-        print("user_id updated to {}".format(new_time))
     
     def delete_user(self, user_id):
         command = """
