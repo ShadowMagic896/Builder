@@ -16,3 +16,5 @@ async def load_extensions(bot, logging = True):
                 print(err)
                 log += f"❌ {cog} [{err}]\n" if logging else ""
         print(log)
+
+

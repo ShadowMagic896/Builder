@@ -5,7 +5,6 @@ from discord import Color as disco
 from discord.ext import commands
 from discord.ext.commands import Context, Greedy, when_mentioned_or
 
-
 import os
 import sys
 import threading
@@ -24,20 +23,4 @@ from typing import *
 from pyfiglet import Figlet
 from dotenv import load_dotenv
 
-def fmte(ctx, t="", d="", c=disco.teal()) -> discord.Embed:
-    embed=discord.Embed(
-        title=t,
-        description=d,
-        color=c
-    )
-    embed.set_footer(text=f"Requested by {ctx.author}")
-    return embed
-
-def fmte_i(inter, t="", d="", c=disco.teal()) -> discord.Embed:
-    embed=discord.Embed(
-        title=t,
-        description=d,
-        color=c
-    )
-    embed.set_footer(text=f"Requested by {inter.user}")
-    return embed
+from _aux import embeds, extensions
