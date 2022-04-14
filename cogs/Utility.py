@@ -8,7 +8,7 @@ class Utility(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
     
-    @commands.command(name = "ping", description = "Returns the bot's latency, in milliseconds")
+    @commands.hybrid_command(name = "ping", description = "Returns the bot's latency, in milliseconds")
     async def ping(self, ctx):
         ping=self.bot.latency
         emt="`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"

@@ -9,7 +9,8 @@ class OwnerManagement(commands.Cog):
         self.bot = bot
     
     
-    @commands.command()
+    @commands.hybrid_command()
+    @commands.is_owner()
     async def load(self, ctx, cog: str = "*", logging: bool = True):
         log = ""
         if cog == "*":
@@ -28,6 +29,32 @@ class OwnerManagement(commands.Cog):
                         print(err)
                         log += f"❌ {cog} [{err}]\n"
         if logging: await ctx.send(log, ephemeral = True)
+    
+    
+    @commands.hybrid_command()
+    @commands.is_owner()
+    async def sync(self, ctx: Context, guilds: Greedy[int], spec: str = None) -> None:
+        if not guilds:
+            if spec == "~":
+                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+            else:
+                fmt = await ctx.bot.tree.sync()
 
+            await ctx.send(
+                f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}"
+            )
+            return
+
+        fmt = 0
+        for guild in guilds:
+            try:
+                await ctx.bot.tree.sync(guild=guild)
+            except discord.HTTPException:
+                pass
+            else:
+                fmt += 1
+
+        await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
+        
 async def setup(bot):
     await bot.add_cog(OwnerManagement(bot))
