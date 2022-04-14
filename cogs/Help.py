@@ -5,7 +5,7 @@ class Help(discord.ext.commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
     
-    # @commands.command(name = "help", description = "Shows a help message with all of the bot's commands")
+    # @commands.hybrid_command(name = "help", description = "Shows a help message with all of the bot's commands")
     # async def help(self, ctx):
     #     commands: list(str) = [c for c in self.bot.commands if not c.cog_name in os.getenv("FORBIDDEN_COGS").split(";")]
     #     print(type(commands[0]))
