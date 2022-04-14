@@ -12,6 +12,10 @@ class OwnerManagement(commands.Cog):
     @commands.hybrid_command()
     @commands.is_owner()
     async def load(self, ctx, cog: str = "*", logging: bool = True):
+        """
+        [Owner only] Reloads any/all cogs.
+        Usage: >>load <cog: str = "*"> [Logging: bool = True]
+        """
         log = ""
         if cog == "*":
             for cog in os.listdir("./cogs"):
@@ -34,8 +38,12 @@ class OwnerManagement(commands.Cog):
     @commands.hybrid_command()
     @commands.is_owner()
     async def sync(self, ctx: Context, guilds: Greedy[int], spec: str = None) -> None:
+        """
+        [Owner only] Syncs all commands.
+        Usage: >>sync [guilds_ids*] [spec: str]
+        """
         if not guilds:
-            if spec == "~":
+            if spec == "*":
                 fmt = await ctx.bot.tree.sync(guild=ctx.guild)
             else:
                 fmt = await ctx.bot.tree.sync()
@@ -53,7 +61,7 @@ class OwnerManagement(commands.Cog):
                 pass
             else:
                 fmt += 1
-
+        await load_extensions(logging=True)
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
         
 async def setup(bot):
