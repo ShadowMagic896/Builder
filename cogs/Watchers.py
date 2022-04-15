@@ -10,7 +10,7 @@ class Watchers(commands.Cog):
     async def on_ready(self):
         print(f"Client online [User: {self.bot.user}, ID: {self.bot.user.id}]")
 
-        conn = sqlite3.connect("data/userdata")
+        conn = sqlite3.connect("data/timers")
         cur = conn.cursor()
         command = """
         CREATE TABLE IF NOT EXISTS 

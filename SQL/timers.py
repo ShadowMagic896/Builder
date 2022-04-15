@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Timer:
     def __init__(self) -> None:
-        self.con: sqlite3.Connection = sqlite3.connect("data/userdata")
+        self.con: sqlite3.Connection = sqlite3.connect("data/timers")
         self.cur: sqlite3.Cursor = self.con.cursor()
 
     def new_user(self, user_id: int) -> None: # gonna kms
