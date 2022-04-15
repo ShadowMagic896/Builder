@@ -1,7 +1,10 @@
-from client_container import *
+from _aux.constants import Constants
+from _aux.embeds import fmte
+from discord.ext import commands
+from typing import Mapping, Optional, List, Dict, Any
 
 class Help(commands.HelpCommand, commands.Cog):
-    async def send_bot_help(self, mapping):
+    async def send_bot_help(self, mapping: Dict[Any | None, List[Any]]):
         embed = fmte(
             ctx = self.context, 
             t = "Help Screen",

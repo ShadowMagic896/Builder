@@ -2,7 +2,7 @@ from typing import Final
 
 class Constants:
     class ExtensionConstants:
-        FORBIDDEN_COGS = ["None", "OwnerManagement", "ExampleCog"]
+        FORBIDDEN_COGS = ["None", "OwnerManagement", "ExampleCog", "Help"]
 
     class FunConstants:
 
