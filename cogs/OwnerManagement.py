@@ -63,6 +63,10 @@ class OwnerManagement(commands.Cog):
                 fmt += 1
         await load_extensions(logging=True)
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
+    
+    @commands.hybrid_command()
+    async def rectest(self, ctx):
+        await ctx.send(await self.bot.fetch_user(724811595976409119))
         
 async def setup(bot):
     await bot.add_cog(OwnerManagement(bot))
