@@ -1,3 +1,4 @@
+from _aux.userio import handle_error
 from client_container import *
 from discord.ext import tasks
 
@@ -9,7 +10,15 @@ class Watchers(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Client online [User: {self.bot.user}, ID: {self.bot.user.id}]")
+        self.startup_SQL()
+        self.apply_handers()
+    
+    @commands.Cog.listener()
+    async def on_command(self, ctx):
+        if message
 
+
+    def startup_SQL(self):
         conn = sqlite3.connect("data/timers")
         cur = conn.cursor()
         command = """
@@ -24,6 +33,15 @@ class Watchers(commands.Cog):
         cur.execute(command)
         conn.commit()
         conn.close()
+    
+    def apply_handers(self):
+        for cm in self.bot.commands:
+            @cm.error
+            async def gloal_handle(ctx, err):
+                await handle_error(ctx, err)
+                pass
+
+
 
 async def setup(bot):
     await bot.add_cog(Watchers(bot))

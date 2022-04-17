@@ -1,21 +1,29 @@
 from client_container import *
 
-class OwnerManagement(commands.Cog):
+class Dev(commands.Cog):
     """
     This cog is for any commands that help users find information about other users, this bot, the server, etc.
     """
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
     
-    
-    @commands.hybrid_command()
+    @commands.hybrid_group(aliases = ["devs", "developers", "team", "owners"])
+    async def dev(self, ctx):
+        app = (await self.bot.application_info())
+        img = app
+        embed = fmte(
+            ctx,
+            t = "Hello! I'm {}.".format(self.bot.user.display_name),
+            d = "Devs on **{}**:\n{}".format(app.team.name, "\n".join(["**{}#{}**".format(member.name, member.discriminator) for member in app.team.members]))
+        )
+        embed.set_image(url=app.team.icon)
+
+        await ctx.send(embed=embed)
+        
+    @dev.command()
     @commands.is_owner()
     async def load(self, ctx, cog: str = "*", logging: bool = True):
-        """
-        [Owner only] Reloads any/all cogs.
-        Usage: >>load <cog: str = "*"> [Logging: bool = True]
-        """
         log = ""
         if cog == "*":
             for cog in os.listdir("./cogs"):
@@ -35,7 +43,7 @@ class OwnerManagement(commands.Cog):
         if logging: await ctx.send(log, ephemeral = True)
     
     
-    @commands.hybrid_command()
+    @dev.command()
     @commands.is_owner()
     async def sync(self, ctx: Context, guilds: Greedy[int], spec: str = None) -> None:
         """
@@ -64,9 +72,11 @@ class OwnerManagement(commands.Cog):
         await load_extensions(logging=True)
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
     
-    @commands.hybrid_command()
-    async def rectest(self, ctx):
-        await ctx.send(await self.bot.fetch_user(724811595976409119))
+    @dev.command()
+    @commands.is_owner()
+    async def rectest(self, ctx: commands.Context):
+        discord.cate
+        pass
         
 async def setup(bot):
-    await bot.add_cog(OwnerManagement(bot))
+    await bot.add_cog(Dev(bot))

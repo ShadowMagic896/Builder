@@ -24,12 +24,8 @@ class Fun(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
     
-    @commands.hybrid_command(name="font")
-    async def font(self, ctx, font: Literal[
-            "0.1-d", "ascii___", "banner0.1-D", "charset_", "gothic", "hollywood", "linux", "lockergnome", "lexible_", 
-            "platoon_", "mike", "mini", "mirror", "mnemonic",  "modern__", "morse", "moscow", "slant", "trek", 
-            "wavy", "weird", "tomahawk", "usaflag", 
-        ], *, text: str):
+    @commands.hybrid_command()
+    async def font(self, ctx, font: str, *, text: str):
         """
         Turns your text into a new font!
         Usage: >>font <font> <*text>

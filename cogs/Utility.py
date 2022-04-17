@@ -2,131 +2,128 @@ from math import floor
 from pydoc import describe
 import discord
 from discord.ext import commands
-import _aux
+from _aux.userio import iototime, is_user, handle_error
 
-from datetime import datetime, timezone
+from datetime import datetime
+import time
 import pytz
+import asyncio
 
 from _aux.embeds import fmte
-from SQL.timers import Timer
 
 class Utility(commands.Cog):
     """
     This cog is for any commands that help users find information about other users, this bot, the server, etc.
     """
 
-    def __init__(self, bot) -> None:
-        self.bot = bot
+    def __init__(self, bot: commands.Bot) -> None:
+        pass
     
-    @commands.hybrid_command(name = "ping")
-    async def ping(self, ctx):
+    @commands.hybrid_group()
+    async def builder(self, ctx):
+        await self.help(ctx)
+
+    @builder.command()
+    async def ping(self, ctx: commands.Context):
         """
         Returns the bot's latency, in milliseconds.
         Usage: >>ping
         """
-        ping=self.bot.latency
+        ping=ctx.bot.latency
         emt="`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"
         emt=emt if ping>0.2 else "`✅ [LOW]`"
 
         await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
     
-
-    @commands.hybrid_group(name = "timer")
-    async def timer(self, ctx):
-        timer = Timer()
-        if timer.get_user_exists(ctx.author.id):
-            await self.check(ctx)
-        else:
-            timer.new_user(ctx.author.id)
-            embed = fmte(
-                ctx = ctx,
-                t = "Timer created!",
-                d = "You can use `>>timer check` to check your time, or `>>timer clear` to delete your timer.",
-            )
-            await ctx.send(embed = embed)
-    
-    @timer.command(aliases = ["restart"])
-    async def new(self, ctx):
-        timer = Timer()
-        timer.delete_user(ctx.author.id)
-        timer.new_user(ctx.author.id)
+    @builder.command()
+    async def help(self, ctx):
+        b = "\n{s}{s}".format(s="ㅤ")
+        bb = "\n{s}{s}{s}".format(s="ㅤ")
         embed = fmte(
-            ctx = ctx,
-            t = "New timer made!",
-            d = "You can use `>>timer check` to check your time, or `>>timer del` to delete your timer."
+            ctx,
+            t = "Hello! I'm {}.".format(ctx.bot.user.name),
+            d = "Prefix: `>>`\nCommand Groups: `{}`".format(len(ctx.bot.commands))
         )
-        await ctx.send(fmte)
-    
-    @timer.command()
-    async def check(self, ctx, user: discord.Member = None):
-        _user = user if user else ctx.author
-        timer = Timer()
-        if not timer.get_user_exists(_user.id):
-            embed = fmte(
-                ctx = ctx,
-                t = "You have not initialized a timer yet." if not user else "This user has no timer initialized.",
-                d = "You can use `>>timer` to create one!" if not user else "They can do so by using `>>timer`!.",
+        embed.add_field(
+            name = "**__Statistics__**",
+            value = "{s}**Creation Date:** <t:{}>{s}**Owners:** {}".format(
+                round(ctx.bot.user.created_at.timestamp()),
+                "\n{}".format(bb).join([str(c) for c in (await ctx.bot.application_info()).team.members]),
+                s = b
             )
-        else:
-            timer.update_user(_user.id)
-            seconds = timer.get_user_current(_user.id)
-            t = _aux.embeds.getReadableValues(seconds)
-            h = str(t[0])
-            m = str(t[1])
-            s = str(t[2])
-            d = str(t[3])
+        )
+        await ctx.send(embed=embed)
+    @commands.hybrid_group()
+    async def guild(self, ctx: commands.Context):
+        pass
+    
+    @guild.command()
+    async def info(self, ctx: commands.Context):
+        guild: discord.Guild = ctx.guild
+        b = "\n{s}{s}".format(s="ㅤ")
+        bb = "\n{s}{s}{s}".format(s="ㅤ")
+        embed = fmte(
+            ctx,
+            t = "Info: {} [{}]".format(guild.name, guild.id),
+            d = guild.description
+        )
+        embed.add_field(
+            name = "***__General Info__***",
+            value = "{s}**Owner**: {} [{}]{s}**Created:**: <t:{}>{s}**Nitro Level:** {}".format(
+                guild.owner, guild.owner_id,
+                round(guild.created_at.timestamp()),
+                guild.premium_tier,
+                s = b
+            ),
+            inline = False
+        )
+        embed.add_field(
+            name = "***__User Info__***",
+            value = "{s}**Users:** {}{s}**Bots:** {}{s}**Boosters:** {}{s}**Total:** {}".format(
+                len([p for p in guild.members if not p.bot]),
+                len([p for p in guild.members if p.bot]),
+                guild.premium_subscription_count,
+                len(guild.members),
+                s = b
+            ),
+            inline = False
+        )
+        embed.add_field(
+            name = "***__Customization__***",
+            value = "{s}**Vanity URL:** {}{s}**Emojis: **{} / {}{s}**Stickers:** {} / {}".format(
+                guild.vanity_url,
+                len(guild.emojis), guild.emoji_limit,
+                len(guild.stickers), guild.sticker_limit,
+                s = b
+            ),
+            inline = False
+        )
+        embed.add_field(
+            name = "***__Statistics__***",
+            value = "{s}**Veri. Level:** {}{s}**Max Filesize:** {}{s}**VC Bitrate:** {} bytes{s}**NSFW Level:** {}{s}**Locale:** {}{s}**Other featues:** {}".format(
+                guild.verification_level.name.capitalize(),
+                guild.filesize_limit,
+                guild.bitrate_limit,
+                guild.nsfw_level.name.capitalize(),
+                guild.preferred_locale,
+                "\n{}".format(bb).join(guild.features) if len(guild.features) > 0 else "{}None\n".format(bb),
+                s = b
+            )
+        )
+        if guild.banner:
+            embed.set_image(url = guild.banner.url)
+        await ctx.send(embed=embed)
 
-            embed = fmte(
-                ctx = ctx,
-                t = "Time: `{}:{}:{}.{}`".format(
-                    "0"*(2-len(h)) + h, 
-                    "0"*(2-len(m)) + m, 
-                    "0"*(2-len(s)) + s,
-                    d),
-                d = "```{} {}\n{} {}\n{} {}\n{} {}\n```".format(
-                    "0"*(2-len(h)) + h, "hour" if h == "1" else "hours",
-                    "0"*(2-len(m)) + m, "minute" if m == "1" else "minutes",
-                    "0"*(2-len(s)) + s, "second" if s == "1" else "seconds", 
-                    d, "microseconds"
-                    )
-            )
-        await ctx.send(embed=embed)
     
-    @timer.command(aliases = ["del", "d", "stop", "destroy"])
-    async def clear(self, ctx):
-        timer = Timer()
-        if not timer.get_user_exists(ctx.author.id):
-            embed = fmte(
-                ctx = ctx,
-                t = "You do not currently have any timer!",
-                d = "You can create one with `>>timer` though!"
-            )
-        else:
-            timer.delete_user(ctx.author.id)
-            embed = fmte(
-                ctx = ctx, 
-                t = "Timer stopped!",
-                d = "You can use `>>timer` to create a new one."
-            )
+    @guild.command(aliases = ["chan", "chans", "channel"])
+    async def channels(self, ctx: commands.Context):
+        embed = fmte(
+            ctx,
+            t = "{} has {} channels".format(ctx.guild.name, len(ctx.guild.channels)),
+            d = "\n".join(["{}:\n{}".format(c.name, ["\t{}".format(chan.name) for chan in c.channels]) for c in ctx.guild.categories])
+        )
         await ctx.send(embed=embed)
-    
-    @commands.hybrid_command()
-    async def time(self, ctx, zone: str = "UTC"):
-        lowered = [x.lower() for x in pytz.all_timezones]
-        if not lowered.__contains__(zone.lower()):
-            embed = fmte(
-                ctx = ctx,
-                t = "Sorry, I can't find that timezone."
-            )
-        else:
-            time = pytz.timezone(zone)
-            embed = fmte(
-                ctx = ctx,
-                t = "Current datetime in zone {}:".format(time.zone),
-                d = "```{}```".format(datetime.now(pytz.timezone(zone)))
-            )
-        await ctx.send(embed=embed)
-    
+        
 
 
 async def setup(bot):
