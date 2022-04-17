@@ -43,16 +43,21 @@ def iototime(userinput: str):
 async def is_user(ctx: commands.Context, user: str = None) -> discord.Member | None:
     if not user:
         return None
-    if user.startswith("<@"):
+    _id = None
+    if user.startswith("<@"): # User is a mention
         try:
             _id = int(str(user)[2:-1])
         except ValueError:
             return None
-    else:
+    else: # It is a user ID
         try:
-            _id = int(user)
+            _id = int(user) # Just an ID
         except ValueError:
-            return None
+            for m in ctx.guild.members: # Try to catch a name
+                if m.name == user or "{}#{}".format(m.name, m.discriminator) == user:
+                    _id = m.id
+            else:
+                return None
     try:
         user = await ctx.guild.fetch_member(_id)
         return user

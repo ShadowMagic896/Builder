@@ -13,7 +13,7 @@ class Time(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_group(name = "timer")
-    async def timer(self, ctx):
+    async def timer(self, ctx: commands.Context):
         timer = Timer()
         if timer.get_user_exists(ctx.author.id):
             await self.check(ctx)
@@ -27,7 +27,7 @@ class Time(commands.Cog):
             await ctx.send(embed = embed)
     
     @timer.command(aliases = ["restart"])
-    async def new(self, ctx):
+    async def new(self, ctx: commands.Context):
         timer = Timer()
         timer.delete_user(ctx.author.id)
         timer.new_user(ctx.author.id)
@@ -36,10 +36,10 @@ class Time(commands.Cog):
             t = "New timer made!",
             d = "You can use `>>timer check` to check your time, or `>>timer del` to delete your timer."
         )
-        await ctx.send(fmte)
+        await ctx.send(embed = embed)
     
     @timer.command()
-    async def check(self, ctx, user: discord.Member = None):
+    async def check(self, ctx: commands.Context, user: discord.Member = None):
         _user = user if user else ctx.author
         timer = Timer()
         if not timer.get_user_exists(_user.id):
@@ -74,7 +74,7 @@ class Time(commands.Cog):
         await ctx.send(embed=embed)
     
     @timer.command(aliases = ["del", "d", "stop", "destroy"])
-    async def clear(self, ctx):
+    async def clear(self, ctx: commands.Context):
         timer = Timer()
         if not timer.get_user_exists(ctx.author.id):
             embed = fmte(
@@ -92,7 +92,7 @@ class Time(commands.Cog):
         await ctx.send(embed=embed)
     
     @commands.hybrid_command()
-    async def time(self, ctx, zone: str = "UTC"):
+    async def time(self, ctx: commands.Context, zone: str = "UTC"):
         lowered = [x.lower() for x in pytz.all_timezones]
         if not lowered.__contains__(zone.lower()):
             embed = fmte(
@@ -107,6 +107,7 @@ class Time(commands.Cog):
                 d = "```{}```".format(datetime.now(pytz.timezone(zone)))
             )
         await ctx.send(embed=embed)
+        
 
 async def setup(bot):
     await bot.add_cog(Time(bot))

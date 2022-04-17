@@ -37,7 +37,7 @@ class Utility(commands.Cog):
         embed = fmte(
             ctx,
             t = "Hello! I'm {}.".format(ctx.bot.user.name),
-            d = "Prefix: `>>`\nCommand Groups: `{}`".format(len(ctx.bot.commands))
+            d = "Prefix: `>>`"
         )
         embed.add_field(
             name = "**__Statistics__**",
@@ -114,10 +114,25 @@ class Utility(commands.Cog):
     async def channels(self, ctx: commands.Context):
         embed = fmte(
             ctx,
-            t = "{} has {} channels".format(ctx.guild.name, len(ctx.guild.channels)),
-            d = "\n".join(["{}:\n{}".format(c.name, ["\t{}".format(chan.name) for chan in c.channels]) for c in ctx.guild.categories])
+            t = "`{}` has `{}` Channels".format(ctx.guild.name, len(ctx.guild.channels)),
+            d = "\n".join(["**__{}__**:\n{}".format(c.name, "\n".join(["ㅤㅤ{}".format(chan.name) for chan in c.channels])) for c in ctx.guild.categories])
         )
         await ctx.send(embed=embed)
+    
+    @guild.command(aliases = ["allinfo", "get"])
+    # @commands.has_permissions(manage_messages = True)
+    async def dump(self, ctx: commands.Context, datatype: str):
+        data = ""
+        if datatype in ["channels", "channel", "chans", "chan"]:
+            data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in ctx.guild.categories])
+        open("commanddump.txt", "wb").write(data.encode("utf-8"))
+        file = discord.File("commanddump.txt", "commanddump.txt")
+        await ctx.author.send(file = file)
+        embed = fmte(
+            ctx,
+            t = "Guild information on {} sent to {}.".format(datatype, ctx.author)
+        )
+        await ctx.send(embed = embed)
         
 
 

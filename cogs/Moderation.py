@@ -66,14 +66,15 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed = embed)
     
-    @commands.hybrid_group(aliases = ["utm", "unmute"])
+    @commands.hybrid_command(aliases = ["utm", "unmute"])
+    @commands.has_permissions(manage_messages = True)
     async def untimeout(self, ctx: commands.Context, user: str, *, reason: str = "No reason given."):
         user = await is_user(ctx, user)
         if not user:
             embed = fmte(
                 ctx, 
                 t = "User not found.",
-                d = "Please make sure you either input a user or a user's ID"
+                d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator"
             )
             await ctx.send(embed=embed)
             return
@@ -103,7 +104,52 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed=embed)
         
+    @commands.hybrid_command(aliases = ["clean", "purgemessage"])
+    async def purge(self, ctx: commands.Context, limit: int, user:str = "all"):
+        if user == "all":
+            errored = 0
+            async for message in await ctx.channel.history(limit = limit+1):
+                try:
+                    await message.delete()
+                except:
+                    errored += 1
+            embed = fmte(
+                ctx,
+                t = "{} Messages by All Users Deleted".format(limit),
+                d = "Could not delete {} messages.".format(errored)
+            )
+            await ctx.send(embed=embed)
+        else:
+            _user = is_user(ctx, user)
+            if not _user:
+                embed = fmte(
+                    ctx,
+                    t = "User {} not found.",
+                    d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator."
+                )
+                await ctx.send(embed = embed)
+                return
+            errored = 0
+            dele = 0
+            _limit = limit
+            async for message in ctx.channel.history(limit = _limit + 1):
+                try:
+                    if message.author == _user:
+                        await message.delete()
+                        dele += 1
+                    else:
+                        _limit += 1
+                except discord.errors.Forbidden or discord.errors.NotFound:
+                    errored += 1
+            embed = fmte(
+                ctx,
+                t = "{} Messages by {} Deleted.".format(limit, _user),
+                d = "Could not delete {} messages".format(errored)
+            )
+            await ctx.send(embed = embed)
+        
     @commands.hybrid_command(aliases = ["rename", "nickname", "name"])
+    @commands.has_permissions(change_nickname = True)
     async def nick(self, ctx: commands.Context, *, things: str = ""):
         things = things.split(" ")
         if len(things) == 0:
@@ -113,20 +159,24 @@ class Moderation(commands.Cog):
         if u:
             nick = " ".join(things[1:])
             bname = u.display_name
+            if not ctx.author.guild_permissions.manage_nicknames and u != ctx.author:
+                embed = fmte(
+                    ctx,
+                    t = "You do not have permission to change other people's nickname.",
+                )
+                await ctx.send(embed = embed)
+                return
             await u.edit(nick = nick)
             embed = fmte(
                 t = "{} renamed to {}".format(bname, u.display_name)
             )
+            await ctx.send(embed = embed)
         else:
             if len(things) == 1:
                 nick = things[0]
             else:
                 nick = " ".join(things)
             await ctx.author.edit(nick = nick)
-    
-    @commands.command()
-    async def scrap(self, ctx, arg: str):
-        return
 
 
 async def setup(bot):

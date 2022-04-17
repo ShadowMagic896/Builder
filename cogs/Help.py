@@ -8,7 +8,11 @@ class Help(commands.HelpCommand, commands.Cog):
         embed = fmte(
             self.context, 
             t = "Help Screen",
-            d = "Prefix: `<mention> or >>`\nCommands: `{}`".format(len(self.context.bot.commands))
+            d = """Prefix: `<mention> or >>`
+            My commands are grouped into `Cogs`, and some are further divided into `Groups`
+            To call a group command, use `>>(group) (command) <options>`
+            To call a normal command, use `>>(command) <arguments>`
+            To see info on a `Cog` (seen below), use `>>help <Cog>`"""
         )
 
         for cog, cmds in mapping.items():
@@ -29,7 +33,7 @@ class Help(commands.HelpCommand, commands.Cog):
         )
         for c in cog.get_commands():
             embed.add_field(
-                name = "{}: `{}` {}".format("Group" if hasattr(c, "commands") else "Command", c.name, " {}".format(c.aliases) if c.aliases else ""),
+                name = "{}: `{}` {}".format("Group" if hasattr(c, "commands") else "Command", c.name, " `{}`".format(c.aliases) if c.aliases else ""),
                 value = "```>>{}{} {}```".format("help " if hasattr(c, "commands") else "", c.name, c.signature),
                 inline = False
             )

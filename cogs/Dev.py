@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+import asyncio
 import os
 
 from _aux.extensions import load_extensions
@@ -12,12 +13,11 @@ class Dev(commands.Cog):
     """
 
     def __init__(self, bot: commands.Bot) -> None:
-        self.bot = bot
+        self.bot: commands.Bot = bot
     
     @commands.hybrid_group(aliases = ["devs", "developers", "team", "owners"])
     async def dev(self, ctx):
         app = (await self.bot.application_info())
-        img = app
         embed = fmte(
             ctx,
             t = "Hello! I'm {}.".format(self.bot.user.display_name),
@@ -90,8 +90,28 @@ class Dev(commands.Cog):
     @dev.command()
     @commands.is_owner()
     async def rectest(self, ctx: commands.Context):
-        discord.cate
         pass
+
+    @dev.command()
+    @commands.is_owner()
+    async def kill(self, ctx: commands.Context):
+        embed = fmte(
+            ctx,
+            t = "Bot Shutting Down..."
+        )
+        await ctx.send(embed = embed)
+        await self.bot.close()
+
+    @dev.command()
+    @commands.is_owner()
+    async def clearcache(self, ctx: commands.Context):
+        self.bot.clear()
+        embed = fmte(
+            ctx,
+            "Cache cleared."
+        )
+        await ctx.send(embed = embed)
+
         
 async def setup(bot):
     await bot.add_cog(Dev(bot))
