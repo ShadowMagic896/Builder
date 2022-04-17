@@ -2,12 +2,7 @@ from math import floor
 from pydoc import describe
 import discord
 from discord.ext import commands
-from _aux.userio import iototime, is_user, handle_error
 
-from datetime import datetime
-import time
-import pytz
-import asyncio
 
 from _aux.embeds import fmte
 

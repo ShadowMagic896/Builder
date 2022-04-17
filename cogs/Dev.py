@@ -1,4 +1,10 @@
-from client_container import *
+import discord
+from discord.ext import commands
+
+import os
+
+from _aux.extensions import load_extensions
+from _aux.embeds import fmte
 
 class Dev(commands.Cog):
     """
@@ -33,7 +39,7 @@ class Dev(commands.Cog):
                         await self.bot.load_extension(f"cogs.{cog[:-3]}")
                         log += f"✅ {cog}\n"
                             
-                    except discord.ext.commands.errors.ExtensionAlreadyLoaded:
+                    except commands.errors.ExtensionAlreadyLoaded:
                         await self.bot.reload_extension(f"cogs.{cog[:-3]}")
                         log += f"✅ {cog}\n"
 
@@ -45,7 +51,7 @@ class Dev(commands.Cog):
     
     @dev.command()
     @commands.is_owner()
-    async def sync(self, ctx: Context, guilds: Greedy[int], spec: str = None) -> None:
+    async def sync(self, ctx: commands.Context, guilds: commands.Greedy[int], spec: str = None) -> None:
         """
         [Owner only] Syncs all commands.
         Usage: >>sync [guilds_ids*] [spec: str]
@@ -71,6 +77,15 @@ class Dev(commands.Cog):
                 fmt += 1
         await load_extensions(logging=True)
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
+    
+    @dev.command()
+    async def get_log(self, ctx: commands.Context):
+        file: discord.File = discord.File("_commandlog.txt", "commandlog.txt")
+        embed: discord.Embed = fmte(
+            ctx,
+            t = "Log fetched."
+        )
+        await ctx.send(embed = embed, file = file)
     
     @dev.command()
     @commands.is_owner()

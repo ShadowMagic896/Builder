@@ -1,10 +1,9 @@
-from pydoc import describe
 import discord
 from discord.ext import commands
 
 import asyncio
 
-from typing import ContextManager, List
+from typing import List
 
 from _aux.embeds import fmte
 

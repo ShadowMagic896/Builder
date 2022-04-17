@@ -1,22 +1,9 @@
-from stat import filemode
-from turtle import pu
-import discord
 from discord.ext import commands
 
 import pyfiglet
 from pyfiglet import Figlet
-from benedict import benedict
 
 from _aux.embeds import fmte
-from typing import Literal, List, Tuple
-
-import pyautogui
-import pygetwindow
-import sys, os
-import asyncio
-import subprocess
-
-import time
 
 class Fun(commands.Cog):
     """Commands that are designed to be fun to use!"""

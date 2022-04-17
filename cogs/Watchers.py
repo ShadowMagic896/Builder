@@ -1,6 +1,11 @@
+from discord.ext import commands
+
+import sqlite3
+from datetime import datetime
+import pytz
+
+
 from _aux.userio import handle_error
-from client_container import *
-from discord.ext import tasks
 
 class Watchers(commands.Cog):
 
@@ -14,8 +19,16 @@ class Watchers(commands.Cog):
         self.apply_handers()
     
     @commands.Cog.listener()
-    async def on_command(self, ctx):
-        if message
+    async def on_command(self, ctx: commands.Context):
+        mes = "Auth: {}; Com: {} [{}]; T: {}; Parents: {}; Children: {};\n".format(
+            ctx.author,
+            ctx.command,
+            ctx.command_failed,
+            datetime.now(tz = pytz.timezone("UTC")),
+            ctx.invoked_parents,
+            ctx.invoked_subcommand,
+        )
+        open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
 
     def startup_SQL(self):

@@ -6,8 +6,8 @@ from datetime import datetime
 
 from SQL.timers import Timer
 
-import _aux
-from _aux.embeds import fmte
+from _aux.embeds import fmte, getReadableValues
+
 class Time(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -51,7 +51,7 @@ class Time(commands.Cog):
         else:
             timer.update_user(_user.id)
             seconds = timer.get_user_current(_user.id)
-            t = _aux.embeds.getReadableValues(seconds)
+            t = getReadableValues(seconds)
             h = str(t[0])
             m = str(t[1])
             s = str(t[2])

@@ -27,4 +27,3 @@ from dotenv import load_dotenv
 from _aux.embeds import *
 from _aux.extensions import *
 from _aux.constants import Constants
-from client_aux import BotFuncs
