@@ -74,3 +74,18 @@ async def handle_error(ctx: commands.Context, error: commands.errors.CommandInvo
         c = discord.Color.red(),
     )
     await ctx.send(embed=embed)
+
+
+async def actual_purge(ctx: commands.Context, limit, user: discord.Member = None):
+    errors = 0
+    dels = 0
+    async for m in ctx.channel.history(limit = round((limit + 10) * 1.5)):
+        if (m.author == user if user else True): # if there is a user, care, otherwise just go on ahead
+            try:
+                await m.delete()
+            except discord.errors.Forbidden or discord.errors.NotFound:
+                errors += 1
+            dels += 1
+        if dels == limit:
+            break
+    return (dels, errors)

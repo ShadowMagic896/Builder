@@ -7,7 +7,7 @@ from datetime import datetime
 import pytz
 
 from _aux.embeds import fmte
-from _aux.userio import is_user, iototime
+from _aux.userio import is_user, iototime, actual_purge
 
 class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -107,20 +107,15 @@ class Moderation(commands.Cog):
     @commands.hybrid_command(aliases = ["clean", "purgemessage"])
     async def purge(self, ctx: commands.Context, limit: int, user:str = "all"):
         if user == "all":
-            errored = 0
-            async for message in await ctx.channel.history(limit = limit+1):
-                try:
-                    await message.delete()
-                except:
-                    errored += 1
+            r = await actual_purge(ctx, limit + 1)
             embed = fmte(
                 ctx,
-                t = "{} Messages by All Users Deleted".format(limit),
-                d = "Could not delete {} messages.".format(errored)
+                t = "{} Messages by All Users Deleted".format(r[0]-1),
+                d = "Failed deletes: {}".format(r[1])
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=3)
         else:
-            _user = is_user(ctx, user)
+            _user = await is_user(ctx, user)
             if not _user:
                 embed = fmte(
                     ctx,
@@ -129,24 +124,13 @@ class Moderation(commands.Cog):
                 )
                 await ctx.send(embed = embed)
                 return
-            errored = 0
-            dele = 0
-            _limit = limit
-            async for message in ctx.channel.history(limit = _limit + 1):
-                try:
-                    if message.author == _user:
-                        await message.delete()
-                        dele += 1
-                    else:
-                        _limit += 1
-                except discord.errors.Forbidden or discord.errors.NotFound:
-                    errored += 1
+            r = await actual_purge(ctx, limit + 1, _user)
             embed = fmte(
                 ctx,
-                t = "{} Messages by {} Deleted.".format(limit, _user),
-                d = "Could not delete {} messages".format(errored)
+                t = "{} Messages by {} Deleted.".format(r[0]-1, _user),
+                d = "Failed deletes: {}.".format(r[1])
             )
-            await ctx.send(embed = embed)
+            await ctx.send(embed=embed, delete_after=3)
         
     @commands.hybrid_command(aliases = ["rename", "nickname", "name"])
     @commands.has_permissions(change_nickname = True)
