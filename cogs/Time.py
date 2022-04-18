@@ -14,20 +14,23 @@ class Time(commands.Cog):
 
     @commands.hybrid_group(name = "timer")
     async def timer(self, ctx: commands.Context):
-        timer = Timer()
-        if timer.get_user_exists(ctx.author.id):
-            await self.check(ctx)
-        else:
-            timer.new_user(ctx.author.id)
-            embed = fmte(
-                ctx = ctx,
-                t = "Timer created!",
-                d = "You can use `>>timer check` to check your time, or `>>timer clear` to delete your timer.",
-            )
-            await ctx.send(embed = embed)
+        embed = fmte(
+            ctx,
+            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
+            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
+                ctx.invoked_parents[0], 
+                c.name, 
+                c.signature, 
+                c.short_doc
+            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
+        )
+        await ctx.send(embed = embed)
     
     @timer.command(aliases = ["restart"])
     async def new(self, ctx: commands.Context):
+        """
+        Creates a new timer for the user, with the time starting at 00:00:00.00.
+        """
         timer = Timer()
         timer.delete_user(ctx.author.id)
         timer.new_user(ctx.author.id)
@@ -40,13 +43,16 @@ class Time(commands.Cog):
     
     @timer.command()
     async def check(self, ctx: commands.Context, user: discord.Member = None):
+        """
+        Checks the user's time. If no user is given, it used the author instead.
+        """
         _user = user if user else ctx.author
         timer = Timer()
         if not timer.get_user_exists(_user.id):
             embed = fmte(
                 ctx = ctx,
                 t = "You have not initialized a timer yet." if not user else "This user has no timer initialized.",
-                d = "You can use `>>timer` to create one!" if not user else "They can do so by using `>>timer`!.",
+                d = "You can use `>>timer new` to create one!" if not user else "They can do so by using `>>timer new`!.",
             )
         else:
             timer.update_user(_user.id)
@@ -75,38 +81,41 @@ class Time(commands.Cog):
     
     @timer.command(aliases = ["del", "d", "stop", "destroy"])
     async def clear(self, ctx: commands.Context):
+        """
+        Deletes the user's timer, allowing them to create a new one.
+        """
         timer = Timer()
         if not timer.get_user_exists(ctx.author.id):
             embed = fmte(
                 ctx = ctx,
                 t = "You do not currently have any timer!",
-                d = "You can create one with `>>timer` though!"
+                d = "You can create one with `>>timer new` though!"
             )
         else:
             timer.delete_user(ctx.author.id)
             embed = fmte(
                 ctx = ctx, 
                 t = "Timer stopped!",
-                d = "You can use `>>timer` to create a new one."
+                d = "You can use `>>timer new` to create a new one."
             )
         await ctx.send(embed=embed)
     
-    @commands.hybrid_command()
-    async def time(self, ctx: commands.Context, zone: str = "UTC"):
-        lowered = [x.lower() for x in pytz.all_timezones]
-        if not lowered.__contains__(zone.lower()):
-            embed = fmte(
-                ctx = ctx,
-                t = "Sorry, I can't find that timezone."
-            )
-        else:
-            time = pytz.timezone(zone)
-            embed = fmte(
-                ctx = ctx,
-                t = "Current datetime in zone {}:".format(time.zone),
-                d = "```{}```".format(datetime.now(pytz.timezone(zone)))
-            )
-        await ctx.send(embed=embed)
+    # @commands.hybrid_command()
+    # async def time(self, ctx: commands.Context, zone: str = "UTC"):
+    #     lowered = [x.lower() for x in pytz.all_timezones]
+    #     if not lowered.__contains__(zone.lower()):
+    #         embed = fmte(
+    #             ctx = ctx,
+    #             t = "Sorry, I can't find that timezone."
+    #         )
+    #     else:
+    #         time = pytz.timezone(zone)
+    #         embed = fmte(
+    #             ctx = ctx,
+    #             t = "Current datetime in zone {}:".format(time.zone),
+    #             d = "```{}```".format(datetime.now(pytz.timezone(zone)))
+    #         )
+    #     await ctx.send(embed=embed)
         
 
 async def setup(bot):

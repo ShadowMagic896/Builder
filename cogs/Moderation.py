@@ -13,9 +13,28 @@ class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
     
-    @commands.hybrid_command(aliases = ["mute", "m", "silence", "tm"])
+    @commands.hybrid_group()
+    async def mod(self, ctx: commands.Context):
+        embed = fmte(
+            ctx,
+            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
+            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
+                ctx.invoked_parents[0], 
+                c.name, 
+                c.signature, 
+                c.short_doc
+            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
+        )
+        await ctx.send(embed = embed)
+
+    @mod.command(aliases = ["mute", "m", "silence", "tm"])
     @commands.has_permissions(manage_messages = True)
     async def timeout(self, ctx: commands.Context, user: str, time: str = "15m", *, reason: str = "No reason given."):
+        """
+        Times out a user.
+        Time can be any number followed by the timeframe [Seconds, Minutes, Hours, etc.]
+        User can be a name, name and discriminator, ID, or mention.
+        """
         st = _time_.time()
         user = await is_user(ctx, user)
         if not user:
@@ -66,9 +85,14 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed = embed)
     
-    @commands.hybrid_command(aliases = ["utm", "unmute"])
+    @mod.command(aliases = ["utm", "unmute"])
     @commands.has_permissions(manage_messages = True)
     async def untimeout(self, ctx: commands.Context, user: str, *, reason: str = "No reason given."):
+        """
+        Removes the timeout from a user.
+        Effectively, it sets the user's timeout ending to right now.
+        User can be a name, name and discriminator, ID, or mention.
+        """
         user = await is_user(ctx, user)
         if not user:
             embed = fmte(
@@ -104,8 +128,14 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed=embed)
         
-    @commands.hybrid_command(aliases = ["clean", "purgemessage"])
+    @mod.command(aliases = ["clean", "purgemessage"])
     async def purge(self, ctx: commands.Context, limit: int, user:str = "all"):
+        """
+        Purges a channel's messages.
+        If no user is given, it deletes all messages. Otherwise, it deletes all messages my that user.
+        The bot will continue to delete messages until the limit is met or messages >= (limit + 10) * 1.5
+        User can be a name, name and discriminator, ID, or mention.
+        """
         if user == "all":
             r = await actual_purge(ctx, limit + 1)
             embed = fmte(
@@ -132,9 +162,15 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed=embed, delete_after=3)
         
-    @commands.hybrid_command(aliases = ["rename", "nickname", "name"])
+    @mod.command(aliases = ["rename", "nickname", "name"])
     @commands.has_permissions(change_nickname = True)
-    async def nick(self, ctx: commands.Context, *, things: str = ""):
+    async def nick(self, ctx: commands.Context, *, options: str = ""):
+        """
+        Nicknames a user.
+        If the first option is a user, then it nicknames that user. Otherwise, the user is yourself.
+        The rest of the options are the user's nickname
+        User can be a name, name and discriminator, ID, or mention.
+        """
         things = things.split(" ")
         if len(things) == 0:
             await ctx.author.edit(nick="")

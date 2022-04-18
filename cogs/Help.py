@@ -1,40 +1,28 @@
 from _aux.constants import Constants
 from _aux.embeds import fmte
 from discord.ext import commands
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 class Help(commands.HelpCommand, commands.Cog):
     async def send_bot_help(self, mapping: Dict[Any | None, List[Any]]):
+        ctx = self.context
         embed = fmte(
             self.context, 
             t = "Help Screen",
             d = """Prefix: `<mention> or >>`
-            My commands are grouped into `Cogs`, and some are further divided into `Groups`
-            To call a group command, use `>>(group) (command) <options>`
-            To call a normal command, use `>>(command) <arguments>`
-            To see info on a `Cog` (seen below), use `>>help <Cog>`"""
+            My commands are grouped into `Groups`
+            To call a group command, use `>><group> <command> <options>`
+            To see info on a `Group` (seen below), use `>>help <Group>`
+            To see info on a `Command`, use `>>help <group> <command>`
+            """
         )
-
-        for cog, cmds in mapping.items():
-            if not cog or str(cog.qualified_name) in Constants.ExtensionConstants.FORBIDDEN_COGS: continue
+        gps: List[commands.HybridGroup] = ctx.bot.commands
+        for group in gps:
+            if group.name in Constants.ExtensionConstants.FORBIDDEN_GROUPS:
+                continue
             embed.add_field(
-                name = "***{}***".format(cog.qualified_name),
-                value = "{} group{}".format(len(cmds), "s" if len(cmds) != 1 else ""),
-                inline = False
-            )
-        await self.context.send(embed = embed)
-    
-    async def send_cog_help(self, cog: commands.Cog, /) -> None:
-        ctx = self.context
-        embed = fmte(
-            ctx,
-            t = "All Commands / Command Groups in {}".format(cog.qualified_name),
-            d = ""
-        )
-        for c in cog.get_commands():
-            embed.add_field(
-                name = "{}: `{}` {}".format("Group" if hasattr(c, "commands") else "Command", c.name, " `{}`".format(c.aliases) if c.aliases else ""),
-                value = "```>>{}{} {}```".format("help " if hasattr(c, "commands") else "", c.name, c.signature),
+                name = "**Group `{}`**".format(group.name),
+                value = "Commands: {}".format(len(group.commands)),
                 inline = False
             )
         await ctx.send(embed = embed)
@@ -43,15 +31,14 @@ class Help(commands.HelpCommand, commands.Cog):
         ctx = self.context
         embed = fmte(
             ctx,
-            t = group.qualified_name,
-            d = ""
+            t = "**Command Group `{}`**".format(group.name),
+            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
+                group.name, 
+                c.name, 
+                c.signature, 
+                c.short_doc
+            ) for c in group.commands]))
         )
-        for c in group.commands:
-            embed.add_field(
-                name = "Command: `{}{}`".format(c.name, " {}".format(c.aliases) if c.aliases else ""),
-                value = "```>>{} {} {}```".format(c.parent, c.name, c.signature),
-                inline = False
-            )
         await ctx.send(embed = embed)
     
     async def send_command_help(self, command: commands.Command, /) -> None:
@@ -62,8 +49,6 @@ class Help(commands.HelpCommand, commands.Cog):
             d = "```>>{}{} {}```".format("{} ".format(command.parent.name) if command.parent else "", command.name, command.signature)
         )
         await ctx.send(embed=embed)
-
-
 
 async def setup(bot):
     await bot.add_cog(Help())

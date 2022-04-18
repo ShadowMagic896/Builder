@@ -63,7 +63,7 @@ class Dev(commands.Cog):
                 fmt = await ctx.bot.tree.sync()
 
             await ctx.send(
-                f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}"
+                "Synced {} commands {}".format(len(fmt), "globally" if not spec else "to the current guild.")
             )
             return
 
