@@ -41,7 +41,7 @@ class Moderation(commands.Cog):
             embed = fmte(
                 ctx, 
                 t = "User not found.",
-                d = "Please make sure you either input a user or a user's ID"
+                d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator"
             )
             await ctx.send(embed=embed)
             return
@@ -171,7 +171,7 @@ class Moderation(commands.Cog):
         The rest of the options are the user's nickname
         User can be a name, name and discriminator, ID, or mention.
         """
-        things = things.split(" ")
+        things = options.split(" ")
         if len(things) == 0:
             await ctx.author.edit(nick="")
             return

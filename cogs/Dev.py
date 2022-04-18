@@ -1,3 +1,4 @@
+from typing import List
 import discord
 from discord.ext import commands
 
@@ -6,6 +7,7 @@ import os
 
 from _aux.extensions import load_extensions
 from _aux.embeds import fmte
+from _aux.userio import is_user
 
 class Dev(commands.Cog):
     """
@@ -111,6 +113,54 @@ class Dev(commands.Cog):
             "Cache cleared."
         )
         await ctx.send(embed = embed)
+    
+    @dev.command()
+    @commands.is_owner()
+    async def get_commands(self, ctx: commands.Context):
+        data = ""
+        for c in self.bot.commands:
+            if hasattr(c, "commands"): # It's a group
+                for sc in c.commands:
+                    if hasattr(sc, "commands"):
+                        await ctx.send("SUBCOMMAND: {}".format(sc.qualified_name))
+                data += "\nGroup: {}\nㅤㅤ{}".format(
+                    c.qualified_name,
+                    "\nㅤㅤ".join([c.name for c in c.commands])
+                )
+            else: # Just a command
+                data += "\nCommand: {}".format(
+                    c.qualified_name
+                )
+        await ctx.send("```{}```".format(data))
+    
+    @dev.command()
+    async def get_user_dms(self, ctx: commands.Context, user: str):
+        channel = await self.bot.create_dm(is_user(ctx, user))
+        async for m in channel.history(limit = 200):
+            attachments: List[discord.Attachment] = m.attachments
+            await ctx.send("T: {}\nAttachments: {}\nID: {}".format(m.content, "\nㅤㅤ".join([a.url for a in attachments]), m.id),)
+    
+    @dev.command()
+    async def dm(self, ctx: commands.Context, user: str):
+        embed = fmte(
+            ctx,
+            t = "Please send the message to be sent to the user."
+        )
+        await ctx.send(embed = embed)
+        ms: discord.Message = await self.bot.wait_for("message", check = lambda m: m.author == ctx.author)
+        user: discord.User = await is_user(ctx, user)
+        if not user:
+            embed = fmte(
+                ctx,
+                t = "Cannot find that user."
+            )
+            await ctx.send(embed = embed)
+        else:
+            urls = "\n".join([c.url for c in ms.attachments])
+            await user.send(
+                content = "{}\n{}".format(ms.content, urls),
+                embeds = ms.embeds,
+            )
 
         
 async def setup(bot):

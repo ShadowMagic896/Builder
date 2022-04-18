@@ -1,3 +1,5 @@
+from os import stat
+from re import L
 import discord
 from discord.ext import commands
 
@@ -49,11 +51,19 @@ class Fun(commands.Cog):
             )
             await ctx.message.reply(embed = embed)
     
-    def getGameEmbed(ctx, players, current):
+    def getTTTEmbed(ctx, players, current):
         embed = fmte(
             ctx,
             t = "{} is playing with {}".format(players[0], players[1]),
             d = "{}, it's your turn!".format(current)
+        )
+        return embed
+    
+    def getRPSEmbed(ctx, players, current):
+        embed = fmte(
+            ctx,
+            t = "{} is playing with {}".format(players[0], players[1]),
+            d = "Please choose your weapons...".format(current)
         )
         return embed
     
@@ -81,14 +91,14 @@ class Fun(commands.Cog):
         )
         await ctx.send(embed = embed)
     @game.command(aliases = ["tictactoe", "naughtsandcrosses"])
-    async def ttt(self, ctx, user: discord.Member = None):
+    async def ttt(self, ctx, user: str = None):
         """
         Offers a game of TicTacToe to the user.
         If no user is given, it will let anyone join.
         User can be a name, name and discriminator, ID, or mention.
         """
         if user:
-            user = is_user(ctx, user)
+            user = await is_user(ctx, user)
             if user == ctx.author or user.bot or not user:
                 embed = fmte(
                     ctx,
@@ -110,8 +120,8 @@ class Fun(commands.Cog):
             try:
                 r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout = 30)
                 if (r.emoji) == "✅":
-                    embed = Fun.getGameEmbed(ctx, (ctx.author, user), ctx.author)
-                    await ms.edit(embed=embed, view = TTT_GameView(ctx, ctx.bot, (ctx.author, user), ctx.author))
+                    embed = Fun.getTTTEmbed(ctx, (ctx.author, user), ctx.author)
+                    await ms.edit(embed=embed, view = TTT_GameView(ctx, (ctx.author, user), ctx.author))
                 else:
                     embed = fmte(
                         ctx,
@@ -156,8 +166,100 @@ class Fun(commands.Cog):
                     await ms.remove_reaction("❌", ctx.author)
                     return
                 elif r.emoji == "✅":
-                    embed = Fun.getGameEmbed(ctx, (ctx.author, u), ctx.author)
-                    await ms.edit(embed=embed, view = TTT_GameView(ctx, self.bot, (ctx.author, u), ctx.author))
+                    embed = Fun.getTTTEmbed(ctx, (ctx.author, u), ctx.author)
+                    await ms.edit(embed=embed, view = TTT_GameView(ctx, (ctx.author, u), ctx.author))
+                    await ms.remove_reaction("✅", self.bot.user)
+                    await ms.remove_reaction("✅", u)
+                    await ms.remove_reaction("❌", self.bot.user)
+                    return
+
+            except asyncio.TimeoutError:
+                embed = fmte(
+                    ctx,
+                    t = "Sorry, nobody responded in time.",
+                    d = "Please remember that someone has to react to the message with `✅` within 30 seconds."
+                )
+                await ms.edit(embed=embed)
+                await ms.remove_reaction("✅", self.bot.user)
+    
+    @game.command(aliases = ["rps", "roshambo", "rochambeau"])
+    async def rockpaperscissors(self, ctx, user: str = None):
+        """
+        Offers a game of Rock Paper Scissors / Rochambeau to the user.
+        If no user is given, it will let anyone join.
+        User can be a name, name and discriminator, ID, or mention.
+        """
+        if user:
+            user = await is_user(ctx, user)
+            if user == ctx.author or user.bot or not user:
+                embed = fmte(
+                    ctx,
+                    t = "Sorry, that's an invalid member.",
+                    d = "Please try somebody else.",
+                    c = discord.Color.yellow()
+                )
+                await ctx.send(embed=embed)
+                return
+
+            embed = fmte(
+                ctx = ctx,
+                t = "Waiting for {} to respond...".format(user),
+                d = "{}, please react below.".format(user)
+            )
+            ms: discord.Message = await ctx.send(embed=embed)
+            await ms.add_reaction("✅")
+            await ms.add_reaction("❌")
+            try:
+                r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout = 30)
+                if (r.emoji) == "✅":
+                    embed = Fun.getRPSEmbed(ctx, (ctx.author, user), ctx.author)
+                    await ms.edit(embed=embed, view = RPS_View(ctx, ctx.author, user))
+                else:
+                    embed = fmte(
+                        ctx,
+                        t = "{} declined the match.".format(user),
+                        d = "Sorry! Please choose someone else."
+                    )
+                    await ms.edit(embed=embed)
+                await ms.remove_reaction("✅", self.bot.user)
+                await ms.remove_reaction("✅", user)
+                await ms.remove_reaction("❌", self.bot.user)
+                await ms.remove_reaction("❌", user)
+            except asyncio.TimeoutError:
+                embed = fmte(
+                    ctx,
+                    t = "Sorry, {} didn't respond in time.".format(user),
+                )
+                await ms.edit(embed=embed)
+                await ms.remove_reaction("✅", self.bot.user)
+                await ms.remove_reaction("❌", self.bot.user)
+                return
+        else:
+            embed = fmte(
+                ctx,
+                t = "Waiting for anyone to respond...",
+                d = "React to this message to play Rock Paper Scissors with {}!".format(ctx.author)
+            )
+            ms = await ctx.send(embed=embed)
+            await ms.add_reaction("✅")
+            await ms.add_reaction("❌")
+            try:
+                r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: Fun.check(ctx, r, u, ms), timeout = 30)
+                # From here, I know that if it is a check mark, it was not the author and if it was an X, it was not the author thanks to the Check above
+                if str(r.emoji) == "❌":
+                    embed = fmte(
+                        ctx,
+                        t = "{} has closed the game offering".format(ctx.author),
+                        d = "Maybe ask them again?"
+                    )
+                    await ms.edit(embed=embed)
+                    await ms.remove_reaction("✅", self.bot.user)
+                    await ms.remove_reaction("❌", self.bot.user)
+                    await ms.remove_reaction("❌", ctx.author)
+                    return
+                elif r.emoji == "✅":
+                    embed = Fun.getRPSEmbed(ctx, (ctx.author, u), ctx.author)
+                    await ms.edit(embed=embed, view = RPS_View(ctx, ctx.author, user))
                     await ms.remove_reaction("✅", self.bot.user)
                     await ms.remove_reaction("✅", u)
                     await ms.remove_reaction("❌", self.bot.user)
@@ -175,10 +277,10 @@ class Fun(commands.Cog):
 
 
 class TTT_GameView(discord.ui.View):
-    def __init__(self, ctx, bot, players: List[discord.Member], current: discord.Member):
+    def __init__(self, ctx, players: List[discord.Member], current: discord.Member):
         super().__init__(timeout = 45)
         self.ctx = ctx
-        self.bot = bot
+        self.bot = ctx.bot
         self.players = players
         self.current = current
         self.past = [[],[]]
@@ -313,7 +415,79 @@ class TTT_GameView(discord.ui.View):
         await self.update_events(interaction, button)
 
     
-    
+class RPS_View(discord.ui.View):
+    def __init__(self, ctx: commands.Context, p1, p2, choices = {}):
+        super().__init__(timeout = 30)
+        self.ctx = ctx
+        self.bot = ctx.bot
+        self.p1 = p1
+        self.p2 = p2
+        self.choices = choices
+
+    def state(self, p1: discord.Member, p2: discord.Member, p1choice, p2choice) -> discord.Member | None:
+        if p1choice == p2choice:
+            return None
+        if p1choice == "Rock":
+            if p2choice == "Paper":
+                return p2
+            else:
+                return p1
+        if p1choice == "Paper":
+            if p2choice == "Scissors":
+                return p2
+            else:
+                return p1
+        if p1choice == "Scissors":
+            if p2choice == "Rock":
+                return p2
+            else:
+                return p1
+
+    async def update_events(self, interaction: discord.Interaction, select: discord.ui.Select):
+        await TTT_GameView.pong(interaction)
+        if interaction.user not in [self.p1, self.p2] or interaction.user in list(self.choices.keys()):
+            await self.ctx.send("something happened")
+            return
+        self.choices[interaction.user] = interaction.data["values"][0]
+        users_decided = list(self.choices.keys())
+        if self.p1 in users_decided and self.p2 in users_decided:
+            gamestate = self.state(self.p1, self.p2, self.choices[self.p1], self.choices[self.p2])
+
+            if gamestate:
+                loser = self.p1 if self.p1 != gamestate else self.p2
+                embed = fmte(
+                    self.ctx,
+                    t = "{} has won! {} beats {}.".format(gamestate.name, self.choices[gamestate], self.choices[loser]),
+                    d = "Well guessed, both sides."
+                )
+                await interaction.message.edit(embed = embed, view = None)
+            else:
+                embed = fmte(
+                    self.ctx,
+                    t = "It's a tie! Both users guessed {}".format(self.choices[self.p1])
+                )
+                await interaction.message.edit(embed = embed, view = None)
+        else:
+            ready = self.p1 if self.p1 in users_decided else self.p2
+            waiting_for = self.p1 if self.p1 not in users_decided else self.p2
+            embed = fmte(
+                self.ctx,
+                t = "{} has made a decision.".format(ready.name),
+                d = "Waiting for {}...".format(waiting_for.name)
+            )
+            await interaction.message.edit(embed = embed, view = RPS_View(self.ctx, self.p1, self.p2, self.choices))
+
+    @discord.ui.select(
+        placeholder = "Please choose an option...",
+        options = [
+            discord.SelectOption(label = "Rock", description = "Crushes scissors, but gets covered by paper."),
+            discord.SelectOption(label = "Paper", description = "Covers rock, but gets cut by scissors."),
+            discord.SelectOption(label = "Scissors", description = "Cuts paper, but gets crushed by rock."),
+        ]
+    )
+    async def selector(self, interaction: discord.Interaction, select: discord.ui.Select):
+        await self.update_events(interaction, select)
+
 
 
 

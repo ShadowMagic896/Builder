@@ -48,6 +48,7 @@ class Utility(commands.Cog):
             )
         )
         await ctx.send(embed=embed)
+        
     @commands.hybrid_group()
     async def guild(self, ctx: commands.Context):
         pass
