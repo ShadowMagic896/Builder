@@ -16,7 +16,17 @@ class Utility(commands.Cog):
     
     @commands.hybrid_group()
     async def builder(self, ctx):
-        await self.help(ctx)
+        embed = fmte(
+            ctx,
+            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
+            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
+                ctx.invoked_parents[0], 
+                c.name, 
+                c.signature, 
+                c.short_doc
+            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
+        )
+        await ctx.send(embed = embed)
 
     @builder.command()
     async def ping(self, ctx: commands.Context):
@@ -51,7 +61,17 @@ class Utility(commands.Cog):
         
     @commands.hybrid_group()
     async def guild(self, ctx: commands.Context):
-        pass
+        embed = fmte(
+            ctx,
+            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
+            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
+                ctx.invoked_parents[0], 
+                c.name, 
+                c.signature, 
+                c.short_doc
+            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
+        )
+        await ctx.send(embed = embed)
     
     @guild.command()
     async def info(self, ctx: commands.Context):

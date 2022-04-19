@@ -1,3 +1,4 @@
+import sqlite3
 from typing import List
 import discord
 from discord.ext import commands
@@ -106,7 +107,7 @@ class Dev(commands.Cog):
 
     @dev.command()
     @commands.is_owner()
-    async def clearcache(self, ctx: commands.Context):
+    async def ccache(self, ctx: commands.Context):
         self.bot.clear()
         embed = fmte(
             ctx,
@@ -116,7 +117,7 @@ class Dev(commands.Cog):
     
     @dev.command()
     @commands.is_owner()
-    async def get_commands(self, ctx: commands.Context):
+    async def cmds(self, ctx: commands.Context):
         data = ""
         for c in self.bot.commands:
             if hasattr(c, "commands"): # It's a group
@@ -125,7 +126,7 @@ class Dev(commands.Cog):
                         await ctx.send("SUBCOMMAND: {}".format(sc.qualified_name))
                 data += "\nGroup: {}\nㅤㅤ{}".format(
                     c.qualified_name,
-                    "\nㅤㅤ".join([c.name for c in c.commands])
+                    "\nㅤㅤ".join(["{} {}".format(c.name, c.aliases) for c in c.commands])
                 )
             else: # Just a command
                 data += "\nCommand: {}".format(
@@ -134,12 +135,12 @@ class Dev(commands.Cog):
         await ctx.send("```{}```".format(data))
     
     @dev.command()
-    async def get_user_dms(self, ctx: commands.Context, user: str):
+    async def dms(self, ctx: commands.Context, user: str):
         channel = await self.bot.create_dm(is_user(ctx, user))
         async for m in channel.history(limit = 200):
             attachments: List[discord.Attachment] = m.attachments
             await ctx.send("T: {}\nAttachments: {}\nID: {}".format(m.content, "\nㅤㅤ".join([a.url for a in attachments]), m.id),)
-    
+
     @dev.command()
     async def dm(self, ctx: commands.Context, user: str):
         embed = fmte(
@@ -155,12 +156,12 @@ class Dev(commands.Cog):
                 t = "Cannot find that user."
             )
             await ctx.send(embed = embed)
-        else:
-            urls = "\n".join([c.url for c in ms.attachments])
-            await user.send(
-                content = "{}\n{}".format(ms.content, urls),
-                embeds = ms.embeds,
-            )
+            return
+        urls = "\n".join([c.url for c in ms.attachments])
+        await user.send(
+            content = "{}\n{}".format(ms.content, urls),
+            embeds = ms.embeds,
+        )
 
         
 async def setup(bot):

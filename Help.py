@@ -1,13 +1,15 @@
+
+import discord
+from discord.ext import commands
 from _aux.constants import Constants
 from _aux.embeds import fmte
-from discord.ext import commands
 from typing import List, Dict, Any, Optional
 
-class Help(commands.HelpCommand, commands.Cog):
-    async def send_bot_help(self, mapping: Dict[Any | None, List[Any]]):
-        ctx = self.context
+class Help(commands.HelpCommand):
+    async def send_bot_help(self, mapping):
+        ctx: commands.Context = self.context
         embed = fmte(
-            self.context, 
+            ctx, 
             t = "Help Screen",
             d = """Prefix: `<mention> or >>`
             My commands are grouped into `Groups`
@@ -16,7 +18,8 @@ class Help(commands.HelpCommand, commands.Cog):
             To see info on a `Command`, use `>>help <group> <command>`
             """
         )
-        gps: List[commands.HybridGroup] = ctx.bot.commands
+        gps = ctx.bot.commands
+        await ctx.send(gps)
         for group in gps:
             if group.name in Constants.ExtensionConstants.FORBIDDEN_GROUPS:
                 continue
@@ -49,6 +52,3 @@ class Help(commands.HelpCommand, commands.Cog):
             d = "```>>{}{} {}```".format("{} ".format(command.parent.name) if command.parent else "", command.name, command.signature)
         )
         await ctx.send(embed=embed)
-
-async def setup(bot):
-    await bot.add_cog(Help())

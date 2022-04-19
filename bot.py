@@ -8,7 +8,7 @@ import logging
 
 from dotenv import load_dotenv
 from _aux.extensions import load_extensions
-from cogs.Help import Help
+from Help import Help
 
 load_dotenv()
 
@@ -37,6 +37,7 @@ bot: commands.Bot = commands.Bot(
 )
 
 async def main():
+    # await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
     await bot.start(os.getenv("BOT_KEY"))
 

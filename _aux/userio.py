@@ -68,7 +68,7 @@ async def handle_error(ctx: commands.Context, error: commands.errors.CommandInvo
     embed = fmte(
         ctx,
         t = "An Error Occurred!",
-        d = "**Error:** {}\n".format(
+        d = "**Error:** `{}`\n".format(
             error.original,
         ),
         c = discord.Color.red(),

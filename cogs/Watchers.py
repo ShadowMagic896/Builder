@@ -1,6 +1,8 @@
+import discord
 from discord.ext import commands
 
 import sqlite3
+import os
 import time
 from datetime import datetime
 import pytz
@@ -57,8 +59,8 @@ class Watchers(commands.Cog):
     
     def apply_handers(self):
         for cm in self.bot.commands:
-            @cm.error
-            async def gloal_handle(self, ctx, err):
+            # @cm.error   
+            async def gloal_handle(ctx, err):
                 await handle_error(ctx, err)
                 pass
 
