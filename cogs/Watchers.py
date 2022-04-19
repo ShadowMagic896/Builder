@@ -35,7 +35,7 @@ class Watchers(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not message.guild:
+        if not message.guild and message.author is not self.bot.user:
             data = "{} at {}: {}\n".format(message.author, datetime.fromtimestamp(time.time()), message.content)
             open("_dmlog.txt", "a").write(data)
         # await self.bot.process_commands(message) # This is no longer necessary in 2.0.0
