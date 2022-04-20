@@ -72,6 +72,13 @@ class Watchers(commands.Cog):
             c = discord.Color.red()
         )
         await ctx.send(embed = embed)
+        await ctx.message.add_reaction("‼️")
+        ctx.command_failed = True
+    
+    @commands.Cog.listener()
+    async def on_command_completion(self, ctx: commands.Context):
+        if not ctx.command_failed:
+            await ctx.message.add_reaction("☑️")
     
     @commands.Cog.listener()
     async def on_message(self, message):
