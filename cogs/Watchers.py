@@ -36,7 +36,7 @@ class Watchers(commands.Cog):
         )
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
     
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         hint = None
         if isinstance(error, commands.CommandInvokeError):

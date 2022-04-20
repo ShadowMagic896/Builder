@@ -11,8 +11,8 @@ class Utility(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         pass
     
-    @commands.hybrid_group(aliases = ["bot"])
-    async def self(self, ctx):
+    @commands.hybrid_group(aliases = ["self"])
+    async def bot(self, ctx):
         """
         Commands that are mostly used to find out info about this bot.
         """
@@ -28,7 +28,7 @@ class Utility(commands.Cog):
         )
         await ctx.send(embed = embed)
 
-    @self.command()
+    @bot.command()
     async def ping(self, ctx: commands.Context):
         """
         Returns the bot's latency, in milliseconds.
@@ -39,8 +39,8 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
     
-    @self.command()
-    async def help(self, ctx):
+    @bot.command()
+    async def info(self, ctx):
         """
         Returns information about the bot.
         """

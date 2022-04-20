@@ -36,7 +36,7 @@ class Help(commands.HelpCommand):
         ctx = self.context
         embed = fmte(
             ctx,
-            t = "**Command Group `{} [{}]`**".format(
+            t = "**Command Group `{} [A.K.A.: {}]`**".format(
                 group.name,
                 group.aliases
             ),
@@ -60,8 +60,18 @@ class Help(commands.HelpCommand):
             cogname = None
         embed = fmte(
             ctx,
-            t = "{} [Cog: `{}` Group: `{}`]\n{}".format(command.name, cogname, command.parent, command.aliases),
-            d = "```>>{}{} {}```\n*{}*".format("{} ".format(command.parent.name) if command.parent else "", command.name, command.signature, command.short_doc)
+            t = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
+                command.name, 
+                cogname, 
+                command.parent, 
+                command.aliases
+            ),
+            d = "```>>{}{} {}```\n*{}*".format(
+                "{} ".format(command.parent.name) if command.parent else "", 
+                command.name, 
+                command.signature, 
+                command.short_doc
+            )
         )
         await ctx.send(embed=embed)
     
@@ -73,6 +83,56 @@ class Help(commands.HelpCommand):
             raise commands.errors.CommandNotFound("I could not find that group")
     
     async def send_error_message(self, error: str, /) -> None:
-        await Watchers(self.context.bot).on_command_error(self.context, commands.errors.CommandNotFound(error))
+        if error.startswith("No command called "):
+            com = error.split()[3][1:-1]
+            
+            coms = [c.commands for c in self.context.bot.commands if not isinstance(c, _HelpCommandImpl) and hasattr(c, "commands")]
+            _coms = []
+            for c in coms:
+                for r in c:
+                    _coms.append(r)
 
-        
+            coms = _coms
+            cmds: List[commands.HybridCommand] = [c for c in coms if c.name == com.lower() or c.name in [r.lower() for r in c.aliases]]
+            if len(cmds) == 0:
+                raise commands.errors.CommandNotFound(error)
+            elif len(cmds) == 1:
+                c: commands.HybridCommand = cmds[0]
+                embed = fmte(
+                    self.context,
+                    t = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
+                        c.name, 
+                        c.cog_name, 
+                        c.parent, 
+                        c.aliases
+                    ),
+                    d = "`>>{} {} {}`".format(
+                        c.parent,
+                        c.name,
+                        c.signature
+                    )
+                )
+                await self.context.send(embed = embed)
+                return
+            else:
+                embed = fmte(
+                    self.context,
+                    t = "Multiple commands found, please choose a specific one.",
+                )
+                for c in cmds:
+                    embed.add_field(
+                        name = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
+                            c.name, 
+                            c.cog_name if c.cog_name else "Utility", #idk 
+                            c.parent, 
+                            c.aliases
+                        ),
+                        value = "`>>{} {} {}`\n*{}*".format(
+                            c.parent,
+                            c.name,
+                            c.signature,
+                            c.short_doc
+                        ),
+                        inline = False
+                    )
+                await self.context.send(embed = embed)
