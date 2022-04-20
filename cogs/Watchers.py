@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+from discord.ext.commands.errors import *
+from discord.errors import *
 
 import sqlite3
 import os
@@ -7,7 +9,7 @@ import time
 from datetime import datetime
 import pytz
 
-
+from _aux.embeds import fmte
 from _aux.userio import handle_error
 
 class Watchers(commands.Cog):
@@ -32,6 +34,33 @@ class Watchers(commands.Cog):
             ctx.invoked_subcommand,
         )
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
+    
+    # @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        hint = None
+
+        if isinstance(error, CommandNotFound):
+            hint = "I couldn't find that command. Try `>>help`"
+        elif isinstance(error, NotFound):
+            hint = "I couldn't find that. Try `>>help`"
+        elif isinstance(error, Forbidden):
+            hint = "I'm not allowed to do that."
+        elif isinstance(error, MissingRequiredArgument):
+            hint = "You need to supply more information to use that command. Try `>>help [group] [command]`"
+        elif isinstance(error, NSFWChannelRequired):
+            hint = "You must be in an NSFW channel to use that."
+        else:
+            hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
+        embed = fmte(
+            ctx,
+            t = "An Error Occurred.",
+            d = "**Hint:**\n{}\n**Error:**\n`{}`".format(
+                hint,
+                error
+            ),
+            c = discord.Color.red()
+        )
+        await ctx.send(embed = embed)
     
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -58,12 +87,12 @@ class Watchers(commands.Cog):
         conn.close()
     
     def apply_handers(self):
-        for cm in self.bot.commands:
-            # @cm.error   
-            async def gloal_handle(ctx, err):
-                await handle_error(ctx, err)
-                pass
-
+        # for cm in self.bot.commands:
+        #     # @cm.error   
+        #     async def gloal_handle(ctx, err):
+        #         await handle_error(ctx, err)
+        #         pass
+        pass
 
 
 async def setup(bot):

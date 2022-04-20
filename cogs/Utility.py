@@ -1,5 +1,6 @@
 from math import floor
 from pydoc import describe
+from typing import Literal
 import discord
 from discord.ext import commands
 
@@ -7,15 +8,14 @@ from discord.ext import commands
 from _aux.embeds import fmte
 
 class Utility(commands.Cog):
-    """
-    This cog is for any commands that help users find information about other users, this bot, the server, etc.
-    """
-
     def __init__(self, bot: commands.Bot) -> None:
         pass
     
     @commands.hybrid_group()
-    async def builder(self, ctx):
+    async def self(self, ctx):
+        """
+        Commands that are mostly used to find out info about this bot.
+        """
         embed = fmte(
             ctx,
             t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
@@ -28,11 +28,10 @@ class Utility(commands.Cog):
         )
         await ctx.send(embed = embed)
 
-    @builder.command()
+    @self.command()
     async def ping(self, ctx: commands.Context):
         """
         Returns the bot's latency, in milliseconds.
-        Usage: >>ping
         """
         ping=ctx.bot.latency
         emt="`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"
@@ -40,14 +39,17 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
     
-    @builder.command()
+    @self.command()
     async def help(self, ctx):
+        """
+        Returns information about the bot.
+        """
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
         embed = fmte(
             ctx,
             t = "Hello! I'm {}.".format(ctx.bot.user.name),
-            d = "Prefix: `>>`"
+            d = "Prefix: `<mention> or >>`"
         )
         embed.add_field(
             name = "**__Statistics__**",
@@ -59,8 +61,11 @@ class Utility(commands.Cog):
         )
         await ctx.send(embed=embed)
         
-    @commands.hybrid_group()
+    @commands.hybrid_group(aliases = ["server"])
     async def guild(self, ctx: commands.Context):
+        """
+        Commands that let users find info about their current guild (server).
+        """
         embed = fmte(
             ctx,
             t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
@@ -75,6 +80,9 @@ class Utility(commands.Cog):
     
     @guild.command()
     async def info(self, ctx: commands.Context):
+        """
+        Returns information on the current server
+        """
         guild: discord.Guild = ctx.guild
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
@@ -132,7 +140,11 @@ class Utility(commands.Cog):
 
     
     @guild.command(aliases = ["chan", "chans", "channel"])
+    @commands.has_permissions(manage_channels = True)
     async def channels(self, ctx: commands.Context):
+        """
+        Returns a list of the server's channels.
+        """
         embed = fmte(
             ctx,
             t = "`{}` has `{}` Channels".format(ctx.guild.name, len(ctx.guild.channels)),
@@ -141,8 +153,11 @@ class Utility(commands.Cog):
         await ctx.send(embed=embed)
     
     @guild.command(aliases = ["allinfo", "get"])
-    # @commands.has_permissions(manage_messages = True)
-    async def dump(self, ctx: commands.Context, datatype: str):
+    @commands.has_permissions(manage_messages = True)
+    async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"]):
+        """
+        Returns all of the available bot data on the datatype given.
+        """
         data = ""
         if datatype in ["channels", "channel", "chans", "chan"]:
             data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in ctx.guild.categories])

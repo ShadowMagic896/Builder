@@ -14,6 +14,9 @@ class Time(commands.Cog):
 
     @commands.hybrid_group(name = "timer")
     async def timer(self, ctx: commands.Context):
+        """
+        Lets the user start a timer and check it whenever they want.
+        """
         embed = fmte(
             ctx,
             t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),

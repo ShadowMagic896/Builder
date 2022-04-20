@@ -15,6 +15,9 @@ class Moderation(commands.Cog):
     
     @commands.hybrid_group()
     async def mod(self, ctx: commands.Context):
+        """
+        Commands that help moderators / administrators do their job.
+        """
         embed = fmte(
             ctx,
             t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),

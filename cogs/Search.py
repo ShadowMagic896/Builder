@@ -19,6 +19,10 @@ class Search(commands.Cog):
     
     @commands.hybrid_group()
     async def search(self, ctx: commands.Context):
+        """
+        These commands are used to search the great big web for a variety of things.
+        Neither this bot nor its owners or developers are responsible for any content returned.
+        """
         embed = fmte(
             ctx,
             t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),

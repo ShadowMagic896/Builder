@@ -12,13 +12,15 @@ from _aux.embeds import fmte
 from _aux.userio import is_user
 
 class Fun(commands.Cog):
-    """Commands that are designed to be fun to use!"""
 
     def __init__(self, bot) -> None:
         self.bot = bot
     
     @commands.hybrid_group()
-    async def text(self, ctx: commands.Context):
+    async def change(self, ctx: commands.Context):
+        """
+        change commands let the user manipulate text and images
+        """
         embed = fmte(
             ctx,
             t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
@@ -31,7 +33,7 @@ class Fun(commands.Cog):
         )
         await ctx.send(embed = embed)
 
-    @text.command()
+    @change.command()
     async def font(self, ctx, font: str, *, text: str):
         """
         Translates your text into a new font!
@@ -79,6 +81,9 @@ class Fun(commands.Cog):
 
     @commands.hybrid_group()
     async def game(self, ctx):
+        """
+        This group has many games in it, which you can play with other users.
+        """
         embed = fmte(
             ctx,
             t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
