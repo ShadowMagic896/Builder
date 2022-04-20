@@ -16,7 +16,7 @@ class Fun(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
     
-    @commands.hybrid_group()
+    @commands.hybrid_group(aliases = ["cng"])
     async def change(self, ctx: commands.Context):
         """
         change commands let the user manipulate text and images
@@ -46,12 +46,7 @@ class Fun(commands.Cog):
             await ctx.message.reply("```{}```".format(t[:1990]), embed = embed)
                 
         except pyfiglet.FontNotFound:
-            embed = fmte(
-                ctx,
-                t = "Sorry, I can't find that font.",
-                d = "Maybe try another one, or use `>>help font` for all fonts",
-            )
-            await ctx.message.reply(embed = embed)
+            raise commands.errors.BadArgument("Font not found.")
     
     def getTTTEmbed(ctx, players, current):
         embed = fmte(
@@ -103,16 +98,11 @@ class Fun(commands.Cog):
         User can be a name, name and discriminator, ID, or mention.
         """
         if user:
-            user = await is_user(ctx, user)
-            if user == ctx.author or user.bot or not user:
-                embed = fmte(
-                    ctx,
-                    t = "Sorry, that's an invalid member.",
-                    d = "Please try somebody else.",
-                    c = discord.Color.yellow()
-                )
-                await ctx.send(embed=embed)
-                return
+            _user = await is_user(ctx, user)
+            if _user == ctx.author or _user.bot or not _user:
+                raise commands.errors.MemberNotFound(user)
+
+            user = _user
 
             embed = fmte(
                 ctx = ctx,
@@ -122,31 +112,22 @@ class Fun(commands.Cog):
             ms: discord.Message = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
-            try:
-                r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout = 30)
-                if (r.emoji) == "✅":
-                    embed = Fun.getTTTEmbed(ctx, (ctx.author, user), ctx.author)
-                    await ms.edit(embed=embed, view = TTT_GameView(ctx, (ctx.author, user), ctx.author))
-                else:
-                    embed = fmte(
-                        ctx,
-                        t = "{} declined the match.".format(user),
-                        d = "Sorry! Please choose someone else."
-                    )
-                    await ms.edit(embed=embed)
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("✅", user)
-                await ms.remove_reaction("❌", self.bot.user)
-                await ms.remove_reaction("❌", user)
-            except asyncio.TimeoutError:
+            
+            r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout = 30)
+            if (r.emoji) == "✅":
+                embed = Fun.getTTTEmbed(ctx, (ctx.author, user), ctx.author)
+                await ms.edit(embed=embed, view = TTT_GameView(ctx, (ctx.author, user), ctx.author))
+            else:
                 embed = fmte(
                     ctx,
-                    t = "Sorry, {} didn't respond in time.".format(user),
+                    t = "{} declined the match.".format(user),
+                    d = "Sorry! Please choose someone else."
                 )
                 await ms.edit(embed=embed)
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("❌", self.bot.user)
-                return
+            await ms.remove_reaction("✅", self.bot.user)
+            await ms.remove_reaction("✅", user)
+            await ms.remove_reaction("❌", self.bot.user)
+            await ms.remove_reaction("❌", user)
         else:
             embed = fmte(
                 ctx,
@@ -156,36 +137,26 @@ class Fun(commands.Cog):
             ms = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
-            try:
-                r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: Fun.check(ctx, r, u, ms), timeout = 30)
-                # From here, I know that if it is a check mark, it was not the author and if it was an X, it was not the author thanks to the Check above
-                if str(r.emoji) == "❌":
-                    embed = fmte(
-                        ctx,
-                        t = "{} has closed the game offering".format(ctx.author),
-                        d = "Maybe ask them again?"
-                    )
-                    await ms.edit(embed=embed)
-                    await ms.remove_reaction("✅", self.bot.user)
-                    await ms.remove_reaction("❌", self.bot.user)
-                    await ms.remove_reaction("❌", ctx.author)
-                    return
-                elif r.emoji == "✅":
-                    embed = Fun.getTTTEmbed(ctx, (ctx.author, u), ctx.author)
-                    await ms.edit(embed=embed, view = TTT_GameView(ctx, (ctx.author, u), ctx.author))
-                    await ms.remove_reaction("✅", self.bot.user)
-                    await ms.remove_reaction("✅", u)
-                    await ms.remove_reaction("❌", self.bot.user)
-                    return
 
-            except asyncio.TimeoutError:
+            r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: Fun.check(ctx, r, u, ms), timeout = 30)
+            # From here, I know that if it is a check mark, it was not the author and if it was an X, it was not the author thanks to the Check above
+            if str(r.emoji) == "❌":
                 embed = fmte(
                     ctx,
-                    t = "Sorry, nobody responded in time.",
-                    d = "Please remember that someone has to react to the message with `✅` within 30 seconds."
+                    t = "{} has closed the game offering".format(ctx.author),
+                    d = "Maybe ask them again?"
                 )
                 await ms.edit(embed=embed)
                 await ms.remove_reaction("✅", self.bot.user)
+                await ms.remove_reaction("❌", self.bot.user)
+                await ms.remove_reaction("❌", ctx.author)
+                return
+            elif r.emoji == "✅":
+                embed = Fun.getTTTEmbed(ctx, (ctx.author, u), ctx.author)
+                await ms.edit(embed=embed, view = TTT_GameView(ctx, (ctx.author, u), ctx.author))
+                await ms.remove_reaction("✅", self.bot.user)
+                await ms.remove_reaction("✅", u)
+                await ms.remove_reaction("❌", self.bot.user)
     
     @game.command(aliases = ["rps", "roshambo", "rochambeau"])
     async def rockpaperscissors(self, ctx, user: str = None):
@@ -195,18 +166,13 @@ class Fun(commands.Cog):
         User can be a name, name and discriminator, ID, or mention.
         """
         if user:
-            user = await is_user(ctx, user)
-            if user == ctx.author or user.bot or not user:
-                embed = fmte(
-                    ctx,
-                    t = "Sorry, that's an invalid member.",
-                    d = "Please try somebody else.",
-                    c = discord.Color.yellow()
-                )
-                await ctx.send(embed=embed)
-                return
+            _user = await is_user(ctx, user)
+            if _user == ctx.author or _user.bot or not _user:
+                raise commands.errors.UserNotFound(user)
+                
+            user = _user
 
-            embed = fmte(
+            embed = fmte(   
                 ctx = ctx,
                 t = "Waiting for {} to respond...".format(user),
                 d = "{}, please react below.".format(user)
@@ -214,31 +180,21 @@ class Fun(commands.Cog):
             ms: discord.Message = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
-            try:
-                r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout = 30)
-                if (r.emoji) == "✅":
-                    embed = Fun.getRPSEmbed(ctx, (ctx.author, user), ctx.author)
-                    await ms.edit(embed=embed, view = RPS_View(ctx, ctx.author, user))
-                else:
-                    embed = fmte(
-                        ctx,
-                        t = "{} declined the match.".format(user),
-                        d = "Sorry! Please choose someone else."
-                    )
-                    await ms.edit(embed=embed)
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("✅", user)
-                await ms.remove_reaction("❌", self.bot.user)
-                await ms.remove_reaction("❌", user)
-            except asyncio.TimeoutError:
+            r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout = 30)
+            if (r.emoji) == "✅":
+                embed = Fun.getRPSEmbed(ctx, (ctx.author, user), ctx.author)
+                await ms.edit(embed=embed, view = RPS_View(ctx, ctx.author, user))
+            else:
                 embed = fmte(
                     ctx,
-                    t = "Sorry, {} didn't respond in time.".format(user),
+                    t = "{} declined the match.".format(user),
+                    d = "Sorry! Please choose someone else."
                 )
                 await ms.edit(embed=embed)
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("❌", self.bot.user)
-                return
+            await ms.remove_reaction("✅", self.bot.user)
+            await ms.remove_reaction("✅", user)
+            await ms.remove_reaction("❌", self.bot.user)
+            await ms.remove_reaction("❌", user)
         else:
             embed = fmte(
                 ctx,
@@ -248,36 +204,27 @@ class Fun(commands.Cog):
             ms = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
-            try:
-                r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: Fun.check(ctx, r, u, ms), timeout = 30)
-                # From here, I know that if it is a check mark, it was not the author and if it was an X, it was not the author thanks to the Check above
-                if str(r.emoji) == "❌":
-                    embed = fmte(
-                        ctx,
-                        t = "{} has closed the game offering".format(ctx.author),
-                        d = "Maybe ask them again?"
-                    )
-                    await ms.edit(embed=embed)
-                    await ms.remove_reaction("✅", self.bot.user)
-                    await ms.remove_reaction("❌", self.bot.user)
-                    await ms.remove_reaction("❌", ctx.author)
-                    return
-                elif r.emoji == "✅":
-                    embed = Fun.getRPSEmbed(ctx, (ctx.author, u), ctx.author)
-                    await ms.edit(embed=embed, view = RPS_View(ctx, ctx.author, user))
-                    await ms.remove_reaction("✅", self.bot.user)
-                    await ms.remove_reaction("✅", u)
-                    await ms.remove_reaction("❌", self.bot.user)
-                    return
-
-            except asyncio.TimeoutError:
+            
+            r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: Fun.check(ctx, r, u, ms), timeout = 30)
+            # From here, I know that if it is a check mark, it was not the author and if it was an X, it was not the author thanks to the Check above
+            if str(r.emoji) == "❌":
                 embed = fmte(
                     ctx,
-                    t = "Sorry, nobody responded in time.",
-                    d = "Please remember that someone has to react to the message with `✅` within 30 seconds."
+                    t = "{} has closed the game offering".format(ctx.author),
+                    d = "Maybe ask them again?"
                 )
                 await ms.edit(embed=embed)
                 await ms.remove_reaction("✅", self.bot.user)
+                await ms.remove_reaction("❌", self.bot.user)
+                await ms.remove_reaction("❌", ctx.author)
+                return
+            elif r.emoji == "✅":
+                embed = Fun.getRPSEmbed(ctx, (ctx.author, u), ctx.author)
+                await ms.edit(embed=embed, view = RPS_View(ctx, ctx.author, user))
+                await ms.remove_reaction("✅", self.bot.user)
+                await ms.remove_reaction("✅", u)
+                await ms.remove_reaction("❌", self.bot.user)
+                return
 
 
 

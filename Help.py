@@ -1,9 +1,12 @@
 
+from array import array
 import discord
 from discord.ext import commands
+from discord.ext.commands.help import _HelpCommandImpl
 from _aux.constants import Constants
 from _aux.embeds import fmte
 from typing import List, Dict, Any, Optional
+from cogs.Watchers import Watchers
 
 class Help(commands.HelpCommand):
     async def send_bot_help(self, mapping):
@@ -33,8 +36,9 @@ class Help(commands.HelpCommand):
         ctx = self.context
         embed = fmte(
             ctx,
-            t = "**Command Group `{}`**".format(
-                group.name
+            t = "**Command Group `{} [{}]`**".format(
+                group.name,
+                group.aliases
             ),
             d = "**Description:**\n{}\n**All Commands:**\n{}".format(
                 group.short_doc, 
@@ -56,8 +60,8 @@ class Help(commands.HelpCommand):
             cogname = None
         embed = fmte(
             ctx,
-            t = "{} [Cog: `{}` Group: `{}`]".format(command.name, cogname, command.parent),
-            d = "```>>{}{} {}```".format("{} ".format(command.parent.name) if command.parent else "", command.name, command.signature)
+            t = "{} [Cog: `{}` Group: `{}`]\n{}".format(command.name, cogname, command.parent, command.aliases),
+            d = "```>>{}{} {}```\n*{}*".format("{} ".format(command.parent.name) if command.parent else "", command.name, command.signature, command.short_doc)
         )
         await ctx.send(embed=embed)
     
@@ -67,3 +71,8 @@ class Help(commands.HelpCommand):
             await self.send_group_help(grp)
         else:
             raise commands.errors.CommandNotFound("I could not find that group")
+    
+    async def send_error_message(self, error: str, /) -> None:
+        await Watchers(self.context.bot).on_command_error(self.context, commands.errors.CommandNotFound(error))
+
+        

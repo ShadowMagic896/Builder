@@ -36,18 +36,11 @@ class Search(commands.Cog):
         await ctx.send(embed = embed)
     
     @search.command(aliases = ["google", "internet", "querey"])
+    @commands.is_nsfw()
     async def web(self, ctx: commands.Context, *, querey: str):
         """
         Searches the web for a website and returns the first result.
         """
-        if not ctx.channel.is_nsfw():
-            embed = fmte(
-                ctx,
-                t = "This is not a NSFW channel.",
-                d = "All commands of group `search` must be used in those channels!"
-            )
-            await ctx.send(embed = embed)
-            return
         url = "https://www.google.com/search?q={}".format(" ".join(querey))
 
         res = requests.get(url)
@@ -57,7 +50,7 @@ class Search(commands.Cog):
         linkElements = soup.select("div#main > div > div > div > a")
 
         if len(linkElements) == 0:
-            raise discord.NotFound("Could not find any valid link elements...")
+            raise commands.errors.BadArgument("Could not find any valid link elements...")
         else:
             link = linkElements[0].get("href")
             i = 0
@@ -71,12 +64,6 @@ class Search(commands.Cog):
         )
         await ctx.send(embed = embed)
         await ctx.send(link)
-
-
-
-
-
-
 
 
 

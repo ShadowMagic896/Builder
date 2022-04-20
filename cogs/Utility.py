@@ -11,7 +11,7 @@ class Utility(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         pass
     
-    @commands.hybrid_group()
+    @commands.hybrid_group(aliases = ["bot"])
     async def self(self, ctx):
         """
         Commands that are mostly used to find out info about this bot.

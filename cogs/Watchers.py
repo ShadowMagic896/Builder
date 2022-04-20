@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ext.commands.errors import *
 from discord.errors import *
 
+import asyncio
 import sqlite3
 import os
 import time
@@ -35,9 +36,11 @@ class Watchers(commands.Cog):
         )
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
     
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         hint = None
+        if isinstance(error, commands.CommandInvokeError):
+            error = error.original
 
         if isinstance(error, CommandNotFound):
             hint = "I couldn't find that command. Try `>>help`"
@@ -49,6 +52,14 @@ class Watchers(commands.Cog):
             hint = "You need to supply more information to use that command. Try `>>help [group] [command]`"
         elif isinstance(error, NSFWChannelRequired):
             hint = "You must be in an NSFW channel to use that."
+        elif isinstance(error, UserNotFound):
+            hint = "That user was not found in discord."
+        elif isinstance(error, MemberNotFound):
+            hint = "That user was not found in this server."
+        elif isinstance(error, BadArgument):
+            hint = "You passed an invalid option."
+        elif isinstance(error, asyncio.TimeoutError):
+            hint = "This has timed out. Next time, try to be quicker."
         else:
             hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
         embed = fmte(
@@ -64,6 +75,8 @@ class Watchers(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author.bot:
+            return
         if not message.guild and message.author is not self.bot.user:
             data = "{} at {}: {}\n".format(message.author, datetime.fromtimestamp(time.time()), message.content)
             open("_dmlog.txt", "a").write(data)

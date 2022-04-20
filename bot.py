@@ -21,10 +21,8 @@ logger.addHandler(handler)
 # -----------------------------------------------------------
 
 
-
 intents = discord.Intents.all()
 activity = discord.Activity(type = discord.ActivityType.listening, name = ">>help")
-
 
 
 bot: commands.Bot = commands.Bot(
@@ -37,7 +35,7 @@ bot: commands.Bot = commands.Bot(
 )
 
 async def main():
-    # await bot.load_extension("jishaku")
+    await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
     await bot.start(os.getenv("BOT_KEY"))
 

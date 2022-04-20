@@ -152,7 +152,7 @@ class Moderation(commands.Cog):
             if not _user:
                 embed = fmte(
                     ctx,
-                    t = "User {} not found.",
+                    t = "User {} not found.".format(user),
                     d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator."
                 )
                 await ctx.send(embed = embed)
@@ -200,6 +200,28 @@ class Moderation(commands.Cog):
             else:
                 nick = " ".join(things)
             await ctx.author.edit(nick = nick)
+    
+    @mod.command()
+    async def kick(self, ctx: commands.Context, user: str, *, reason: str):
+        _user = await is_user(user)
+        if not _user:
+            embed = fmte(
+                ctx,
+                t = "User {} not found.".format(user),
+                d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator."
+            )
+            await ctx.send(embed = embed)
+            return
+        user: discord.User = _user
+        if not user in ctx.guild.members:
+            embed = fmte(
+                ctx,
+                t = "That user is not in this guild"
+            )
+            await ctx.send(embed = embed)
+            return
+        await ctx.guild.kick(user)
+        embed = fmte
 
 
 async def setup(bot):
