@@ -102,7 +102,6 @@ class Moderation(commands.Cog):
         try:
             at = user.timed_out_until
             await user.timeout(datetime.now(tz = pytz.timezone("utc")), reason = reason + " [Manual untimeout]") # Set timeout value to right now
-            print(datetime.fromtimestamp(_time_.time()).astimezone(pytz.timezone("utc")))
             embed = fmte(
                 ctx,
                 t = "{} is no longer timed out.".format(user),

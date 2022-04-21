@@ -27,7 +27,7 @@ class Watchers(commands.Cog):
     async def on_command(self, ctx: commands.Context):
         mes = "Auth: {}; Com: {} [{}]; T: {}; Parents: {}; Children: {};\n".format(
             ctx.author,
-            ctx.command,
+            ctx.command.qualified_name,
             ctx.command_failed,
             datetime.now(tz = pytz.timezone("UTC")),
             ctx.invoked_parents,
@@ -39,10 +39,10 @@ class Watchers(commands.Cog):
     async def on_command_error(self, ctx: commands.Context, error):
         hint = None
 
-        if "jishaku" in ctx.invoked_parents:
+        if "jishaku" in ctx.invoked_parents: # Do not automate command errors for this cog
             return
 
-        if isinstance(error, commands.CommandInvokeError):
+        if isinstance(error, commands.CommandInvokeError): # Unwrap CommandInvokeErrors
             error = error.original
 
         if isinstance(error, CommandNotFound):
@@ -79,7 +79,6 @@ class Watchers(commands.Cog):
     
     @commands.Cog.listener()
     async def on_command_completion(self, ctx: commands.Context):
-        print(ctx.invoked_parents)
         if "jishaku" in ctx.invoked_parents or "jsk" in ctx.invoked_parents:
             return
             

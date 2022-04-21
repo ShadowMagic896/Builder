@@ -2,7 +2,7 @@
 from array import array
 from tkinter.tix import Select
 import discord
-from discord import Embed, SelectOption
+from discord import AppInfo, Embed, SelectOption
 from discord.ext import commands
 from discord.ext.commands.help import _HelpCommandImpl
 from _aux.constants import Constants
@@ -10,134 +10,6 @@ from _aux.embeds import fmte
 from typing import List, Dict, Any, Mapping, Optional
 from cogs.Watchers import Watchers
 
-class TextHelp(commands.HelpCommand):
-    async def send_bot_help(self, mapping):
-        ctx: commands.Context = self.context
-        embed = fmte(
-            ctx, 
-            t = "Help Screen",
-            d = """Prefix: `<mention> or >>`
-            My commands are grouped into `Groups`
-            To call a group command, use `>><group> <command> <options>`
-            To see info on a `Group` (seen below), use `>>help <Group>`
-            To see info on a `Command`, use `>>help <group> <command>`
-            """
-        )
-        gps = ctx.bot.commands
-        for group in gps:
-            if group.name in Constants.ExtensionConstants.FORBIDDEN_GROUPS:
-                continue
-            embed.add_field(
-                name = "**Group `{}`**".format(group.name),
-                value = "Commands: {}".format(len(group.commands)),
-                inline = False
-            )
-        await ctx.send(embed = embed)
-    
-    async def send_group_help(self, group: commands.Group, /) -> None:
-        ctx = self.context
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{} [A.K.A.: {}]`**".format(
-                group.name,
-                group.aliases
-            ),
-            d = "**Description:**\n{}\n**All Commands:**\n{}".format(
-                group.short_doc, 
-                "".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                    group.name, 
-                    c.name, 
-                    c.signature, 
-                    c.short_doc
-                ) for c in group.commands])
-            )
-        )
-        await ctx.send(embed = embed)
-    
-    async def send_command_help(self, command: commands.Command, /) -> None:
-        ctx = self.context
-        if command.cog:
-            cogname = command.cog.qualified_name
-        else:
-            cogname = None
-        embed = fmte(
-            ctx,
-            t = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
-                command.name, 
-                cogname, 
-                command.parent, 
-                command.aliases
-            ),
-            d = "```>>{}{} {}```\n*{}*".format(
-                "{} ".format(command.parent.name) if command.parent else "", 
-                command.name, 
-                command.signature, 
-                command.short_doc
-            )
-        )
-        await ctx.send(embed=embed)
-    
-    async def send_cog_help(self, cog: commands.Cog, /) -> None:
-        if cog.qualified_name.lower() in [c.name for c in self.context.bot.commands]:
-            grp = self.context.bot.get_command(cog.qualified_name.lower())
-            await self.send_group_help(grp)
-        else:
-            raise commands.errors.CommandNotFound("I could not find that group")
-    
-    async def send_error_message(self, error: str, /) -> None:
-        if error.startswith("No command called "):
-            com = error.split()[3][1:-1]
-            
-            coms = [c.commands for c in self.context.bot.commands if not isinstance(c, _HelpCommandImpl) and hasattr(c, "commands")]
-            _coms = []
-            for c in coms:
-                for r in c:
-                    _coms.append(r)
-
-            coms = _coms
-            cmds: List[commands.HybridCommand] = [c for c in coms if c.name == com.lower() or c.name in [r.lower() for r in c.aliases]]
-            if len(cmds) == 0:
-                raise commands.errors.CommandNotFound(error)
-            elif len(cmds) == 1:
-                c: commands.HybridCommand = cmds[0]
-                embed = fmte(
-                    self.context,
-                    t = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
-                        c.name, 
-                        c.cog_name, 
-                        c.parent, 
-                        c.aliases
-                    ),
-                    d = "`>>{} {} {}`".format(
-                        c.parent,
-                        c.name,
-                        c.signature
-                    )
-                )
-                await self.context.send(embed = embed)
-                return
-            else:
-                embed = fmte(
-                    self.context,
-                    t = "Multiple commands found, please choose a specific one.",
-                )
-                for c in cmds:
-                    embed.add_field(
-                        name = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
-                            c.name, 
-                            c.cog_name if c.cog_name else "Utility", #idk 
-                            c.parent, 
-                            c.aliases
-                        ),
-                        value = "`>>{} {} {}`\n*{}*".format(
-                            c.parent,
-                            c.name,
-                            c.signature,
-                            c.short_doc
-                        ),
-                        inline = False
-                    )
-                await self.context.send(embed = embed)
 
 
 class EmbedHelp(commands.HelpCommand):
@@ -160,10 +32,17 @@ class EmbedHelp(commands.HelpCommand):
 
         options: List[discord.SelectOption] = self.get_options()
 
+        application: AppInfo = await ctx.bot.application_info()
+
         embed: discord.Embed = fmte(
             ctx,
-            t = "Help",
-            d = "Hello! I'm {}.\nPrefix: `>> or <mention>`\nYou can use `>>help <cog>` to find more information on a cog.\nAll Cogs:".format(ctx.bot.user.display_name)
+            t = "**Hello! I'm {}.**".format(
+                ctx.bot.user.display_name, 
+            ),
+            d = "**Prefix:**\n`>> or <mention>`\n\n**Who I am:**\n{}\n\n**My Team:**\nㅤㅤ{}".format(
+                application.description,
+                "ㅤㅤ\n".join([str(u) for u in application.team.members])
+            )
         )
 
         view: discord.ui.View = BaseHelpView(ctx)
@@ -268,6 +147,36 @@ class EmbedHelp(commands.HelpCommand):
         view = BaseHelpView(ctx)
         view.add_item(HelpSelect(ctx, placeholder = "Please choose an option...", options = self.get_options()))
         await ctx.send(embed = embed, view = view)
+    
+    async def send_error_message(self, error: str, /) -> None:
+        attempt = error.split()[3][1:-1]
+        for cogname, cog in self.context.bot.cogs.items():
+            if cogname.lower() == attempt.lower():
+                await self.send_cog_help(cog)
+                return
+        else:
+            for com in self.context.bot.commands:
+                if com.name.lower() == attempt.lower():
+                    if isinstance(com, commands.HybridCommand):
+                        await self.send_command_help(com)
+                        return
+                    elif isinstance(com, commands.HybridGroup):
+                        await self.send_group_help(com)
+                        return
+                    else:
+                        raise commands.CommandError("Something happened: Command not Command or Group")
+            else:
+                raise commands.errors.CommandNotFound(error)
+
+
+    # async def on_help_command_error(self, ctx: commands.Context, error: commands.CommandError, /) -> None:
+    #     attempt = ctx.command
+    #     for cog in ctx.bot.cogs:
+    #         if cog.name.lower() == attempt.lower():
+    #             await self.send_cog_help(cog)
+    #             return
+    #     else:
+    #         raise commands.errors.CommandNotFound("Cannot find that Cog")
 
 
 class BaseHelpView(discord.ui.View):

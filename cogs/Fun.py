@@ -1,9 +1,11 @@
 from os import stat
+from random import random
 from re import L
 import discord
 from discord.ext import commands
 
 import asyncio
+import random
 import pyfiglet
 from pyfiglet import Figlet
 from typing import List
@@ -33,6 +35,28 @@ class Fun(commands.Cog):
                 
         except pyfiglet.FontNotFound:
             raise commands.errors.BadArgument("Font not found.")
+    
+    @commands.hybrid_command(aliases = ["dice", "diceroll"])
+    async def roll(self, ctx, sides: int = 20, times: int = 1):
+        """
+        Rolls a dice a certain amount of times. If the dice fall off of the table, we reroll.
+        """
+        if times > 25 or sides > 10000:
+            raise commands.BadArgument("Number too large. Sorry!")
+        results = []
+        for c in range(times):
+            results.append(random.randrange(0 + 1, sides + 1))
+        formatted = ""
+        for c, r in enumerate(results):
+            formatted += "`Roll {}: {}`\n".format(("0" * (len(str(times)) - len(str(c+1)))) + str(c+1), r)
+        embed = fmte(
+            ctx,
+            t = "Rolling `{}`-sided die `{}` time{}...".format(
+                sides, times, "s" if times != 1 else ""
+            ),
+            d = formatted
+        )
+        await ctx.send(embed = embed)
     
     def getTTTEmbed(ctx, players, current):
         embed = fmte(

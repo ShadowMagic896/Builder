@@ -8,7 +8,7 @@ import logging
 
 from dotenv import load_dotenv
 from _aux.extensions import load_extensions
-from Help import TextHelp, EmbedHelp
+from Help import EmbedHelp
 
 load_dotenv()
 
