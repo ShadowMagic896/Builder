@@ -13,25 +13,11 @@ class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
     
-    @commands.hybrid_group()
-    async def mod(self, ctx: commands.Context):
-        """
-        Commands that help moderators / administrators do their job.
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0], 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
+    def ge(self):
+        return "⚖️"
 
-    @mod.command(aliases = ["mute", "m", "silence", "tm"])
-    @commands.has_permissions(manage_messages = True)
+    @commands.hybrid_command(aliases = ["mute", "m", "silence", "tm"])
+    @commands.has_permissions(moderate_members = True)
     async def timeout(self, ctx: commands.Context, user: str, time: str = "15m", *, reason: str = "No reason given."):
         """
         Times out a user.
@@ -88,8 +74,8 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed = embed)
     
-    @mod.command(aliases = ["utm", "unmute"])
-    @commands.has_permissions(manage_messages = True)
+    @commands.hybrid_command(aliases = ["unmute", "um", "utm"])
+    @commands.has_permissions(moderate_members = True)
     async def untimeout(self, ctx: commands.Context, user: str, *, reason: str = "No reason given."):
         """
         Removes the timeout from a user.
@@ -131,7 +117,8 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed=embed)
         
-    @mod.command(aliases = ["clean", "purgemessage"])
+    @commands.hybrid_command(aliases = ["clean", "purgemessage"])
+    @commands.has_permissions(manage_messages = True)
     async def purge(self, ctx: commands.Context, limit: int, user:str = "all"):
         """
         Purges a channel's messages.
@@ -165,8 +152,8 @@ class Moderation(commands.Cog):
             )
             await ctx.send(embed=embed, delete_after=3)
         
-    @mod.command(aliases = ["rename", "nickname", "name"])
-    @commands.has_permissions(change_nickname = True)
+    @commands.hybrid_command(aliases = ["rename", "nickname", "name"])
+    @commands.has_permissions(manage_nicknames = True)
     async def nick(self, ctx: commands.Context, *, options: str = ""):
         """
         Nicknames a user.
@@ -182,13 +169,6 @@ class Moderation(commands.Cog):
         if u:
             nick = " ".join(things[1:])
             bname = u.display_name
-            if not ctx.author.guild_permissions.manage_nicknames and u != ctx.author:
-                embed = fmte(
-                    ctx,
-                    t = "You do not have permission to change other people's nickname.",
-                )
-                await ctx.send(embed = embed)
-                return
             await u.edit(nick = nick)
             embed = fmte(
                 t = "{} renamed to {}".format(bname, u.display_name)
@@ -201,27 +181,25 @@ class Moderation(commands.Cog):
                 nick = " ".join(things)
             await ctx.author.edit(nick = nick)
     
-    @mod.command()
-    async def kick(self, ctx: commands.Context, user: str, *, reason: str):
+    @commands.hybrid_command(aliases = ["boot", "kickuser"])
+    @commands.has_permissions(kick_members = True)
+    async def kick(self, ctx: commands.Context, user: str, *, reason: str = "No reason given."):
+        """
+        Kicks a member from the guild. This user can be reinvited later.
+        """
         _user = await is_user(user)
         if not _user:
-            embed = fmte(
-                ctx,
-                t = "User {} not found.".format(user),
-                d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator."
-            )
-            await ctx.send(embed = embed)
-            return
+            raise commands.errors.MemberNotFound(user)
         user: discord.User = _user
+
         if not user in ctx.guild.members:
-            embed = fmte(
-                ctx,
-                t = "That user is not in this guild"
-            )
-            await ctx.send(embed = embed)
-            return
-        await ctx.guild.kick(user)
-        embed = fmte
+            raise commands.errors.MemberNotFound(user)
+
+        await ctx.guild.kick(user, reason = reason)
+        embed = fmte(
+            ctx,
+            t = "{} renamed to {}"
+        )
 
 
 async def setup(bot):

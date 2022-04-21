@@ -10,25 +10,11 @@ from _aux.embeds import fmte
 class Utility(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         pass
-    
-    @commands.hybrid_group(aliases = ["self"])
-    async def bot(self, ctx):
-        """
-        Commands that are mostly used to find out info about this bot.
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0], 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
 
-    @bot.command()
+    def ge(self):
+        return "🔢"
+
+    @commands.hybrid_command()
     async def ping(self, ctx: commands.Context):
         """
         Returns the bot's latency, in milliseconds.
@@ -39,8 +25,8 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
     
-    @bot.command()
-    async def info(self, ctx):
+    @commands.hybrid_command()
+    async def bot(self, ctx):
         """
         Returns information about the bot.
         """
@@ -138,7 +124,6 @@ class Utility(commands.Cog):
             embed.set_image(url = guild.banner.url)
         await ctx.send(embed=embed)
 
-    
     @guild.command(aliases = ["chan", "chans", "channel"])
     @commands.has_permissions(manage_channels = True)
     async def channels(self, ctx: commands.Context):

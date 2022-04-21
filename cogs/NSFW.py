@@ -14,25 +14,14 @@ from bs4 import BeautifulSoup
 from _aux.embeds import fmte
 
 class NSFW(commands.Cog):
-    @commands.hybrid_group()
-    async def nsfw(self, ctx: commands.Context):
-        """
-        NSFW (Not Safe For Work) commands. If you are under 18, do not use these commands.
-        Neither this bot nor its owners or developers are responsible for any content returned.
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0], 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
+    def __init__(self, bot) -> None:
+        self.bot = bot
+    
+    def ge(self):
+        return "🔞"
         
-    @nsfw.command(aliases=["rule34"])
+    @commands.hybrid_command(aliases=["rule34"])
+    @commands.is_nsfw()
     async def r34(self, ctx: commands.Context, *, query: str):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
@@ -61,8 +50,7 @@ class NSFW(commands.Cog):
             embed.set_image(url = url)
             await ctx.author.send(embed=embed)
 
-
-    @nsfw.command()
+    @commands.hybrid_command(aliases = ["n"])
     @commands.is_nsfw()
     async def neko(self, ctx: commands.Context, amount: int = 1):
         """
@@ -94,7 +82,7 @@ class NSFW(commands.Cog):
             embed.set_image(url=l)
             await ctx.send(embed=embed)
 
-    @nsfw.command(aliases=["nekol"])
+    @commands.hybrid_command(aliases=["nekol", "nl"])
     @commands.is_nsfw()
     async def nekolewd(self, ctx: commands.Context, amount: int = 1):
         """
@@ -119,7 +107,7 @@ class NSFW(commands.Cog):
             embed = fmte( ctx, )
             await ctx.author.send(embed=embed, file = l)
 
-    @nsfw.command(aliases=["nhg", "nh"])
+    @commands.hybrid_command(aliases=["nhg", "nh"])
     @commands.is_nsfw()
     async def nhentai(self, ctx: commands.Context, code: int):
         """
@@ -152,7 +140,7 @@ class NSFW(commands.Cog):
             embed.set_image(url=x)
             await ctx.author.send(embed=embed)
 
-    @nsfw.command(aliases=["nhs", "nhentaisearch"])
+    @commands.hybrid_command(aliases=["nhs", "nhentaisearch"])
     @commands.is_nsfw()
     async def nhsearch(self, ctx: commands.Context, *, query: str):
         """

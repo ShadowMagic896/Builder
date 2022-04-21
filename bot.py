@@ -8,7 +8,7 @@ import logging
 
 from dotenv import load_dotenv
 from _aux.extensions import load_extensions
-from Help import Help
+from Help import TextHelp, EmbedHelp
 
 load_dotenv()
 
@@ -21,20 +21,25 @@ logger.addHandler(handler)
 # -----------------------------------------------------------
 
 
-intents = discord.Intents.all()
-activity = discord.Activity(type = discord.ActivityType.listening, name = ">>help")
+class Builder(commands.AutoShardedBot):
+    def __init__(self):
+        command_prefix = when_mentioned_or(">>", "<@!963411905018466314>", )
+        intents = discord.Intents.all()
+        activity = discord.Activity(type = discord.ActivityType.listening, name = ">>help")
+        help_command = EmbedHelp()
 
 
-bot: commands.Bot = commands.Bot(
-    command_prefix = when_mentioned_or(">>", "<@!963411905018466314>", ),
-    case_insensitive = True,
-    intents = intents,
-    activity = activity,
-    application_id="963411905018466314",
-    help_command = Help()
-)
+        super().__init__(
+            command_prefix = command_prefix,
+            case_insensitive = True,
+            intents = intents,
+            activity = activity,
+            application_id="963411905018466314",
+            help_command = help_command
+        )
 
 async def main():
+    bot = Builder()
     await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
     await bot.start(os.getenv("BOT_KEY"))

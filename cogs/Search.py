@@ -17,27 +17,12 @@ class Search(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
     
-    @commands.hybrid_group()
-    async def search(self, ctx: commands.Context):
-        """
-        These commands are used to search the great big web for a variety of things.
-        Neither this bot nor its owners or developers are responsible for any content returned.
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0] if len(ctx.invoked_parents) > 0 else "None", 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
+    def ge(self):
+        return "🌐"
     
-    @search.command(aliases = ["google", "internet", "querey"])
+    @commands.hybrid_command(aliases = ["google", "internet", "querey", "query"])
     @commands.is_nsfw()
-    async def web(self, ctx: commands.Context, *, querey: str):
+    async def search(self, ctx: commands.Context, *, querey: str):
         """
         Searches the web for a website and returns the first result.
         """

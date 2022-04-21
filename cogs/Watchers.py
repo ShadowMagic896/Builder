@@ -22,7 +22,6 @@ class Watchers(commands.Cog):
     async def on_ready(self):
         print(f"Client online [User: {self.bot.user}, ID: {self.bot.user.id}]")
         self.startup_SQL()
-        self.apply_handers()
     
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
@@ -36,16 +35,20 @@ class Watchers(commands.Cog):
         )
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
     
-    # @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, error):
         hint = None
+
+        if "jishaku" in ctx.invoked_parents:
+            return
+
         if isinstance(error, commands.CommandInvokeError):
             error = error.original
 
         if isinstance(error, CommandNotFound):
             hint = "I couldn't find that command. Try `>>help`"
         elif isinstance(error, NotFound):
-            hint = "I couldn't find that. Try `>>help`"
+            hint = "I couldn't find that. Try `>>help`, or check the error for more info."
         elif isinstance(error, Forbidden):
             hint = "I'm not allowed to do that."
         elif isinstance(error, MissingRequiredArgument):
@@ -76,6 +79,10 @@ class Watchers(commands.Cog):
     
     @commands.Cog.listener()
     async def on_command_completion(self, ctx: commands.Context):
+        print(ctx.invoked_parents)
+        if "jishaku" in ctx.invoked_parents or "jsk" in ctx.invoked_parents:
+            return
+            
         if ctx.command_failed:
             await ctx.message.add_reaction("‼️")
         else:
@@ -106,14 +113,6 @@ class Watchers(commands.Cog):
         cur.execute(command)
         conn.commit()
         conn.close()
-    
-    def apply_handers(self):
-        # for cm in self.bot.commands:
-        #     # @cm.error   
-        #     async def gloal_handle(ctx, err):
-        #         await handle_error(ctx, err)
-        #         pass
-        pass
 
 
 async def setup(bot):

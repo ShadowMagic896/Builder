@@ -3,6 +3,9 @@ from datetime import datetime
 from discord import Color as disco
 
 def fmte(ctx = None, t = "", d = "", c = disco.teal(), u = None) -> discord.Embed:
+    """
+    Takes the sent information and returns an embed with a footer and timestamp added, with the default color being teal.
+    """
     if not (ctx or u):
         raise Exception("my guy")
     embed = discord.Embed(
@@ -32,3 +35,15 @@ def getReadableValues(seconds):
     msec += "0"*(6-len(msec))
     
     return(hours, mins, secs, msec)
+
+def gge(self, ctx):
+        return fmte(
+            ctx,
+            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
+            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
+                ctx.invoked_parents[0] if len(ctx.invoked_parents) > 0 else "None", 
+                c.name, 
+                c.signature, 
+                c.short_doc
+            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
+        )

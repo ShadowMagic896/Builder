@@ -18,6 +18,9 @@ class Dev(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
     
+    def ge(self):
+        return "👨🏻‍💻"
+    
     @commands.hybrid_group(aliases = ["devs", "developers", "team", "owners"])
     async def dev(self, ctx):
         app = (await self.bot.application_info())

@@ -8,7 +8,7 @@ import pyfiglet
 from pyfiglet import Figlet
 from typing import List
 
-from _aux.embeds import fmte
+from _aux.embeds import fmte, gge
 from _aux.userio import is_user
 
 class Fun(commands.Cog):
@@ -16,24 +16,10 @@ class Fun(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
     
-    @commands.hybrid_group(aliases = ["cng"])
-    async def change(self, ctx: commands.Context):
-        """
-        change commands let the user manipulate text and images
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0], 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
+    def ge(self):
+        return "⚽"
 
-    @change.command()
+    @commands.hybrid_command(aliases = ["text"])
     async def font(self, ctx, font: str, *, text: str):
         """
         Translates your text into a new font!
@@ -74,23 +60,7 @@ class Fun(commands.Cog):
             u != ctx.author if str(r.emoji) == "✅" else True # If it's an check, it was the author
         ])
 
-    @commands.hybrid_group()
-    async def game(self, ctx):
-        """
-        This group has many games in it, which you can play with other users.
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0], 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
-    @game.command(aliases = ["tictactoe", "naughtsandcrosses"])
+    @commands.hybrid_command(aliases = ["tictactoe", "naughtsandcrosses"])
     async def ttt(self, ctx, user: str = None):
         """
         Offers a game of TicTacToe to the user.
@@ -137,7 +107,6 @@ class Fun(commands.Cog):
             ms = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
-
             r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: Fun.check(ctx, r, u, ms), timeout = 30)
             # From here, I know that if it is a check mark, it was not the author and if it was an X, it was not the author thanks to the Check above
             if str(r.emoji) == "❌":
@@ -158,7 +127,7 @@ class Fun(commands.Cog):
                 await ms.remove_reaction("✅", u)
                 await ms.remove_reaction("❌", self.bot.user)
     
-    @game.command(aliases = ["rps", "roshambo", "rochambeau"])
+    @commands.hybrid_command(aliases = ["rps", "roshambo", "rochambeau"])
     async def rockpaperscissors(self, ctx, user: str = None):
         """
         Offers a game of Rock Paper Scissors / Rochambeau to the user.
@@ -440,10 +409,6 @@ class RPS_View(discord.ui.View):
     async def selector(self, interaction: discord.Interaction, select: discord.ui.Select):
         await self.update_events(interaction, select)
 
-
-
-
-    
             
 async def setup(bot):
     await bot.add_cog(Fun(bot))

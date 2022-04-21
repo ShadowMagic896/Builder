@@ -11,26 +11,12 @@ from _aux.embeds import fmte, getReadableValues
 class Time(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-
-    @commands.hybrid_group(name = "timer")
-    async def timer(self, ctx: commands.Context):
-        """
-        Lets the user start a timer and check it whenever they want.
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0], 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
     
-    @timer.command(aliases = ["restart"])
-    async def new(self, ctx: commands.Context):
+    def ge(self):
+        return "⌚"
+
+    @commands.hybrid_command(aliases = ["newtimer", "timernew"])
+    async def timer(self, ctx: commands.Context):
         """
         Creates a new timer for the user, with the time starting at 00:00:00.00.
         """
@@ -40,11 +26,11 @@ class Time(commands.Cog):
         embed = fmte(
             ctx = ctx,
             t = "New timer made!",
-            d = "You can use `>>timer check` to check your time, or `>>timer del` to delete your timer."
+            d = "You can use `>>check` to check your time, or `>>stop` to delete your timer."
         )
         await ctx.send(embed = embed)
     
-    @timer.command()
+    @commands.hybrid_command(aliases = ["checktimer", "timertime"])
     async def check(self, ctx: commands.Context, user: discord.Member = None):
         """
         Checks the user's time. If no user is given, it used the author instead.
@@ -52,11 +38,8 @@ class Time(commands.Cog):
         _user = user if user else ctx.author
         timer = Timer()
         if not timer.get_user_exists(_user.id):
-            embed = fmte(
-                ctx = ctx,
-                t = "You have not initialized a timer yet." if not user else "This user has no timer initialized.",
-                d = "You can use `>>timer new` to create one!" if not user else "They can do so by using `>>timer new`!.",
-            )
+            raise commands.errors.BadArgument("This member has no timer.")
+            
         else:
             timer.update_user(_user.id)
             seconds = timer.get_user_current(_user.id)
@@ -66,42 +49,59 @@ class Time(commands.Cog):
             s = str(t[2])
             d = str(t[3])
 
-            embed = fmte(
-                ctx = ctx,
-                t = "Time: `{}:{}:{}.{}`".format(
+            formatted = "Time: `{}:{}:{}.{}`".format(
                     "0"*(2-len(h)) + h, 
                     "0"*(2-len(m)) + m, 
                     "0"*(2-len(s)) + s,
-                    d),
-                d = "```{} {}\n{} {}\n{} {}\n{} {}\n```".format(
+                    d)
+            extra = "```{} {}\n{} {}\n{} {}\n{} {}\n```".format(
                     "0"*(2-len(h)) + h, "hour" if h == "1" else "hours",
                     "0"*(2-len(m)) + m, "minute" if m == "1" else "minutes",
                     "0"*(2-len(s)) + s, "second" if s == "1" else "seconds", 
                     d, "microseconds"
                     )
+
+            embed = fmte(
+                ctx = ctx,
+                t = formatted,
+                d = extra
             )
-        await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
+            return formatted
+        
+    def __check(self, user):
+        timer = Timer()
+        timer.update_user(user.id)
+        seconds = timer.get_user_current(user.id)
+        t = getReadableValues(seconds)
+        h = str(t[0])
+        m = str(t[1])
+        s = str(t[2])
+        d = str(t[3])
+
+        formatted = "`{}:{}:{}.{}`".format(
+                "0"*(2-len(h)) + h, 
+                "0"*(2-len(m)) + m, 
+                "0"*(2-len(s)) + s,
+                d)
+        return formatted
     
-    @timer.command(aliases = ["del", "d", "stop", "destroy"])
-    async def clear(self, ctx: commands.Context):
+    @commands.hybrid_command(aliases = ["stoptimer"])
+    async def stop(self, ctx: commands.Context):
         """
         Deletes the user's timer, allowing them to create a new one.
         """
         timer = Timer()
         if not timer.get_user_exists(ctx.author.id):
-            embed = fmte(
-                ctx = ctx,
-                t = "You do not currently have any timer!",
-                d = "You can create one with `>>timer new` though!"
-            )
+            raise commands.errors.BadArgument("This member has no timer.")
         else:
-            timer.delete_user(ctx.author.id)
             embed = fmte(
                 ctx = ctx, 
-                t = "Timer stopped!",
-                d = "You can use `>>timer new` to create a new one."
+                t = "Timer stopped at {}".format(self.__check(ctx.author)),
+                d = "You can use `>>timer` to create a new one."
             )
-        await ctx.send(embed=embed)
+            timer.delete_user(ctx.author.id)
+            await ctx.send(embed=embed)
     
     # @commands.hybrid_command()
     # async def time(self, ctx: commands.Context, zone: str = "UTC"):
