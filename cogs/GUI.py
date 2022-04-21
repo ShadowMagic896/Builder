@@ -22,15 +22,15 @@ class GUI(commands.Cog):
         pyautogui.moveTo(x, y)
     
     @gui.command()
-    async def ss(self, ctx: commands.Context, regionX:int = 0, regionY:int = 0, regionWidth:int = pyautogui.size()[0], regionHeight:int = pyautogui.size()[1]):
-        pyautogui.screenshot(region=(regionX, regionY, regionWidth, regionHeight)).save("pyauto_resources/game_image.jpg")
+    async def ss(self, ctx: commands.Context, regionx:int = 0, regiony:int = 0, regionwidth:int = pyautogui.size()[0], regionheight:int = pyautogui.size()[1]):
+        pyautogui.screenshot(region=(regionx, regiony, regionwidth, regionheight)).save("pyauto_resources/game_image.jpg")
         f = discord.File("pyauto_resources/game_image.jpg", filename = "Game_Image.jpg")
         await ctx.message.reply(file = f)
 
     @gui.command()   
     @commands.is_owner()           
-    async def open(self, ctx: discord.ext.commands.Context, file_location: str = "C:\\Users\\ryano\\Downloads\\VisualBoyAdvance.exe"):
-        os.startfile(file_location)
+    async def open(self, ctx: discord.ext.commands.Context, location: str = "C:\\Users\\ryano\\Downloads\\VisualBoyAdvance.exe"):
+        os.startfile(location)
     
     @gui.command()
     @commands.is_owner()

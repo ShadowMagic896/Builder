@@ -14,6 +14,9 @@ from _aux.embeds import fmte, gge
 from _aux.userio import is_user
 
 class Fun(commands.Cog):
+    """
+    If you wanna have a good time...
+    """
 
     def __init__(self, bot) -> None:
         self.bot = bot

@@ -1,81 +1,82 @@
 
 import discord
 from discord.ext import commands
+from discord import app_commands, Interaction
 
 import requests
 import bs4
 from typing import Literal
 
 
-from _aux.embeds import fmte
+from _aux.embeds import fmte, fmte_i
+from Help import EmbedHelp  
 
 class Utility(commands.Cog):
+    """
+    Helpful stuff
+    """
     def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
         pass
 
     def ge(self):
         return "🔢"
+    
+    @app_commands.command()
+    async def helpmsg(self, inter: Interaction, cog: str = None, group: str = None, command: str = None):
+        h = EmbedHelp()
+        if cog and not group and not command:
+            h.send_cog_help(self.bot.get_cog(cog))
+        elif group and not cog and not command:
+            h.send_group_help(self.bot.get_group(group))
+        elif command and not cog and not group:
+            h.send_command_help(self.bot.get_command(command))
 
-    @commands.hybrid_command()
-    async def ping(self, ctx: commands.Context):
+    @app_commands.command()
+    async def ping(self, inter: Interaction, ephemeral: bool = True):
         """
         Returns the bot's latency, in milliseconds.
         """
-        ping=ctx.bot.latency
-        emt="`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"
-        emt=emt if ping>0.2 else "`✅ [LOW]`"
+        ping = self.bot.latency
+        emt = "`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"
+        emt = emt if ping>0.2 else "`✅ [LOW]`"
 
-        await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
+        await inter.response.send_message(embed=fmte_i(inter, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"), ephemeral=ephemeral)
     
-    @commands.hybrid_command()
-    async def bot(self, ctx):
+    @app_commands.command()
+    async def bot(self, inter: Interaction):
         """
         Returns information about the bot.
         """
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
-        embed = fmte(
-            ctx,
-            t = "Hello! I'm {}.".format(ctx.bot.user.name),
+        embed = fmte_i(
+            inter,
+            t = "Hello! I'm {}.".format(self.bot.user.name),
             d = "Prefix: `<mention> or >>`"
         )
         embed.add_field(
             name = "**__Statistics__**",
             value = "{s}**Creation Date:** <t:{}>{s}**Owners:** {}".format(
-                round(ctx.bot.user.created_at.timestamp()),
-                "\n{}".format(bb).join([str(c) for c in (await ctx.bot.application_info()).team.members]),
+                round(self.bot.user.created_at.timestamp()),
+                "\n{}".format(bb).join([str(c) for c in (await self.bot.application_info()).team.members]),
                 s = b
             )
         )
-        await ctx.send(embed=embed)
+        await inter.response.send_message(embed=embed, ephemeral=True)
         
-    @commands.hybrid_group(aliases = ["server"])
-    async def guild(self, ctx: commands.Context):
-        """
-        Commands that let users find info about their current guild (server).
-        """
-        embed = fmte(
-            ctx,
-            t = "**Command Group `{}`**".format(ctx.invoked_parents[0]),
-            d = "**All Commands:**\n{}".format("".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-                ctx.invoked_parents[0], 
-                c.name, 
-                c.signature, 
-                c.short_doc
-            ) for c in getattr(self, ctx.invoked_parents[0]).commands]))
-        )
-        await ctx.send(embed = embed)
+    guild = app_commands.Group(name = "guild", description = "...")
     
     @guild.command()
-    async def info(self, ctx: commands.Context):
+    async def info(self, inter: Interaction, ephemeral: bool = True):
         """
         Returns information on the current server
         """
-        guild: discord.Guild = ctx.guild
+        guild: discord.Guild = inter.guild
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
-        embed = fmte(
-            ctx,
+        embed = fmte_i(
+            inter,
             t = "Info: {} [{}]".format(guild.name, guild.id),
             d = guild.description
         )
@@ -124,46 +125,46 @@ class Utility(commands.Cog):
         )
         if guild.banner:
             embed.set_image(url = guild.banner.url)
-        await ctx.send(embed=embed)
+        await inter.response.send_message(embed=embed, ephemeral=ephemeral)
 
-    @guild.command(aliases = ["chan", "chans", "channel"])
+    @guild.command()
     @commands.has_permissions(manage_channels = True)
-    async def channels(self, ctx: commands.Context):
+    async def channels(self, inter: Interaction, ephemeral: bool = True):
         """
         Returns a list of the server's channels.
         """
-        embed = fmte(
-            ctx,
-            t = "`{}` has `{}` Channels".format(ctx.guild.name, len(ctx.guild.channels)),
-            d = "\n".join(["**__{}__**:\n{}".format(c.name, "\n".join(["ㅤㅤ{}".format(chan.name) for chan in c.channels])) for c in ctx.guild.categories])
+        embed = fmte_i(
+            inter,
+            t = "`{}` has `{}` Channels".format(inter.guild.name, len(inter.guild.channels)),
+            d = "\n".join(["**__{}__**:\n{}".format(c.name, "\n".join(["ㅤㅤ{}".format(chan.name) for chan in c.channels])) for c in inter.guild.categories])
         )
-        await ctx.send(embed=embed)
+        await inter.response.send_message(embed=embed, ephemeral=ephemeral)
     
-    @guild.command(aliases = ["allinfo", "get"])
+    @guild.command()
     @commands.has_permissions(manage_messages = True)
-    async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"]):
+    async def dump(self, inter: Interaction, datatype: Literal["channel", "user", "role"], ephemeral: bool = True):
         """
         Returns all of the available bot data on the datatype given.
         """
         data = ""
         if datatype in ["channels", "channel", "chans", "chan"]:
-            data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in ctx.guild.categories])
+            data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in inter.guild.categories])
         open("commanddump.txt", "wb").write(data.encode("utf-8"))
         file = discord.File("commanddump.txt", "commanddump.txt")
-        await ctx.author.send(file = file)
-        embed = fmte(
-            ctx,
-            t = "Guild information on {} sent to {}.".format(datatype, ctx.author)
+        await inter.user.send(file = file)
+        embed = fmte_i(
+            inter,
+            t = "`{}` information on `{}`".format(inter.guild, datatype)
         )
-        await ctx.send(embed = embed)
+        await inter.response.send_message(embed=embed, file = file, ephemeral=True)
     
-    @commands.hybrid_command(aliases = ["google", "internet", "querey", "query"])
+    @app_commands.command()
     @commands.is_nsfw()
-    async def search(self, ctx: commands.Context, *, querey: str):
+    async def search(self, inter: Interaction, querey: str, ephemeral: bool = True):
         """
         Searches the web for a website and returns the first result.
         """
-        url = "https://www.google.com/search?q={}".format(" ".join(querey))
+        url = "https://www.google.com/search?q={}".format(querey)
 
         res = requests.get(url)
 
@@ -179,13 +180,12 @@ class Utility(commands.Cog):
             while link[0:4] != "/url" or link[14:20] == "google":
                 i += 1
                 link = linkElements[i].get("href")
-        embed = fmte(
-            ctx,
+        embed = fmte_i(
+            inter,
             t = "Result found!",
             d = "*Bot is not responsible for results*"
         )
-        await ctx.send(embed = embed)
-        await ctx.send(link)
+        await inter.response.send_message(link, embed=embed, ephemeral=ephemeral)
 
 
 async def setup(bot):

@@ -10,6 +10,9 @@ from _aux.embeds import fmte
 from _aux.userio import is_user, iototime, actual_purge
 
 class Moderation(commands.Cog):
+    """
+    For keeping the users in line.
+    """
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
     

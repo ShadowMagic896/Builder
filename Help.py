@@ -26,7 +26,7 @@ class EmbedHelp(commands.HelpCommand):
                 SelectOption(label = name, description = cog.description, emoji = cog.ge())
             )
         return options
-
+    
     async def send_bot_help(self, mapping: Mapping[Optional[commands.Cog], List[commands.Command]], /) -> None:
         ctx: commands.Context = self.context
 

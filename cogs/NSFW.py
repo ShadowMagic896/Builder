@@ -14,6 +14,9 @@ from bs4 import BeautifulSoup
 from _aux.embeds import fmte
 
 class NSFW(commands.Cog):
+    """
+    For the horny fellows
+    """
     def __init__(self, bot) -> None:
         self.bot = bot
     

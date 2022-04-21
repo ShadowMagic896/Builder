@@ -9,6 +9,9 @@ from SQL.timers import Timer
 from _aux.embeds import fmte, getReadableValues
 
 class Time(commands.Cog):
+    """
+    Don't have a clock? Now you do.
+    """
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
     
