@@ -9,6 +9,7 @@ import logging
 from dotenv import load_dotenv
 from _aux.extensions import load_extensions
 from Help.TextHelp import EmbedHelp
+from cogs.InterHelp import InterHelp    
 
 load_dotenv()
 
@@ -23,10 +24,10 @@ logger.addHandler(handler)
 
 class Builder(commands.AutoShardedBot):
     def __init__(self):
-        command_prefix = when_mentioned_or(">>", "<@!963411905018466314>", )
+        command_prefix = when_mentioned_or(">>")
         intents = discord.Intents.all()
-        activity = discord.Activity(type = discord.ActivityType.listening, name = ">>help")
-        help_command = EmbedHelp()
+        activity = discord.Activity(type = discord.ActivityType.listening, name = "/help")
+        help_command = None
 
 
         super().__init__(

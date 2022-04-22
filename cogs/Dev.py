@@ -1,13 +1,15 @@
+from code import interact
 import sqlite3
 from typing import List
 import discord
+from discord import Interaction, app_commands
 from discord.ext import commands
 
 import asyncio
 import os
 
 from _aux.extensions import load_extensions
-from _aux.embeds import fmte
+from _aux.embeds import fmte, fmte_i
 from _aux.userio import is_user
 
 class Dev(commands.Cog):
@@ -16,24 +18,13 @@ class Dev(commands.Cog):
     
     def ge(self):
         return "👨🏻‍💻"
-    
-    # @commands.hybrid_group(aliases = ["devs", "developers", "team", "owners"])
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
-    # async def dev(self, ctx):
-    #     app = (await self.bot.application_info())
-    #     embed = fmte(
-    #         ctx,
-    #         t = "Hello! I'm {}.".format(self.bot.user.display_name),
-    #         d = "Devs on **{}**:\n{}".format(app.team.name, "\n".join(["**{}#{}**".format(member.name, member.discriminator) for member in app.team.members]))
-    #     )
-    #     embed.set_image(url=app.team.icon)
-
-    #     await ctx.send(embed=embed)
         
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
     # async def load(self, ctx, cog: str = "*", logging: bool = True):
+    #     """
+    #     Loads the bot's cogs
+    #     """
     #     log = ""
     #     if cog == "*":
     #         for cog in os.listdir("./cogs"):
@@ -53,56 +44,27 @@ class Dev(commands.Cog):
     #     if logging: await ctx.send(log, ephemeral = True)
     
     
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
-    # @commands.is_owner()
-    # async def sync(self, ctx: commands.Context, guilds: commands.Greedy[int], spec: str = None) -> None:
-    #     """
-    #     [Owner only] Syncs all commands.
-    #     """
-    #     if not guilds:
-    #         if spec == "*":
-    #             fmt = await ctx.bot.tree.sync(guild=ctx.guild)
-    #         else:
-    #             fmt = await ctx.bot.tree.sync()
 
-    #         await ctx.send(
-    #             "Synced {} commands {}".format(len(fmt), "globally" if not spec else "to the current guild.")
-    #         )
-    #         return
-
-    #     fmt = 0
-    #     for guild in guilds:
-    #         try:
-    #             await ctx.bot.tree.sync(guild=guild)
-    #         except discord.HTTPException:
-    #             pass
-    #         else:
-    #             fmt += 1
-    #     await load_extensions(logging=True)
-    #     await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
     
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
-    # async def get_log(self, ctx: commands.Context):
+    # async def get_log(self, inter: Interaction):
+    #     """
+    #     Returns the bot's commandlog
+    #     """
     #     file: discord.File = discord.File("_commandlog.txt", "commandlog.txt")
-    #     embed: discord.Embed = fmte(
-    #         ctx,
+    #     embed: discord.Embed = fmte_i(
+    #         inter,
     #         t = "Log fetched."
     #     )
-    #     await ctx.send(embed = embed, file = file)
-    
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
-    # @commands.is_owner()
-    # async def rectest(self, ctx: commands.Context):
-    #     pass
+    #     await inter.response.send_message(embed = embed, file = file, ephemeral=True)
 
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
     # async def kill(self, ctx: commands.Context):
+    #     """
+    #     Turns off the bot.
+    #     """
     #     embed = fmte(
     #         ctx,
     #         t = "Bot Shutting Down..."
@@ -110,27 +72,28 @@ class Dev(commands.Cog):
     #     await ctx.send(embed = embed)
     #     await self.bot.close()
 
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
-    # async def ccache(self, ctx: commands.Context):
+    # async def ccache(self, inter: Interaction):
+    #     """
+    #     Clears the bot's cache
+    #     """
     #     self.bot.clear()
-    #     embed = fmte(
-    #         ctx,
+    #     embed = fmte_i(
+    #         inter,
     #         "Cache cleared."
     #     )
-    #     await ctx.send(embed = embed)
+    #     await inter.response.send_message(embed = embed, ephemeral=True)
     
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
-    # async def cmds(self, ctx: commands.Context):
+    # async def cmds(self, inter: Interaction):
+    #     """
+    #     Returns a list of all of the bot's commands
+    #     """
     #     data = ""
     #     for c in self.bot.commands:
     #         if hasattr(c, "commands"): # It's a group
-    #             for sc in c.commands:
-    #                 if hasattr(sc, "commands"):
-    #                     await ctx.send("SUBCOMMAND: {}".format(sc.qualified_name))
     #             data += "\nGroup: {}\nㅤㅤ{}".format(
     #                 c.qualified_name,
     #                 "\nㅤㅤ".join(["{} {}".format(c.name, c.aliases) for c in c.commands])
@@ -139,21 +102,25 @@ class Dev(commands.Cog):
     #             data += "\nCommand: {}".format(
     #                 c.qualified_name
     #             )
-    #     await ctx.send("```{}```".format(data))
+    #     await inter.response.send_message("```{}```".format(data), ephemeral=True)
     
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
     # async def dms(self, ctx: commands.Context, user: str):
+    #     """
+    #     Gets all dms from a user
+    #     """
     #     channel = await self.bot.create_dm(is_user(ctx, user))
     #     async for m in channel.history(limit = 200):
     #         attachments: List[discord.Attachment] = m.attachments
     #         await ctx.send("T: {}\nAttachments: {}\nID: {}".format(m.content, "\nㅤㅤ".join([a.url for a in attachments]), m.id),)
     
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
     # async def sigs(self, ctx: commands.Context):
+    #     """
+    #     Gets signatures of all commands
+    #     """
     #     data = ""
     #     for c in self.bot.commands:
     #         if hasattr(c, "commands"): # It's a group
@@ -163,10 +130,12 @@ class Dev(commands.Cog):
     #             data += "{} {}\n".format(c.qualified_name, c.signature)
     #     await ctx.send("```{}```".format(data))
 
-    # @dev.command()
-    # @discord.app_commands.guilds(871913539936329768, 816348537800753182)
+    # @app_commands.command()
     # @commands.is_owner()
     # async def dm(self, ctx: commands.Context, user: str):
+    #     """
+    #     Dms a user
+    #     """
     #     embed = fmte(
     #         ctx,
     #         t = "Please send the message to be sent to the user."

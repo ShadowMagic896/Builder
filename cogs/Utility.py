@@ -10,6 +10,7 @@ from typing import Literal
 
 from _aux.embeds import fmte, fmte_i
 from Help.TextHelp import EmbedHelp  
+from cogs.InterHelp import InterHelp
 
 class Utility(commands.Cog):
     """
@@ -22,8 +23,8 @@ class Utility(commands.Cog):
     def ge(self):
         return "🔢"
 
-    @app_commands.command()
-    async def ping(self, inter: Interaction, ephemeral: bool = True):
+    @commands.hybrid_command()
+    async def ping(self, ctx: commands.Context, ephemeral: bool = True):
         """
         Returns the bot's latency, in milliseconds.
         """
@@ -31,17 +32,17 @@ class Utility(commands.Cog):
         emt = "`🛑 [HIGH]`" if ping>0.4 else "`⚠ [MEDIUM]`"
         emt = emt if ping>0.2 else "`✅ [LOW]`"
 
-        await inter.response.send_message(embed=fmte_i(inter, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"), ephemeral=ephemeral)
+        await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"), ephemeral=ephemeral)
     
-    @app_commands.command()
-    async def bot(self, inter: Interaction):
+    @commands.hybrid_command()
+    async def bot(self, ctx: commands.Context):
         """
         Returns information about the bot.
         """
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
-        embed = fmte_i(
-            inter,
+        embed = fmte(
+            ctx,
             t = "Hello! I'm {}.".format(self.bot.user.name),
             d = "Prefix: `<mention> or >>`"
         )
@@ -53,12 +54,12 @@ class Utility(commands.Cog):
                 s = b
             )
         )
-        await inter.response.send_message(embed=embed, ephemeral=True)
+        await ctx.send(embed=embed, ephemeral=True)
 
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @commands.is_nsfw()
-    async def search(self, inter: Interaction, querey: str, ephemeral: bool = True):
+    async def search(self, ctx: commands.Context, querey: str, ephemeral: bool = True):
         """
         Searches the web for a website and returns the first result.
         """
@@ -78,12 +79,12 @@ class Utility(commands.Cog):
             while link[0:4] != "/url" or link[14:20] == "google":
                 i += 1
                 link = linkElements[i].get("href")
-        embed = fmte_i(
-            inter,
+        embed = fmte(
+            ctx,
             t = "Result found!",
             d = "*Bot is not responsible for results*"
         )
-        await inter.response.send_message(link, embed=embed, ephemeral=ephemeral)
+        await ctx.send(link, embed=embed, ephemeral=ephemeral)
 
 
 async def setup(bot):

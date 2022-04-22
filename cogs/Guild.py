@@ -4,24 +4,26 @@ from discord.ext import commands
 
 from typing import Literal
 
-from _aux.embeds import fmte_i
+from _aux.embeds import fmte_i, fmte
 
 
 class Guild(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
     
+    def ge(self):
+        return "🏠"
     
-    @app_commands.command()
-    async def guildinfo(self, inter: Interaction, ephemeral: bool = True):
+    @commands.hybrid_command()
+    async def guildinfo(self, ctx: commands.Context, ephemeral: bool = True):
         """
         Returns information on the current server
         """
-        guild: discord.Guild = inter.guild
+        guild: discord.Guild = ctx.guild
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
-        embed = fmte_i(
-            inter,
+        embed = fmte(
+            ctx,
             t = "Info: {} [{}]".format(guild.name, guild.id),
             d = guild.description
         )
@@ -70,39 +72,39 @@ class Guild(commands.Cog):
         )
         if guild.banner:
             embed.set_image(url = guild.banner.url)
-        await inter.response.send_message(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed, ephemeral=ephemeral)
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(manage_channels = True)
-    async def channels(self, inter: Interaction, ephemeral: bool = True):
+    async def channels(self, ctx: commands.Context, ephemeral: bool = True):
         """
         Returns a list of the server's channels.
         """
-        embed = fmte_i(
-            inter,
-            t = "`{}` has `{}` Channels".format(inter.guild.name, len(inter.guild.channels)),
-            d = "\n".join(["**__{}__**:\n{}".format(c.name, "\n".join(["ㅤㅤ{}".format(chan.name) for chan in c.channels])) for c in inter.guild.categories])
+        embed = fmte(
+            ctx,
+            t = "`{}` has `{}` Channels".format(ctx.guild.name, len(ctx.guild.channels)),
+            d = "\n".join(["**__{}__**:\n{}".format(c.name, "\n".join(["ㅤㅤ{}".format(chan.name) for chan in c.channels])) for c in ctx.guild.categories])
         )
-        await inter.response.send_message(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed, ephemeral=ephemeral)
     
-    @app_commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(manage_messages = True)
-    async def dump(self, inter: Interaction, datatype: Literal["channel", "user", "role"], ephemeral: bool = True):
+    async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"], ephemeral: bool = True):
         """
         Returns all of the available bot data on the datatype given.
         """
         data = ""
         if datatype in ["channels", "channel", "chans", "chan"]:
-            data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in inter.guild.categories])
+            data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in ctx.guild.categories])
         open("commanddump.txt", "wb").write(data.encode("utf-8"))
         file = discord.File("commanddump.txt", "commanddump.txt")
-        await inter.user.send(file = file)
+        await ctx.user.send(file = file)
         embed = fmte_i(
-            inter,
-            t = "`{}` information on `{}`".format(inter.guild, datatype)
+            ctx,
+            t = "`{}` information on `{}`".format(ctx.guild, datatype)
         )
-        await inter.response.send_message(embed=embed, file = file, ephemeral=True)
+        await ctx.send(embed=embed, file = file, ephemeral=True)
 
 
-async def setup(self, bot: commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Guild(bot))

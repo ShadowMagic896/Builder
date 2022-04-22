@@ -1,7 +1,7 @@
 from os import stat
 from random import random
-from re import L
 import discord
+from discord.app_commands import Range
 from discord.ext import commands
 
 import asyncio
@@ -40,18 +40,19 @@ class Fun(commands.Cog):
             raise commands.errors.BadArgument("Font not found.")
     
     @commands.hybrid_command(aliases = ["dice", "diceroll"])
-    async def roll(self, ctx, sides: int = 20, times: int = 1):
+    async def roll(self, ctx, sides: Range[int, 1, 20000] = 20, times: Range[int, 1, 200] = 1):
         """
         Rolls a dice a certain amount of times. If the dice fall off of the table, we reroll.
         """
-        if times > 25 or sides > 10000:
-            raise commands.BadArgument("Number too large. Sorry!")
         results = []
         for c in range(times):
             results.append(random.randrange(0 + 1, sides + 1))
         formatted = ""
         for c, r in enumerate(results):
-            formatted += "`Roll {}: {}`\n".format(("0" * (len(str(times)) - len(str(c+1)))) + str(c+1), r)
+            if times <= 25:
+                formatted += "`Roll {}: {}`\n".format(("0" * (len(str(times)) - len(str(c+1)))) + str(c+1), r)
+            else:
+                formatted += "`{}`".format(r)
         embed = fmte(
             ctx,
             t = "Rolling `{}`-sided die `{}` time{}...".format(
