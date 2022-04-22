@@ -8,6 +8,9 @@ from _aux.embeds import fmte_i, fmte
 
 
 class Guild(commands.Cog):
+    """
+    Commands for managing or getting information about this guild.
+    """
     def __init__(self, bot: commands.Bot):
         self.bot = bot
     

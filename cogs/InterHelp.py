@@ -1,5 +1,6 @@
 from ipaddress import v4_int_to_packed
 from typing import List, Literal, Mapping, Optional
+from black import format_file_in_place
 import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
@@ -15,14 +16,22 @@ from _aux.embeds import fmte, fmte_i
 class InterHelp(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
+    @commands.hybrid_command()
+    async def invite(self, ctx: commands.context, ephemeral: bool = True):
+        link = "https://discord.com/api/oauth2/authorize?client_id=963411905018466314&permissions=8&scope=bot%20applications.commands"
+        embed = fmte(
+            ctx,
+            t = "Invite Me to a Server!",
+            d = "[Invite Link]({})".format(link)
+        )
+        await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()
     async def help(self, ctx: commands.Context, ephemeral: bool = True):
         embed = fmte(
             ctx,
             t = "Help Screen",
-            d = "Hello! I'm {}.\n{}\nCogs: `{}`\nCommands: `{}`".format(
-                self.bot.user.display_name,
+            d = "Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
                 (await self.bot.application_info()).description,
                 len(self.bot.cogs),
                 len(self.bot.commands)
@@ -139,14 +148,15 @@ class CogSelect(discord.ui.Select): # Shows all cogs in the bot
         obj = self.bot.get_cog(opt)
 
         embed = InterHelp(self.bot)._cog_embed(interaction, obj)
-        view = HelpMenu().add_item(self).add_item(CommandSelect(obj))
+        view = HelpMenu().add_item(self).add_item(CommandSelect(self.bot, obj))
 
         await interaction.response.edit_message(embed=embed, view=view)
 
 class CommandSelect(discord.ui.Select): # Shows all commands from a certain cog
-    def __init__(self, cog: commands.Cog):
+    def __init__(self, bot: commands.Bot, cog: commands.Cog):
         placeholder = "Command Selection..."
         options = []
+        self.bot = bot
         for command in cog.get_commands():
             options.append(
                 discord.SelectOption(
@@ -160,7 +170,21 @@ class CommandSelect(discord.ui.Select): # Shows all commands from a certain cog
         )
     
     async def callback(self, interaction: Interaction) -> Any:
-        pass # tbi
+        command: commands.HybridCommand = self.bot.get_command(interaction.data["values"][0])
+        embed = fmte_i(
+            interaction,
+            t = "`{}` [Cog: `{}`, Group: `{}`]".format(
+                command.qualified_name,
+                command.cog_name,
+                command.parent
+            ),
+            d = "```{} {}```\n*{}*".format(
+                command.qualified_name, command.signature,
+                command.short_doc
+            )
+        )
+        view = HelpMenu().add_item(CogSelect(self.bot)).add_item(self)
+        await interaction.response.edit_message(embed=embed, view=view)
 
 
 
