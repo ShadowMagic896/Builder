@@ -1,8 +1,11 @@
+from typing import List
 import discord
 from discord.ext import commands
 
 from SQL.timers import Timer
 
+import pytz
+from datetime import datetime
 from _aux.embeds import fmte, getReadableValues
 
 class Time(commands.Cog):
@@ -16,7 +19,7 @@ class Time(commands.Cog):
         return "⌚"
 
     @commands.hybrid_command(aliases = ["newtimer", "timernew"])
-    async def timer(self, ctx: commands.Context):
+    async def timer(self, ctx: commands.Context, ephemeral: bool = True):
         """
         Creates a new timer for the user, with the time starting at 00:00:00.00.
         """
@@ -28,10 +31,10 @@ class Time(commands.Cog):
             t = "New timer made!",
             d = "You can use `>>check` to check your time, or `>>stop` to delete your timer."
         )
-        await ctx.send(embed = embed)
+        await ctx.send(embed=embed, ephemeral=ephemeral)
     
     @commands.hybrid_command(aliases = ["checktimer", "timertime"])
-    async def check(self, ctx: commands.Context, user: discord.Member = None):
+    async def check(self, ctx: commands.Context, user: discord.Member = None, ephemeral: bool = True):
         """
         Checks the user's time. If no user is given, it used the author instead.
         """
@@ -66,8 +69,7 @@ class Time(commands.Cog):
                 t = formatted,
                 d = extra
             )
-            await ctx.send(embed=embed)
-            return formatted
+            await ctx.send(embed=embed, ephemeral=True)
         
     def __check(self, user):
         timer = Timer()
@@ -87,7 +89,7 @@ class Time(commands.Cog):
         return formatted
     
     @commands.hybrid_command(aliases = ["stoptimer"])
-    async def stop(self, ctx: commands.Context):
+    async def stop(self, ctx: commands.Context, ephemeral: bool=True):
         """
         Deletes the user's timer, allowing them to create a new one.
         """
@@ -101,24 +103,31 @@ class Time(commands.Cog):
                 d = "You can use `>>timer` to create a new one."
             )
             timer.delete_user(ctx.author.id)
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=ephemeral)
     
-    # @commands.hybrid_command()
-    # async def time(self, ctx: commands.Context, zone: str = "UTC"):
-    #     lowered = [x.lower() for x in pytz.all_timezones]
-    #     if not lowered.__contains__(zone.lower()):
-    #         embed = fmte(
-    #             ctx = ctx,
-    #             t = "Sorry, I can't find that timezone."
-    #         )
-    #     else:
-    #         time = pytz.timezone(zone)
-    #         embed = fmte(
-    #             ctx = ctx,
-    #             t = "Current datetime in zone {}:".format(time.zone),
-    #             d = "```{}```".format(datetime.now(pytz.timezone(zone)))
-    #         )
-    #     await ctx.send(embed=embed)
+    @commands.hybrid_command()
+    async def time(self, ctx: commands.Context, zone: str = "UTC", ephemeral: bool = True):
+        """
+        Gets the current time in the desired time zone.
+        """
+        lowered = [x.lower() for x in pytz.all_timezones]
+        if not lowered.__contains__(zone.lower()):
+            raise commands.errors.BadArgument(zone)
+        else:
+            time = pytz.timezone(zone)
+            embed = fmte(
+                ctx = ctx,
+                t = "Current datetime in zone {}:".format(time.zone),
+                d = "```{}```".format(datetime.now(pytz.timezone(zone)))
+            )
+            await ctx.send(embed=embed, ephemeral=ephemeral)
+        
+    @time.autocomplete("zone")
+    async def time_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+        return [
+            discord.app_commands.Choice(name=zone, value=zone)
+            for zone in pytz.all_timezones if current.lower() in zone.lower()
+        ][:25]
         
 
 async def setup(bot):

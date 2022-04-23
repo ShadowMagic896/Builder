@@ -83,7 +83,7 @@ class Watchers(commands.Cog):
             
         if ctx.command_failed:
             await ctx.message.add_reaction("‼️")
-        else:
+        else:   
             await ctx.message.add_reaction("☑️")
     
     @commands.Cog.listener()

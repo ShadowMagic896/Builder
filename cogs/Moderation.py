@@ -93,15 +93,12 @@ class Moderation(commands.Cog):
         reason="The reason for timing out the user. Shows up on audit log.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(moderate_members = True)
-    async def timeout(self, ctx: commands.Context, user: str, time: str = "15m", reason: str = "No reason given.", ephemeral:bool = True):
+    async def timeout(self, ctx: commands.Context, user: discord.Member, time: str = "15m", reason: str = "No reason given.", ephemeral:bool = True):
         """
         Times out a user.
         """
         st = _time_.time()
-        
-        user = await is_user(ctx, user)
         
         if not time[0].isdigit():
             reason = "{} {}".format(time, reason)
@@ -142,13 +139,11 @@ class Moderation(commands.Cog):
         reason="The reason for untimingout the user. Shows up on the audit log.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(moderate_members = True)
-    async def untimeout(self, ctx: commands.Context, user: str, reason: str = "No reason given.", ephemeral:bool = True):
+    async def untimeout(self, ctx: commands.Context, user: discord.Member, reason: str = "No reason given.", ephemeral:bool = True):
         """
         Removes the timeout from a user.
         """
-        user = await is_user(ctx, user)
 
         if not user.is_timed_out:
             embed = fmte(
@@ -174,9 +169,8 @@ class Moderation(commands.Cog):
         reason="The reason for purging. Shows up on audit log.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(manage_messages = True)
-    async def purge(self, ctx: commands.Context, limit: int, user: str = None, reason: str = "No reason given.", ephemeral:bool = True):
+    async def purge(self, ctx: commands.Context, limit: int, user: discord.Member = None, reason: str = "No reason given.", ephemeral:bool = True):
         """
         Purges a channel's messages.
         """
@@ -189,7 +183,6 @@ class Moderation(commands.Cog):
             )
             
         else:
-            user = await is_user(ctx, user)
             
             r = await actual_purge(ctx, limit + 1, user)
             embed = fmte(
@@ -207,9 +200,8 @@ class Moderation(commands.Cog):
         reason="The reason for renaming the user. Shows up on audit log.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(manage_nicknames = True)
-    async def nick(self, ctx: commands.Context, user: str = None, name: str = None, reason:str = "No reason given.", ephemeral:bool = True):
+    async def nick(self, ctx: commands.Context, user: discord.Member = None, name: str = None, reason:str = "No reason given.", ephemeral:bool = True):
         """
         Nicknames a user.
         """
@@ -220,11 +212,10 @@ class Moderation(commands.Cog):
                 t = "You have been renamed to {}."
             )
         else:
-            u = await is_user(ctx, user)
-            await u.edit(nick=name, reason=reason)
+            await user.edit(nick=name, reason=reason)
             embed = fmte(
                 ctx,
-                t = "{} has been renamed to {}".format(u, name)
+                t = "{} has been renamed to {}".format(user, name)
             )
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
@@ -234,13 +225,11 @@ class Moderation(commands.Cog):
         reason="The reason for kicking the member. Shows up on audit log.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(kick_members = True)
-    async def kick(self, ctx: commands.Context, user: str, reason: str = "No reason given.", ephemeral:bool = True):
+    async def kick(self, ctx: commands.Context, user: discord.Member, reason: str = "No reason given.", ephemeral:bool = True):
         """
         Kicks a member from the guild. This user can be reinvited later.
         """
-        user = await is_user(user)
 
         await ctx.guild.kick(user, reason = reason)
         embed = fmte(

@@ -1,7 +1,7 @@
 from os import stat
 from random import random
 import discord
-from discord.app_commands import Range
+from discord.app_commands import Range, describe
 from discord.ext import commands
 
 import random
@@ -24,12 +24,13 @@ class Fun(commands.Cog):
         return "⚽"
 
     @commands.hybrid_command(aliases = ["text"])
-    async def font(self, ctx, font: str, *, text: str):
+    @describe(font="The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.", text="The text to translate.")
+    async def font(self, ctx, font: str, text: str):
         """
         Translates your text into a new font!
         """
         try:
-            t = Figlet(font).renderText(" ".join(text))
+            t = Figlet(font).renderText(text)
             embed = fmte(ctx, t = "Rendering Finished!")
             if len(t) > 1990:
                 embed.set_footer(text = "Requested by {}\n[Tuncated because of size]".format(ctx.author))
@@ -39,9 +40,10 @@ class Fun(commands.Cog):
             raise commands.errors.BadArgument("Font not found.")
     
     @commands.hybrid_command(aliases = ["dice", "diceroll"])
+    @describe(sides="The amount of sides for the dice.", times="How many times to roll the dice.")
     async def roll(self, ctx, sides: Range[int, 1, 20000] = 20, times: Range[int, 1, 200] = 1):
         """
-        Rolls a dice a certain amount of times. If the dice fall off of the table, we reroll.
+        Rolls a dice a certain amount of times.
         """
         results = []
         for c in range(times):
@@ -87,25 +89,22 @@ class Fun(commands.Cog):
             u != ctx.author if str(r.emoji) == "✅" else True # If it's an check, it was the author
         ])
 
-    @commands.hybrid_command(aliases = ["tictactoe", "naughtsandcrosses"])
-    async def ttt(self, ctx, user: str = None):
+    @commands.hybrid_command()
+    @describe(user="The user to offer a game to.")
+    async def tictactoe(self, ctx, user: discord.Member = None):
         """
         Offers a game of TicTacToe to the user.
-        If no user is given, it will let anyone join.
-        User can be a name, name and discriminator, ID, or mention.
         """
         if user:
-            _user = await is_user(ctx, user)
-            if _user == ctx.author or _user.bot or not _user:
-                raise commands.errors.MemberNotFound(user)
-
-            user = _user
+            if user == ctx.author or user.bot or not user:
+                raise commands.errors.BadArgument(user)
 
             embed = fmte(
                 ctx = ctx,
                 t = "Waiting for {} to respond...".format(user),
                 d = "{}, please react below.".format(user)
             )
+
             ms: discord.Message = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
@@ -121,10 +120,7 @@ class Fun(commands.Cog):
                     d = "Sorry! Please choose someone else."
                 )
                 await ms.edit(embed=embed)
-            await ms.remove_reaction("✅", self.bot.user)
-            await ms.remove_reaction("✅", user)
-            await ms.remove_reaction("❌", self.bot.user)
-            await ms.remove_reaction("❌", user)
+            await ms.clear_reactions()
         else:
             embed = fmte(
                 ctx,
@@ -135,7 +131,7 @@ class Fun(commands.Cog):
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
             r, u = await self.bot.wait_for("reaction_add", check = lambda r, u: Fun.check(ctx, r, u, ms), timeout = 30)
-            # From here, I know that if it is a check mark, it was not the author and if it was an X, it was not the author thanks to the Check above
+            
             if str(r.emoji) == "❌":
                 embed = fmte(
                     ctx,
@@ -143,36 +139,31 @@ class Fun(commands.Cog):
                     d = "Maybe ask them again?"
                 )
                 await ms.edit(embed=embed)
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("❌", self.bot.user)
-                await ms.remove_reaction("❌", ctx.author)
+                await ms.clear_reactions()
                 return
             elif r.emoji == "✅":
                 embed = Fun.getTTTEmbed(ctx, (ctx.author, u), ctx.author)
                 await ms.edit(embed=embed, view = TTT_GameView(ctx, (ctx.author, u), ctx.author))
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("✅", u)
-                await ms.remove_reaction("❌", self.bot.user)
+                await ms.clear_reactions()
     
     @commands.hybrid_command(aliases = ["rps", "roshambo", "rochambeau"])
-    async def rockpaperscissors(self, ctx, user: str = None):
+    @describe(user="The user to offer a game to.")
+    async def rockpaperscissors(self, ctx, user: discord.Member = None):
         """
         Offers a game of Rock Paper Scissors / Rochambeau to the user.
         If no user is given, it will let anyone join.
         User can be a name, name and discriminator, ID, or mention.
         """
         if user:
-            _user = await is_user(ctx, user)
-            if _user == ctx.author or _user.bot or not _user:
-                raise commands.errors.UserNotFound(user)
-                
-            user = _user
+            if user == ctx.author or user.bot or not user:
+                raise commands.errors.BadArgument(user)
 
             embed = fmte(   
                 ctx = ctx,
                 t = "Waiting for {} to respond...".format(user),
                 d = "{}, please react below.".format(user)
             )
+
             ms: discord.Message = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
@@ -187,10 +178,7 @@ class Fun(commands.Cog):
                     d = "Sorry! Please choose someone else."
                 )
                 await ms.edit(embed=embed)
-            await ms.remove_reaction("✅", self.bot.user)
-            await ms.remove_reaction("✅", user)
-            await ms.remove_reaction("❌", self.bot.user)
-            await ms.remove_reaction("❌", user)
+            await ms.clear_reactions()
         else:
             embed = fmte(
                 ctx,
@@ -210,16 +198,12 @@ class Fun(commands.Cog):
                     d = "Maybe ask them again?"
                 )
                 await ms.edit(embed=embed)
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("❌", self.bot.user)
-                await ms.remove_reaction("❌", ctx.author)
+                await ms.clear_reactions()
                 return
             elif r.emoji == "✅":
                 embed = Fun.getRPSEmbed(ctx, (ctx.author, u), ctx.author)
                 await ms.edit(embed=embed, view = RPS_View(ctx, ctx.author, user))
-                await ms.remove_reaction("✅", self.bot.user)
-                await ms.remove_reaction("✅", u)
-                await ms.remove_reaction("❌", self.bot.user)
+                await ms.clear_reactions()
                 return
 
 

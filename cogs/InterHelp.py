@@ -1,3 +1,4 @@
+from asyncore import close_all
 import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
@@ -19,21 +20,28 @@ class InterHelp(commands.Cog):
             t = "Invite Me to a Server!",
             d = "[Invite Link]({})".format(link)
         )
-        await ctx.interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()
-    async def help(self, ctx: commands.Context, ephemeral: bool = True):
+    async def help(self, ctx: commands.Context):
+        """
+        Get a guide on what I can do.
+        """
         embed = fmte(
             ctx,
-            t = "Help Screen",
+            t = "Help",
             d = "Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
                 (await self.bot.application_info()).description,
                 len(self.bot.cogs),
                 len(self.bot.commands)
             )
         )
-        view = HelpMenu().add_item(CogSelect(self.bot)).add_item(CloseButton())
-        await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
+        
+        
+        view = HelpMenu().add_item(CogSelect(self.bot))
+        
+        await ctx.send(embed=embed, view=view, ephemeral=True)
+        
     
     def get_cmds(self):
         coms = [
@@ -119,10 +127,11 @@ class HelpMenu(discord.ui.View): # Base to add things on
         super().__init__(timeout=timeout)
 
 class CogSelect(discord.ui.Select): # Shows all cogs in the bot
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, ephemeral: bool):
         placeholder = "Cog Selection..."
         options = []
         self.bot = bot
+        self.ephemeral = ephemeral
         for name, cog in bot.cogs.items():
             if name in os.getenv("FORBIDDEN_COGS").split(";"):
                 continue
@@ -143,7 +152,8 @@ class CogSelect(discord.ui.Select): # Shows all cogs in the bot
         obj = self.bot.get_cog(opt)
 
         embed = InterHelp(self.bot)._cog_embed(interaction, obj)
-        view = HelpMenu().add_item(self).add_item(CommandSelect(self.bot, obj)).add_item(CloseButton())
+        
+        view = HelpMenu().add_item(self).add_item(CommandSelect(self.bot, obj, self.ephemeral))
 
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -178,15 +188,16 @@ class CommandSelect(discord.ui.Select): # Shows all commands from a certain cog
                 command.short_doc
             )
         )
-        view = HelpMenu().add_item(CogSelect(self.bot)).add_item(self).add_item(CloseButton())
+        view = HelpMenu().add_item(CogSelect(self.bot, self.ephemeral)).add_item(self)
         await interaction.response.edit_message(embed=embed, view=view)
 
 class CloseButton(discord.ui.Button):
     def __init__(self):
         super().__init__(label="Close", emoji="❌", style=discord.ButtonStyle.red)
+        self.message: discord.Message = None
     
     async def callback(self, interaction: Interaction) -> Any:
-        await interaction.delete_original_message()
+        await self.message.delete()
 
 async def setup(bot):
     await bot.add_cog(InterHelp(bot))
