@@ -107,6 +107,7 @@ class Guild(commands.Cog):
             t = "`{}` information on `{}`".format(ctx.guild, datatype)
         )
         await ctx.send(embed=embed, file = file, ephemeral=True)
+        
 
 
 async def setup(bot: commands.Bot):

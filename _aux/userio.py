@@ -41,14 +41,15 @@ def iototime(userinput: str):
         return 60 * 60 # Not sure what they meant, so just do an hour.
 
 async def is_user(ctx: commands.Context, user: str = None) -> discord.Member | None:
+    r = ""
     if not user:
-        return None
+        r =  None
     _id = None
     if user.startswith("<@"): # User is a mention
         try:
             _id = int(str(user)[2:-1])
         except ValueError:
-            return None
+            r =  None
     else: # It is a user ID
         try:
             _id = int(user) # Just an ID
@@ -57,23 +58,15 @@ async def is_user(ctx: commands.Context, user: str = None) -> discord.Member | N
                 if m.name == user or "{}#{}".format(m.name, m.discriminator) == user:
                     _id = m.id
             else:
-                return None
+                r =  None
     try:
         user = await ctx.guild.fetch_member(_id)
         return user
     except discord.errors.NotFound:
-        return None
-
-async def handle_error(ctx: commands.Context, error: commands.errors.CommandInvokeError):
-    embed = fmte(
-        ctx,
-        t = "An Error Occurred!",
-        d = "**Error:** `{}`\n".format(
-            error.original,
-        ),
-        c = discord.Color.red(),
-    )
-    await ctx.send(embed=embed)
+        r = None
+    
+    if not r:
+        raise commands.errors.MemberNotFound(user)
 
 
 async def actual_purge(ctx: commands.Context, limit, user: discord.Member = None):

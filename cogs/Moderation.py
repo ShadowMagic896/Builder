@@ -1,9 +1,12 @@
 import discord
+from discord import app_commands
+from discord.app_commands import describe
 from discord.ext import commands
 
 import asyncio
 import time as _time_
 from datetime import datetime
+import time
 import pytz
 
 from _aux.embeds import fmte
@@ -19,25 +22,87 @@ class Moderation(commands.Cog):
     def ge(self):
         return "⚖️"
 
-    @commands.hybrid_command(aliases = ["mute", "m", "silence", "tm"])
+    @commands.hybrid_command()
+    @describe(
+        until="The time to automatically unlock the channel",
+        reason="The reason for locking the channel. Show up on audit log.",
+        ephemeral="Whether to publicly show the response to the command"
+    )
+    @commands.has_permissions(manage_channels = True)
+    async def lock(self, ctx: commands.Context, until: str = None, reason: str = "No reason given", ephemeral: bool = False):
+        """
+        Disallows non-admin users from sending messages in the channel where this was used.
+        """
+        embed = fmte(
+            ctx,
+            t = "Channel Locked by {}.".format(ctx.author),
+            d = "Use `/unlock` to unlock it." if not until else "Until: <t:{}>".format(round(time.time() + iototime(until)))
+        )
+
+        await ctx.send(embed=embed, ephemeral=ephemeral)
+
+        await ctx.channel.set_permissions(
+            ctx.guild.default_role,
+            send_messages = False,
+            add_reactions = False,
+            reason = reason
+        )
+
+        if until:
+            secs = iototime(until)
+            await asyncio.sleep(secs)
+            await ctx.channel.set_permissions(
+                ctx.guild.default_role,
+                send_messages = True,
+                add_reactions = True,
+                reason = "Automatic Channel Unlock."
+            )
+            embed = fmte(
+                ctx,
+                t = "Channel Unlocked",
+                d = "Channel originally locked by {}".format(ctx.author)
+            )
+            await ctx.send(embed=embed, ephemeral=ephemeral)
+    
+    @commands.hybrid_command()
+    @describe(
+        reason="The reason for unlocking the channel. Shows up on audit log.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    async def unlock(self, ctx, reason: str = "No reason given", ephemeral: bool = False):
+        """
+        Manually unlocks a channel
+        """
+        embed = fmte(
+            ctx,
+            t = "Channel Unlocked"
+        )
+        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.channel.set_permissions(
+            ctx.guild.default_role,
+            send_messages = True,
+            add_reactions = True,
+            reason = reason
+        )
+
+
+    @commands.hybrid_command()
+    @describe(
+        user="The user to timeout.",
+        time="The time to timeout for.",
+        reason="The reason for timing out the user. Shows up on audit log.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(moderate_members = True)
-    async def timeout(self, ctx: commands.Context, user: str, time: str = "15m", *, reason: str = "No reason given."):
+    async def timeout(self, ctx: commands.Context, user: str, time: str = "15m", reason: str = "No reason given.", ephemeral:bool = True):
         """
         Times out a user.
-        Time can be any number followed by the timeframe [Seconds, Minutes, Hours, etc.]
-        User can be a name, name and discriminator, ID, or mention.
         """
         st = _time_.time()
+        
         user = await is_user(ctx, user)
-        if not user:
-            embed = fmte(
-                ctx, 
-                t = "User not found.",
-                d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator"
-            )
-            await ctx.send(embed=embed)
-            return
-
+        
         if not time[0].isdigit():
             reason = "{} {}".format(time, reason)
             secs = 60 * 60
@@ -46,162 +111,144 @@ class Moderation(commands.Cog):
 
         targtime = _time_.time() + secs
         until = datetime.fromtimestamp(targtime).astimezone(pytz.timezone("utc"))
-        try:
-            await user.timeout(until, reason = reason)
-            embed = fmte(
-                ctx,
-                t = "{} timed out.".format(user),
-                d = "**Until:** <t:{}>\n**Reason:** {}\n**Mod:** `{}`".format(round(until.timestamp()), reason, ctx.author)
+
+        await user.timeout(until, reason = reason)
+        embed = fmte(
+            ctx,
+            t = "{} timed out.".format(user),
+            d = "**Until:** <t:{}>\n**Reason:** {}\n**Mod:** `{}`".format(round(until.timestamp()), reason, ctx.author)
+        )
+        await ctx.send(embed = embed)
+        await asyncio.sleep(secs-1)
+        if user.is_timed_out:
+            ...
+        else:
+            return
+        embed = fmte(
+            ctx,
+            t = "{} is no longer timed out.".format(user),
+            d = "**Timeout info:**\n**At:** <t:{}>\n**For:** `{}`\n**Until:** <t:{}>".format(
+                round(st),
+                time,
+                round(until.timestamp())
             )
-            await ctx.send(embed = embed)
-            await asyncio.sleep(secs-1)
-            if user.is_timed_out:
-                ...
-            else:
-                return
-            embed = fmte(
-                ctx,
-                t = "{} is no longer timed out.".format(user),
-                d = "**Timeout info:**\n**At:** <t:{}>\n**For:** `{}`\n**Until:** <t:{}>".format(
-                    round(st),
-                    time,
-                    round(until.timestamp())
-                )
-            )
-            await ctx.send(embed=embed)
-        except discord.errors.Forbidden:
-            embed = fmte(
-                ctx,
-                t = "I do not have permission to timeout that user.",
-                d = "Please make sure that I have the administrator role, and that you are not trying to timeout an admin!"
-            )
-            await ctx.send(embed = embed)
+        )
+        await ctx.send(embed=embed, ephemeral=ephemeral)
     
-    @commands.hybrid_command(aliases = ["unmute", "um", "utm"])
+
+    @commands.hybrid_command()
+    @describe(
+        user = "The user to untimeout",
+        reason="The reason for untimingout the user. Shows up on the audit log.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(moderate_members = True)
-    async def untimeout(self, ctx: commands.Context, user: str, *, reason: str = "No reason given."):
+    async def untimeout(self, ctx: commands.Context, user: str, reason: str = "No reason given.", ephemeral:bool = True):
         """
         Removes the timeout from a user.
-        Effectively, it sets the user's timeout ending to right now.
-        User can be a name, name and discriminator, ID, or mention.
         """
         user = await is_user(ctx, user)
-        if not user:
-            embed = fmte(
-                ctx, 
-                t = "User not found.",
-                d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator"
-            )
-            await ctx.send(embed=embed)
-            return
 
         if not user.is_timed_out:
             embed = fmte(
                 ctx,
                 t = "This user is not timed out."
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=ephemeral)
             return
-        try:
-            at = user.timed_out_until
-            await user.timeout(datetime.now(tz = pytz.timezone("utc")), reason = reason + " [Manual untimeout]") # Set timeout value to right now
-            embed = fmte(
-                ctx,
-                t = "{} is no longer timed out.".format(user),
-                d = "**Original timeout target:** <t:{}>\n**Reason:** {}\n**Mod:** `{}`".format(round(at.timestamp()), reason, ctx.author)
-            )
-            await ctx.send(embed=embed)
-        except discord.errors.Forbidden:
-            embed = fmte(
-                ctx,
-                t = "I do not have permission to untimeout that user.",
-                d = "Please make sure that I have the administrator role!"
-            )
-            await ctx.send(embed=embed)
+            
+        at = user.timed_out_until
+        await user.timeout(datetime.now(tz = pytz.timezone("utc")), reason = reason + " [Manual untimeout]") # Set timeout value to right now
+        embed = fmte(
+            ctx,
+            t = "{} is no longer timed out.".format(user),
+            d = "**Original timeout target:** <t:{}>\n**Reason:** {}\n**Mod:** `{}`".format(round(at.timestamp()), reason, ctx.author)
+        )
+        await ctx.send(embed=embed, ephemeral=ephemeral)
         
-    @commands.hybrid_command(aliases = ["clean", "purgemessage"])
+    @commands.hybrid_command()
+    @describe(
+        limit="Maximum number of messages to delete. This may not always be reached.",
+        user="If specified, this will only delete messages by this user",
+        reason="The reason for purging. Shows up on audit log.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(manage_messages = True)
-    async def purge(self, ctx: commands.Context, limit: int, user:str = "all"):
+    async def purge(self, ctx: commands.Context, limit: int, user: str = None, reason: str = "No reason given.", ephemeral:bool = True):
         """
         Purges a channel's messages.
-        If no user is given, it deletes all messages. Otherwise, it deletes all messages my that user.
-        The bot will continue to delete messages until the limit is met or messages >= (limit + 10) * 1.5
-        User can be a name, name and discriminator, ID, or mention.
         """
-        if user == "all":
+        if not user:
             r = await actual_purge(ctx, limit + 1)
             embed = fmte(
                 ctx,
                 t = "{} Messages by All Users Deleted".format(r[0]-1),
                 d = "Failed deletes: {}".format(r[1])
             )
-            await ctx.send(embed=embed, delete_after=3)
+            
         else:
-            _user = await is_user(ctx, user)
-            if not _user:
-                embed = fmte(
-                    ctx,
-                    t = "User {} not found.".format(user),
-                    d = "Please make sure you either input a user mention, a user's ID, a user's name, or a name#discriminator."
-                )
-                await ctx.send(embed = embed)
-                return
-            r = await actual_purge(ctx, limit + 1, _user)
+            user = await is_user(ctx, user)
+            
+            r = await actual_purge(ctx, limit + 1, user)
             embed = fmte(
                 ctx,
-                t = "{} Messages by {} Deleted.".format(r[0]-1, _user),
+                t = "{} Messages by {} Deleted.".format(r[0]-1, user),
                 d = "Failed deletes: {}.".format(r[1])
             )
-            await ctx.send(embed=embed, delete_after=3)
+
+        await ctx.send(embed=embed, ephemeral=ephemeral)
         
-    @commands.hybrid_command(aliases = ["rename", "nickname", "name"])
+    @commands.hybrid_command()
+    @describe(
+        user="The user to nickname. Defaults to the author.",
+        name="The new name. Defaults to removing the nickname.",
+        reason="The reason for renaming the user. Shows up on audit log.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(manage_nicknames = True)
-    async def nick(self, ctx: commands.Context, *, options: str = ""):
+    async def nick(self, ctx: commands.Context, user: str = None, name: str = None, reason:str = "No reason given.", ephemeral:bool = True):
         """
         Nicknames a user.
-        If the first option is a user, then it nicknames that user. Otherwise, the user is yourself.
-        The rest of the options are the user's nickname
-        User can be a name, name and discriminator, ID, or mention.
         """
-        things = options.split(" ")
-        if len(things) == 0:
-            await ctx.author.edit(nick="")
-            return
-        u = await is_user(ctx, things[0])
-        if u:
-            nick = " ".join(things[1:])
-            bname = u.display_name
-            await u.edit(nick = nick)
+        if not user:
+            await ctx.author.edit(nick=name, reason=reason)
             embed = fmte(
-                t = "{} renamed to {}".format(bname, u.display_name)
+                ctx,
+                t = "You have been renamed to {}."
             )
-            await ctx.send(embed = embed)
         else:
-            if len(things) == 1:
-                nick = things[0]
-            else:
-                nick = " ".join(things)
-            await ctx.author.edit(nick = nick)
-    
-    @commands.hybrid_command(aliases = ["boot", "kickuser"])
+            u = await is_user(ctx, user)
+            await u.edit(nick=name, reason=reason)
+            embed = fmte(
+                ctx,
+                t = "{} has been renamed to {}".format(u, name)
+            )
+        await ctx.send(embed=embed, ephemeral=ephemeral)
+
+    @commands.hybrid_command()
+    @describe(
+        user="The user to kick from the guild.",
+        reason="The reason for kicking the member. Shows up on audit log.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    @app_commands.guilds(871913539936329768)
     @commands.has_permissions(kick_members = True)
-    async def kick(self, ctx: commands.Context, user: str, *, reason: str = "No reason given."):
+    async def kick(self, ctx: commands.Context, user: str, reason: str = "No reason given.", ephemeral:bool = True):
         """
         Kicks a member from the guild. This user can be reinvited later.
         """
-        _user = await is_user(user)
-        if not _user:
-            raise commands.errors.MemberNotFound(user)
-        user: discord.User = _user
-
-        if not user in ctx.guild.members:
-            raise commands.errors.MemberNotFound(user)
+        user = await is_user(user)
 
         await ctx.guild.kick(user, reason = reason)
         embed = fmte(
             ctx,
-            t = "{} renamed to {}"
+            t = "`{}` kicked from `{}`".format(user, ctx.guild),
+            d = "Reason: `{}`".format(reason)
         )
+        await ctx.send(embed=embed, ephemeral=ephemeral)
 
 
 async def setup(bot):

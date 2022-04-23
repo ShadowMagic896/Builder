@@ -10,8 +10,7 @@ import time
 from datetime import datetime
 import pytz
 
-from _aux.embeds import fmte
-from _aux.userio import handle_error
+from _aux.embeds import fmte 
 
 class Watchers(commands.Cog):
 
