@@ -1,16 +1,11 @@
 
-import discord
 from discord.ext import commands
-from discord import app_commands, Interaction
 
 import requests
 import bs4
-from typing import Literal
 
 
-from _aux.embeds import fmte, fmte_i
-from Help.TextHelp import EmbedHelp  
-from cogs.InterHelp import InterHelp
+from _aux.embeds import fmte
 
 class Utility(commands.Cog):
     """

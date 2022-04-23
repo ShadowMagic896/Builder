@@ -1,9 +1,6 @@
 import discord
 from discord.ext import commands
 
-import pytz
-from datetime import datetime
-
 from SQL.timers import Timer
 
 from _aux.embeds import fmte, getReadableValues

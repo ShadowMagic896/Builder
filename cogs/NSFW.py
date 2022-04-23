@@ -1,11 +1,8 @@
-from re import T
-from typing import ContextManager
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import CommandInvokeError  
 
 import os
-import asyncio
 import math
 import random
 import requests

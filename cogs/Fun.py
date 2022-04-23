@@ -4,7 +4,6 @@ import discord
 from discord.app_commands import Range
 from discord.ext import commands
 
-import asyncio
 import random
 import pyfiglet
 from pyfiglet import Figlet
