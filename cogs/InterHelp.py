@@ -278,9 +278,9 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         if not self.ephemeral:
             close = CloseButton()
             view.add_item(close)
-        message = await interaction.response.edit_message(embed=embed, view=view)
+        await interaction.response.edit_message(embed=embed, view=view)
         if not self.ephemeral:
-            close.message = message
+            close.message = interaction.message
 
 
 class CommandSelect(
@@ -321,9 +321,9 @@ class CommandSelect(
         if not self.ephemeral:
             close = CloseButton()
             view.add_item(close)
-        message = await interaction.response.edit_message(embed=embed, view=view)
+        await interaction.response.edit_message(embed=embed, view=view)
         if not self.ephemeral:
-            close.message = message
+            close.message = interaction.message
 
 
 class CloseButton(discord.ui.Button):

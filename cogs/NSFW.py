@@ -39,7 +39,7 @@ class NSFW(commands.Cog):
 
         tags = soup.select(
             "div[id=content] > div[id=post-list] > div[class=content] > div[class=image-list] > *")
-
+        
         urls = []
 
         embed = fmte(
