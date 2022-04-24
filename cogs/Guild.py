@@ -1,9 +1,12 @@
 import discord
+from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import Literal
 
 from _aux.embeds import fmte_i, fmte
+from _aux.sql3OOP import Table
+from _aux.userio import clean
 
 
 class Guild(commands.Cog):
@@ -17,7 +20,10 @@ class Guild(commands.Cog):
         return "🏠"
     
     @commands.hybrid_command()
-    async def guildinfo(self, ctx: commands.Context, ephemeral: bool = True):
+    @describe(
+        ephemeral = "Whether to publicly show the response to the command.",
+    )
+    async def guildinfo(self, ctx: commands.Context, ephemeral: bool = False):
         """
         Returns information on the current server
         """
@@ -75,23 +81,14 @@ class Guild(commands.Cog):
         if guild.banner:
             embed.set_image(url = guild.banner.url)
         await ctx.send(embed=embed, ephemeral=ephemeral)
-
-    @commands.hybrid_command()
-    @commands.has_permissions(manage_channels = True)
-    async def channels(self, ctx: commands.Context, ephemeral: bool = True):
-        """
-        Returns a list of the server's channels.
-        """
-        embed = fmte(
-            ctx,
-            t = "`{}` has `{}` Channels".format(ctx.guild.name, len(ctx.guild.channels)),
-            d = "\n".join(["**__{}__**:\n{}".format(c.name, "\n".join(["ㅤㅤ{}".format(chan.name) for chan in c.channels])) for c in ctx.guild.categories])
-        )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
     
     @commands.hybrid_command()
     @commands.has_permissions(manage_messages = True)
-    async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"], ephemeral: bool = True):
+    @describe(
+        datatype = "The type of data to return.",
+        ephemeral = "Whether to publicly show the response to the command.",
+    )
+    async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"], ephemeral: bool = False):
         """
         Returns all of the available bot data on the datatype given.
         """
@@ -105,7 +102,7 @@ class Guild(commands.Cog):
             ctx,
             t = "`{}` information on `{}`".format(ctx.guild, datatype)
         )
-        await ctx.send(embed=embed, file = file, ephemeral=True)
+        await ctx.send(embed=embed, file = file, ephemeral=ephemeral)
 
 
 async def setup(bot: commands.Bot):

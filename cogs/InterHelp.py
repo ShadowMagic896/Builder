@@ -127,11 +127,10 @@ class HelpMenu(discord.ui.View): # Base to add things on
         super().__init__(timeout=timeout)
 
 class CogSelect(discord.ui.Select): # Shows all cogs in the bot
-    def __init__(self, bot: commands.Bot, ephemeral: bool):
+    def __init__(self, bot: commands.Bot):
         placeholder = "Cog Selection..."
         options = []
         self.bot = bot
-        self.ephemeral = ephemeral
         for name, cog in bot.cogs.items():
             if name in os.getenv("FORBIDDEN_COGS").split(";"):
                 continue
@@ -153,7 +152,7 @@ class CogSelect(discord.ui.Select): # Shows all cogs in the bot
 
         embed = InterHelp(self.bot)._cog_embed(interaction, obj)
         
-        view = HelpMenu().add_item(self).add_item(CommandSelect(self.bot, obj, self.ephemeral))
+        view = HelpMenu().add_item(self).add_item(CommandSelect(self.bot, obj))
 
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -188,7 +187,7 @@ class CommandSelect(discord.ui.Select): # Shows all commands from a certain cog
                 command.short_doc
             )
         )
-        view = HelpMenu().add_item(CogSelect(self.bot, self.ephemeral)).add_item(self)
+        view = HelpMenu().add_item(CogSelect(self.bot)).add_item(self)
         await interaction.response.edit_message(embed=embed, view=view)
 
 class CloseButton(discord.ui.Button):

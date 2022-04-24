@@ -1,15 +1,16 @@
-from code import interact
+from math import ceil
 import sqlite3
-from typing import List
+from typing import Any, List
 import discord
 from discord import Interaction, app_commands
-from discord.ext import commands
+from discord.ext import commands, menus
+
 
 import asyncio
 import os
 
 from _aux.extensions import load_extensions
-from _aux.embeds import fmte, fmte_i
+from _aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
 from _aux.userio import is_user
 
 class Dev(commands.Cog):
@@ -104,16 +105,60 @@ class Dev(commands.Cog):
     #             )
     #     await inter.response.send_message("```{}```".format(data), ephemeral=True)
     
-    # @app_commands.command()
-    # @commands.is_owner()
-    # async def dms(self, ctx: commands.Context, user: str):
-    #     """
-    #     Gets all dms from a user
-    #     """
-    #     channel = await self.bot.create_dm(is_user(ctx, user))
-    #     async for m in channel.history(limit = 200):
-    #         attachments: List[discord.Attachment] = m.attachments
-    #         await ctx.send("T: {}\nAttachments: {}\nID: {}".format(m.content, "\nㅤㅤ".join([a.url for a in attachments]), m.id),)
+    @commands.hybrid_command()
+    @commands.is_owner()
+    async def dms(self, ctx: commands.Context, thing: str):
+        """
+        Gets all dms from a user
+        """
+        user = await is_user(ctx, thing)
+        channel = await self.bot.create_dm(user)
+        msgs = []
+        async for m in channel.history(limit = 300):
+            msgs.append(m)
+        print(len(msgs))
+        embed = fmte(
+            ctx,
+            t = "Waiting for user input...",
+        )
+        view = DMEmbedPaginator(
+            values = msgs,
+            pagesize = 10,
+            fieldname = "content",
+            fieldvalue = "attachments",
+            defaultname = "`No Content`",
+            defaultvalue = "`No Attachments`"
+        )
+
+        await ctx.send(embed=embed, view=view)
+    
+    @commands.hybrid_command()
+    @commands.is_owner()
+    async def history(self, ctx: commands.Context):
+        """
+        Create a paginator with buttons for looking through message history
+        """
+        msgs = []
+        async for m in ctx.channel.history(limit = 199):
+            msgs.append(m)
+        
+        embed = fmte(
+            ctx,
+            t = "Waiting for user input...",
+        )
+        view = EmbedPaginator(
+            values = msgs,
+            pagesize = 10,
+            fieldname = "content",
+            fieldvalue = "author",
+            defaultname = "`No Content`",
+            defaultvalue = "`No author (?)`"
+        )
+
+        msg = await ctx.send(embed=embed, view=view)
+        view.response = msg
+
+        
     
     # @app_commands.command()
     # @commands.is_owner()
@@ -159,3 +204,48 @@ class Dev(commands.Cog):
         
 async def setup(bot):
     await bot.add_cog(Dev(bot))
+
+
+class DM_Menu(discord.ui.View):
+    def __init__(self, mlist):
+        super().__init__()
+        self.pagesize = 10
+        self.pos = 0
+        self.posmax = ceil((len(mlist) - 1) / self.pagesize)
+        self.mlist: List[discord.Message] = mlist
+    
+    @discord.ui.button(label="<")
+    async def back(self, inter: discord.Interaction, _: Any):
+        self.pos -= 1
+        if self.pos < 0:
+            self.pos = self.posmax
+        embed = fmte_i(
+            inter,
+            t = "[{}/{}]".format(self.pos + 1, self.posmax + 1),
+        )
+        for mes in self.mlist[self.pagesize * (self.pos - 1):self.pagesize * self.pos]:
+            embed.add_field(
+                name=mes.content if mes.content else "`NO CONTENT`",
+                value=", ".join([a.url for a in mes.attachments]) if mes.attachments else "`NO ATTACHMENTS`",
+                inline=False
+            )
+        await inter.response.edit_message(embed=embed, view=self)
+    @discord.ui.button(emoji="❌")
+    async def close(self, inter: discord.Interaction, _: Any):
+        await inter.delete_original_message()
+    @discord.ui.button(label=">")
+    async def next(self, inter: discord.Interaction, _: Any):
+        self.pos += 1
+        if self.pos > self.posmax:
+            self.pos = 0
+        embed = fmte_i(
+            inter,
+            t = "[{}/{}]".format(self.pos + 1, self.posmax + 1),
+        )
+        for mes in self.mlist[self.pagesize * (self.pos - 1):self.pagesize * self.pos]:
+            embed.add_field(
+                name=mes.content if mes.content else "`NO CONTENT`",
+                value=", ".join([a.url for a in mes.attachments]) if mes.attachments else "`NO ATTACHMENTS`",
+                inline=False
+            )
+        await inter.response.edit_message(embed=embed, view=self)

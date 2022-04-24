@@ -9,7 +9,7 @@ import pyfiglet
 from pyfiglet import Figlet
 from typing import List
 
-from _aux.embeds import fmte, gge
+from _aux.embeds import fmte
 from _aux.userio import is_user
 
 class Fun(commands.Cog):
@@ -24,8 +24,12 @@ class Fun(commands.Cog):
         return "⚽"
 
     @commands.hybrid_command(aliases = ["text"])
-    @describe(font="The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.", text="The text to translate.")
-    async def font(self, ctx, font: str, text: str):
+    @describe(
+        font = "The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.", 
+        text = "The text to translate.",
+        ephemeral = "Whether to publicly show the response to the command.",
+    )
+    async def font(self, ctx, font: str, text: str, ephemeral: bool = False):
         """
         Translates your text into a new font!
         """
@@ -34,14 +38,18 @@ class Fun(commands.Cog):
             embed = fmte(ctx, t = "Rendering Finished!")
             if len(t) > 1990:
                 embed.set_footer(text = "Requested by {}\n[Tuncated because of size]".format(ctx.author))
-            await ctx.message.reply("```{}```".format(t[:1990]), embed = embed)
+            await ctx.message.reply("```{}```".format(t[:1990]), embed=embed, ephemeral=ephemeral)
                 
         except pyfiglet.FontNotFound:
             raise commands.errors.BadArgument("Font not found.")
     
-    @commands.hybrid_command(aliases = ["dice", "diceroll"])
-    @describe(sides="The amount of sides for the dice.", times="How many times to roll the dice.")
-    async def roll(self, ctx, sides: Range[int, 1, 20000] = 20, times: Range[int, 1, 200] = 1):
+    @commands.hybrid_command()
+    @describe(
+        sides = "The amount of sides for the dice.", 
+        times = "How many times to roll the dice.",
+        ephemeral = "Whether to publicly show the response to the command.",
+    )
+    async def roll(self, ctx, sides: Range[int, 1, 20000] = 20, times: Range[int, 1, 200] = 1, ephemeral: bool = False):
         """
         Rolls a dice a certain amount of times.
         """
@@ -61,36 +69,13 @@ class Fun(commands.Cog):
             ),
             d = formatted
         )
-        await ctx.send(embed = embed)
+        await ctx.send(embed=embed, ephemeral=ephemeral)
     
-    def getTTTEmbed(ctx, players, current):
-        embed = fmte(
-            ctx,
-            t = "{} is playing with {}".format(players[0], players[1]),
-            d = "{}, it's your turn!".format(current)
-        )
-        return embed
-    
-    def getRPSEmbed(ctx, players, current):
-        embed = fmte(
-            ctx,
-            t = "{} is playing with {}".format(players[0], players[1]),
-            d = "Please choose your weapons...".format(current)
-        )
-        return embed
-    
-    def check(ctx, r, u, ms):
-        # I would do this in a lambda but it's so big
-        return all([
-            not u.bot, # User isn't a bot
-            str(r.emoji) in ["✅", "❌"], 
-            r.message == ms, # On the message I sent
-            u == ctx.author if str(r.emoji) == "❌" else True, # If it's an X, it was the author
-            u != ctx.author if str(r.emoji) == "✅" else True # If it's an check, it was the author
-        ])
 
     @commands.hybrid_command()
-    @describe(user="The user to offer a game to.")
+    @describe(
+        user = "The user to offer a game to."
+    )
     async def tictactoe(self, ctx, user: discord.Member = None):
         """
         Offers a game of TicTacToe to the user.
@@ -147,7 +132,9 @@ class Fun(commands.Cog):
                 await ms.clear_reactions()
     
     @commands.hybrid_command(aliases = ["rps", "roshambo", "rochambeau"])
-    @describe(user="The user to offer a game to.")
+    @describe(
+        user="The user to offer a game to."
+    )
     async def rockpaperscissors(self, ctx, user: discord.Member = None):
         """
         Offers a game of Rock Paper Scissors / Rochambeau to the user.
@@ -206,7 +193,31 @@ class Fun(commands.Cog):
                 await ms.clear_reactions()
                 return
 
-
+    def getTTTEmbed(ctx, players, current):
+        embed = fmte(
+            ctx,
+            t = "{} is playing with {}".format(players[0], players[1]),
+            d = "{}, it's your turn!".format(current)
+        )
+        return embed
+    
+    def getRPSEmbed(ctx, players, current):
+        embed = fmte(
+            ctx,
+            t = "{} is playing with {}".format(players[0], players[1]),
+            d = "Please choose your weapons...".format(current)
+        )
+        return embed
+    
+    def check(ctx, r, u, ms):
+        # I would do this in a lambda but it's so big
+        return all([
+            not u.bot, # User isn't a bot
+            str(r.emoji) in ["✅", "❌"], 
+            r.message == ms, # On the message I sent
+            u == ctx.author if str(r.emoji) == "❌" else True, # If it's an X, it was the author
+            u != ctx.author if str(r.emoji) == "✅" else True # If it's an check, it was the author
+        ])
 
 class TTT_GameView(discord.ui.View):
     def __init__(self, ctx, players: List[discord.Member], current: discord.Member):

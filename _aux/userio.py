@@ -40,16 +40,15 @@ def iototime(userinput: str):
     else:
         return 60 * 60 # Not sure what they meant, so just do an hour.
 
-async def is_user(ctx: commands.Context, user: str = None) -> discord.Member | None:
-    r = ""
+async def is_user(ctx: commands.Context, user: str = None) -> discord.User:
     if not user:
-        r =  None
+        raise commands.errors.UserNotFound(user)
     _id = None
     if user.startswith("<@"): # User is a mention
         try:
             _id = int(str(user)[2:-1])
         except ValueError:
-            r =  None
+            raise commands.errors.UserNotFound(user)
     else: # It is a user ID
         try:
             _id = int(user) # Just an ID
@@ -58,15 +57,16 @@ async def is_user(ctx: commands.Context, user: str = None) -> discord.Member | N
                 if m.name == user or "{}#{}".format(m.name, m.discriminator) == user:
                     _id = m.id
             else:
-                r =  None
+                commands.errors.UserNotFound(user)
     try:
-        user = await ctx.guild.fetch_member(_id)
-        return user
+        users = []
+        for r in ctx.bot.guilds:
+            for m in r.members:
+                users.append(m)
+                
+        return discord.utils.find(lambda u: u.id == _id, users)
     except discord.errors.NotFound:
-        r = None
-    
-    if not r:
-        raise commands.errors.MemberNotFound(user)
+        raise commands.errors.UserNotFound(user)
 
 
 async def actual_purge(ctx: commands.Context, limit, user: discord.Member = None):
@@ -82,3 +82,15 @@ async def actual_purge(ctx: commands.Context, limit, user: discord.Member = None
         if dels == limit:
             break
     return (dels, errors)
+
+
+def clean(_input: str):
+    banned_chars = [";", "\"", "'"]
+    for r in _input:
+        if r in banned_chars:
+            raise commands.errors.BadArgument(_input)
+    for c in _input:
+        try:
+            c.encode("utf-8")
+        except UnicodeEncodeError:
+            raise commands.errors.BadArgument(_input)

@@ -1,4 +1,4 @@
-
+from discord.app_commands import describe
 from discord.ext import commands
 
 import requests
@@ -19,7 +19,10 @@ class Utility(commands.Cog):
         return "🔢"
 
     @commands.hybrid_command()
-    async def ping(self, ctx: commands.Context, ephemeral: bool = True):
+    @describe(
+        ephemeral = "Whether to publicly show the response to the command.",
+    )
+    async def ping(self, ctx: commands.Context, ephemeral: bool = False):
         """
         Returns the bot's latency, in milliseconds.
         """
@@ -30,7 +33,10 @@ class Utility(commands.Cog):
         await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"), ephemeral=ephemeral)
     
     @commands.hybrid_command()
-    async def bot(self, ctx: commands.Context):
+    @describe(
+        ephemeral = "Whether to publicly show the response to the command.",
+    )
+    async def bot(self, ctx: commands.Context, ephemeral: bool = False):
         """
         Returns information about the bot.
         """
@@ -39,7 +45,6 @@ class Utility(commands.Cog):
         embed = fmte(
             ctx,
             t = "Hello! I'm {}.".format(self.bot.user.name),
-            d = "Prefix: `<mention> or >>`"
         )
         embed.add_field(
             name = "**__Statistics__**",
@@ -49,12 +54,16 @@ class Utility(commands.Cog):
                 s = b
             )
         )
-        await ctx.send(embed=embed, ephemeral=True)
+        await ctx.send(embed=embed, ephemeral=ephemeral)
 
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    async def search(self, ctx: commands.Context, querey: str, ephemeral: bool = True):
+    @describe(
+        querey = "What to search for.",
+        ephemeral = "Whether to publicly show the response to the command.",
+    )
+    async def search(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
         """
         Searches the web for a website and returns the first result.
         """
@@ -77,9 +86,8 @@ class Utility(commands.Cog):
         embed = fmte(
             ctx,
             t = "Result found!",
-            d = "*Bot is not responsible for results*"
         )
-        await ctx.send(link, embed=embed, ephemeral=ephemeral)
+        await ctx.send("https://google.com{}".format(link), embed=embed, ephemeral=ephemeral)
 
 
 async def setup(bot):
