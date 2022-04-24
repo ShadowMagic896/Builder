@@ -1,10 +1,11 @@
 from asyncore import close_all
+from pydoc import describe
 import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
 
 import os
-from typing import Any, Optional
+from typing import Any, List, Optional, Union
 
 
 from _aux.embeds import fmte, fmte_i
@@ -12,35 +13,66 @@ from _aux.embeds import fmte, fmte_i
 class InterHelp(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
-    @commands.hybrid_command()
-    async def invite(self, ctx: commands.Context, ephemeral: bool = True):
-        link = "https://discord.com/api/oauth2/authorize?client_id=963411905018466314&permissions=8&scope=bot%20applications.commands"
-        embed = fmte(
-            ctx,
-            t = "Invite Me to a Server!",
-            d = "[Invite Link]({})".format(link)
-        )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()
-    async def help(self, ctx: commands.Context):
+    async def help(self, ctx: commands.Context, item: str = None):
         """
         Get a guide on what I can do.
         """
-        embed = fmte(
-            ctx,
-            t = "Help",
-            d = "Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
-                (await self.bot.application_info()).description,
-                len(self.bot.cogs),
-                len(self.bot.commands)
+        if not item:
+            embed = fmte(
+                ctx,
+                t = "Help",
+                d = "Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
+                    (await self.bot.application_info()).description,
+                    len(self.bot.cogs),
+                    len(self.bot.commands)
+                )
             )
-        )
+            
+            
+            view = HelpMenu().add_item(CogSelect(self.bot))
+            
+            await ctx.send(embed=embed, view=view, ephemeral=True)
+        cogs = [v for c, v in self.bot.cogs.items() if c.lower() == item.lower()]
+        if len(cogs) != 0:
+            embed = InterHelp(self.bot)._cog_embed(ctx.interaction, cogs[0])
+            view = HelpMenu().add_item(CogSelect(self.bot)).add_item(CommandSelect(self.bot, cogs[0]))
+            await ctx.send(embed=embed, view=view)
+            return
+        commands = [c for c in self.get_cmds() if c.name.lower() == item.lower()]
+        if len(commands) != 0:
+            embed = InterHelp(self.bot)._command_embed(ctx.interaction, commands[0])
+            view = HelpMenu().add_item(CogSelect(self.bot)).add_item(CommandSelect(self.bot, commands[0].cog))
+            await ctx.send(embed=embed, view=view)
+            return
+        else:
+            embed = fmte(
+                ctx,
+                t = "Hm... I Couldn't Find That",
+                d = "Please choose an option from below."
+            )
+            view = HelpMenu().add_item(CogSelect(self.bot))
+            await ctx.send(embed=embed, view=view)
+            
+
         
+
+    @help.autocomplete("item")
+    async def item_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+        ac: List[Union[commands.Cog, commands.HybridCommand]] = [c for c in self.bot.commands]
         
-        view = HelpMenu().add_item(CogSelect(self.bot))
-        
-        await ctx.send(embed=embed, view=view, ephemeral=True)
+        for c, v in self.bot.cogs.items():
+            if c in os.getenv("FORBIDDEN_COGS").split(";"):
+                continue
+            ac.append(v)
+            
+        return [
+            discord.app_commands.Choice(name=f"{c.qualified_name} [{'COG' if isinstance(c, commands.Cog) else 'COMMAND'}]", value=c.qualified_name)
+            for c in ac
+            if current.lower() in c.qualified_name.lower() or c.qualified_name.lower() in current.lower()
+        ][:25]
+
         
     
     def get_cmds(self):

@@ -1,3 +1,4 @@
+import os
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
@@ -93,16 +94,17 @@ class Guild(commands.Cog):
         Returns all of the available bot data on the datatype given.
         """
         data = ""
-        if datatype in ["channels", "channel", "chans", "chan"]:
+        if datatype == "channel":
             data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in ctx.guild.categories])
+        elif datatype == "user":
+            data = "\n".join(["{} [ID: {}]".format(user, user.id) for user in ctx.guild.members])
+        elif datatype == "role":
+            data = "\n".join(["{} [{} Users] [ID: {}]".format(role.name, len(role.members), role.id) for role in ctx.guild.roles])
         open("commanddump.txt", "wb").write(data.encode("utf-8"))
         file = discord.File("commanddump.txt", "commanddump.txt")
-        await ctx.user.send(file = file)
-        embed = fmte_i(
-            ctx,
-            t = "`{}` information on `{}`".format(ctx.guild, datatype)
-        )
-        await ctx.send(embed=embed, file = file, ephemeral=ephemeral)
+        await ctx.send(file = file, ephemeral=ephemeral)
+        file.close()
+        os.remove("commanddump.txt")
 
 
 async def setup(bot: commands.Bot):

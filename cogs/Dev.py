@@ -1,15 +1,9 @@
-from math import ceil
-import sqlite3
-from typing import Any, List
 import discord
-from discord import Interaction, app_commands
-from discord.ext import commands, menus
+from discord.ext import commands
 
+from typing import Any, List
+from math import ceil
 
-import asyncio
-import os
-
-from _aux.extensions import load_extensions
 from _aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
 from _aux.userio import is_user
 

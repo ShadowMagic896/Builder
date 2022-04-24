@@ -10,7 +10,6 @@ from pyfiglet import Figlet
 from typing import List
 
 from _aux.embeds import fmte
-from _aux.userio import is_user
 
 class Fun(commands.Cog):
     """
