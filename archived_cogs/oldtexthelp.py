@@ -4,7 +4,7 @@
 #     async def send_bot_help(self, mapping):
 #         ctx: commands.Context = self.context
 #         embed = fmte(
-#             ctx, 
+#             ctx,
 #             t = "Help Screen",
 #             d = """Prefix: `<mention> or >>`
 #             My commands are grouped into `Groups`
@@ -23,7 +23,7 @@
 #                 inline = False
 #             )
 #         await ctx.send(embed = embed)
-    
+
 #     async def send_group_help(self, group: commands.Group, /) -> None:
 #         ctx = self.context
 #         embed = fmte(
@@ -33,17 +33,17 @@
 #                 group.aliases
 #             ),
 #             d = "**Description:**\n{}\n**All Commands:**\n{}".format(
-#                 group.short_doc, 
+#                 group.short_doc,
 #                 "".join(["ㅤㅤ`>>{} {} {}`\nㅤㅤ*{}*\n\n".format(
-#                     group.name, 
-#                     c.name, 
-#                     c.signature, 
+#                     group.name,
+#                     c.name,
+#                     c.signature,
 #                     c.short_doc
 #                 ) for c in group.commands])
 #             )
 #         )
 #         await ctx.send(embed = embed)
-    
+
 #     async def send_command_help(self, command: commands.Command, /) -> None:
 #         ctx = self.context
 #         if command.cog:
@@ -53,31 +53,31 @@
 #         embed = fmte(
 #             ctx,
 #             t = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
-#                 command.name, 
-#                 cogname, 
-#                 command.parent, 
+#                 command.name,
+#                 cogname,
+#                 command.parent,
 #                 command.aliases
 #             ),
 #             d = "```>>{}{} {}```\n*{}*".format(
-#                 "{} ".format(command.parent.name) if command.parent else "", 
-#                 command.name, 
-#                 command.signature, 
+#                 "{} ".format(command.parent.name) if command.parent else "",
+#                 command.name,
+#                 command.signature,
 #                 command.short_doc
 #             )
 #         )
 #         await ctx.send(embed=embed)
-    
+
 #     async def send_cog_help(self, cog: commands.Cog, /) -> None:
 #         if cog.qualified_name.lower() in [c.name for c in self.context.bot.commands]:
 #             grp = self.context.bot.get_command(cog.qualified_name.lower())
 #             await self.send_group_help(grp)
 #         else:
 #             raise commands.errors.CommandNotFound("I could not find that group")
-    
+
 #     async def send_error_message(self, error: str, /) -> None:
 #         if error.startswith("No command called "):
 #             com = error.split()[3][1:-1]
-            
+
 #             coms = [c.commands for c in self.context.bot.commands if not isinstance(c, _HelpCommandImpl) and hasattr(c, "commands")]
 #             _coms = []
 #             for c in coms:
@@ -93,9 +93,9 @@
 #                 embed = fmte(
 #                     self.context,
 #                     t = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
-#                         c.name, 
-#                         c.cog_name, 
-#                         c.parent, 
+#                         c.name,
+#                         c.cog_name,
+#                         c.parent,
 #                         c.aliases
 #                     ),
 #                     d = "`>>{} {} {}`".format(
@@ -114,9 +114,9 @@
 #                 for c in cmds:
 #                     embed.add_field(
 #                         name = "{} [Cog: `{}` Group: `{}`]\n`A.K.A: {}`".format(
-#                             c.name, 
-#                             c.cog_name if c.cog_name else "Utility", #idk 
-#                             c.parent, 
+#                             c.name,
+#                             c.cog_name if c.cog_name else "Utility", #idk
+#                             c.parent,
 #                             c.aliases
 #                         ),
 #                         value = "`>>{} {} {}`\n*{}*".format(

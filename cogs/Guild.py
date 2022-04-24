@@ -14,15 +14,16 @@ class Guild(commands.Cog):
     """
     Commands for managing or getting information about this guild.
     """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-    
+
     def ge(self):
         return "🏠"
-    
+
     @commands.hybrid_command()
     @describe(
-        ephemeral = "Whether to publicly show the response to the command.",
+        ephemeral="Whether to publicly show the response to the command.",
     )
     async def guildinfo(self, ctx: commands.Context, ephemeral: bool = False):
         """
@@ -33,61 +34,63 @@ class Guild(commands.Cog):
         bb = "\n{s}{s}{s}".format(s="ㅤ")
         embed = fmte(
             ctx,
-            t = "Info: {} [{}]".format(guild.name, guild.id),
-            d = guild.description
+            t="Info: {} [{}]".format(guild.name, guild.id),
+            d=guild.description
         )
         embed.add_field(
-            name = "***__General Info__***",
-            value = "{s}**Owner**: {} [{}]{s}**Created:**: <t:{}>{s}**Nitro Level:** {}".format(
+            name="***__General Info__***",
+            value="{s}**Owner**: {} [{}]{s}**Created:**: <t:{}>{s}**Nitro Level:** {}".format(
                 guild.owner, guild.owner_id,
                 round(guild.created_at.timestamp()),
                 guild.premium_tier,
-                s = b
+                s=b
             ),
-            inline = False
+            inline=False
         )
         embed.add_field(
-            name = "***__User Info__***",
-            value = "{s}**Users:** {}{s}**Bots:** {}{s}**Boosters:** {}{s}**Total:** {}".format(
+            name="***__User Info__***",
+            value="{s}**Users:** {}{s}**Bots:** {}{s}**Boosters:** {}{s}**Total:** {}".format(
                 len([p for p in guild.members if not p.bot]),
                 len([p for p in guild.members if p.bot]),
                 guild.premium_subscription_count,
                 len(guild.members),
-                s = b
+                s=b
             ),
-            inline = False
+            inline=False
         )
         embed.add_field(
-            name = "***__Customization__***",
-            value = "{s}**Vanity URL:** {}{s}**Emojis: **{} / {}{s}**Stickers:** {} / {}".format(
+            name="***__Customization__***",
+            value="{s}**Vanity URL:** {}{s}**Emojis: **{} / {}{s}**Stickers:** {} / {}".format(
                 guild.vanity_url,
                 len(guild.emojis), guild.emoji_limit,
                 len(guild.stickers), guild.sticker_limit,
-                s = b
+                s=b
             ),
-            inline = False
+            inline=False
         )
         embed.add_field(
-            name = "***__Statistics__***",
-            value = "{s}**Veri. Level:** {}{s}**Max Filesize:** {}{s}**VC Bitrate:** {} bytes{s}**NSFW Level:** {}{s}**Locale:** {}{s}**Other featues:** {}".format(
+            name="***__Statistics__***",
+            value="{s}**Veri. Level:** {}{s}**Max Filesize:** {}{s}**VC Bitrate:** {} bytes{s}**NSFW Level:** {}{s}**Locale:** {}{s}**Other featues:** {}".format(
                 guild.verification_level.name.capitalize(),
                 guild.filesize_limit,
                 guild.bitrate_limit,
                 guild.nsfw_level.name.capitalize(),
                 guild.preferred_locale,
-                "\n{}".format(bb).join(guild.features) if len(guild.features) > 0 else "{}None\n".format(bb),
-                s = b
+                "\n{}".format(bb).join(
+                    guild.features) if len(
+                    guild.features) > 0 else "{}None\n".format(bb),
+                s=b
             )
         )
         if guild.banner:
-            embed.set_image(url = guild.banner.url)
+            embed.set_image(url=guild.banner.url)
         await ctx.send(embed=embed, ephemeral=ephemeral)
-    
+
     @commands.hybrid_command()
-    @commands.has_permissions(manage_messages = True)
+    @commands.has_permissions(manage_messages=True)
     @describe(
-        datatype = "The type of data to return.",
-        ephemeral = "Whether to publicly show the response to the command.",
+        datatype="The type of data to return.",
+        ephemeral="Whether to publicly show the response to the command.",
     )
     async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"], ephemeral: bool = False):
         """
@@ -95,14 +98,17 @@ class Guild(commands.Cog):
         """
         data = ""
         if datatype == "channel":
-            data = "\n".join(["{}: {}".format(c.name, ", ".join([chan.name for chan in c.channels])) for c in ctx.guild.categories])
+            data = "\n".join(["{}: {}".format(c.name, ", ".join(
+                [chan.name for chan in c.channels])) for c in ctx.guild.categories])
         elif datatype == "user":
-            data = "\n".join(["{} [ID: {}]".format(user, user.id) for user in ctx.guild.members])
+            data = "\n".join(["{} [ID: {}]".format(user, user.id)
+                             for user in ctx.guild.members])
         elif datatype == "role":
-            data = "\n".join(["{} [{} Users] [ID: {}]".format(role.name, len(role.members), role.id) for role in ctx.guild.roles])
+            data = "\n".join(["{} [{} Users] [ID: {}]".format(
+                role.name, len(role.members), role.id) for role in ctx.guild.roles])
         open("commanddump.txt", "wb").write(data.encode("utf-8"))
         file = discord.File("commanddump.txt", "commanddump.txt")
-        await ctx.send(file = file, ephemeral=ephemeral)
+        await ctx.send(file=file, ephemeral=ephemeral)
         file.close()
         os.remove("commanddump.txt")
 
