@@ -25,16 +25,10 @@ class InterHelp(commands.Cog):
         if not cog and not command:
             embed = await self.main_embed(ctx, self.bot)
 
-            view = HelpMenu().add_item(CogSelect(self.bot, ephemeral))
-
-            if not ephemeral:
-                close = CloseButton()
-                view.add_item(close)
-
-            message = await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
-
-            if not ephemeral:
-                close.message = message
+            view = self.get_view(
+                self.bot, ctx, ephemeral,
+            )
+            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
             return
 
         if cog and not command:
@@ -45,21 +39,11 @@ class InterHelp(commands.Cog):
                 raise commands.errors.ExtensionNotFound(cog)
 
             embed = InterHelp(self.bot)._cog_embed(ctx.interaction, cogs[0])
-            view = HelpMenu().add_item(
-                CogSelect(
-                    self.bot,
-                    ephemeral)).add_item(
-                CommandSelect(
-                    self.bot,
-                    cogs[0],
-                    ephemeral))
-
-            if not ephemeral:
-                close = CloseButton()
-                view.add_item(close)
-            message = await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
-            if not ephemeral:
-                close.message = message
+            view = self.get_view(
+                self.bot, ctx, ephemeral,
+                cog=cogs[0]
+            )
+            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
         elif command and not cog:
             cmds = [c for c in self.get_cmds() if c.name.lower()
@@ -72,21 +56,12 @@ class InterHelp(commands.Cog):
                 self.bot)._command_embed(
                 ctx.interaction,
                 cmds[0])
-            view = HelpMenu().add_item(
-                CogSelect(
-                    self.bot,
-                    ephemeral)).add_item(
-                CommandSelect(
-                    self.bot,
-                    cmds[0].cog,
-                    ephemeral))
 
-            if not ephemeral:
-                close = CloseButton()
-                view.add_item(close)
-            message = await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
-            if not ephemeral:
-                close.message = message
+            view = self.get_view(
+                self.bot, ctx, ephemeral,
+                cog=cmds[0].cog,
+            )
+            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
         elif command and cog:
             _cog: commands.Cog = self.bot.get_cog(cog)
@@ -101,21 +76,13 @@ class InterHelp(commands.Cog):
             command: commands.HybridCommand = _command[0]
 
             embed = self.command_embed(ctx, command)
-            view = HelpMenu().add_item(
-                CogSelect(
-                    self.bot,
-                    ephemeral)).add_item(
-                CommandSelect(
-                    self.bot,
-                    cog,
-                    ephemeral))
 
-            if not ephemeral:
-                close = CloseButton()
-                view.add_item(close)
-            message = await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
-            if not ephemeral:
-                close.message = message
+            view = self.get_view(
+                self.bot, ctx, ephemeral,
+                cog=cog, command=command
+            )
+
+            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
     @help.autocomplete("cog")
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
@@ -199,14 +166,6 @@ class InterHelp(commands.Cog):
                 len(cog.get_commands()), cog.description)
         )
 
-    def group_embed(self, ctx, group: commands.HybridGroup):
-        return fmte(
-            ctx,
-            t="Group: `{}`".format(group.qualified_name),
-            d="**Commands:** {}\n*{}*".format(len(group.commands),
-                                              group.description)
-        )
-
     def command_embed(self, ctx, command: commands.HybridCommand):
         return fmte(
             ctx,
@@ -234,10 +193,26 @@ class InterHelp(commands.Cog):
     def _command_embed(self, inter, command: commands.HybridCommand):
         return fmte_i(
             inter,
-            t="Command: `{}`".format(command.name),
-            d="`/{} {}`\n*{}*".format(command.qualified_name,
-                                      command.signature, command.short_doc)
+            t="`{}` [Cog: `{}`, Group: `{}`]".format(
+                command.qualified_name,
+                command.cog_name,
+                command.parent
+            ),
+            d="```{} {}```\n*{}*".format(
+                command.qualified_name, command.signature,
+                command.short_doc
+            )
         )
+
+    def get_view(self, bot: commands.Bot, context: commands.Context, ephemeral: bool,
+                 cog: commands.Cog = None):
+        view = HelpMenu().add_item(CogSelect(bot, context, ephemeral))
+        if cog:
+            view.add_item(CommandSelect(bot, context, ephemeral, cog))      
+        if not ephemeral:
+            view.add_item(CloseButton())
+        view.add_item(MainMenu(bot, context, ephemeral))
+        return view
 
 
 class HelpMenu(discord.ui.View):  # Base to add things on
@@ -246,11 +221,14 @@ class HelpMenu(discord.ui.View):  # Base to add things on
 
 
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
-    def __init__(self, bot: commands.Bot, ephemeral: bool):
+    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
         placeholder = "Cog Selection..."
         options = []
+
         self.bot = bot
+        self.context = context
         self.ephemeral = ephemeral
+
         for name, cog in bot.cogs.items():
             if name in os.getenv("FORBIDDEN_COGS").split(";"):
                 continue
@@ -271,25 +249,21 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         obj = self.bot.get_cog(opt)
 
         embed = InterHelp(self.bot)._cog_embed(interaction, obj)
+        view = InterHelp(self.bot).get_view(self.bot, self.context, self.ephemeral, cog=obj)
 
-        view = HelpMenu().add_item(self).add_item(
-            CommandSelect(self.bot, obj, self.ephemeral))
-
-        if not self.ephemeral:
-            close = CloseButton()
-            view.add_item(close)
         await interaction.response.edit_message(embed=embed, view=view)
-        if not self.ephemeral:
-            close.message = interaction.message
 
 
 class CommandSelect(
         discord.ui.Select):  # Shows all commands from a certain cog
-    def __init__(self, bot: commands.Bot, cog: commands.Cog, ephemeral: bool):
+    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool, cog: commands.Cog,):
         placeholder = "Command Selection..."
         options = []
+
         self.bot = bot
+        self.context = context
         self.ephemeral = ephemeral
+
         for command in cog.get_commands():
             options.append(
                 discord.SelectOption(
@@ -297,6 +271,7 @@ class CommandSelect(
                     description=command.short_doc
                 )
             )
+
         super().__init__(
             placeholder=placeholder,
             options=options,
@@ -305,25 +280,9 @@ class CommandSelect(
     async def callback(self, interaction: Interaction) -> Any:
         command: commands.HybridCommand = self.bot.get_command(
             interaction.data["values"][0])
-        embed = fmte_i(
-            interaction,
-            t="`{}` [Cog: `{}`, Group: `{}`]".format(
-                command.qualified_name,
-                command.cog_name,
-                command.parent
-            ),
-            d="```{} {}```\n*{}*".format(
-                command.qualified_name, command.signature,
-                command.short_doc
-            )
-        )
-        view = HelpMenu().add_item(CogSelect(self.bot, self.ephemeral)).add_item(self)
-        if not self.ephemeral:
-            close = CloseButton()
-            view.add_item(close)
+        embed = InterHelp(self.bot)._command_embed(interaction, command)
+        view = InterHelp(self.bot).get_view(self.bot, self.context, self.ephemeral, cog=command.cog)
         await interaction.response.edit_message(embed=embed, view=view)
-        if not self.ephemeral:
-            close.message = interaction.message
 
 
 class CloseButton(discord.ui.Button):
@@ -332,7 +291,20 @@ class CloseButton(discord.ui.Button):
         self.message: discord.Message = ...
 
     async def callback(self, interaction: Interaction) -> Any:
-        await self.message.delete()
+        await interaction.message.delete()
+
+
+class MainMenu(discord.ui.Button):
+    def __init__(self, bot, context, ephemeral):
+        self.bot = bot
+        self.context = context
+        self.ephemeral = ephemeral
+        super().__init__(label="Menu", emoji="📃", style=discord.ButtonStyle.blurple)
+
+    async def callback(self, interaction: Interaction) -> Any:
+        embed = await InterHelp(self.bot).main_embed(self.context, self.bot)
+        view = InterHelp(self.bot).get_view(self.bot, self.context, self.ephemeral)
+        await interaction.response.edit_message(embed=embed, view=view )
 
 
 async def setup(bot):
