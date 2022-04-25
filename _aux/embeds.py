@@ -1,22 +1,31 @@
 from math import ceil, floor
 from typing import Any, List, Optional
 import discord
+from discord.ext import commands
 from datetime import datetime
 
 
-def fmte(ctx=None, t="", d="", c=discord.Color.teal(),
-         u=None) -> discord.Embed:
+def fmte(
+        ctx: commands.Context = None,
+        t: str = "",
+        d: str = "",
+        c: discord.Color = discord.Color.teal(),
+        u: discord.User = None) -> discord.Embed:
     """
     Takes the sent information and returns an embed with a footer and timestamp added, with the default color being teal.
     """
     if not (ctx or u):
         raise Exception("my guy")
+    user = ctx.author if not u else u
     embed = discord.Embed(
         title=t,
         description=d,
         color=c
     )
-    embed.set_footer(text=f"Requested by {ctx.author}")
+    embed.set_author(
+        name="Interaction Requested By: %s\n[Click To View Profile in Web]" %
+        str(user), url="https://discordapp.com/users/%s" %
+        user.id, icon_url=user.avatar.url)
     embed.timestamp = datetime.now()
     return embed
 
@@ -165,8 +174,8 @@ class EmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize *
-                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize * \
+            (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(
@@ -309,8 +318,8 @@ class DMEmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize *
-                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize * \
+            (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(

@@ -3,9 +3,7 @@ from multiprocessing.sharedctypes import Value
 from types import coroutine
 import discord
 from discord.ext import commands
-from _aux.embeds import fmte
-import traceback
-import sys
+import re
 
 
 def iototime(userinput: str):
@@ -101,3 +99,11 @@ def clean(_input: str):
             c.encode("utf-8")
         except UnicodeEncodeError:
             raise commands.errors.BadArgument(_input)
+
+
+def convCodeBlock(code: str):
+    match = "```.*[\n]?[^```]+```"
+    se = re.search(match, code.strip())
+    if not se:
+        raise commands.errors.BadArgument("Invalid code format.")
+    return se.group()

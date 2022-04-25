@@ -7,8 +7,13 @@ import os
 
 
 class Table:
-    def __init__(self, database: str, table: str,
-                 values: Mapping[str, Type], *, if_not_exists: bool = True) -> None:
+    def __init__(self,
+                 database: str,
+                 table: str,
+                 values: Mapping[str,
+                                 Type],
+                 *,
+                 if_not_exists: bool = True) -> None:
         """Creates a new table in `database` named `table` with `values`. Will throw an error if a table exists and `if_not_exists` is False"""
         self.con: sqlite3.Connection = sqlite3.connect(database=database)
         self.cur: sqlite3.Cursor = self.con.cursor()

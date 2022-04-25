@@ -37,10 +37,12 @@ class Moderation(commands.Cog):
         """
         embed = fmte(
             ctx,
-            t="Channel Locked by {}.".format(ctx.author),
+            t="Channel Locked by {}.".format(
+                ctx.author),
             d="Use `/unlock` to unlock it." if not until else "Until: <t:{}>".format(
-                round(time.time() + iototime(until)))
-        )
+                round(
+                    time.time() +
+                    iototime(until))))
 
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
@@ -131,17 +133,15 @@ class Moderation(commands.Cog):
             d="**Timeout info:**\n**At:** <t:{}>\n**For:** `{}`\n**Until:** <t:{}>".format(
                 round(st),
                 time,
-                round(until.timestamp())
-            )
-        )
+                round(
+                    until.timestamp())))
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()
-    @describe(
-        user="The user to untimeout",
-        reason="The reason for untimingout the user. Shows up on the audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
-    )
+    @describe(user="The user to untimeout",
+              reason="The reason for untimingout the user. Shows up on the audit log.",
+              ephemeral="Whether to publicly show the response to the command.",
+              )
     @commands.has_permissions(moderate_members=True)
     async def untimeout(self, ctx: commands.Context, user: discord.Member, reason: str = "No reason given.", ephemeral: bool = True):
         """
@@ -163,8 +163,10 @@ class Moderation(commands.Cog):
             ctx,
             t="{} is no longer timed out.".format(user),
             d="**Original timeout target:** <t:{}>\n**Reason:** {}\n**Mod:** `{}`".format(
-                round(at.timestamp()), reason, ctx.author)
-        )
+                round(
+                    at.timestamp()),
+                reason,
+                ctx.author))
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()

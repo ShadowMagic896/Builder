@@ -36,8 +36,7 @@ class Time(commands.Cog):
         embed = fmte(
             ctx=ctx,
             t="New timer made!",
-            d="You can use `/check` to check your time, or `/stop` to delete your timer."
-        )
+            d="You can use `/check` to check your time, or `/stop` to delete your timer.")
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()

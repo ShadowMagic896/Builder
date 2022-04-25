@@ -25,9 +25,8 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(
-        querey="The keywords to search for.",
-        ephemeral="Whether to publicly send the response or not. All images are sent in DMs.")
+    @describe(querey="The keywords to search for.",
+              ephemeral="Whether to publicly send the response or not. All images are sent in DMs.")
     async def r34(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
@@ -65,10 +64,8 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(
-        amount="The amount of images to send.",
-        ephemeral="Whether to public send the response or not. All images are sent in DMs."
-    )
+    @describe(amount="The amount of images to send.",
+              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
     async def neko(self, ctx: commands.Context, amount: Range[int, 1, 20] = 1, ephemeral: bool = False):
         """
         Gets an image response from [nekos.life](https://nekos.life) and sends it to you.
@@ -99,10 +96,8 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(
-        amount="The amount of images to send.",
-        ephemeral="Whether to public send the response or not. All images are sent in DMs."
-    )
+    @describe(amount="The amount of images to send.",
+              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
     async def nekolewd(self, ctx: commands.Context, amount: Range[int, 1, 20] = 1, ephemeral: bool = False):
         """
         Gets an image response from [nekos.life/lewd](https://nekos.life/lewd) and sends it to you.
@@ -131,10 +126,8 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(
-        code="The code to search for.",
-        ephemeral="Whether to public send the response or not. All images are sent in DMs."
-    )
+    @describe(code="The code to search for.",
+              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
     async def nhentai(self, ctx: commands.Context, code: int, ephemeral: bool = False):
         """
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
@@ -164,10 +157,8 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(
-        querey="The keywords to search for.",
-        ephemeral="Whether to public send the response or not. All images are sent in DMs."
-    )
+    @describe(querey="The keywords to search for.",
+              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
     async def nhsearch(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
         """
         Searches for manga on [nhentai.xxx](https://nhentai.xxx) and returns the top results.

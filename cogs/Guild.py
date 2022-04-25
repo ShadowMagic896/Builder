@@ -40,13 +40,13 @@ class Guild(commands.Cog):
         embed.add_field(
             name="***__General Info__***",
             value="{s}**Owner**: {} [{}]{s}**Created:**: <t:{}>{s}**Nitro Level:** {}".format(
-                guild.owner, guild.owner_id,
-                round(guild.created_at.timestamp()),
+                guild.owner,
+                guild.owner_id,
+                round(
+                    guild.created_at.timestamp()),
                 guild.premium_tier,
-                s=b
-            ),
-            inline=False
-        )
+                s=b),
+            inline=False)
         embed.add_field(
             name="***__User Info__***",
             value="{s}**Users:** {}{s}**Bots:** {}{s}**Boosters:** {}{s}**Total:** {}".format(
@@ -79,9 +79,7 @@ class Guild(commands.Cog):
                 "\n{}".format(bb).join(
                     guild.features) if len(
                     guild.features) > 0 else "{}None\n".format(bb),
-                s=b
-            )
-        )
+                s=b))
         if guild.banner:
             embed.set_image(url=guild.banner.url)
         await ctx.send(embed=embed, ephemeral=ephemeral)

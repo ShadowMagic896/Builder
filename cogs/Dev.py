@@ -1,5 +1,8 @@
+from subprocess import Popen
 import discord
+from discord.app_commands import describe
 from discord.ext import commands
+import autopep8
 
 from typing import Any, List
 from math import ceil
@@ -151,6 +154,19 @@ class Dev(commands.Cog):
 
         msg = await ctx.send(embed=embed, view=view)
         view.response = msg
+
+    @commands.hybrid_command()
+    @commands.is_owner()
+    @describe(
+        params="The arguments to pass to Popen & autopep8"
+    )
+    async def fmtcode(self, ctx, params: str = ""):
+        """
+        Formats the bot's code using autopep8
+        """
+        output = Popen(
+            "autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" %
+            (params,)).stdout
 
     # @app_commands.command()
     # @commands.is_owner()

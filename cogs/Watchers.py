@@ -94,16 +94,11 @@ class Watchers(commands.Cog):
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
         mes = "Auth: {}; Com: {} [{}]; T: {}; Parents: {}; Children: {};\n".format(
-            ctx.author,
-            ctx.command.qualified_name,
-            ctx.command_failed,
-            datetime.now(tz=pytz.timezone("UTC")),
-            ctx.invoked_parents,
-            ctx.invoked_subcommand,
-        )
+            ctx.author, ctx.command.qualified_name, ctx.command_failed, datetime.now(
+                tz=pytz.timezone("UTC")), ctx.invoked_parents, ctx.invoked_subcommand, )
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error):
         hint = None
 
@@ -111,7 +106,8 @@ class Watchers(commands.Cog):
             return
 
         if isinstance(
-                error, commands.CommandInvokeError):  # Unwrap CommandInvokeErrors
+                error,
+                commands.CommandInvokeError):  # Unwrap CommandInvokeErrors
             error = error.original
 
         if isinstance(error, CommandNotFound):

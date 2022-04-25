@@ -1,7 +1,6 @@
-from asyncore import close_all
-from pydoc import describe
 import discord
 from discord import app_commands, Interaction
+from discord.app_commands import describe
 from discord.ext import commands
 
 import os
@@ -18,6 +17,11 @@ class InterHelp(commands.Cog):
         self.bot: commands.Bot = bot
 
     @commands.hybrid_command()
+    @describe(
+        cog="The cog to show help on.",
+        command="The command to show help on.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
     async def help(self, ctx: commands.Context, cog: str = None, command: str = None, ephemeral: bool = False):
         """
         Get a guide on what I can do.
@@ -36,7 +40,7 @@ class InterHelp(commands.Cog):
                     == cog.lower()]
 
             if not cogs:
-                raise commands.errors.ExtensionNotFound(cog)
+                raise commands.errors.BadArgument(cog)
 
             embed = InterHelp(self.bot)._cog_embed(ctx.interaction, cogs[0])
             view = self.get_view(
@@ -50,7 +54,7 @@ class InterHelp(commands.Cog):
                     == command.lower()]
 
             if not cmds:
-                raise commands.errors.CommandNotFound(command)
+                raise commands.errors.BadArgument(command)
 
             embed = InterHelp(
                 self.bot)._command_embed(
@@ -66,13 +70,13 @@ class InterHelp(commands.Cog):
         elif command and cog:
             _cog: commands.Cog = self.bot.get_cog(cog)
             if not _cog:
-                raise commands.errors.ExtensionNotFound(cog)
+                raise commands.errors.BadArgument(cog)
             cog: commands.Cog = _cog
 
             _command: commands.HybridCommand = [
                 r for r in cog.get_commands() if r.qualified_name.lower() == command.lower()]
             if not _command:
-                raise commands.errors.CommandNotFound(command)
+                raise commands.errors.BadArgument(command)
             command: commands.HybridCommand = _command[0]
 
             embed = self.command_embed(ctx, command)
@@ -86,7 +90,7 @@ class InterHelp(commands.Cog):
 
     @help.autocomplete("cog")
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-        return [
+        return sorted([
             discord.app_commands.Choice(
                 name="{}".format(
                     c
@@ -94,21 +98,13 @@ class InterHelp(commands.Cog):
                 value=c
             ) for c in list(self.bot.cogs.keys())
             if ((current.lower() in c.lower() or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")
-        ][:25]
+        ][:25], key=lambda c: c.name)
 
     @help.autocomplete("command")
     async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
         ac: List[commands.HybridCommand] = self.bot.commands
-        return [
-            discord.app_commands.Choice(
-                name="[{}] {}".format(
-                    c.cog_name,
-                    c.qualified_name
-                ),
-                value=c.qualified_name
-            ) for c in ac
-            if ((current.lower() in c.qualified_name.lower()) or (c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")
-        ][:25]
+        return sorted([discord.app_commands.Choice(name="[{}] {}".format(c.cog_name, c.qualified_name), value=c.qualified_name) for c in ac if ((current.lower() in c.qualified_name.lower()) or (
+            c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name[c.name.index("]") + 1:])
 
     def get_cmds(self):
         coms = [
@@ -128,8 +124,9 @@ class InterHelp(commands.Cog):
             raise commands.errors.ExtensionNotFound(cog)
 
     def raisegroup(self, group: str):
-        for n, g in [(g.name, g)
-                     for g in self.bot.commands if isinstance(g, app_commands.Group)]:
+        for n, g in [
+            (g.name, g) for g in self.bot.commands if isinstance(
+                g, app_commands.Group)]:
             if group.lower() == n.lower():
                 return g
         else:
@@ -204,14 +201,34 @@ class InterHelp(commands.Cog):
             )
         )
 
-    def get_view(self, bot: commands.Bot, context: commands.Context, ephemeral: bool,
-                 cog: commands.Cog = None):
+    def _invite_embed(self, inter):
+        return fmte_i(
+            inter,
+            t="Invite Me to a Server!",
+            d="[Invite Link]({})".format(
+                discord.utils.oauth_url(
+                    self.bot.application_id,
+                    permissions=discord.Permissions(8),
+                    scopes=["bot", "applications.commands"],
+                )
+            )
+        )
+
+    def get_view(
+            self,
+            bot: commands.Bot,
+            context: commands.Context,
+            ephemeral: bool,
+            cog: commands.Cog = None):
         view = HelpMenu().add_item(CogSelect(bot, context, ephemeral))
         if cog:
-            view.add_item(CommandSelect(bot, context, ephemeral, cog))      
+            view.add_item(CommandSelect(bot, context, ephemeral, cog))
+
+        view.add_item(MainMenu(bot, context, ephemeral))
+        view.add_item(InviteLink(bot, context, ephemeral))
         if not ephemeral:
             view.add_item(CloseButton())
-        view.add_item(MainMenu(bot, context, ephemeral))
+
         return view
 
 
@@ -221,7 +238,8 @@ class HelpMenu(discord.ui.View):  # Base to add things on
 
 
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
-    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
+    def __init__(self, bot: commands.Bot,
+                 context: commands.Context, ephemeral: bool):
         placeholder = "Cog Selection..."
         options = []
 
@@ -249,14 +267,20 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         obj = self.bot.get_cog(opt)
 
         embed = InterHelp(self.bot)._cog_embed(interaction, obj)
-        view = InterHelp(self.bot).get_view(self.bot, self.context, self.ephemeral, cog=obj)
+        view = InterHelp(
+            self.bot).get_view(
+            self.bot,
+            self.context,
+            self.ephemeral,
+            cog=obj)
 
         await interaction.response.edit_message(embed=embed, view=view)
 
 
 class CommandSelect(
         discord.ui.Select):  # Shows all commands from a certain cog
-    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool, cog: commands.Cog,):
+    def __init__(self, bot: commands.Bot, context: commands.Context,
+                 ephemeral: bool, cog: commands.Cog,):
         placeholder = "Command Selection..."
         options = []
 
@@ -281,7 +305,12 @@ class CommandSelect(
         command: commands.HybridCommand = self.bot.get_command(
             interaction.data["values"][0])
         embed = InterHelp(self.bot)._command_embed(interaction, command)
-        view = InterHelp(self.bot).get_view(self.bot, self.context, self.ephemeral, cog=command.cog)
+        view = InterHelp(
+            self.bot).get_view(
+            self.bot,
+            self.context,
+            self.ephemeral,
+            cog=command.cog)
         await interaction.response.edit_message(embed=embed, view=view)
 
 
@@ -303,8 +332,26 @@ class MainMenu(discord.ui.Button):
 
     async def callback(self, interaction: Interaction) -> Any:
         embed = await InterHelp(self.bot).main_embed(self.context, self.bot)
-        view = InterHelp(self.bot).get_view(self.bot, self.context, self.ephemeral)
-        await interaction.response.edit_message(embed=embed, view=view )
+        view = InterHelp(
+            self.bot).get_view(
+            self.bot,
+            self.context,
+            self.ephemeral)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class InviteLink(discord.ui.Button):
+    def __init__(self, bot, context, ephemeral):
+        self.bot = bot
+        self.context = context
+        self.ephemeral = ephemeral
+        super().__init__(label="Invite", emoji="📨", style=discord.ButtonStyle.blurple)
+
+    async def callback(self, interaction: Interaction) -> Any:
+        embed = InterHelp(self.bot)._invite_embed(interaction)
+        view = InterHelp(self.bot).get_view(
+            self.bot, self.context, self.ephemeral)
+        await interaction.response.edit_message(embed=embed, view=view)
 
 
 async def setup(bot):

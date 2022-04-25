@@ -40,10 +40,18 @@ class Fun(commands.Cog):
                 embed.set_footer(
                     text="Requested by {}\n[Tuncated because of size]".format(
                         ctx.author))
-            await ctx.message.reply("```{}```".format(t[:1990]), embed=embed, ephemeral=ephemeral)
+            await ctx.send("```{}```".format(t[:1990]), embed=embed, ephemeral=ephemeral)
 
         except pyfiglet.FontNotFound:
             raise commands.errors.BadArgument("Font not found.")
+
+    @font.autocomplete("font")
+    async def font_autocomplete(self, interaction: discord.Interaction, current: str):
+        return sorted([
+            discord.app_commands.Choice(name=c, value=c)
+            for c in Figlet().getFonts()
+            if c.lower() in current.lower() or current.lower() in c.lower()
+        ][:25], key=lambda c: c.name)
 
     @commands.hybrid_command()
     @describe(
@@ -174,8 +182,7 @@ class Fun(commands.Cog):
                 ctx,
                 t="Waiting for anyone to respond...",
                 d="React to this message to play Rock Paper Scissors with {}!".format(
-                    ctx.author)
-            )
+                    ctx.author))
             ms = await ctx.send(embed=embed)
             await ms.add_reaction("✅")
             await ms.add_reaction("❌")
@@ -406,7 +413,8 @@ class RPS_View(discord.ui.View):
 
     async def update_events(self, interaction: discord.Interaction, select: discord.ui.Select):
         await TTT_GameView.pong(interaction)
-        if interaction.user not in [self.p1, self.p2] or interaction.user in list(
+        if interaction.user not in [
+                self.p1, self.p2] or interaction.user in list(
                 self.choices.keys()):
             await self.ctx.send("something happened")
             return
@@ -423,9 +431,10 @@ class RPS_View(discord.ui.View):
                 embed = fmte(
                     self.ctx,
                     t="{} has won! {} beats {}.".format(
-                        gamestate.name, self.choices[gamestate], self.choices[loser]),
-                    d="Well guessed, both sides."
-                )
+                        gamestate.name,
+                        self.choices[gamestate],
+                        self.choices[loser]),
+                    d="Well guessed, both sides.")
                 await interaction.message.edit(embed=embed, view=None)
             else:
                 embed = fmte(

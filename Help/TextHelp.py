@@ -153,13 +153,14 @@ class EmbedHelp(commands.HelpCommand):
         embed = fmte(
             ctx,
             t="`{}` [Cog: `{}`, Grp: `{}`]\nAliases: `{}`".format(
-                command.name, command.cog_name, command.parent, command.aliases),
+                command.name,
+                command.cog_name,
+                command.parent,
+                command.aliases),
             d="*{}*\n`>>{} {}`".format(
                 command.short_doc,
                 command.qualified_name,
-                command.signature
-            )
-        )
+                command.signature))
         view = BaseHelpView(ctx)
         view.add_item(
             HelpSelect(
