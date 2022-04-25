@@ -2,13 +2,12 @@ from subprocess import Popen
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
-import autopep8
 
 from typing import Any, List
 from math import ceil
 
 from _aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
-from _aux.userio import is_user
+from _aux.Converters import UserConverter
 
 
 class Dev(commands.Cog):
@@ -104,11 +103,10 @@ class Dev(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_owner()
-    async def dms(self, ctx: commands.Context, thing: str):
+    async def dms(self, ctx: commands.Context, user: discord.Member):
         """
         Gets all dms from a user
         """
-        user = await is_user(ctx, thing)
         channel = await self.bot.create_dm(user)
         msgs = []
         async for m in channel.history(limit=300):
@@ -131,14 +129,13 @@ class Dev(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_owner()
-    async def history(self, ctx: commands.Context):
+    async def history(self, ctx: commands.Context, user: discord.Member):
         """
-        Create a paginator with buttons for looking through message history
+        Create a paginator with buttons for looking through the user's message history
         """
         msgs = []
-        async for m in ctx.channel.history(limit=199):
+        async for m in user.history(limit=200):
             msgs.append(m)
-
         embed = fmte(
             ctx,
             t="Waiting for user input...",
@@ -147,9 +144,9 @@ class Dev(commands.Cog):
             values=msgs,
             pagesize=10,
             fieldname="content",
-            fieldvalue="author",
+            fieldvalue="created_at",
             defaultname="`No Content`",
-            defaultvalue="`No author (?)`"
+            defaultvalue="`No Timestamp`"
         )
 
         msg = await ctx.send(embed=embed, view=view)

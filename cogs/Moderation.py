@@ -10,7 +10,7 @@ import time
 import pytz
 
 from _aux.embeds import fmte
-from _aux.userio import is_user, iototime, actual_purge
+from _aux.userio import iototime, actual_purge
 
 
 class Moderation(commands.Cog):

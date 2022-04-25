@@ -23,7 +23,7 @@ def fmte(
         color=c
     )
     embed.set_author(
-        name="Interaction Requested By: %s\n[Click To View Profile in Web]" %
+        name="Requested By: %s" %
         str(user), url="https://discordapp.com/users/%s" %
         user.id, icon_url=user.avatar.url)
     embed.timestamp = datetime.now()
@@ -31,12 +31,16 @@ def fmte(
 
 
 def fmte_i(inter, t="", d="", c=discord.Color.teal()) -> discord.Embed:
+    user = inter.user
     embed = discord.Embed(
         title=t,
         description=d,
         color=c
     )
-    embed.set_footer(text=f"Requested by {inter.user}")
+    embed.set_author(
+        name="Requested By: %s" %
+        str(user), url="https://discordapp.com/users/%s" %
+        user.id, icon_url=user.avatar.url)
     embed.timestamp = datetime.now()
     return embed
 

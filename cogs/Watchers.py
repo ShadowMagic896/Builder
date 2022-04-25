@@ -13,6 +13,8 @@ import pytz
 from _aux.embeds import fmte
 from _aux.sql3OOP import Table
 
+from cogs.InterHelp import InterHelp
+
 
 class Watchers(commands.Cog):
 
@@ -98,8 +100,8 @@ class Watchers(commands.Cog):
                 tz=pytz.timezone("UTC")), ctx.invoked_parents, ctx.invoked_subcommand, )
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
-    # @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error):
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, error: Exception):
         hint = None
 
         if "jishaku" in ctx.invoked_parents:  # Do not automate command errors for this cog
@@ -130,9 +132,11 @@ class Watchers(commands.Cog):
             hint = "You passed an invalid option."
         elif isinstance(error, asyncio.TimeoutError):
             hint = "This has timed out. Next time, try to be quicker."
+        elif isinstance(error, CommandOnCooldown):
+            hint = "Slow down! You can't use that right now."
         else:
             hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
-        embed = fmte(
+        hintEmbed = fmte(
             ctx,
             t="An Error Occurred.",
             d="**Hint:**\n{}\n**Error:**\n`{}`".format(
@@ -141,7 +145,8 @@ class Watchers(commands.Cog):
             ),
             c=discord.Color.red()
         )
-        await ctx.send(embed=embed, ephemeral=True)
+        helpEmbed = InterHelp(self.bot)._command_embed(ctx.interaction, ctx.command, color=discord.Color.red())
+        await ctx.send(embeds = [hintEmbed, helpEmbed], ephemeral=True)
         ctx.command_failed = True
 
     @commands.Cog.listener()

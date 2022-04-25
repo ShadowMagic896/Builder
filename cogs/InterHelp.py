@@ -187,7 +187,7 @@ class InterHelp(commands.Cog):
                                               group.description)
         )
 
-    def _command_embed(self, inter, command: commands.HybridCommand):
+    def _command_embed(self, inter, command: commands.HybridCommand, color = discord.Color.teal()):
         return fmte_i(
             inter,
             t="`{}` [Cog: `{}`, Group: `{}`]".format(
@@ -198,7 +198,8 @@ class InterHelp(commands.Cog):
             d="```{} {}```\n*{}*".format(
                 command.qualified_name, command.signature,
                 command.short_doc
-            )
+            ),
+            c = color
         )
 
     def _invite_embed(self, inter):
