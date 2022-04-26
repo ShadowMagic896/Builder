@@ -27,9 +27,9 @@ class Tools(commands.Cog):
         Resizes an image to a certain width and height
         """
         
-        errored = [c for c in [width, height] if c < 32 or c > 2048 or ceil(log2(c)) != floor(log2(c))]
+        errored = [c for c in [width, height] if c < 32 or c > 2048]
         if errored:
-            raise commands.errors.BadArgument("Dimensions too large or not powers of 2: %s" % ", ".join(errored))
+            raise commands.errors.BadArgument("Dimensions too large or small: %s" % ", ".join(errored))
 
         ogsize = (attachment.width, attachment.height)
 
@@ -71,9 +71,10 @@ class Tools(commands.Cog):
         """
         fn = attachment.filename
         extension = fn[fn.replace(".", "_", fn.count(".")-1).index("."):]
-        if extension.lower() not in ["png", "jpg"]:
+        print(extension)
+        if extension.lower() not in [".png", ".jpg"]:
             raise TypeError("Only PNG and JPG files are permitted.")
-        if attachment.size() > 8388608:
+        if attachment.size > 8388608:
             raise IOError("Image size too large")
         await attachment.save("data/PIL/resize%s%s" % (str(len(os.listdir("data/PIL"))), extension))
 

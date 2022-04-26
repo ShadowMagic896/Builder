@@ -1,4 +1,5 @@
 from multiprocessing.sharedctypes import Value
+from typing import Type
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import *
@@ -128,15 +129,17 @@ class Watchers(commands.Cog):
         elif isinstance(error, UserNotFound):
             hint = "That user was not found in discord."
         elif isinstance(error, MemberNotFound):
-            hint = "That user was not found in this server."
+            hint = "That member was not found in this server."
         elif isinstance(error, BadArgument):
             hint = "You passed an invalid option."
         elif isinstance(error, asyncio.TimeoutError):
             hint = "This has timed out. Next time, try to be quicker."
         elif isinstance(error, CommandOnCooldown):
             hint = "Slow down! You can't use that right now."
-        elif isinstance(error, ValueError):
-            hint = "You gave something of the wrong time. Check the error for more information."
+        elif isinstance(error, ValueError) or isinstance(error, TypeError):
+            hint = "You gave something of the wrong value or type. Check the error for more information."
+        elif isinstance(error, IOError):
+            hint = "You input an incorrect parameter for a file."
         else:
             hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
         hintEmbed = fmte(
