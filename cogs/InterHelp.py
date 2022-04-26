@@ -4,9 +4,8 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 import os
-from typing import Any, List, Optional, Union
 
-from setuptools import Command
+from typing import Any, List, Optional
 
 
 from _aux.embeds import fmte, fmte_i
@@ -83,28 +82,21 @@ class InterHelp(commands.Cog):
 
             view = self.get_view(
                 self.bot, ctx, ephemeral,
-                cog=cog, command=command
+                cog=cog
             )
 
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
+
+    # hahah code in one line go brrrrr
+
     @help.autocomplete("cog")
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-        return sorted([
-            discord.app_commands.Choice(
-                name="{}".format(
-                    c
-                ),
-                value=c
-            ) for c in list(self.bot.cogs.keys())
-            if ((current.lower() in c.lower() or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")
-        ][:25], key=lambda c: c.name)
+        return sorted([discord.app_commands.Choice(name=c,value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower() or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name)
 
     @help.autocomplete("command")
     async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-        ac: List[commands.HybridCommand] = self.bot.commands
-        return sorted([discord.app_commands.Choice(name="[{}] {}".format(c.cog_name, c.qualified_name), value=c.qualified_name) for c in ac if ((current.lower() in c.qualified_name.lower()) or (
-            c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name[c.name.index("]") + 1:])
+        return sorted([discord.app_commands.Choice(name="[{}] {}".format(c.cog_name, c.qualified_name), value=c.qualified_name) for c in (self.bot.commands if not getattr(inter.namespace, "cog") else self.bot.get_cog(inter.namespace.cog).get_commands() if inter.namespace.cog in [c for c, v in self.bot.cogs.items()] else []) if ((current.lower() in c.qualified_name.lower()) or (c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name[c.name.index("]") + 1:])
 
     def get_cmds(self):
         coms = [
@@ -190,6 +182,20 @@ class InterHelp(commands.Cog):
     def _command_embed(self, inter, command: commands.HybridCommand, color = discord.Color.teal()):
         return fmte_i(
             inter,
+            t="`{}` [Cog: `{}`, Group: `{}`]".format(
+                command.qualified_name,
+                command.cog_name,
+                command.parent
+            ),
+            d="```{} {}```\n*{}*".format(
+                command.qualified_name, command.signature,
+                command.short_doc
+            ),
+            c = color
+        )
+    def _command_embed_ctx(self, ctx, command: commands.HybridCommand, color = discord.Color.teal()):
+        return fmte(
+            ctx,
             t="`{}` [Cog: `{}`, Group: `{}`]".format(
                 command.qualified_name,
                 command.cog_name,

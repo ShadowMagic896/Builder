@@ -1,10 +1,13 @@
-from typing import Iterable
+import io
+import os
+from typing import Any, Iterable, List, Mapping, Optional, Type, Union
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
 import requests
 import bs4
+from PIL import Image
 
 import PythonSafeEval
 
@@ -180,6 +183,46 @@ class Utility(commands.Cog):
             t="Result found!",
         )
         await ctx.send("https://google.com{}".format(link), embed=embed, ephemeral=ephemeral)
+    
+    @commands.hybrid_command()
+    @describe(
+        objectid = "The ID of the object to look for.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    async def find(self, ctx: commands.Context, objectid: int, ephemeral: bool = False):
+        """
+        Finds a user, role, custom emoji, sticker, channel, or server based on the ID given
+        """
+        found: Any = ...
+        name: str = ...
+        objtype: Any = ...
+        attempts: List = [self.bot.get_user, ctx.guild.get_role, self.bot.get_emoji, self.bot.get_channel, self.bot.get_sticker, self.bot.get_guild, ]
+        
+        for t in attempts:
+            res = t(objectid)
+            if not res:
+                continue
+
+            found = res
+            objtype = type(found)
+            if isinstance(found, discord.User):
+                name = str(found)
+            else:
+                name = res.name
+
+            embed = fmte(
+                ctx,
+                t = "Object Found!",
+                d = "**Name: ** %s\n**Type:** %s" %
+                (name, objtype.__name__)
+            )
+            await ctx.send(embed=embed, ephemeral=ephemeral)
+            return
+        else:
+            raise commands.errors.BadArgument("Cannot find object: %s. Make sure this bot can see it. If it was an emoji, make sure it was not a default one." % str(objectid))
+            
+
+
 
 
 async def setup(bot):

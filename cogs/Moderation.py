@@ -1,3 +1,4 @@
+from typing import Optional
 import discord
 from discord import app_commands
 from discord.app_commands import describe
@@ -176,7 +177,7 @@ class Moderation(commands.Cog):
         reason="The reason for purging. Shows up on audit log.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    @commands.has_permissions(manage_messages=True)
+    # @commands.has_permissions(manage_messages=True)
     async def purge(self, ctx: commands.Context, limit: int, user: discord.Member = None, reason: str = "No reason given.", ephemeral: bool = True):
         """
         Purges a channel's messages.
@@ -245,6 +246,33 @@ class Moderation(commands.Cog):
             d="Reason: `{}`".format(reason)
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
+    
+    @commands.hybrid_command()
+    @describe(
+        name = "The name of the emoji to delete",
+        ephemeral = "Whether to publicily send the response to the command."
+    )
+    async def emojidel(self, ctx: commands.Context, name: str, ephemeral: bool = False):
+        """
+        Deletes an emoji from the guild with the given name.
+        """
+        for c in ctx.guild.emojis:
+            if c.name == name:
+                await ctx.guild.delete_emoji(c)
+                embed = fmte(ctx, t = "Emoji %s successfully deleted" % name)
+                await ctx.send(embed=embed, ephemeral=ephemeral)
+                return
+        raise commands.errors.EmojiNotFound(name)
+    
+    @commands.hybrid_command(name="del")
+    async def _del(self, ctx: commands.Context, messageid: Optional[int]):
+        if not messageid:
+            if not ctx.message.reference:
+                raise commands.errors.MissingRequiredArgument("No message ID or message reference")
+            messageid = ctx.message.reference.message_id
+        await (await ctx.fetch_message(ctx.message.reference.message_id)).delete()
+        await ctx.message.delete()
+
 
 
 async def setup(bot):

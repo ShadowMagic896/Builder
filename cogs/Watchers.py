@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import *
@@ -100,7 +101,7 @@ class Watchers(commands.Cog):
                 tz=pytz.timezone("UTC")), ctx.invoked_parents, ctx.invoked_subcommand, )
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         hint = None
 
@@ -134,6 +135,8 @@ class Watchers(commands.Cog):
             hint = "This has timed out. Next time, try to be quicker."
         elif isinstance(error, CommandOnCooldown):
             hint = "Slow down! You can't use that right now."
+        elif isinstance(error, ValueError):
+            hint = "You gave something of the wrong time. Check the error for more information."
         else:
             hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
         hintEmbed = fmte(
@@ -145,7 +148,11 @@ class Watchers(commands.Cog):
             ),
             c=discord.Color.red()
         )
-        helpEmbed = InterHelp(self.bot)._command_embed(ctx.interaction, ctx.command, color=discord.Color.red())
+        helpEmbed = InterHelp(self.bot)._command_embed(
+            ctx.interaction, ctx.command, color=discord.Color.red()
+        ) if ctx.interaction else InterHelp(self.bot)._command_embed_ctx(
+            ctx, ctx.command, color=discord.Color.red()
+        )
         await ctx.send(embeds = [hintEmbed, helpEmbed], ephemeral=True)
         ctx.command_failed = True
 
