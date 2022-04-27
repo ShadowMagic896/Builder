@@ -220,8 +220,39 @@ class Utility(commands.Cog):
             return
         else:
             raise commands.errors.BadArgument("Cannot find object: %s. Make sure this bot can see it. If it was an emoji, make sure it was not a default one." % str(objectid))
-            
+        
+    @commands.hybrid_command()
+    @describe(
+        term = "The term to search urbanDictionary for.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    async def urban(self, ctx: commands.Context, term: str, ephemeral: bool = False):
+        """
+        Searches the Urban Dictionary for a term
+        """
+        url = "https://mashape-community-urban-dictionary.p.rapidapi.com/define"
 
+        params = {"term":term}
+
+        headers = {
+            "X-RapidAPI-Host": "mashape-community-urban-dictionary.p.rapidapi.com",
+            "X-RapidAPI-Key": os.getenv("X_RAPID_API_KEY")
+        }
+
+        response = requests.request("GET", url, headers=headers, params=params)
+        res = response.json()["list"]
+        embed = fmte(
+            ctx,
+            t = "`{}`: {} Definitions {}".format(term, len(res), "[Showing 5]" if len(res) > 5 else ""),
+        )
+        for d in res[:5]:
+            embed.add_field(
+                name = "[{}]({})".format(d["author"], d["permalink"]),
+                value = "{}\n**Upvotes:** {}\n**Written On:** {}".format(d["definition"], d["thumbs_up"], d["written_on"]),
+                inline = False
+            )
+        
+        await ctx.send(embed=embed, ephemeral=ephemeral)
 
 
 
