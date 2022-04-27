@@ -23,7 +23,7 @@ class Fun(commands.Cog):
     def ge(self):
         return "⚽"
 
-    @commands.hybrid_command(aliases=["text"])
+    @commands.hybrid_command()
     @describe(
         font="The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.",
         text="The text to translate.",

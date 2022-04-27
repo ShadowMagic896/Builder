@@ -46,7 +46,7 @@ class Builder(commands.AutoShardedBot):
 
 async def main():
     bot = Builder()
-    await bot.load_extension("jishaku")
+    # await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
     await bot.start(os.getenv("BOT_KEY"))
 

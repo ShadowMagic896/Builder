@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
+import re
+
 class UserConverter(commands.Converter):
     async def convert(self, ctx: Context, user: str):
         if not user:
@@ -31,3 +33,20 @@ class UserConverter(commands.Converter):
             return discord.utils.find(lambda u: u.id == _id, users)
         except discord.errors.NotFound:
             raise commands.errors.UserNotFound(user)
+
+class YouTubeLink(commands.Converter):
+    async def convert(self, ctx: Context, arg: str):
+        match = "(http(s)?://)?(www.)?youtube.com/watch\?v=.+"
+
+        if not re.match(match, arg):
+            raise commands.errors.BadArgument("Invalid URL")
+
+        if not arg.startswith("https://"):
+            arg = "https://" + arg
+
+        arg = arg.replace("www.", "")
+
+        if not re.match(match, arg):
+            raise commands.errors.BadArgument("Invalid URL: %s" % arg)
+
+        return arg

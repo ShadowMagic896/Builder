@@ -94,12 +94,19 @@ class Watchers(commands.Cog):
     async def on_guild_join(self, guild: discord.Guild):
         # await self.prep_guild_channels(guild)
         pass
-
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction: discord.Interaction):
+        if not interaction.command:
+            return
+        mes = "[INTERACTION] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
+            interaction.user, interaction.command.name, datetime.now(
+                tz=pytz.timezone("UTC")), interaction.command.parent,)
+        open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
-        mes = "Auth: {}; Com: {} [{}]; T: {}; Parents: {}; Children: {};\n".format(
-            ctx.author, ctx.command.qualified_name, ctx.command_failed, datetime.now(
-                tz=pytz.timezone("UTC")), ctx.invoked_parents, ctx.invoked_subcommand, )
+        mes = "[COMMAND] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
+            ctx.author, ctx.command.qualified_name, datetime.now(
+                tz=pytz.timezone("UTC")), ctx.invoked_parents,)
         open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
     # @commands.Cog.listener()
@@ -139,7 +146,7 @@ class Watchers(commands.Cog):
         elif isinstance(error, ValueError) or isinstance(error, TypeError):
             hint = "You gave something of the wrong value or type. Check the error for more information."
         elif isinstance(error, IOError):
-            hint = "You input an incorrect parameter for a file."
+            hint = "You gave an incorrect parameter for a file."
         else:
             hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
         hintEmbed = fmte(
