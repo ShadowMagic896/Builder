@@ -254,6 +254,50 @@ class Utility(commands.Cog):
         
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
+    @commands.hybrid_command()
+    async def define(self, ctx: commands.Context, term: str, ephemeral: bool = False):
+        response = requests.get(
+            "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
+                term.lower(),
+                os.getenv("DICT_API_KEY")
+            )
+        ).json()
+        defs=[]
+        dates=[]
+        types=[]
+        
+        for defi in response:
+            defs.append(("".join(defi["shortdef"][0])).capitalize())
+            dates.append(defi["date"])
+            types.append(defi["fl"])
+
+        embed = fmte(
+            ctx,
+            t = "Definition(s) for the word: {} [{}]".format(
+                term.capitalize(),
+                len(defs)
+            ),
+        )
+        if len(defs) < 1:
+            raise ValueError('Word not found/no definition')
+
+        cut = None if len(defs)<=5 else len(defs)-5
+        defs = defs[:5]
+
+        for c, item in enumerate(defs):
+            embed.add_field(
+                name = "Definition {}, {}: *`[{}]`*".format(
+                    c+1,
+                    types[c].capitalize(),
+                    str(dates[c])[:dates[c].index("{")] if "{" in str(dates[c]) else str(dates[c])
+                ),
+                value = item, 
+                inline=False
+            )
+        if cut:
+            embed.add_field(name="...and %s more definitions." % cut, value = "-------------------------------------------------------------------", inline = False)
+        await ctx.send(embed=embed)
+
 
 
 async def setup(bot):
