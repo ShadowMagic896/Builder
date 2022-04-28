@@ -11,7 +11,7 @@ from matplotlib import font_manager
 from PIL import Image, ImageDraw, ImageFont
 from typing import Literal, Optional
 
-from _aux.embeds import fmte
+from _aux.embeds import fmte, Desc
 
 class Media(commands.Cog):
     """
@@ -55,7 +55,7 @@ class Media(commands.Cog):
     @describe(
         width = "The new image's width.",
         height = "The new image's height.",
-        ephemeral="Whether to publicly show the response to the command.",
+        ephemeral=Desc.ephemeral,
     )
     async def resize(self, ctx: commands.Context, attachment: discord.Attachment, width: int, height: int, ephemeral: bool = False):
         """
@@ -82,7 +82,7 @@ class Media(commands.Cog):
     @describe(
         name="What to name the new emoji.",
         reason="The reason for creating the emoji. Shows up in audit logs.",
-        ephemeral="Whether to publicly show the response to the command.",
+        ephemeral=Desc.ephemeral,
     )
     async def steal(self, ctx: commands.Context, name: str, attachment: discord.Attachment, reason: Optional[str] = "No reason given", ephemeral: bool = False):
         """
@@ -127,7 +127,7 @@ class Media(commands.Cog):
         r = "The RED component of the text color.",
         g = "The GREEN component of the text color.",
         b = "The BLUE component of the text color.",
-        ephemeral="Whether to publicly show the response to the command.",
+        ephemeral=Desc.ephemeral,
     )
     async def text(
         self, 
@@ -188,7 +188,11 @@ class Media(commands.Cog):
         return op
     
     @commands.hybrid_command()
-    async def avatar(self, ctx: commands.Context, user: Optional[discord.Member]):
+    @describe(
+        user=Desc.user,
+        ephemeral=Desc.ephemeral
+    )
+    async def avatar(self, ctx: commands.Context, user: Optional[discord.Member], ephemeral: bool = False):
         """
         Gets the avatar / profile picture of a member
         """

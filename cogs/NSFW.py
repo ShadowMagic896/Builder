@@ -27,12 +27,12 @@ class NSFW(commands.Cog):
     @commands.is_nsfw()
     @describe(querey="The keywords to search for.",
               ephemeral="Whether to publicly send the response or not. All images are sent in DMs.")
-    async def r34(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
+    async def rule34(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
         """
         res = requests.get(
-            f"https://rule34.xxx/index.php?page=post&s=list&tags={'+'.join(querey.split('' ''))}+"
+            f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % querey
         ).text
         soup = BeautifulSoup(res, 'html.parser')
 
@@ -65,7 +65,7 @@ class NSFW(commands.Cog):
     @commands.hybrid_command()
     @commands.is_nsfw()
     @describe(amount="The amount of images to send.",
-              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
+            ephemeral="Whether to publicly show the response to the command. All images are sent in DMs.")
     async def neko(self, ctx: commands.Context, amount: Range[int, 1, 20] = 1, ephemeral: bool = False):
         """
         Gets an image response from [nekos.life](https://nekos.life) and sends it to you.

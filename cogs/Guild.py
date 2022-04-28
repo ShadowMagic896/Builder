@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from typing import Literal
 
-from _aux.embeds import fmte_i, fmte
+from _aux.embeds import fmte_i, fmte, Desc
 from _aux.sql3OOP import Table
 from _aux.userio import clean
 
@@ -23,7 +23,7 @@ class Guild(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        ephemeral="Whether to publicly show the response to the command.",
+        ephemeral=Desc.ephemeral,
     )
     async def guildinfo(self, ctx: commands.Context, ephemeral: bool = False):
         """
@@ -88,7 +88,7 @@ class Guild(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     @describe(
         datatype="The type of data to return.",
-        ephemeral="Whether to publicly show the response to the command.",
+        ephemeral=Desc.ephemeral,
     )
     async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"], ephemeral: bool = False):
         """

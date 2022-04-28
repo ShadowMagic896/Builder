@@ -9,7 +9,7 @@ import pyfiglet
 from pyfiglet import Figlet
 from typing import List
 
-from _aux.embeds import fmte
+from _aux.embeds import fmte, Desc
 
 
 class Fun(commands.Cog):
@@ -25,9 +25,9 @@ class Fun(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        font="The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.",
-        text="The text to translate.",
-        ephemeral="Whether to publicly show the response to the command.",
+        font = "The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.",
+        text = "The text to translate.",
+        ephemeral= Desc.ephemeral
     )
     async def font(self, ctx, font: str, text: str, ephemeral: bool = False):
         """
@@ -57,7 +57,7 @@ class Fun(commands.Cog):
     @describe(
         sides="The amount of sides for the dice.",
         times="How many times to roll the dice.",
-        ephemeral="Whether to publicly show the response to the command.",
+        ephemeral=Desc.ephemeral
     )
     async def roll(self, ctx, sides: Range[int, 1, 20000] = 20, times: Range[int, 1, 200] = 1, ephemeral: bool = False):
         """
@@ -84,7 +84,7 @@ class Fun(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        user="The user to offer a game to."
+        user=Desc.user
     )
     async def tictactoe(self, ctx, user: discord.Member = None):
         """
@@ -144,7 +144,7 @@ class Fun(commands.Cog):
 
     @commands.hybrid_command(aliases=["rps", "roshambo", "rochambeau"])
     @describe(
-        user="The user to offer a game to."
+        user=Desc.user
     )
     async def rockpaperscissors(self, ctx, user: discord.Member = None):
         """

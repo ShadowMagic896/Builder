@@ -9,7 +9,7 @@ import os
 from typing import Any, List, Optional
 
 
-from _aux.embeds import fmte, fmte_i
+from _aux.embeds import fmte, fmte_i, Desc
 
 
 class InterHelp(commands.Cog):
@@ -20,7 +20,7 @@ class InterHelp(commands.Cog):
     @describe(
         cog="The cog to show help on.",
         command="The command to show help on.",
-        ephemeral="Whether to publicly show the response to the command.",
+        ephemeral=Desc.ephemeral,
     )
     async def help(self, ctx: commands.Context, cog: str = None, command: str = None, ephemeral: bool = False):
         """
@@ -79,7 +79,7 @@ class InterHelp(commands.Cog):
                 raise commands.errors.BadArgument(command)
             command: commands.HybridCommand = _command[0]
 
-            embed = self._command_embed(ctx, command)
+            embed = self._command_embed_ctx(ctx, command)
 
             view = self.get_view(
                 self.bot, ctx, ephemeral,
@@ -216,6 +216,13 @@ class InterHelp(commands.Cog):
                 )
             )
         )
+    
+    def _os_embed(self, inter):
+        return fmte_i(
+            inter,
+            t="I'm 100\% Open Source!",
+            d="View on [GitHub](%s)" % "https://github.com/ShadowMagic896/Builder"
+        )
 
     def get_view(
             self,
@@ -229,6 +236,7 @@ class InterHelp(commands.Cog):
 
         view.add_item(MainMenu(bot, context, ephemeral))
         view.add_item(InviteLink(bot, context, ephemeral))
+        view.add_item(OpenSrc(bot, context, ephemeral))
         if not ephemeral:
             view.add_item(CloseButton())
 
@@ -356,13 +364,19 @@ class InviteLink(discord.ui.Button):
             self.bot, self.context, self.ephemeral)
         await interaction.response.edit_message(embed=embed, view=view)
 
+class OpenSrc(discord.ui.Button):
+    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
+            self.bot = bot
+            self.context = context
+            self.ephemeral = ephemeral
+            super().__init__(label="I'm OpenSource!", emoji="👨🏻‍💻", style=discord.ButtonStyle.blurple)
+    
+    async def callback(self, interaction: Interaction) -> Any:
+        embed = InterHelp(self.bot)._os_embed(interaction)
+        view = InterHelp(self.bot).get_view(
+            self.bot, self.context, self.ephemeral)
+        await interaction.response.edit_message(embed=embed, view=view)
+
 
 async def setup(bot):
     await bot.add_cog(InterHelp(bot))
-
-
-
-def getRandomChars(amount: int):
-    chars = string.ascii_letters.split("") # These return one big "abcdefghijk..." strings, using .split("") turns it into ["a", "b", ...]
-    numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    chars.extend(numbers) # Add the numbers to the valid characters

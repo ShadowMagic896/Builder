@@ -10,7 +10,7 @@ from datetime import datetime
 import time
 import pytz
 
-from _aux.embeds import fmte
+from _aux.embeds import Desc, fmte
 from _aux.userio import iototime, actual_purge
 
 
@@ -27,9 +27,9 @@ class Moderation(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        until="The time to automatically unlock the channel",
-        reason="The reason for locking the channel. Show up on audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        until = "How long to wait before unlocking the channel.",
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     @commands.has_permissions(manage_channels=True)
     async def lock(self, ctx: commands.Context, until: str = None, reason: str = "No reason given", ephemeral: bool = False):
@@ -72,8 +72,8 @@ class Moderation(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        reason="The reason for unlocking the channel. Shows up on audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     async def unlock(self, ctx, reason: str = "No reason given", ephemeral: bool = False):
         """
@@ -93,10 +93,10 @@ class Moderation(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        user="The user to timeout.",
+        user = Desc.user,
         time="The time to timeout for.",
-        reason="The reason for timing out the user. Shows up on audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     @commands.has_permissions(moderate_members=True)
     async def timeout(self, ctx: commands.Context, user: discord.Member, time: str = "15m", reason: str = "No reason given.", ephemeral: bool = False):
@@ -126,9 +126,10 @@ class Moderation(commands.Cog):
 
     @commands.hybrid_command()
     @commands.has_permissions(moderate_members=True)
-    @describe(user="The user to untimeout",
-              reason="The reason for untimingout the user. Shows up on the audit log.",
-              ephemeral="Whether to publicly show the response to the command.",
+    @describe(
+        user = Desc.user,
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     async def untimeout(self, ctx: commands.Context, user: discord.Member, reason: str = "No reason given.", ephemeral: bool = False):
         """
@@ -160,9 +161,9 @@ class Moderation(commands.Cog):
     @commands.has_permissions(manage_messages = True)
     @describe(
         limit="Maximum number of messages to delete. This may not always be reached.",
-        user="If specified, this will only delete messages by this user",
-        reason="The reason for purging. Shows up on audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        user = Desc.user,
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     async def purge(self, ctx: commands.Context, limit: int, user: discord.Member = None, reason: str = "No reason given.", ephemeral: bool = False):
         """
@@ -190,10 +191,10 @@ class Moderation(commands.Cog):
     @commands.hybrid_command()
     @commands.has_permissions(manage_nicknames=True)
     @describe(
-        user="The user to nickname. Defaults to the author.",
-        name="The new name. Defaults to removing the nickname.",
-        reason="The reason for renaming the user. Shows up on audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        user = Desc.user,
+        name = "The new name for the user.",
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     async def nick(self, ctx: commands.Context, user: discord.Member = None, name: str = None, reason: str = "No reason given.", ephemeral: bool = False):
         """
@@ -216,9 +217,9 @@ class Moderation(commands.Cog):
     @commands.hybrid_command()
     @commands.has_permissions(kick_members=True)
     @describe(
-        user="The user to kick from the guild.",
-        reason="The reason for kicking the member. Shows up on audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        user = Desc.user,
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     async def kick(self, ctx: commands.Context, user: discord.Member, reason: str = "No reason given.", ephemeral: bool = False):
         """
@@ -236,10 +237,10 @@ class Moderation(commands.Cog):
     @commands.hybrid_command()
     @commands.has_permissions(ban_members = True)
     @describe(
-        user = "The user to ban.",
+        user = Desc.user,
         purgedays = "The amount of days' worth of messages to delete.",
-        reason = "The reason for banning the user. Shows up in audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     async def ban(self, ctx: commands.Context, user: discord.Member, purgedays: Range[int, 0, 7] = 0, reason: str = "No reason given", ephemeral: bool = False):
         """
@@ -258,9 +259,9 @@ class Moderation(commands.Cog):
     @commands.hybrid_command()
     @commands.has_permissions(ban_members = True)
     @describe(
-        user = "The user to unban.",
-        reason = "The reason for unbanning the user. Shows up in audit log.",
-        ephemeral="Whether to publicly show the response to the command.",
+        user = Desc.user,
+        reason = Desc.reason,
+        ephemeral = Desc.ephemeral,
     )
     async def unban(self, ctx: commands.Context, user: discord.User, reason: str = "No reason given", ephemeral: bool = False):
         """

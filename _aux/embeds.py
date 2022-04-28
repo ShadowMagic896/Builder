@@ -1,5 +1,5 @@
 from math import ceil, floor
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 import discord
 from discord.ext import commands
 from datetime import datetime
@@ -342,3 +342,8 @@ class DMEmbedPaginator(discord.ui.View):
                 inline=self.inln
             )
         return embed
+
+class Desc:
+    user = "The target of this command."
+    ephemeral = "Whether to publicly show the response to the command."
+    reason = "The reason for using this command. Shows up in the server's audit log."
