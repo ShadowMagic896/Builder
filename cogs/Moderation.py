@@ -262,7 +262,7 @@ class Moderation(commands.Cog):
         reason = "The reason for unbanning the user. Shows up in audit log.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    async def ban(self, ctx: commands.Context, user: discord.User, reason: str = "No reason given", ephemeral: bool = False):
+    async def unban(self, ctx: commands.Context, user: discord.User, reason: str = "No reason given", ephemeral: bool = False):
         """
         Unbans a user from the server
         """

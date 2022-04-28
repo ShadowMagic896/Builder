@@ -34,16 +34,22 @@ class Media(commands.Cog):
         if attachment.size > 40000000:
             raise IOError("Attachment is too large. Please keep files under 40MB")
 
-    async def _resize(self, attachment: discord.Attachment, width, height):
-        fp = self.getFP(attachment)
+    async def _resize(self, attachment: discord.Attachment, width, height) -> io.BytesIO:
+        # fp = self.getFP(attachment)
 
-        await attachment.save(fp)
+        buffer = io.BytesIO()
+        await attachment.save(buffer)
 
-        img = Image.open(fp)
+        img = Image.open(buffer)
+        print("OPENED")
+
         img = img.resize((width, height))
+        img.save(buffer, "png")
+        print("SAVED")
 
-        return img, fp
-    
+        img.close() 
+        return buffer
+
     @commands.hybrid_command()
     @commands.cooldown(5, 60*60*3, commands.BucketType.user)
     @describe(
@@ -58,7 +64,9 @@ class Media(commands.Cog):
         self.checkAttachment(attachment)
         ogsize = (attachment.width, attachment.height)
 
-        img, filepath = await self._resize(attachment, width, height)
+        buffer = await self._resize(attachment, width, height)
+
+        print("RESIZED")
 
         embed = fmte(
             ctx,
@@ -66,12 +74,9 @@ class Media(commands.Cog):
             d = "File of dimensions (%s, %s) converted to file of dimensions (%s, %s)" %
             (ogsize[0], ogsize[1], width, height)
         )
-
-        file = discord.File(filepath, filename="resize.%s" % attachment.filename)
-
+        file = discord.File(buffer.seek(0), filename="resize.%s" % attachment.filename)
+        print("MADE FILE")
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
-        img.close()
-        os.remove(filepath)
     
     @commands.hybrid_command()
     @commands.cooldown(2, 60*60*3, commands.BucketType.user)
@@ -92,7 +97,9 @@ class Media(commands.Cog):
         
         fp = self.getFP(attachment)
 
-        await attachment.save("data/PIL/image%s%s" % (str(len(os.listdir("data/PIL"))), extension))
+        buffer = io.BytesIO()
+
+        await attachment.save(buffer)
 
         img, filepath = await self._resize(attachment, 128, 128)
 
@@ -142,7 +149,9 @@ class Media(commands.Cog):
 
         ephemeral: bool = False
     ):
-        """Adds text to an image. Does this have too many parameters? Yes."""
+        """
+        Adds text to an image. Does this have too many parameters? Yes.
+        """
         fp = self.getFP(attachment)
         
         if font not in font_manager.findSystemFonts(fontpaths=None, fontext='ttf'):
@@ -181,6 +190,9 @@ class Media(commands.Cog):
     
     @commands.hybrid_command()
     async def avatar(self, ctx: commands.Context, user: Optional[discord.Member]):
+        """
+        Gets the avatar / profile picture of a member
+        """
         user = user if user else ctx.author
         embed = fmte(
             ctx,

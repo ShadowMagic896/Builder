@@ -228,7 +228,7 @@ class Utility(commands.Cog):
     )
     async def urban(self, ctx: commands.Context, term: str, ephemeral: bool = False):
         """
-        Searches the Urban Dictionary for a term
+        Searches the Urban Dictionary and returns the top results for a term
         """
         url = "https://mashape-community-urban-dictionary.p.rapidapi.com/define"
 
@@ -255,7 +255,14 @@ class Utility(commands.Cog):
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()
+    @describe(
+        term = "The term to search urbanDictionary for.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
     async def define(self, ctx: commands.Context, term: str, ephemeral: bool = False):
+        """
+        Searches Merriam-Webster's Collegiate dictionary and returns the top results for a term
+        """
         response = requests.get(
             "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
                 term.lower(),
@@ -296,7 +303,7 @@ class Utility(commands.Cog):
             )
         if cut:
             embed.add_field(name="...and %s more definitions." % cut, value = "-------------------------------------------------------------------", inline = False)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, ephemeral=ephemeral)
 
 
 

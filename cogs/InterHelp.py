@@ -1,3 +1,4 @@
+import string
 import discord
 from discord import app_commands, Interaction
 from discord.app_commands import describe
@@ -41,7 +42,7 @@ class InterHelp(commands.Cog):
             if not cogs:
                 raise commands.errors.BadArgument(cog)
 
-            embed = InterHelp(self.bot)._cog_embed(ctx.interaction, cogs[0])
+            embed = InterHelp(self.bot)._cog_embed_ctx(ctx, cogs[0])
             view = self.get_view(
                 self.bot, ctx, ephemeral,
                 cog=cogs[0]
@@ -78,7 +79,7 @@ class InterHelp(commands.Cog):
                 raise commands.errors.BadArgument(command)
             command: commands.HybridCommand = _command[0]
 
-            embed = self.command_embed(ctx, command)
+            embed = self._command_embed(ctx, command)
 
             view = self.get_view(
                 self.bot, ctx, ephemeral,
@@ -147,22 +148,6 @@ class InterHelp(commands.Cog):
             )
         )
 
-    def cog_embed(self, ctx, cog: commands.Cog):
-        return fmte(
-            ctx,
-            t="Cog: `{}`".format(cog.qualified_name),
-            d="**Commands:** {}\n*{}*".format(
-                len(cog.get_commands()), cog.description)
-        )
-
-    def command_embed(self, ctx, command: commands.HybridCommand):
-        return fmte(
-            ctx,
-            t="Command: `{}`".format(command.name),
-            d="`/{} {}`\n*{}*".format(command.qualified_name,
-                                      command.signature, command.short_doc)
-        )
-
     def _cog_embed(self, inter, cog: commands.Cog):
         return fmte_i(
             inter,
@@ -193,6 +178,16 @@ class InterHelp(commands.Cog):
             ),
             c = color
         )
+    
+    def _cog_embed_ctx(self, ctx: commands.Context, cog: commands.Cog):
+        return fmte(
+            ctx,
+            t="Cog: `{}`".format(cog.qualified_name),
+            d="**Commands:** {}\n*{}*".format(
+                len(cog.get_commands()), cog.description)
+        )
+
+
     def _command_embed_ctx(self, ctx, command: commands.HybridCommand, color = discord.Color.teal()):
         return fmte(
             ctx,
@@ -207,6 +202,7 @@ class InterHelp(commands.Cog):
             ),
             c = color
         )
+
 
     def _invite_embed(self, inter):
         return fmte_i(
@@ -237,7 +233,7 @@ class InterHelp(commands.Cog):
             view.add_item(CloseButton())
 
         return view
-
+        
 
 class HelpMenu(discord.ui.View):  # Base to add things on
     def __init__(self, *, timeout: Optional[float] = 180):
@@ -363,3 +359,10 @@ class InviteLink(discord.ui.Button):
 
 async def setup(bot):
     await bot.add_cog(InterHelp(bot))
+
+
+
+def getRandomChars(amount: int):
+    chars = string.ascii_letters.split("") # These return one big "abcdefghijk..." strings, using .split("") turns it into ["a", "b", ...]
+    numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    letters.extend(numbers)
