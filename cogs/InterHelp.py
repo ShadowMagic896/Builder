@@ -365,4 +365,4 @@ async def setup(bot):
 def getRandomChars(amount: int):
     chars = string.ascii_letters.split("") # These return one big "abcdefghijk..." strings, using .split("") turns it into ["a", "b", ...]
     numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    letters.extend(numbers)
+    chars.extend(numbers) # Add the numbers to the valid characters

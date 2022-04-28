@@ -7,9 +7,6 @@ from discord.ext import commands
 
 import requests
 import bs4
-from PIL import Image
-
-import PythonSafeEval
 
 from _aux.embeds import fmte
 from _aux.userio import convCodeBlock
@@ -47,33 +44,6 @@ class Utility(commands.Cog):
             d="[Invite Link]({})".format(link)
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
-
-    @commands.hybrid_command()
-    async def py(self, ctx: commands.Context):
-        """
-        Isolated evaluation of python code.
-        """
-        embed = fmte(
-            ctx,
-            t="Waiting for code..."
-        )
-        await ctx.send(embed=embed)
-        message = await self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.author == ctx.author, timeout=120)
-        message = convCodeBlock(message.content)[5:-3]
-        sf = PythonSafeEval.SafeEval(version="3.8", modules=["numpy"])
-        _eval = sf.eval(message, time_limit=2)
-        lines: Iterable = ...
-        with open("evalstdout.txt", "wb") as f:
-            f.write(_eval.stdout)
-            lines = [s.decode("utf-8") for s in f.readlines()]
-        embed = fmte(
-            ctx,
-            t="Process Exited With Code {}".format(_eval.returncode),
-            d="\n".join("{}{}| {}".format("0" * 3 - len(str(c)), c, l)
-                        for c, l in enumerate(lines)),
-            c=discord.Color.teal() if _eval.returncode == 0 else discord.Color.red()
-        )
-        await ctx.interaction.followup(embed=embed)
 
     @commands.hybrid_command()
     @describe(

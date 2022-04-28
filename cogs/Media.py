@@ -35,19 +35,19 @@ class Media(commands.Cog):
             raise IOError("Attachment is too large. Please keep files under 40MB")
 
     async def _resize(self, attachment: discord.Attachment, width, height) -> io.BytesIO:
-        # fp = self.getFP(attachment)
-
         buffer = io.BytesIO()
         await attachment.save(buffer)
 
         img = Image.open(buffer)
-        print("OPENED")
+        
 
         img = img.resize((width, height))
         img.save(buffer, "png")
-        print("SAVED")
-
+        
         img.close() 
+        
+        buffer.seek(0)
+
         return buffer
 
     @commands.hybrid_command()
@@ -66,7 +66,6 @@ class Media(commands.Cog):
 
         buffer = await self._resize(attachment, width, height)
 
-        print("RESIZED")
 
         embed = fmte(
             ctx,
@@ -74,8 +73,8 @@ class Media(commands.Cog):
             d = "File of dimensions (%s, %s) converted to file of dimensions (%s, %s)" %
             (ogsize[0], ogsize[1], width, height)
         )
-        file = discord.File(buffer.seek(0), filename="resize.%s" % attachment.filename)
-        print("MADE FILE")
+
+        file = discord.File(buffer, filename="resize.%s" % attachment.filename)
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
     
     @commands.hybrid_command()

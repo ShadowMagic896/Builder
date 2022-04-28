@@ -57,7 +57,7 @@ class FeedbackModal(ui.Modal, title="Anonymous Feedback Forum"):
 
     async def on_submit(self, interaction: Interaction) -> None:
         open(
-            "feedback.txt",
+            "data/logs/feedback.txt",
             "a").write(
             "\n---FEEDBACK---\nRating: %s\nBugs: %s\nReqs: %s\nComments: %s\n\n" %
             (self.rating.value.strip(),

@@ -2,14 +2,12 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import when_mentioned_or
 
-import os
 import asyncio
-import logging
-
 from dotenv import load_dotenv
+import logging
+import os
+
 from _aux.extensions import load_extensions
-from Help.TextHelp import EmbedHelp
-from cogs.InterHelp import InterHelp
 
 load_dotenv()
 
@@ -17,7 +15,7 @@ load_dotenv()
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
-    filename='_discord.log',
+    filename='data/logs/_discord.log',
     encoding='utf-8',
     mode='w')
 handler.setFormatter(logging.Formatter(
@@ -46,8 +44,9 @@ class Builder(commands.AutoShardedBot):
 
 async def main():
     bot = Builder()
-    # await bot.load_extension("jishaku")
+    await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
+
     await bot.start(os.getenv("BOT_KEY"))
 
 asyncio.run(main())

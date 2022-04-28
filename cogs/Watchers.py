@@ -1,13 +1,9 @@
-from multiprocessing.sharedctypes import Value
-from typing import Type
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import *
 from discord.errors import *
 
 import asyncio
-import sqlite3
-import os
 import time
 from datetime import datetime
 import pytz
@@ -101,13 +97,13 @@ class Watchers(commands.Cog):
         mes = "[INTERACTION] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
             interaction.user, interaction.command.name, datetime.now(
                 tz=pytz.timezone("UTC")), interaction.command.parent,)
-        open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
+        open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
         mes = "[COMMAND] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
             ctx.author, ctx.command.qualified_name, datetime.now(
                 tz=pytz.timezone("UTC")), ctx.invoked_parents,)
-        open("_commandlog.txt", "ab").write(mes.encode("UTF-8"))
+        open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
     # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
@@ -170,11 +166,15 @@ class Watchers(commands.Cog):
     async def on_command_completion(self, ctx: commands.Context):
         if "jishaku" in ctx.invoked_parents or "jsk" in ctx.invoked_parents:
             return
-
-        if ctx.command_failed:
-            await ctx.message.add_reaction("‼️")
-        else:
-            await ctx.message.add_reaction("☑️")
+        try:
+            if ctx.command_failed:
+                await ctx.message.add_reaction("‼️")
+            else:
+                await ctx.message.add_reaction("☑️")
+        except discord.errors.NotFound:
+            pass
+        except Exception as e:
+            raise e
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -184,7 +184,7 @@ class Watchers(commands.Cog):
             data = "{} at {}: {}\n".format(
                 message.author, datetime.fromtimestamp(
                     time.time()), message.content)
-            open("_dmlog.txt", "a").write(data)
+            open("data/logs/_dmlog.txt", "a").write(data)
         # await self.bot.process_commands(message) # This is no longer
         # necessary in 2.0.0?
 
