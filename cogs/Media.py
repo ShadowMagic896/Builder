@@ -6,13 +6,22 @@ from discord.ext import commands
 
 import os
 
+import numpy as np
 
-from matplotlib import font_manager
-import PIL
-from PIL import Image, ImageDraw, ImageFont, features
+from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.lines import Line2D
+
+
+from PIL import Image, ImageDraw
 from typing import Literal, Optional
 
+import matplotlib
+from matplotlib.lines import Line2D
+from matplotlib.transforms import Bbox
+
 from _aux.embeds import fmte, Desc
+from _aux.Converters import ListConverter
 
 
 class Media(commands.Cog):
@@ -155,15 +164,8 @@ class Media(commands.Cog):
         ephemeral: bool = False
     ):
         """
-        Adds text to an image. Does this have too many parameters? Yes.
+        Adds text to an image. Does this have too many
         """
-        # print(features.check("raqm"))
-        # print(PIL.__version__)
-
-        # if font not in font_manager.findSystemFonts(fontpaths=None, fontext='ttf'):
-        #     raise commands.errors.BadArgument("Invalid font given. Please use the autocomplete to find a font.")
-
-        # font = ImageFont.FreeTypeFont(font, size = strokeweight)
 
         buffer = io.BytesIO()
 
@@ -189,15 +191,6 @@ class Media(commands.Cog):
         )
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
 
-    # @text.autocomplete("font")
-    async def font_autocomplete(self, inter: discord.Interaction, current: str):
-        op = [
-            discord.app_commands.Choice(name=c[20:-4], value=c)
-            for c in font_manager.findSystemFonts(fontpaths=None, fontext='ttf')
-            if c[20:-4].lower() in current.lower() or current.lower() in c[20:-4].lower()
-        ][:25]
-        return op
-
     @commands.hybrid_command()
     @describe(
         user=Desc.user,
@@ -215,6 +208,128 @@ class Media(commands.Cog):
         )
         embed.set_image(url=user.avatar.url)
         await ctx.send(embed=embed)
+
+    @commands.hybrid_group()
+    async def graph(self, ctx: commands.Context):
+        pass
+
+    @graph.command()
+    @describe(
+        xvalues="An array of numbers, seperated by a comma. Example: 1, 298, -193, 2.2",
+        yvalues="An array of numbers, seperated by a comma. Example: 1, 298, -193, 2.2",
+        xlabel="The label of the graph's X axis.",
+        ylabel="The label of the graph's Y axis.",
+        title="The title of the graph",
+        color="The color of the line.",
+        autoscale="Whether to autoscale / autozoom the axes.",
+    )
+    async def plot(
+        self,
+        ctx: commands.Context,
+
+        xvalues: ListConverter,
+        yvalues: ListConverter,
+
+        xlabel: str = "X Axis",
+        ylabel: str = "X Axis",
+
+        title: Optional[str] = None,
+        color: str = "black",
+
+        autoscale: bool = False
+    ):
+        """
+        Graphs X-Values and Y-Values using matplotlib and shows the result
+        """
+
+        buffer = io.BytesIO()
+
+        plt.plot(xvalues, yvalues, color=color)
+
+        plt.grid(True)
+
+        plt.title(title if title else str(ctx.author))
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+
+        minv = min(min(xvalues), min(yvalues))
+        maxv = max(max(xvalues), max(yvalues))
+
+        if not autoscale:
+            plt.xlim(minv, maxv)
+            plt.ylim(minv, maxv)
+
+        plt.autoscale(autoscale)
+
+        plt.minorticks_on()
+
+        plt.savefig(buffer)
+
+        buffer.seek(0)
+        embed = fmte(
+            ctx,
+            t="Data Loaded and Graphed"
+        )
+        file = discord.File(buffer, filename="graph.png")
+        await ctx.send(embed=embed, file=file)
+
+    @plot.autocomplete("color")
+    async def plotcolor_autocomplete(self, inter: discord.Interaction, current: str):
+        colors = [
+            "aqua",
+            "aquamarine",
+            "axure",
+            "beige",
+            "black",
+            "blue",
+            "brown",
+            "chartreuse",
+            "chocolate",
+            "coral",
+            "crimson",
+            "cyan",
+            "darkblue",
+            "darkgreen",
+            "fuchsia",
+            "gold",
+            "goldenrod",
+            "green",
+            "grey",
+            "indigo",
+            "ivory",
+            "khaki",
+            "lavender",
+            "lightblue",
+            "lightgreen",
+            "lime",
+            "magenta",
+            "maroon",
+            "navy",
+            "olive",
+            "orange",
+            "orangered",
+            "orchid",
+            "pink",
+            "plum",
+            "purple",
+            "red",
+            "salmon",
+            "sienna",
+            "silver",
+            "tan",
+            "teal",
+            "tomato",
+            "turquoise",
+            "violet",
+            "wheat",
+            "white",
+            "yellow",
+            "yellowgreen"]
+        return [
+            discord.app_commands.Choice(name=c, value=c)
+            for c in colors if
+            c in current or current in c
+        ][:25]
 
 
 async def setup(bot: commands.Bot):

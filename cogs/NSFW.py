@@ -46,7 +46,7 @@ class NSFW(commands.Cog):
         embed = fmte(
             ctx,
             t="Results found...",
-            d="Send to channel."
+            d="Sending to author."
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
 

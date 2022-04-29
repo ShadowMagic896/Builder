@@ -274,7 +274,8 @@ class Utility(commands.Cog):
                 name="Definition {}, {}: *`[{}]`*".format(
                     c + 1,
                     types[c].capitalize(),
-                    str(dates[c])[:dates[c].index("{")] if "{" in str(dates[c]) else str(dates[c])
+                    str(dates[c])[:dates[c].index("{")] if "{" in str(
+                        dates[c]) else str(dates[c])
                 ),
                 value=item,
                 inline=False

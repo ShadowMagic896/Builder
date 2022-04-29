@@ -1,3 +1,4 @@
+from typing import List
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -90,3 +91,19 @@ class TimeConvert(commands.Converter):
                 totaltime += times[char] * int(counter)
                 counter = ""
         return totaltime
+
+
+class ListConverter(commands.Converter):
+    async def convert(self, ctx: Context, argument: str):
+        argument = argument.replace(" ", "")
+        match = "\\[?(\\-?\\d+,?\\s*)+\\]?"
+        if not (res := re.search(match, argument).group()):
+            raise commands.errors.BadArgument(argument)
+        return self.strToList(res)
+
+    def strToList(self, string: str) -> List[int]:
+        return [
+            int(a) for a in string.replace(
+                "[", "").replace(
+                "]", "").replace(
+                " ", "").split(",")]

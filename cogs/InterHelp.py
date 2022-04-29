@@ -50,7 +50,7 @@ class InterHelp(commands.Cog):
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
         elif command and not cog:
-            cmds = [c for c in self.get_cmds() if c.name.lower()
+            cmds = [c for c in self.explode(self.bot.commands) if c.qualified_name.lower()
                     == command.lower()]
 
             if not cmds:
@@ -74,7 +74,8 @@ class InterHelp(commands.Cog):
             cog: commands.Cog = _cog
 
             _command: commands.HybridCommand = [
-                r for r in cog.get_commands() if r.qualified_name.lower() == command.lower()]
+                r for r in self.explode(cog.get_commands()) if r.qualified_name.lower() == command.lower()]
+                
             if not _command:
                 raise commands.errors.BadArgument(command)
             command: commands.HybridCommand = _command[0]
@@ -89,6 +90,13 @@ class InterHelp(commands.Cog):
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
     # hahah code in one line go brrrrr
+    def explode(self, l: List[commands.HybridCommand]):
+        l = list(l)
+        for c in l:
+            if isinstance(c, commands.HybridGroup):
+                l.extend(c.commands)
+                l.remove(c)
+        return l
 
     @help.autocomplete("cog")
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
@@ -102,24 +110,14 @@ class InterHelp(commands.Cog):
                 discord.app_commands.Choice(
                     name="[{}] {}".format(
                         c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
-                    self.bot.commands if not getattr(
-                        inter.namespace, "cog") else self.bot.get_cog(
-                            inter.namespace.cog).get_commands() if inter.namespace.cog in [
+                    self.explode([c for c in self.bot.commands]) if not getattr(
+                        inter.namespace, "cog") else self.explode(self.bot.get_cog(
+                            inter.namespace.cog).get_commands()) if inter.namespace.cog in [
                                 c for c, v in self.bot.cogs.items()] else []) if (
                                     (current.lower() in c.qualified_name.lower()) or (
                                         c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
                                             :25], key=lambda c: c.name[
                                                 c.name.index("]") + 1:])
-
-    def get_cmds(self):
-        coms = [
-            c for c in self.bot.commands
-            if not isinstance(c, app_commands.Group)
-        ]
-        for g in [g for g in self.bot.commands if isinstance(
-                g, app_commands.Group)]:
-            coms.extend(g.commands)
-        return coms
 
     def raisecog(self, cog: str):
         for c, v in self.bot.cogs.items():
@@ -139,11 +137,11 @@ class InterHelp(commands.Cog):
 
     def raisecommand(self, command: str):
         e = commands.errors.ExtensionNotFound(
-            command) if command not in self.get_cmds() else None
+            command) if command not in self.explode(self.bot.commands) else None
         if e:
             raise e
 
-        for c in self.get_cmds():
+        for c in self.explode(self.bot.commands):
             if c.name.lower() == command:
                 return c
         else:
@@ -316,8 +314,13 @@ class CommandSelect(
         self.bot = bot
         self.context = context
         self.ephemeral = ephemeral
+        cmds = cog.get_commands()
+        for c in cmds:
+            if isinstance(c, commands.HybridGroup):
+                cmds.extend(c.commands)
+                cmds.remove(c)
 
-        for command in cog.get_commands():
+        for command in cmds:
             options.append(
                 discord.SelectOption(
                     label=command.qualified_name,

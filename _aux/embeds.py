@@ -26,23 +26,17 @@ def fmte(
         name="Requested By: %s" %
         str(user), url="https://discordapp.com/users/%s" %
         user.id, icon_url=user.avatar.url)
+    if ctx:
+        embed.set_footer(
+            text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
+        )
     embed.timestamp = datetime.now()
     return embed
 
 
-def fmte_i(inter, t="", d="", c=discord.Color.teal()) -> discord.Embed:
-    user = inter.user
-    embed = discord.Embed(
-        title=t,
-        description=d,
-        color=c
-    )
-    embed.set_author(
-        name="Requested By: %s" %
-        str(user), url="https://discordapp.com/users/%s" %
-        user.id, icon_url=user.avatar.url)
-    embed.timestamp = datetime.now()
-    return embed
+def fmte_i(inter: discord.Interaction, t="", d="",
+           c=discord.Color.teal()) -> discord.Embed:
+    return fmte(t=t, d=d, c=c, u=inter.user)
 
 
 def getReadableValues(seconds):

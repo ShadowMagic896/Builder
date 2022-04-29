@@ -74,13 +74,14 @@ class Dev(commands.Cog):
     @describe(
         params="The arguments to pass to Popen & autopep8"
     )
-    async def fmtcode(self, ctx, params: str = ""):
+    async def fmtcode(self, ctx, params: str = "-air"):
         """
         Formats the bot's code using autopep8
         """
         Popen(
-            "autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" %
-            (params,)).stdout
+            "py -m autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" %
+            params,).stdout
+        await ctx.send("Code formatting completed.")
 
     @commands.hybrid_command()
     @commands.is_owner()
