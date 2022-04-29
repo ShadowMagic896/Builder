@@ -8,7 +8,7 @@ from typing import Any, List, Literal, Mapping
 from math import ceil
 
 from _aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
-from _aux.Converters import UserConverter
+from _aux.Converters import TimeConvert
 
 
 class Dev(commands.Cog):
@@ -81,28 +81,28 @@ class Dev(commands.Cog):
         Popen(
             "autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" %
             (params,)).stdout
-    
+
     @commands.hybrid_command()
     @commands.is_owner()
-    async def sync(self, ctx: commands.Context, current: str = None):
-        if current == "~":
-            l = await self.bot.tree.sync(guild = ctx.guild)
-            t = "to %s [%s]" % (ctx.guild.name, ctx.guild.id)
-        else:
-            l = await self.bot.tree.sync()
-            t = "Globally"
+    async def sync(self, ctx: commands.Context, log: bool = False):
+        l = await self.bot.tree.sync()
         cogs: Mapping[commands.Cog, commands.HybridCommand] = {}
         for c in self.bot.commands:
             if c.cog in list(cogs.keys()):
                 cogs[c.cog].append(c)
             else:
-                cogs[c.cog] = [c,]
-        embed = fmte(
-            ctx,
-            t = "{} Commands Synced {}".format(len(l), t),
-            d = "```%s```" % "".join(["\n{}\n{}".format(co.qualified_name, "\n".join(["ㅤ{}".format(c.name) for c in v])) for co, v in cogs.items()])
-        )
+                cogs[c.cog] = [c, ]
+        embed = fmte(ctx,
+                     t="{} Commands Synced".format(len(l)),
+                     d="```%s```" % "".join(["\n{}\n{}".format(co.qualified_name,
+                                                               "\n".join(["ㅤ{}".format(c.name) for c in v])) for co,
+                                             v in cogs.items()]) if log else "No Log")
         await ctx.send(embed=embed)
+
+    @commands.hybrid_command()
+    async def timetest(self, ctx: commands.Context, time: TimeConvert):
+        await ctx.send(str(time))
+
 
 async def setup(bot):
     await bot.add_cog(Dev(bot))

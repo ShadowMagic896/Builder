@@ -78,17 +78,18 @@ class Utility(commands.Cog):
         )
         embed.add_field(
             name="***__General Info__***",
-            value="{s}**Name:** `{}`{s}**Nickname:** `{}`{s}**ID:** `{}`{s}**Nitro Since:** <t:{}>{}{s}".format(
+            value="{s}**Name:** `{}`{s}**Nickname:** `{}`{s}**ID:** `{}`{s}**Nitro Since:** {}{s}".format(
                 user,
                 user.nick,
                 user.id,
-                round(
-                    user.premium_since.timestamp()) if user.premium_since else "`None`",
+                ("t<:%s>" %
+                 round(
+                     user.premium_since.timestamp())) if user.premium_since else "`None`",
                 s=b),
             inline=False)
         embed.add_field(
             name="***__Statistics__***",
-            value="{s}**Status:** `{}`{s}**Creation Date:** `<t:{}>`{s}**Join Date:** <t:{}>{s}**System User:** `{}`{s}".format(
+            value="{s}**Status:** `{}`{s}**Creation Date:** <t:{}>{s}**Join Date:** <t:{}>{s}**System User:** `{}`{s}".format(
                 user.status, round(
                     user.joined_at.timestamp()) if user.joined_at else "`Unknown`", round(
                     user.created_at.timestamp()) if user.created_at else "`Unknown`", user.system,
@@ -153,10 +154,10 @@ class Utility(commands.Cog):
             t="Result found!",
         )
         await ctx.send("https://google.com{}".format(link), embed=embed, ephemeral=ephemeral)
-    
+
     @commands.hybrid_command()
     @describe(
-        objectid = "The ID of the object to look for.",
+        objectid="The ID of the object to look for.",
         ephemeral="Whether to publicly show the response to the command.",
     )
     async def find(self, ctx: commands.Context, objectid: int, ephemeral: bool = False):
@@ -166,8 +167,15 @@ class Utility(commands.Cog):
         found: Any = ...
         name: str = ...
         objtype: Any = ...
-        attempts: List = [self.bot.get_user, ctx.guild.get_role, self.bot.get_emoji, self.bot.get_channel, self.bot.get_sticker, self.bot.get_guild, ]
-        
+        attempts: List = [
+            self.bot.get_user,
+            ctx.guild.get_role,
+            self.bot.get_emoji,
+            self.bot.get_channel,
+            self.bot.get_sticker,
+            self.bot.get_guild,
+        ]
+
         for t in attempts:
             res = t(objectid)
             if not res:
@@ -182,18 +190,20 @@ class Utility(commands.Cog):
 
             embed = fmte(
                 ctx,
-                t = "Object Found!",
-                d = "**Name: ** %s\n**Type:** %s" %
+                t="Object Found!",
+                d="**Name: ** %s\n**Type:** %s" %
                 (name, objtype.__name__)
             )
             await ctx.send(embed=embed, ephemeral=ephemeral)
             return
         else:
-            raise commands.errors.BadArgument("Cannot find object: %s. Make sure this bot can see it. If it was an emoji, make sure it was not a default one." % str(objectid))
-        
+            raise commands.errors.BadArgument(
+                "Cannot find object: %s. Make sure this bot can see it. If it was an emoji, make sure it was not a default one." %
+                str(objectid))
+
     @commands.hybrid_command()
     @describe(
-        term = "The term to search urbanDictionary for.",
+        term="The term to search urbanDictionary for.",
         ephemeral="Whether to publicly show the response to the command.",
     )
     async def urban(self, ctx: commands.Context, term: str, ephemeral: bool = False):
@@ -202,31 +212,32 @@ class Utility(commands.Cog):
         """
         url = "https://mashape-community-urban-dictionary.p.rapidapi.com/define"
 
-        params = {"term":term}
+        params = {"term": term}
 
         headers = {
             "X-RapidAPI-Host": "mashape-community-urban-dictionary.p.rapidapi.com",
-            "X-RapidAPI-Key": os.getenv("X_RAPID_API_KEY")
-        }
+            "X-RapidAPI-Key": os.getenv("X_RAPID_API_KEY")}
 
         response = requests.request("GET", url, headers=headers, params=params)
         res = response.json()["list"]
-        embed = fmte(
-            ctx,
-            t = "`{}`: {} Definitions {}".format(term, len(res), "[Showing 5]" if len(res) > 5 else ""),
-        )
+        embed = fmte(ctx, t="`{}`: {} Definitions {}".format(
+            term, len(res), "[Showing 5]" if len(res) > 5 else ""), )
         for d in res[:5]:
             embed.add_field(
-                name = "[{}]({})".format(d["author"], d["permalink"]),
-                value = "{}\n**Upvotes:** {}\n**Written On:** {}".format(d["definition"], d["thumbs_up"], d["written_on"]),
-                inline = False
-            )
-        
+                name="[{}]({})".format(
+                    d["author"],
+                    d["permalink"]),
+                value="{}\n**Upvotes:** {}\n**Written On:** {}".format(
+                    d["definition"],
+                    d["thumbs_up"],
+                    d["written_on"]),
+                inline=False)
+
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()
     @describe(
-        term = "The term to search urbanDictionary for.",
+        term="The term to search urbanDictionary for.",
         ephemeral="Whether to publicly show the response to the command.",
     )
     async def define(self, ctx: commands.Context, term: str, ephemeral: bool = False):
@@ -235,14 +246,11 @@ class Utility(commands.Cog):
         """
         response = requests.get(
             "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
-                term.lower(),
-                os.getenv("DICT_API_KEY")
-            )
-        ).json()
-        defs=[]
-        dates=[]
-        types=[]
-        
+                term.lower(), os.getenv("DICT_API_KEY"))).json()
+        defs = []
+        dates = []
+        types = []
+
         for defi in response:
             defs.append(("".join(defi["shortdef"][0])).capitalize())
             dates.append(defi["date"])
@@ -250,7 +258,7 @@ class Utility(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Definition(s) for the word: {} [{}]".format(
+            t="Definition(s) for the word: {} [{}]".format(
                 term.capitalize(),
                 len(defs)
             ),
@@ -258,23 +266,26 @@ class Utility(commands.Cog):
         if len(defs) < 1:
             raise ValueError('Word not found/no definition')
 
-        cut = None if len(defs)<=5 else len(defs)-5
+        cut = None if len(defs) <= 5 else len(defs) - 5
         defs = defs[:5]
 
         for c, item in enumerate(defs):
             embed.add_field(
-                name = "Definition {}, {}: *`[{}]`*".format(
-                    c+1,
+                name="Definition {}, {}: *`[{}]`*".format(
+                    c + 1,
                     types[c].capitalize(),
                     str(dates[c])[:dates[c].index("{")] if "{" in str(dates[c]) else str(dates[c])
                 ),
-                value = item, 
+                value=item,
                 inline=False
             )
         if cut:
-            embed.add_field(name="...and %s more definitions." % cut, value = "-------------------------------------------------------------------", inline = False)
+            embed.add_field(
+                name="...and %s more definitions." %
+                cut,
+                value="-------------------------------------------------------------------",
+                inline=False)
         await ctx.send(embed=embed, ephemeral=ephemeral)
-
 
 
 async def setup(bot):

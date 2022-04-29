@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
@@ -31,6 +32,7 @@ class NSFW(commands.Cog):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
         """
+        querey = querey.replace(" ", "+")
         res = requests.get(
             f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % querey
         ).text
@@ -65,7 +67,7 @@ class NSFW(commands.Cog):
     @commands.hybrid_command()
     @commands.is_nsfw()
     @describe(amount="The amount of images to send.",
-            ephemeral="Whether to publicly show the response to the command. All images are sent in DMs.")
+              ephemeral="Whether to publicly show the response to the command. All images are sent in DMs.")
     async def neko(self, ctx: commands.Context, amount: Range[int, 1, 20] = 1, ephemeral: bool = False):
         """
         Gets an image response from [nekos.life](https://nekos.life) and sends it to you.
@@ -102,15 +104,16 @@ class NSFW(commands.Cog):
         """
         Gets an image response from [nekos.life/lewd](https://nekos.life/lewd) and sends it to you.
         """
+        mdir = os.getenv("NSFW_PATH") + "Nekos/"
         data = []
 
         for co in range(amount):
             data.append(
                 discord.File(
-                    "R:\\__TheStuff\\Content\\Nekos\\" +
-                    random.choice(
-                        os.listdir("R:\\__TheStuff\\Content\\Nekos")),
-                    "Neko.jpg"))
+                    mdir + random.choice(os.listdir(mdir)),
+                    "Neko.jpg"
+                )
+            )
 
         embed = fmte(
             ctx,
@@ -123,6 +126,7 @@ class NSFW(commands.Cog):
         for l in data:
             embed = fmte(ctx, )
             await ctx.author.send(embed=embed, file=l)
+            await asyncio.sleep(1)
 
     @commands.hybrid_command()
     @commands.is_nsfw()
@@ -132,7 +136,7 @@ class NSFW(commands.Cog):
         """
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
         """
-        res = requests.get(f"https://nhentai.xxx/g/{code}").text
+        res = requests.get("https://nhentai.xxx/g/%s" % code).text
         soup = BeautifulSoup(res, "html.parser")
 
         data = [
@@ -163,8 +167,8 @@ class NSFW(commands.Cog):
         """
         Searches for manga on [nhentai.xxx](https://nhentai.xxx) and returns the top results.
         """
-        url = "https://nhentai.xxx/search/?q={}".format(
-            '+'.join(querey.split(" ")))
+        querey = querey.replace(" ", "+")
+        url = "https://nhentai.xxx/search/?q=%s" % querey
         res = requests.get(url).text
         parse = BeautifulSoup(
             res, "html.parser"

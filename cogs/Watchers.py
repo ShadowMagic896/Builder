@@ -90,6 +90,7 @@ class Watchers(commands.Cog):
     async def on_guild_join(self, guild: discord.Guild):
         # await self.prep_guild_channels(guild)
         pass
+
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
         if not interaction.command:
@@ -98,6 +99,7 @@ class Watchers(commands.Cog):
             interaction.user, interaction.command.name, datetime.now(
                 tz=pytz.timezone("UTC")), interaction.command.parent,)
         open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
+
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
         mes = "[COMMAND] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
@@ -159,7 +161,7 @@ class Watchers(commands.Cog):
         ) if ctx.interaction else InterHelp(self.bot)._command_embed_ctx(
             ctx, ctx.command, color=discord.Color.red()
         )
-        await ctx.send(embeds = [hintEmbed, helpEmbed], ephemeral=True)
+        await ctx.send(embeds=[hintEmbed, helpEmbed], ephemeral=True)
         ctx.command_failed = True
 
     @commands.Cog.listener()

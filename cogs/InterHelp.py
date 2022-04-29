@@ -88,16 +88,28 @@ class InterHelp(commands.Cog):
 
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
-
     # hahah code in one line go brrrrr
 
     @help.autocomplete("cog")
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-        return sorted([discord.app_commands.Choice(name=c,value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower() or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name)
+        return sorted([discord.app_commands.Choice(name=c, value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower(
+        ) or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name)
 
     @help.autocomplete("command")
     async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-        return sorted([discord.app_commands.Choice(name="[{}] {}".format(c.cog_name, c.qualified_name), value=c.qualified_name) for c in (self.bot.commands if not getattr(inter.namespace, "cog") else self.bot.get_cog(inter.namespace.cog).get_commands() if inter.namespace.cog in [c for c, v in self.bot.cogs.items()] else []) if ((current.lower() in c.qualified_name.lower()) or (c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name[c.name.index("]") + 1:])
+        return sorted(
+            [
+                discord.app_commands.Choice(
+                    name="[{}] {}".format(
+                        c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
+                    self.bot.commands if not getattr(
+                        inter.namespace, "cog") else self.bot.get_cog(
+                            inter.namespace.cog).get_commands() if inter.namespace.cog in [
+                                c for c, v in self.bot.cogs.items()] else []) if (
+                                    (current.lower() in c.qualified_name.lower()) or (
+                                        c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
+                                            :25], key=lambda c: c.name[
+                                                c.name.index("]") + 1:])
 
     def get_cmds(self):
         coms = [
@@ -164,7 +176,11 @@ class InterHelp(commands.Cog):
                                               group.description)
         )
 
-    def _command_embed(self, inter, command: commands.HybridCommand, color = discord.Color.teal()):
+    def _command_embed(
+            self,
+            inter,
+            command: commands.HybridCommand,
+            color=discord.Color.teal()):
         return fmte_i(
             inter,
             t="`{}` [Cog: `{}`, Group: `{}`]".format(
@@ -176,9 +192,9 @@ class InterHelp(commands.Cog):
                 command.qualified_name, command.signature,
                 command.short_doc
             ),
-            c = color
+            c=color
         )
-    
+
     def _cog_embed_ctx(self, ctx: commands.Context, cog: commands.Cog):
         return fmte(
             ctx,
@@ -187,8 +203,11 @@ class InterHelp(commands.Cog):
                 len(cog.get_commands()), cog.description)
         )
 
-
-    def _command_embed_ctx(self, ctx, command: commands.HybridCommand, color = discord.Color.teal()):
+    def _command_embed_ctx(
+            self,
+            ctx,
+            command: commands.HybridCommand,
+            color=discord.Color.teal()):
         return fmte(
             ctx,
             t="`{}` [Cog: `{}`, Group: `{}`]".format(
@@ -200,9 +219,8 @@ class InterHelp(commands.Cog):
                 command.qualified_name, command.signature,
                 command.short_doc
             ),
-            c = color
+            c=color
         )
-
 
     def _invite_embed(self, inter):
         return fmte_i(
@@ -216,13 +234,13 @@ class InterHelp(commands.Cog):
                 )
             )
         )
-    
+
     def _os_embed(self, inter):
         return fmte_i(
             inter,
-            t="I'm 100\% Open Source!",
-            d="View on [GitHub](%s)" % "https://github.com/ShadowMagic896/Builder"
-        )
+            t="I'm 100% Open Source!",
+            d="View on [GitHub](%s)" %
+            "https://github.com/ShadowMagic896/Builder")
 
     def get_view(
             self,
@@ -241,7 +259,7 @@ class InterHelp(commands.Cog):
             view.add_item(CloseButton())
 
         return view
-        
+
 
 class HelpMenu(discord.ui.View):  # Base to add things on
     def __init__(self, *, timeout: Optional[float] = 180):
@@ -364,13 +382,18 @@ class InviteLink(discord.ui.Button):
             self.bot, self.context, self.ephemeral)
         await interaction.response.edit_message(embed=embed, view=view)
 
+
 class OpenSrc(discord.ui.Button):
-    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
-            self.bot = bot
-            self.context = context
-            self.ephemeral = ephemeral
-            super().__init__(label="I'm OpenSource!", emoji="👨🏻‍💻", style=discord.ButtonStyle.blurple)
-    
+    def __init__(
+            self,
+            bot: commands.Bot,
+            context: commands.Context,
+            ephemeral: bool):
+        self.bot = bot
+        self.context = context
+        self.ephemeral = ephemeral
+        super().__init__(label="View OS", emoji="👨🏻‍💻", style=discord.ButtonStyle.blurple)
+
     async def callback(self, interaction: Interaction) -> Any:
         embed = InterHelp(self.bot)._os_embed(interaction)
         view = InterHelp(self.bot).get_view(

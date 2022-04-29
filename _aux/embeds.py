@@ -178,8 +178,8 @@ class EmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize * \
-            (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize *
+                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(
@@ -322,8 +322,8 @@ class DMEmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize * \
-            (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize *
+                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(
@@ -342,6 +342,7 @@ class DMEmbedPaginator(discord.ui.View):
                 inline=self.inln
             )
         return embed
+
 
 class Desc:
     user = "The target of this command."

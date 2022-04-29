@@ -25,9 +25,9 @@ class Fun(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        font = "The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.",
-        text = "The text to translate.",
-        ephemeral= Desc.ephemeral
+        font="The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.",
+        text="The text to translate.",
+        ephemeral=Desc.ephemeral
     )
     async def font(self, ctx, font: str, text: str, ephemeral: bool = False):
         """
