@@ -9,8 +9,9 @@ from discord.app_commands import describe, guilds
 from discord.ext import commands
 
 import inspect
-from typing import Optional
+from typing import List, Optional
 
+from _aux.userio import explode
 from _aux.embeds import Desc, fmte
 
 
@@ -43,19 +44,20 @@ class Client(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
+        cog="The cog to get the source of.",
         command="The command to get the source of.",
         ephemeral=Desc.ephemeral
     )
-    async def source(self, ctx: commands.Context, command: Optional[str], ephemeral: bool = False):
+    async def source(self, ctx: commands.Context, cog: Optional[str], command: Optional[str], ephemeral: bool = False):
         """
         Gets the source code for any of the bot's commands.
         """
-        if not command:
+        if not command and not cog:
             embed = fmte(
                 ctx, t="Source Code!", d="[View on GitHub](%s)" %
                 "https://github.com/ShadowMagic896/Builder")
             await ctx.send(embed=embed, ephemeral=ephemeral)
-        elif command:
+        elif command and not cog:
             if not (command := self.bot.get_command(command)):
                 raise commands.errors.CommandNotFound(command)
             src = command.callback.__code__
@@ -71,16 +73,69 @@ class Client(commands.Cog):
             )
             file = discord.File(buffer, "source.%s.py" % command)
             await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+        elif cog and not command:
+            if not (cog := self.bot.get_cog(cog)):
+                raise commands.errors.ExtensionNotFound(cog)
+            src = inspect.getsource(cog.__class__)
+            buffer = io.BytesIO()
+            buffer.write(src.encode("UTF-8"))
+            buffer.seek(0)
+            
+            embed = fmte(
+                ctx,
+                t="Source for Cog: %s" % cog.qualified_name
+            )
+            file = discord.File(buffer, "source.%s.py" % cog.qualified_name)
+            await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+        else:
+            if not (command := self.bot.get_command(command)):
+                raise commands.errors.CommandNotFound(ctx.args[1])
+            elif not (cog := self.bot.get_cog(cog)):
+                raise commands.errors.ExtensionNotFound(ctx.args[0])
+            if command in self.explode(cog.get_commands()):
+                src = command.callback.__code__
+                note = ""
+            else:
+                src = cog.__class__
+                note = "# Command not found in that cog, showing source for cog instead.\n"
+            buffer = io.BytesIO()
+            buffer.write((note + inspect.getsource(src)).encode("UTF-8"))
+            buffer.seek(0)
+
+            embed = fmte(
+                ctx,
+                t="Source for %s" % (("`%s`" % cog.qualified_name) if note else "`{}` of Cog `{}`".format(command.qualified_name, cog.qualified_name))
+            )
+            file = discord.File(buffer, "source.%s.py" % (cog.qualified_name if note else command.qualified_name))
+            await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+
+    @source.autocomplete("cog")
+    async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+        return sorted([discord.app_commands.Choice(name=c, value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower(
+        ) or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name)
 
     @source.autocomplete("command")
-    async def source_autocomplete(self, inter: discord.Interaction, current: str):
-        return [
-            discord.app_commands.Choice(name=c.name, value=c.name)
-            for c in self.bot.commands if
-            (c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")) and
-            (c.qualified_name in current) or
-            (current in c.qualified_name)
-        ][:25]
+    async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+        return sorted(
+            [
+                discord.app_commands.Choice(
+                    name="[{}] {}".format(
+                        c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
+                    self.explode([c for c in self.bot.commands]) if not getattr(
+                        inter.namespace, "cog") else self.explode(self.bot.get_cog(
+                            inter.namespace.cog).get_commands()) if inter.namespace.cog in [
+                                c for c, v in self.bot.cogs.items()] else []) if (
+                                    (current.lower() in c.qualified_name.lower()) or (
+                                        c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
+                                            :25], key=lambda c: c.name[
+                                                c.name.index("]") + 1:])
+    def explode(self, l: List[commands.HybridCommand]):
+        l = list(l)
+        for c in l:
+            if isinstance(c, commands.HybridGroup):
+                l.extend(c.commands)
+                l.remove(c)
+        return l
 
 
 class FeedbackModal(ui.Modal, title="Anonymous Feedback Forum"):

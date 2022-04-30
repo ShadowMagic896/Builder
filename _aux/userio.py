@@ -1,6 +1,7 @@
 from inspect import trace
 from multiprocessing.sharedctypes import Value
 from types import coroutine
+from typing import List
 import discord
 from discord.ext import commands
 import re
@@ -77,3 +78,11 @@ def convCodeBlock(code: str):
     if not se:
         raise commands.errors.BadArgument("Invalid code format.")
     return se.group()
+    
+def explode(l: List[commands.HybridCommand]):
+    l = list(l)
+    for c in l:
+        if isinstance(c, commands.HybridGroup):
+            l.extend(c.commands)
+            l.remove(c)
+    return l

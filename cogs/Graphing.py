@@ -1,14 +1,14 @@
-from math import ceil, floor
 import discord
-from discord.app_commands import describe, Range, guilds
+from discord.app_commands import describe, Range
 from discord.ext import commands
-import numpy as np
-from pyparsing import line
 
 from _aux.embeds import fmte
+from _aux.userio import explode
 from _aux.Converters import ListConverter
 
 import io
+import simpleeval
+import numpy as np
 from typing import Literal, Optional
 from matplotlib import pyplot as plt
 
@@ -164,7 +164,7 @@ class Graphing(commands.Cog):
         ylabel="The label of the graph's Y axis.",
         title="The title of the graph",
         color="The color of the line.",
-        barwidth="Width of the line. If left empty, it will be decided automatically.",
+        barwidth="Width of the bars. If left empty, it will be decided automatically.",
         font="The font of the text for the labels and title.",
         yticks="The amount of ticks on the Y Axis.",
     )
@@ -187,7 +187,7 @@ class Graphing(commands.Cog):
         yticks: Range[int, 0, 30] = 10,
     ):
         """
-        Graphs X-Values and Y-Values on a line plot using matplotlib and shows the result
+        Graphs X-Values and Y-Values on a bar graph using matplotlib and shows the result
         """
         if len(xvalues) != len(yvalues):
             raise commands.errors.BadArgument(
@@ -222,8 +222,96 @@ class Graphing(commands.Cog):
         plt.cla()
 
     @bar.autocomplete("color")
-    async def plotcolor_autocomplete(self, inter: discord.Interaction, current: str):
+    async def barcolor_autocomplete(self, inter: discord.Interaction, current: str):
         return self.color_autocomplete(inter, current)
+    
+    @graph.command()
+    @describe(
+        function = "The functiont to graph, in slope-intercept form.",
+        rangelower = "Where to start graphing Y.",
+        rangeupper = "Where to stop graphing Y.",
+        plots = "how many plots of Y to make.",
+        xlabel="The label of the graph's X axis.",
+        ylabel="The label of the graph's Y axis.",
+        title="The title of the graph",
+        color="The color of the line.",
+        linewidth="Width of the line. If left empty, it will be decided automatically.",
+        font="The font of the text for the labels and title.",
+        xticks="How many ticks to place on the X axis.",
+        yticks="How many ticks to place on the Y axis.",
+    )
+    async def psi(
+        self,
+        ctx: commands.Context,
+
+        function: str,
+        rangelower: float,
+        rangeupper: float,
+        plots: int = 50,
+
+        xlabel: str = "X Axis",
+        ylabel: str = "Y Axis",
+
+        title: Optional[str] = None,
+        color: str = "black",
+
+        linewidth: Range[float, 0.1, 100.0] = 5.0,
+        font: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"] = "monospace",
+
+        xticks: Range[int, 0, 30] = 10,
+        yticks: Range[int, 0, 30] = 10,
+        # autoperspective: bool = False
+    ):
+        """
+        Graphs Y using a function in slope-intercept form (y = mx + b)
+        """
+        buffer = io.BytesIO()
+        xvalues = np.linspace(rangelower, rangeupper, plots)
+        yvalues = []
+        function = function.replace(" ", "").replace("^", "**").replace("y=", "")
+        if function.count("x"):
+            if function.index("x") == 0:
+                ast = False
+            else:
+                ast = function[function.index("x")-1].isdigit
+        for v in xvalues:
+            yvalues.append(simpleeval.SimpleEval().eval(function.replace("x", ("*%s" % v) if ast else str(v))))
+        plt.plot(xvalues, yvalues, color=color, linewidth=linewidth)
+        plt.grid(True)
+
+        plt.title(title if title else str(ctx.author))
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+
+        xmax,  ymax = max(
+            xvalues), max(yvalues),
+            
+        plt.xticks(
+            np.linspace(0, xmax, xticks)
+        )
+        plt.yticks(
+            np.linspace(0, ymax, yticks)
+        )
+
+        plt.minorticks_on()
+        plt.rcParams.update({"font.family": font})
+
+        plt.savefig(buffer)
+
+        buffer.seek(0)
+        embed = fmte(
+            ctx,
+            t="Data Loaded and Graphed"
+        )
+        file = discord.File(buffer, filename="graph.png")
+        print("SEnd")
+        await ctx.send(embed=embed, file=file)
+        plt.cla()
+
+    @psi.autocomplete("color")
+    async def psicolor_autocomplete(self, inter: discord.Interaction, current: str):
+        return self.color_autocomplete(inter, current)
+
 
 
 async def setup(bot):

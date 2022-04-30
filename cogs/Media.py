@@ -6,19 +6,10 @@ from discord.ext import commands
 
 import os
 
-import numpy as np
 
-from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
-
-
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageColor
 from typing import Literal, Optional
 
-import matplotlib
-from matplotlib.lines import Line2D
-from matplotlib.transforms import Bbox
 
 from _aux.embeds import fmte, Desc
 from _aux.Converters import ListConverter
@@ -37,11 +28,7 @@ class Media(commands.Cog):
 
     def getExtension(self, attachment: discord.Attachment):
         fn = attachment.filename
-        return fn[fn.replace(".", "_", fn.count(".") - 1).index("."):]
-
-    def getFP(self, attachment: discord.Attachment):
-        return "data/PIL/image%s%s" % (str(len(os.listdir("data/PIL"))),
-                                       self.getExtension(attachment))
+        return fn[fn.replace(".", "_", fn.count(".") - 1).index(".")+1:]
 
     def checkAttachment(self, attachment: discord.Attachment):
         if attachment.size > 40000000:
@@ -64,7 +51,11 @@ class Media(commands.Cog):
 
         return buffer
 
-    @commands.hybrid_command()
+    @commands.hybrid_group()
+    async def image(self, ctx: commands.Context):
+        pass
+
+    @image.command()
     @commands.cooldown(5, 60 * 60 * 3, commands.BucketType.user)
     @describe(
         width="The new image's width.",
@@ -90,8 +81,8 @@ class Media(commands.Cog):
         file = discord.File(buffer, filename="resize.%s" % attachment.filename)
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
 
-    @commands.hybrid_command()
-    @commands.cooldown(2, 60 * 60 * 3, commands.BucketType.user)
+    @image.command()
+    @commands.cooldown(10, 60 * 60, commands.BucketType.user)
     @describe(
         name="What to name the new emoji.",
         reason="The reason for creating the emoji. Shows up in audit logs.",
@@ -108,8 +99,6 @@ class Media(commands.Cog):
             raise TypeError(
                 "Only PNG and JPG files are permitted. [Discord limitation]")
 
-        fp = self.getFP(attachment)
-
         buffer = io.BytesIO()
 
         await attachment.save(buffer)
@@ -125,8 +114,8 @@ class Media(commands.Cog):
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
-    @commands.hybrid_command()
-    @commands.cooldown(2, 60 * 60 * 3, commands.BucketType.user)
+    @image.command()
+    @commands.cooldown(10, 60 * 60, commands.BucketType.user)
     @describe(
         text="The text to add.",
         attachment="The image to add the text to.",
@@ -164,7 +153,7 @@ class Media(commands.Cog):
         ephemeral: bool = False
     ):
         """
-        Adds text to an image. Does this have too many
+        Adds text to an image. More featues are a WIP
         """
 
         buffer = io.BytesIO()
@@ -190,6 +179,121 @@ class Media(commands.Cog):
             t="File Successfully Edited!"
         )
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+    
+    @image.command()
+    @describe(
+        attachment = "The image to crop.",
+        left = "The left point to start cropping.",
+        upper = "The upper point to start cropping.",
+        right = "The right point to stop cropping.",
+        lower = "The lower point to start cropping.",
+        ephemeral=Desc.ephemeral,
+    )
+    async def crop(
+        self, 
+        ctx: commands.Context, 
+        attachment: discord.Attachment, 
+        left: int, upper: int, right: int, lower: int,
+        ephemeral: bool = False,
+        ):
+        """
+        Crops an image to the given dimensions
+        """
+        buffer = io.BytesIO()
+        await attachment.save(buffer)
+        buffer.seek(0)
+
+        img: Image.Image = Image.open(buffer)
+        buffer = io.BytesIO()
+        img = img.crop((left, upper, right, lower))
+        img.save(buffer, self.getExtension(attachment))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t="Image Cropped"
+        )
+        file = discord.File(buffer, "crop.%s" % attachment.filename)
+        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+    
+    @image.command()
+    @describe(
+        attachment = "The image to get information on.",
+        ephemeral=Desc.ephemeral,
+    )
+    async def info(self, ctx: commands.Context, attachment: discord.Attachment, ephemeral: bool = False):
+        """
+        Retrieves information about the image
+        """
+        embed = fmte(
+            ctx,
+            t = "Gathered Information",
+        )
+        embed.add_field(
+            name = "Dimensions",
+            value = "`{}x{}`".format(attachment.width, attachment.height),
+            inline=False
+        )
+        embed.add_field(
+            name = "File Size",
+            value = "`%s bytes`" % attachment.size,
+            inline=False
+        )
+        embed.add_field(
+            name = "File Type",
+            value = "`%s`" % attachment.content_type,
+            inline=False
+        )
+        buffer = io.BytesIO()
+        await attachment.save(buffer)
+        buffer.seek(0)
+        file = discord.File(buffer, filename=attachment.filename)
+        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+
+    @image.command()
+    @describe(
+        attachment = "The image to rotate",
+        degrees = "The amount of degrees to rotate the image.",
+        centerx = "The X Coordinate of the center of rotation.",
+        centery = "The Y Coordinate of the center of rotation.",
+        fillcolor = "The color to fill the remaining parts of the image after rotation.",
+        ephemeral = Desc.ephemeral
+    )
+    async def rotate(
+        self, 
+        ctx: commands.Context, 
+        attachment: discord.Attachment, 
+        degrees: int, 
+        centerx: Optional[int] = None, centery: Optional[int] = None,
+        fillcolor: str = "white",
+        ephemeral: bool = False,
+        ):
+        """
+        Rotates an image by a given amount of degrees
+        """
+        buffer = io.BytesIO()
+        await attachment.save(buffer)
+        buffer.seek(0)
+        if not (centerx and centery):
+            center = None
+        else:
+            center = (centerx, centery)
+
+        img = Image.open(buffer)
+        fillcolor = ImageColor.getrgb(fillcolor)
+        img = img.rotate(degrees, center=center, fillcolor=fillcolor, expand=True)
+        buffer = io.BytesIO()
+        img.save(buffer, self.getExtension(attachment))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t = "Image Rotated"
+        )
+        file = discord.File(buffer, "rotate.%s" % attachment.filename)
+        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+    
+
 
     @commands.hybrid_command()
     @describe(
