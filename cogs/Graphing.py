@@ -20,7 +20,6 @@ class Graphing(commands.Cog):
     def ge(self):
         return "📊"
 
-    
     def color_autocomplete(self, inter, current: str):
         colors = [
             "aqua",
@@ -81,7 +80,7 @@ class Graphing(commands.Cog):
     @commands.hybrid_group()
     async def graph(self, ctx: commands.Context):
         pass
-        
+
     @graph.command()
     @describe(
         xvalues="An array of numbers, seperated by a comma. Example: 1, 298, -193, 2.2",
@@ -103,7 +102,7 @@ class Graphing(commands.Cog):
         yvalues: ListConverter(float),
 
         xlabel: str = "X Axis",
-        ylabel: str = "X Axis",
+        ylabel: str = "Y Axis",
 
         title: Optional[str] = None,
         color: str = "black",
@@ -118,7 +117,9 @@ class Graphing(commands.Cog):
         Graphs X-Values and Y-Values on a line plot using matplotlib and shows the result
         """
         if len(xvalues) != len(yvalues):
-            raise commands.errors.BadArgument("Values have uneven amounts of data [{} vs {}]".format(len(xvalues), len(yvalues)))
+            raise commands.errors.BadArgument(
+                "Values have uneven amounts of data [{} vs {}]".format(
+                    len(xvalues), len(yvalues)))
         buffer = io.BytesIO()
 
         plt.plot(xvalues, yvalues, color=color, linewidth=linewidth)
@@ -128,17 +129,17 @@ class Graphing(commands.Cog):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-        xmin, xmax, ymin, ymax = min(xvalues), max(xvalues), min(yvalues), max(yvalues),
+        xmin, xmax, ymin, ymax = min(xvalues), max(
+            xvalues), min(yvalues), max(yvalues),
         plt.xticks(
-            np.arange(xmin, xmax, (xmax - xmin) / xticks)
+            np.linspace(xmin, xmax, xticks)
         )
         plt.yticks(
-            np.arange(ymin, ymax, (ymax - ymin) / yticks)
+            np.linspace(ymin, ymax, yticks)
         )
 
-
         plt.minorticks_on()
-        plt.rcParams.update({"font.family":font})
+        plt.rcParams.update({"font.family": font})
 
         plt.savefig(buffer)
 
@@ -154,8 +155,19 @@ class Graphing(commands.Cog):
     @plot.autocomplete("color")
     async def plotcolor_autocomplete(self, inter: discord.Interaction, current: str):
         return self.color_autocomplete(inter, current)
-    
+
     @graph.command()
+    @describe(
+        xvalues="An array of strings, seperated by a comma. Example: Group 1, Group 2",
+        yvalues="An array of numbers, seperated by a comma. Example: 13.5, -13.102",
+        xlabel="The label of the graph's X axis.",
+        ylabel="The label of the graph's Y axis.",
+        title="The title of the graph",
+        color="The color of the line.",
+        barwidth="Width of the line. If left empty, it will be decided automatically.",
+        font="The font of the text for the labels and title.",
+        yticks="The amount of ticks on the Y Axis.",
+    )
     async def bar(
         self,
         ctx: commands.Context,
@@ -164,42 +176,39 @@ class Graphing(commands.Cog):
         yvalues: ListConverter(float),
 
         xlabel: str = "X Axis",
-        ylabel: str = "X Axis",
+        ylabel: str = "Y Axis",
 
         title: Optional[str] = None,
         color: str = "black",
 
-        linewidth: Range[float, 0.1, 100.0] = 5.0,
+        barwidth: Range[float, 0.1, 100.0] = 5.0,
         font: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"] = "monospace",
 
-        xticks: Range[int, 0, 30] = 10,
         yticks: Range[int, 0, 30] = 10,
     ):
         """
         Graphs X-Values and Y-Values on a line plot using matplotlib and shows the result
         """
         if len(xvalues) != len(yvalues):
-            raise commands.errors.BadArgument("Values have uneven amounts of data [{} vs {}]".format(len(xvalues), len(yvalues)))
+            raise commands.errors.BadArgument(
+                "Values have uneven amounts of data [{} vs {}]".format(
+                    len(xvalues), len(yvalues)))
         buffer = io.BytesIO()
 
-        plt.bar(xvalues, yvalues, color=color, linewidth=linewidth)
+        plt.bar(xvalues, yvalues, color=color, linewidth=barwidth)
         plt.grid(True)
 
         plt.title(title if title else str(ctx.author))
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-        xmin, xmax, ymin, ymax = min(xvalues), max(xvalues), min(yvalues), max(yvalues),
-        plt.xticks(
-            np.arange(xmin, xmax, (xmax - xmin) / xticks)
-        )
+        ymin, ymax = min(yvalues), max(yvalues),
         plt.yticks(
-            np.arange(ymin, ymax, (ymax - ymin) / yticks)
+            np.linspace(ymin, ymax, yticks)
         )
-
 
         plt.minorticks_on()
-        plt.rcParams.update({"font.family":font})
+        plt.rcParams.update({"font.family": font})
 
         plt.savefig(buffer)
 
@@ -211,6 +220,11 @@ class Graphing(commands.Cog):
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()
+
+    @bar.autocomplete("color")
+    async def plotcolor_autocomplete(self, inter: discord.Interaction, current: str):
+        return self.color_autocomplete(inter, current)
+
 
 async def setup(bot):
     await bot.add_cog(Graphing(bot))

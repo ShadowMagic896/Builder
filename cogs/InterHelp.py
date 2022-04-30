@@ -49,8 +49,9 @@ class InterHelp(commands.Cog):
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
 
         elif command and not cog:
-            cmds = [c for c in self.explode(self.bot.commands) if c.qualified_name.lower()
-                    == command.lower()]
+            cmds = [
+                c for c in self.explode(
+                    self.bot.commands) if c.qualified_name.lower() == command.lower()]
 
             if not cmds:
                 raise commands.errors.BadArgument(command)
@@ -72,9 +73,9 @@ class InterHelp(commands.Cog):
                 raise commands.errors.BadArgument(cog)
             cog: commands.Cog = _cog
 
-            _command: commands.HybridCommand = [
-                r for r in self.explode(cog.get_commands()) if r.qualified_name.lower() == command.lower()]
-                
+            _command: commands.HybridCommand = [r for r in self.explode(
+                cog.get_commands()) if r.qualified_name.lower() == command.lower()]
+
             if not _command:
                 raise commands.errors.BadArgument(command)
             command: commands.HybridCommand = _command[0]

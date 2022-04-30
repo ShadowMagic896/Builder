@@ -100,7 +100,8 @@ class ListConverter(commands.Converter):
 
     async def convert(self, ctx: Context, argument: str):
         argument = argument.replace(" ", "")
-        match = "\[?(\-?[\d\.]+,?\s*)+\]?"
+        match = "\\[?(\\-?[\\d\\.]+,?\\s*)+\\]?" if self.convtype in [float,
+                                                                      int] else "\\[?(\\-?[^,]+,?\\s*)+\\]?"
         if not (res := re.search(match, argument).group()):
             raise commands.errors.BadArgument(argument)
         return self.strToList(res, self.convtype)

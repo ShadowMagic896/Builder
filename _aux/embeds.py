@@ -5,6 +5,8 @@ from discord.ext import commands
 from datetime import datetime
 
 latest_delay = None
+
+
 def fmte(
         ctx: commands.Context = None,
         t: str = "",
@@ -177,8 +179,8 @@ class EmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize *
-                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize * \
+            (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(
@@ -321,8 +323,8 @@ class DMEmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize *
-                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize * \
+            (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(
