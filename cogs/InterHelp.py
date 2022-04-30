@@ -1,4 +1,3 @@
-import string
 import discord
 from discord import app_commands, Interaction
 from discord.app_commands import describe

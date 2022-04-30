@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Type
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -94,16 +94,20 @@ class TimeConvert(commands.Converter):
 
 
 class ListConverter(commands.Converter):
+    def __init__(self, convtype: Type) -> None:
+        self.convtype = convtype
+        super().__init__()
+
     async def convert(self, ctx: Context, argument: str):
         argument = argument.replace(" ", "")
-        match = "\\[?(\\-?\\d+,?\\s*)+\\]?"
+        match = "\[?(\-?[\d\.]+,?\s*)+\]?"
         if not (res := re.search(match, argument).group()):
             raise commands.errors.BadArgument(argument)
-        return self.strToList(res)
+        return self.strToList(res, self.convtype)
 
-    def strToList(self, string: str) -> List[int]:
+    def strToList(self, string: str, convtype: Type) -> List[int]:
         return [
-            int(a) for a in string.replace(
+            self.convtype(a) for a in string.replace(
                 "[", "").replace(
                 "]", "").replace(
                 " ", "").split(",")]

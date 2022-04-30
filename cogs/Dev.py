@@ -85,19 +85,12 @@ class Dev(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_owner()
-    async def sync(self, ctx: commands.Context, log: bool = False):
-        l = await self.bot.tree.sync()
-        cogs: Mapping[commands.Cog, commands.HybridCommand] = {}
-        for c in self.bot.commands:
-            if c.cog in list(cogs.keys()):
-                cogs[c.cog].append(c)
-            else:
-                cogs[c.cog] = [c, ]
-        embed = fmte(ctx,
-                     t="{} Commands Synced".format(len(l)),
-                     d="```%s```" % "".join(["\n{}\n{}".format(co.qualified_name,
-                                                               "\n".join(["ㅤ{}".format(c.name) for c in v])) for co,
-                                             v in cogs.items()]) if log else "No Log")
+    async def sync(self, ctx: commands.Context, spec: str = None):
+        if spec:
+            l: List[app_commands.AppCommand] = await self.bot.tree.sync(guild=ctx.guild)
+        else:
+            l: List[app_commands.AppCommand] = await self.bot.tree.sync()
+        embed = fmte(ctx, t="%s Commands Synced" % len(l))
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()

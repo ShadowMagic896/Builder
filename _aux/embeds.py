@@ -1,10 +1,10 @@
-from math import ceil, floor
-from typing import Any, List, Literal, Optional
+from math import floor
+from typing import Any, List, Optional
 import discord
 from discord.ext import commands
 from datetime import datetime
 
-
+latest_delay = None
 def fmte(
         ctx: commands.Context = None,
         t: str = "",
@@ -29,6 +29,11 @@ def fmte(
     if ctx:
         embed.set_footer(
             text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
+        )
+        latest_delay = ctx.bot.latency
+    elif latest_delay:
+        embed.set_footer(
+            text="Response in %sms" % round(latest_delay * 1000, 2)
         )
     embed.timestamp = datetime.now()
     return embed
