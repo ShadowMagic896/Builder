@@ -7,7 +7,7 @@ from discord.ext import commands
 import os
 
 
-from PIL import Image, ImageDraw, ImageColor
+from PIL import Image, ImageDraw, ImageColor, ImageFilter
 from typing import Literal, Optional
 
 
@@ -281,7 +281,7 @@ class Media(commands.Cog):
 
         img = Image.open(buffer)
         fillcolor = ImageColor.getrgb(fillcolor)
-        img = img.rotate(degrees, center=center, fillcolor=fillcolor, expand=True)
+        img = img.rotate(degrees % 360, center=center, fillcolor=fillcolor, expand=True)
         buffer = io.BytesIO()
         img.save(buffer, self.getExtension(attachment))
         buffer.seek(0)
@@ -292,6 +292,49 @@ class Media(commands.Cog):
         )
         file = discord.File(buffer, "rotate.%s" % attachment.filename)
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+    
+    def getFilters(self):
+        """Basically get all constants in ImageFilter"""
+        return [c for c in dir(ImageFilter) if c.upper() == c]
+    @image.command()
+    @describe(
+        imagefilter = "The filter to apply.",
+        attachment = "The image to apply the filter to.",
+    )
+    async def filter(self, ctx: commands.Context, imagefilter: str, attachment: discord.Attachment, ):
+        """
+        Applies a filter onto the image
+        """
+        filts = self.getFilters()
+        if imagefilter not in filts:
+            raise commands.BadArgument(imagefilter)
+
+        buffer = io.BytesIO()
+        await attachment.save(buffer)
+        buffer.seek(0)
+        img = Image.open(buffer)
+
+        _filter = getattr(ImageFilter, imagefilter)
+        img = img.filter(_filter)
+        buffer = io.BytesIO()
+        img.save(buffer, self.getExtension(attachment))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t="Image Filter Applied"
+        )
+        file = discord.File(buffer, "filter.%s" % attachment.filename)
+        await ctx.send(embed=embed, file=file)
+    
+    @filter.autocomplete("imagefilter")
+    async def filterimagefilter_autocomplete(self, inter: discord.Interaction, current: str):
+        return [
+            discord.app_commands.Choice(name=c, value=c)
+            for c in self.getFilters()
+            if c.lower() in current.lower() or current.lower() in c.lower()
+        ][:25]
+        
     
 
 

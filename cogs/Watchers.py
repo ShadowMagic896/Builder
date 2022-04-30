@@ -109,6 +109,7 @@ class Watchers(commands.Cog):
 
     # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
+        print(error)
         hint = None
 
         if "jishaku" in ctx.invoked_parents:  # Do not automate command errors for this cog

@@ -177,8 +177,7 @@ class Utility(commands.Cog):
         ]
 
         for t in attempts:
-            res = t(objectid)
-            if not res:
+            if not (res := t(int(objectid))):
                 continue
 
             found = res
