@@ -8,6 +8,7 @@ import logging
 import os
 
 from _aux.extensions import load_extensions
+from server import flask
 
 load_dotenv()
 
@@ -17,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
     filename='data/logs/_discord.log',
     encoding='utf-8',
-    mode='w')
+    mode='a')
 handler.setFormatter(logging.Formatter(
     '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
@@ -46,7 +47,7 @@ async def main():
     bot = Builder()
     await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
-
+    flask.run()
     await bot.start(os.getenv("BOT_KEY"))
 
 asyncio.run(main())
