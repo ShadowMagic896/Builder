@@ -1,8 +1,9 @@
-## Welcome to GitHub Pages
+## Builder
 
-You can use the [editor on GitHub](https://github.com/ShadowMagic896/Builder/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+This is a Discord slash-based bot build by Ryan Peckham [Cookie?#9999], with inspiration and support from kiwiiiii#5063
+Started as a small hobby project, this is my fourth bot. It is built using (discord.py)[https://discordpy.readthedocs.io/en/stable/].
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+
 
 ### Markdown
 
