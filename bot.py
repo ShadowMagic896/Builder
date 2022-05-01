@@ -8,7 +8,6 @@ import logging
 import os
 
 from _aux.extensions import load_extensions
-from server import flask
 
 load_dotenv()
 
@@ -47,7 +46,6 @@ async def main():
     bot = Builder()
     await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
-    flask.run()
     await bot.start(os.getenv("BOT_KEY"))
 
 asyncio.run(main())

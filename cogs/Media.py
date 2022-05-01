@@ -298,8 +298,8 @@ class Media(commands.Cog):
         return [c for c in dir(ImageFilter) if c.upper() == c]
     @image.command()
     @describe(
-        imagefilter = "The filter to apply.",
         attachment = "The image to apply the filter to.",
+        imagefilter = "The filter to apply.",
     )
     async def filter(self, ctx: commands.Context, imagefilter: str, attachment: discord.Attachment, ):
         """
