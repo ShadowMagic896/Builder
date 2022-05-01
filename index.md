@@ -21,4 +21,5 @@ Builder's commands are mostly focused on changing images. Most commands fall und
   - Guild Management [Manage roles, channels, members, etc.]
   - NSFW [Gotta have those...!]
 
-Because Builder's commands are constantly changing and I'm bad at making websites, a full list of
+Because Builder's commands are constantly changing and I'm bad at making websites, the only truly up-to-date list of commands and features will be available within the bot itself.
+However, all major changes should also be recorded here.
