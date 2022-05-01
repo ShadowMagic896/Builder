@@ -28,20 +28,18 @@ def fmte(
         name="Requested By: %s" %
         str(user), url="https://discordapp.com/users/%s" %
         user.id, icon_url=user.avatar.url)
-    if ctx:
+    if ctx is not None:
         embed.set_footer(
             text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
         )
+        latest_delay = ctx.bot.latency
     else:
         try:
             embed.set_footer(
-                text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
+                text="Response in %sms" % round(latest_delay * 1000, 2)
             )
         except UnboundLocalError:
             pass
-    embed.set_footer(
-        text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
-    )
     embed.timestamp = datetime.now()
     return embed
 

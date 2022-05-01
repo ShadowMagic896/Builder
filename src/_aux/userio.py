@@ -78,7 +78,8 @@ def convCodeBlock(code: str):
     if not se:
         raise commands.errors.BadArgument("Invalid code format.")
     return se.group()
-    
+
+
 def explode(l: List[commands.HybridCommand]):
     l = list(l)
     for c in l:

@@ -80,7 +80,7 @@ class Client(commands.Cog):
             buffer = io.BytesIO()
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
-            
+
             embed = fmte(
                 ctx,
                 t="Source for Cog: %s" % cog.qualified_name
@@ -104,9 +104,14 @@ class Client(commands.Cog):
 
             embed = fmte(
                 ctx,
-                t="Source for %s" % (("`%s`" % cog.qualified_name) if note else "`{}` of Cog `{}`".format(command.qualified_name, cog.qualified_name))
-            )
-            file = discord.File(buffer, "source.%s.py" % (cog.qualified_name if note else command.qualified_name))
+                t="Source for %s" %
+                (("`%s`" %
+                  cog.qualified_name) if note else "`{}` of Cog `{}`".format(
+                    command.qualified_name,
+                    cog.qualified_name)))
+            file = discord.File(
+                buffer, "source.%s.py" %
+                (cog.qualified_name if note else command.qualified_name))
             await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
 
     @source.autocomplete("cog")
@@ -129,6 +134,7 @@ class Client(commands.Cog):
                                         c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
                                             :25], key=lambda c: c.name[
                                                 c.name.index("]") + 1:])
+
     def explode(self, l: List[commands.HybridCommand]):
         l = list(l)
         for c in l:

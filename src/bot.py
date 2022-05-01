@@ -15,7 +15,7 @@ load_dotenv()
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
-    filename='data\logs\_discord.log',
+    filename='data\\logs\\_discord.log',
     encoding='utf-8',
     mode='a')
 handler.setFormatter(logging.Formatter(
@@ -26,7 +26,7 @@ logger.addHandler(handler)
 
 class Builder(commands.AutoShardedBot):
     def __init__(self):
-        command_prefix = when_mentioned_or(">>")
+        command_prefix = when_mentioned_or("dev>>")
         intents = discord.Intents.all()
         activity = discord.Activity(
             type=discord.ActivityType.listening, name="/help")

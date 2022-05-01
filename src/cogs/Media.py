@@ -28,7 +28,7 @@ class Media(commands.Cog):
 
     def getExtension(self, attachment: discord.Attachment):
         fn = attachment.filename
-        return fn[fn.replace(".", "_", fn.count(".") - 1).index(".")+1:]
+        return fn[fn.replace(".", "_", fn.count(".") - 1).index(".") + 1:]
 
     def checkAttachment(self, attachment: discord.Attachment):
         if attachment.size > 40000000:
@@ -179,23 +179,23 @@ class Media(commands.Cog):
             t="File Successfully Edited!"
         )
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
-    
+
     @image.command()
     @describe(
-        attachment = "The image to crop.",
-        left = "The left point to start cropping.",
-        upper = "The upper point to start cropping.",
-        right = "The right point to stop cropping.",
-        lower = "The lower point to start cropping.",
+        attachment="The image to crop.",
+        left="The left point to start cropping.",
+        upper="The upper point to start cropping.",
+        right="The right point to stop cropping.",
+        lower="The lower point to start cropping.",
         ephemeral=Desc.ephemeral,
     )
     async def crop(
-        self, 
-        ctx: commands.Context, 
-        attachment: discord.Attachment, 
+        self,
+        ctx: commands.Context,
+        attachment: discord.Attachment,
         left: int, upper: int, right: int, lower: int,
         ephemeral: bool = False,
-        ):
+    ):
         """
         Crops an image to the given dimensions
         """
@@ -215,10 +215,10 @@ class Media(commands.Cog):
         )
         file = discord.File(buffer, "crop.%s" % attachment.filename)
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
-    
+
     @image.command()
     @describe(
-        attachment = "The image to get information on.",
+        attachment="The image to get information on.",
         ephemeral=Desc.ephemeral,
     )
     async def info(self, ctx: commands.Context, attachment: discord.Attachment, ephemeral: bool = False):
@@ -227,21 +227,21 @@ class Media(commands.Cog):
         """
         embed = fmte(
             ctx,
-            t = "Gathered Information",
+            t="Gathered Information",
         )
         embed.add_field(
-            name = "Dimensions",
-            value = "`{}x{}`".format(attachment.width, attachment.height),
+            name="Dimensions",
+            value="`{}x{}`".format(attachment.width, attachment.height),
             inline=False
         )
         embed.add_field(
-            name = "File Size",
-            value = "`%s bytes`" % attachment.size,
+            name="File Size",
+            value="`%s bytes`" % attachment.size,
             inline=False
         )
         embed.add_field(
-            name = "File Type",
-            value = "`%s`" % attachment.content_type,
+            name="File Type",
+            value="`%s`" % attachment.content_type,
             inline=False
         )
         buffer = io.BytesIO()
@@ -251,23 +251,21 @@ class Media(commands.Cog):
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
 
     @image.command()
-    @describe(
-        attachment = "The image to rotate",
-        degrees = "The amount of degrees to rotate the image.",
-        centerx = "The X Coordinate of the center of rotation.",
-        centery = "The Y Coordinate of the center of rotation.",
-        fillcolor = "The color to fill the remaining parts of the image after rotation.",
-        ephemeral = Desc.ephemeral
-    )
+    @describe(attachment="The image to rotate",
+              degrees="The amount of degrees to rotate the image.",
+              centerx="The X Coordinate of the center of rotation.",
+              centery="The Y Coordinate of the center of rotation.",
+              fillcolor="The color to fill the remaining parts of the image after rotation.",
+              ephemeral=Desc.ephemeral)
     async def rotate(
-        self, 
-        ctx: commands.Context, 
-        attachment: discord.Attachment, 
-        degrees: int, 
+        self,
+        ctx: commands.Context,
+        attachment: discord.Attachment,
+        degrees: int,
         centerx: Optional[int] = None, centery: Optional[int] = None,
         fillcolor: str = "white",
         ephemeral: bool = False,
-        ):
+    ):
         """
         Rotates an image by a given amount of degrees
         """
@@ -281,25 +279,31 @@ class Media(commands.Cog):
 
         img = Image.open(buffer)
         fillcolor = ImageColor.getrgb(fillcolor)
-        img = img.rotate(degrees % 360, center=center, fillcolor=fillcolor, expand=True)
+        img = img.rotate(
+            degrees %
+            360,
+            center=center,
+            fillcolor=fillcolor,
+            expand=True)
         buffer = io.BytesIO()
         img.save(buffer, self.getExtension(attachment))
         buffer.seek(0)
 
         embed = fmte(
             ctx,
-            t = "Image Rotated"
+            t="Image Rotated"
         )
         file = discord.File(buffer, "rotate.%s" % attachment.filename)
         await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
-    
+
     def getFilters(self):
         """Basically get all constants in ImageFilter"""
         return [c for c in dir(ImageFilter) if c.upper() == c]
+
     @image.command()
     @describe(
-        attachment = "The image to apply the filter to.",
-        imagefilter = "The filter to apply.",
+        attachment="The image to apply the filter to.",
+        imagefilter="The filter to apply.",
     )
     async def filter(self, ctx: commands.Context, imagefilter: str, attachment: discord.Attachment, ):
         """
@@ -326,7 +330,7 @@ class Media(commands.Cog):
         )
         file = discord.File(buffer, "filter.%s" % attachment.filename)
         await ctx.send(embed=embed, file=file)
-    
+
     @filter.autocomplete("imagefilter")
     async def filterimagefilter_autocomplete(self, inter: discord.Interaction, current: str):
         return [
@@ -334,9 +338,6 @@ class Media(commands.Cog):
             for c in self.getFilters()
             if c.lower() in current.lower() or current.lower() in c.lower()
         ][:25]
-        
-    
-
 
     @commands.hybrid_command()
     @describe(
