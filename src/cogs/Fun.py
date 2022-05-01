@@ -392,7 +392,7 @@ class RPS_View(discord.ui.View):
         self.choices = choices
 
     def state(self, p1: discord.Member, p2: discord.Member,
-              p1choice, p2choice) -> discord.Member | None:
+              p1choice, p2choice):
         if p1choice == p2choice:
             return None
         if p1choice == "Rock":

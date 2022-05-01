@@ -26,7 +26,7 @@ async def load_extensions(bot, ignore_errors=False, logging=True):
         print(log)
     else:
         log = ""
-        for cog in os.listdir("./cogs"):
+        for cog in os.listdir("./src/cogs"):
             try:
                 if cog.endswith(".py") and not cog.startswith("_"):
                     await bot.load_extension(f"cogs.{cog[:-3]}")

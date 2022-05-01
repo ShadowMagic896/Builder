@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
-latest_delay = None
+latest_delay: float = None
 
 
 def fmte(
@@ -32,11 +32,16 @@ def fmte(
         embed.set_footer(
             text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
         )
-        latest_delay = ctx.bot.latency
-    elif latest_delay:
-        embed.set_footer(
-            text="Response in %sms" % round(latest_delay * 1000, 2)
-        )
+    else:
+        try:
+            embed.set_footer(
+                text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
+            )
+        except UnboundLocalError:
+            pass
+    embed.set_footer(
+        text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
+    )
     embed.timestamp = datetime.now()
     return embed
 

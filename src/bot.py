@@ -15,7 +15,7 @@ load_dotenv()
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
-    filename='data/logs/_discord.log',
+    filename='data\logs\_discord.log',
     encoding='utf-8',
     mode='a')
 handler.setFormatter(logging.Formatter(

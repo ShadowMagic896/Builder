@@ -1,17 +1,17 @@
-# set base image (host OS)
 FROM python:3.8
 
-# set the working directory in the container
-WORKDIR /code
+LABEL maintainer="Ryan Peckham"
 
-# copy the dependencies file to the working directory
+WORKDIR /src
+
 COPY requirements.txt .
 
-# install dependencies
 RUN pip install -r requirements.txt
 
-# copy the content of the local src directory to the working directory
+# RUN apt update \
+#     && apt-get install gcc git curl python3-venv -y \
+#     && pip install --upgrade pip setuptools wheel poetry
+
 COPY src/ .
 
-# command to run on container start
 CMD [ "python", "./bot.py" ] 
