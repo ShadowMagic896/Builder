@@ -18,4 +18,7 @@ This bot's primary focus is on image manipulation. I chose this because of a few
 Builder's commands are mostly focused on changing images. Most commands fall under a certain group:
   - Graphing [Functions, data, etc.]
   - Imaging [Resize, filter, rotate, caption, etc.]
-  - 
+  - Guild Management [Manage roles, channels, members, etc.]
+  - NSFW [Gotta have those...!]
+
+Because Builder's commands are constantly changing and I'm bad at making websites, a full list of
