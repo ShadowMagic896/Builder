@@ -14,6 +14,9 @@ from matplotlib import pyplot as plt
 
 
 class Graphing(commands.Cog):
+    """
+    Commands for visualizing data and functions
+    """
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -268,19 +271,24 @@ class Graphing(commands.Cog):
         buffer = io.BytesIO()
         xvalues = np.linspace(rangelower, rangeupper, plots)
         yvalues = []
-        function = function.replace(" ", "").replace(
-            "^", "**").replace("y=", "")
-        if function.count("x"):
-            if function.index("x") == 0:
-                ast = False
-            else:
-                ast = function[function.index("x") - 1].isdigit
+        function = function.replace(" ", "").replace("^", "**").replace("y=", "")
+        
+        
+        def ins(string: str, char: str, pos: int):
+            return string[:pos] + char + string[pos:]
+
+        for co, char in enumerate(function):
+            if co == 0:
+                continue
+            if char == "x":
+                if function[co-1].isdigit:
+                    function = ins(function, "*", co)
+            
         for v in xvalues:
             yvalues.append(
                 simpleeval.SimpleEval().eval(
                     function.replace(
-                        "x", ("*%s" %
-                              v) if ast else str(v))))
+                        "x", str(v))))
         plt.plot(xvalues, yvalues, color=color, linewidth=linewidth)
         plt.grid(True)
 
@@ -309,13 +317,13 @@ class Graphing(commands.Cog):
             t="Data Loaded and Graphed"
         )
         file = discord.File(buffer, filename="graph.png")
-        print("SEnd")
         await ctx.send(embed=embed, file=file)
         plt.cla()
 
     @psi.autocomplete("color")
     async def psicolor_autocomplete(self, inter: discord.Interaction, current: str):
         return self.color_autocomplete(inter, current)
+    
 
 
 async def setup(bot):

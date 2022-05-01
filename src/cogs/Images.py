@@ -6,7 +6,6 @@ from discord.ext import commands
 
 import os
 
-
 from PIL import Image, ImageDraw, ImageColor, ImageFilter
 from typing import Literal, Optional
 
@@ -15,9 +14,9 @@ from _aux.embeds import fmte, Desc
 from _aux.Converters import ListConverter
 
 
-class Media(commands.Cog):
+class Images(commands.Cog):
     """
-    Commands to manipulate and change images, download videos, and more!
+    Commands to manipulate and change images!
     """
 
     def __init__(self, bot: commands.Bot) -> None:
@@ -359,4 +358,4 @@ class Media(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(Media(bot))
+    await bot.add_cog(Images(bot))
