@@ -107,7 +107,7 @@ class Watchers(commands.Cog):
                 tz=pytz.timezone("UTC")), ctx.invoked_parents,)
         open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         print(error)
         hint = None
@@ -183,7 +183,7 @@ class Watchers(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        if not message.guild and message.author is not self.bot.user:
+        if message.author is not self.bot.user:
             data = "{} at {}: {}\n".format(
                 message.author, datetime.fromtimestamp(
                     time.time()), message.content)

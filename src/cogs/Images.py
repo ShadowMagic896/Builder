@@ -6,12 +6,13 @@ from discord.ext import commands
 
 import os
 
-from PIL import Image, ImageDraw, ImageColor, ImageFilter
-from typing import Literal, Optional
+from PIL import Image, ImageDraw, ImageColor, ImageFilter, ImageEnhance
+from typing import Literal, Optional, Type
+from moviepy.editor import VideoFileClip
 
 
 from _aux.embeds import fmte, Desc
-from _aux.Converters import ListConverter
+from _aux.Converters import ListConverter, TimeConvert
 
 
 class Images(commands.Cog):
@@ -337,6 +338,54 @@ class Images(commands.Cog):
             for c in self.getFilters()
             if c.lower() in current.lower() or current.lower() in c.lower()
         ][:25]
+    
+    @image.command()
+    @describe(
+        attachment = "The attachment to convert."
+    )
+    async def greyscale(self, ctx: commands.Context, attachment: discord.Attachment):
+        """
+        Convert an image to a grey-scale color scheme
+        """
+        buffer = io.BytesIO()
+        await attachment.save(buffer)
+        buffer.seek(0)
+        img = Image.open(buffer)
+        img = img.convert("L")
+        buffer = io.BytesIO()
+        img.save(buffer, self.getExtension(attachment))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t = "Conversion Complete"
+        )
+        file = discord.File(buffer, "gs.%s" % attachment.filename)
+        await ctx.send(embed=embed, file=file)
+        
+    @image.command()
+    async def convert(self, ctx: commands.Context, attachment: discord.Attachment, mode: Literal['1', 'CMYK', 'F', 'HSV', 'I', 'L', 'LAB', 'P', 'RGB', 'RGBA', 'RGBX', 'YCbCr']):
+        """
+        Attempts to convert the image into the specified mode.
+        """
+        buffer = io.BytesIO()
+        await attachment.save(buffer)
+        buffer.seek(0)
+        img = Image.open(buffer)
+        try:
+            img = img.convert(mode=mode)
+        except OSError or TypeError as e:
+            raise TypeError(e)
+        buffer = io.BytesIO()
+        img.save(buffer, self.getExtension(attachment))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t = "Image Successfully Converted"
+        )
+        file = discord.File(buffer, "conv.%s" % attachment.filename)
+        await ctx.send(embed=embed, file=file)
 
     @commands.hybrid_command()
     @describe(
