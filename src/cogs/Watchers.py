@@ -183,7 +183,7 @@ class Watchers(commands.Cog):
     async def on_message(self, message):
         if message.author.bot:
             return
-        if message.author is not self.bot.user:
+        if not message.guild and message.author is not self.bot.user:
             data = "{} at {}: {}\n".format(
                 message.author, datetime.fromtimestamp(
                     time.time()), message.content)
