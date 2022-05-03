@@ -91,12 +91,17 @@ class InterHelp(commands.Cog):
 
     # hahah code in one line go brrrrr
     def explode(self, l: List[commands.HybridCommand]):
+        """
+        A recursive func to flatten all commands into one list
+        """
         l = list(l)
+        nl = []
         for c in l:
             if isinstance(c, (commands.HybridGroup, commands.Group)):
-                l.extend(c.commands)
-                l.remove(c)
-        return l
+                nl.extend(self.explode(c.commands))
+            else:
+                nl.append(c)
+        return nl
 
     @help.autocomplete("cog")
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:

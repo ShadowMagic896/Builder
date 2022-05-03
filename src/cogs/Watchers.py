@@ -14,7 +14,7 @@ import pytz
 from _aux.embeds import fmte
 from _aux.sql3OOP import Table
 
-from cogs.InterHelp import InterHelp
+from archived_cogs.InterHelp import InterHelp
 
 
 class Watchers(commands.Cog):
@@ -110,7 +110,7 @@ class Watchers(commands.Cog):
                 tz=pytz.timezone("UTC")), ctx.invoked_parents,)
         open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         hint = None
 

@@ -386,7 +386,12 @@ class Images(commands.Cog):
         file = discord.File(buffer, "conv.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
     
-    @image.command()
+    @image.group()
+    async def enhance(self, ctx: commands.Context):
+        pass
+            
+
+    @enhance.command()
     @describe(
         image = "The image whose contrast to adjust.",
         factor = "The factor of contrast. 0 is greyscale, 100 is maximum contrast."
@@ -410,6 +415,86 @@ class Images(commands.Cog):
             t = "Image Successfully Edited"
         )
         file = discord.File(buffer, "cntr.%s" % image.filename)
+        await ctx.send(embed=embed, file=file)
+    
+    
+
+    @enhance.command()
+    @describe(
+        image = "The image whose contrast to adjust.",
+        factor = "The factor of brightness. 0 is black, 100 is basically pure white."
+    )
+    async def brightness(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
+        """
+        Adjusts the brightness of an image
+        """
+        buffer = io.BytesIO()
+        await image.save(buffer)
+        buffer.seek(0)
+        img = Image.open(buffer)
+        enh = ImageEnhance.Brightness(img)
+        img = enh.enhance(factor)
+        buffer = io.BytesIO()
+        img.save(buffer, self.getExtension(image))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t = "Image Successfully Edited"
+        )
+        file = discord.File(buffer, "brht.%s" % image.filename)
+        await ctx.send(embed=embed, file=file)
+    
+    @enhance.command()
+    @describe(
+        image = "The image whose contrast to adjust.",
+        factor = "The factor of brightness. 0 is black & white."
+    )
+    async def color(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
+        """
+        Adjusts the color of an image
+        """
+        buffer = io.BytesIO()
+        await image.save(buffer)
+        buffer.seek(0)
+        img = Image.open(buffer)
+        enh = ImageEnhance.Color(img)
+        img = enh.enhance(factor)
+        buffer = io.BytesIO()
+        img.save(buffer, self.getExtension(image))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t = "Image Successfully Edited"
+        )
+        file = discord.File(buffer, "brht.%s" % image.filename)
+        await ctx.send(embed=embed, file=file)
+    
+    @enhance.command()
+    @describe(
+        image = "The image whose contrast to adjust.",
+        factor = "The factor of brightness. 0 is blurred."
+    )
+    async def sharpness(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
+        """
+        Adjusts the sharpess of an image
+        """
+        buffer = io.BytesIO()
+        await image.save(buffer)
+        buffer.seek(0)
+        img = Image.open(buffer)
+        enh = ImageEnhance.Sharpness(img)
+        img = enh.enhance(factor)
+        buffer = io.BytesIO()
+        img.save(buffer, self.getExtension(image))
+        buffer.seek(0)
+
+        embed = fmte(
+            ctx,
+            t = "Image Successfully Edited"
+        )
+        file = discord.File(buffer, "shrp.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
         
 
