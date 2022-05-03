@@ -4,6 +4,7 @@ from typing_extensions import Self
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
+from numpy import fix
 
 from translate import Translator
 import langdetect
@@ -28,11 +29,17 @@ class Language(commands.Cog):
         return [country.alpha_2 for country in pycountry.countries]
     
     def getLangCode(self, msg: str):
-        try:
-            return langcodes.find_name("language", msg)
+        try: # Full name
+            lang = langcodes.find_name("language", msg).language
+            fixdict = {
+                "enc": "en"
+            }
+            if lang in fixdict.keys():
+                return fixdict[lang]
+            return lang
         except LookupError:
             if x := langcodes.get(msg): # Just a code
-                return x.language
+                return (x.language)
         raise commands.errors.BadArgument(msg)
         
     def getLangName(self, code: str):
@@ -57,7 +64,6 @@ class Language(commands.Cog):
             fromlang = self.getLangCode(fromlang)
             
         tolang = self.getLangCode(tolang)
-
         message = translate.Translator(to_lang=tolang, from_lang=fromlang).translate(message)
         fromlang, tolang = langcodes.get(fromlang).display_name(), langcodes.get(tolang).display_name()
 

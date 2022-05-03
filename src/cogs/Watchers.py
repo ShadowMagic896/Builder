@@ -1,3 +1,4 @@
+from typing import Union
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import *
@@ -6,6 +7,8 @@ from discord.errors import *
 import asyncio
 import time
 from datetime import datetime
+from langcodes import LanguageTagError
+from numpy import isin
 import pytz
 
 from _aux.embeds import fmte
@@ -107,19 +110,17 @@ class Watchers(commands.Cog):
                 tz=pytz.timezone("UTC")), ctx.invoked_parents,)
         open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
-        print(error)
         hint = None
 
         if "jishaku" in ctx.invoked_parents:  # Do not automate command errors for this cog
             return
+        
 
-        if isinstance(
-                error,
-                commands.CommandInvokeError):  # Unwrap CommandInvokeErrors
+        while isinstance(error, Union[commands.errors.CommandInvokeError, discord.app_commands.errors.CommandInvokeError, commands.errors.HybridCommandError]):
             error = error.original
-
+        
         if isinstance(error, CommandNotFound):
             hint = "I couldn't find that command. Try `/help`"
         if isinstance(error, ExtensionNotFound):
@@ -146,6 +147,8 @@ class Watchers(commands.Cog):
             hint = "You gave something of the wrong value or type. Check the error for more information."
         elif isinstance(error, IOError):
             hint = "You gave an incorrect parameter for a file."
+        elif isinstance(error, LanguageTagError):
+            hint = "You gave an invalid language tag or name."
         else:
             hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
         hintEmbed = fmte(

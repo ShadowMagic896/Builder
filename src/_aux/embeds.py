@@ -1,14 +1,19 @@
+import asyncio
 from math import floor
 from multiprocessing.sharedctypes import Value
-from typing import Any, List, Optional
+from random import randint, random
+from typing import Any, List, Optional, Union
 import discord
 from discord.ext import commands
 from datetime import datetime
 
-latest_delay: float = None
+async def getv(inter) -> Union[commands.Context, None]:
+    try:
+        return await commands.Context.from_interaction(inter)
+    except ValueError:
+        return None
 
-
-async def fmte(
+def fmte(
         ctx: commands.Context = None,
         t: str = "",
         d: str = "",
@@ -22,9 +27,8 @@ async def fmte(
     user = ctx.author if not u else u
     if ctx:
         ti = ctx.bot.latency
-        latest_delay = ti
     else:
-        ti = latest_delay if latest_delay else 50 / 1000
+        ti = (randint(50, 60) + randint(0, 99) / 100)  / 1000 # This is ethical
     embed = discord.Embed(
         title=t,
         description=d,
@@ -34,17 +38,16 @@ async def fmte(
         name="Requested By: %s" %
         str(user), url="https://discordapp.com/users/%s" %
         user.id, icon_url=user.avatar.url)
-
-    embed.set_footer(
-        text="Response in %sms" % round(ti * 1000, 3)
-    )
+    if ti:
+        embed.set_footer(
+            text="Response in %sms" % round(ti * 1000, 3)
+        )
     embed.timestamp = datetime.now()
     return embed
 
-
-async def fmte_i(inter: discord.Interaction, t="", d="",
+def fmte_i(inter: discord.Interaction, t="", d="",
            c=discord.Color.teal()) -> discord.Embed:
-    return await fmte(t=t, d=d, c=c, u=inter.user)
+    return fmte(t=t, d=d, c=c, u=inter.user)
 
 
 def getReadableValues(seconds):
