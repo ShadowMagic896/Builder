@@ -32,7 +32,7 @@ class Guild(commands.Cog):
         guild: discord.Guild = ctx.guild
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="Info: {} [{}]".format(guild.name, guild.id),
             d=guild.description

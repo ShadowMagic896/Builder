@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
     filename='data\\logs\\_discord.log',
     encoding='utf-8',
-    mode='a')
+    mode='w')
 handler.setFormatter(logging.Formatter(
     '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)

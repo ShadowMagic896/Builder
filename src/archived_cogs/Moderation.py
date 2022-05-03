@@ -37,7 +37,7 @@ class Moderation(commands.Cog):
         """
         Disallows non-admin users from sending messages in the channel where this was used.
         """
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="Channel Locked by {}.".format(
                 ctx.author),
@@ -64,7 +64,7 @@ class Moderation(commands.Cog):
                 add_reactions=True,
                 reason="Automatic Channel Unlock."
             )
-            embed = fmte(
+            embed = await fmte(
                 ctx,
                 t="Channel Unlocked",
                 d="Channel originally locked by {}".format(ctx.author)
@@ -80,7 +80,7 @@ class Moderation(commands.Cog):
         """
         Manually unlocks a channel
         """
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="Channel Unlocked"
         )
@@ -111,7 +111,7 @@ class Moderation(commands.Cog):
             targtime).astimezone(pytz.timezone("utc"))
 
         await user.timeout(until, reason=reason)
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="{} timed out.".format(user),
             d="**Until:** <t:{}>\n**Reason:** {}\n**Mod:** `{}`".format(
@@ -132,7 +132,7 @@ class Moderation(commands.Cog):
         """
 
         if not user.is_timed_out:
-            embed = fmte(
+            embed = await fmte(
                 ctx,
                 t="This user is not timed out."
             )
@@ -142,7 +142,7 @@ class Moderation(commands.Cog):
         at = user.timed_out_until
         # Set timeout value to right now
         await user.timeout(datetime.now(tz=pytz.timezone("utc")), reason=reason + " [Manual untimeout]")
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="{} is no longer timed out.".format(user),
             d="**Original timeout target:** <t:{}>\n**Reason:** {}\n**Mod:** `{}`".format(
@@ -166,7 +166,7 @@ class Moderation(commands.Cog):
         """
         if not user:
             r = await actual_purge(ctx, limit + 1)
-            embed = fmte(
+            embed = await fmte(
                 ctx,
                 t="{} Messages by All Users Deleted".format(r[0] - 1),
                 d="Failed deletes: {}".format(r[1])
@@ -175,7 +175,7 @@ class Moderation(commands.Cog):
         else:
 
             r = await actual_purge(ctx, limit + 1, user)
-            embed = fmte(
+            embed = await fmte(
                 ctx,
                 t="{} Messages by {} Deleted.".format(r[0] - 1, user),
                 d="Failed deletes: {}.".format(r[1])
@@ -197,13 +197,13 @@ class Moderation(commands.Cog):
         """
         if not user:
             await ctx.author.edit(nick=name, reason=reason)
-            embed = fmte(
+            embed = await fmte(
                 ctx,
                 t="You have been renamed to {}."
             )
         else:
             await user.edit(nick=name, reason=reason)
-            embed = fmte(
+            embed = await fmte(
                 ctx,
                 t="{} has been renamed to {}".format(user, name)
             )
@@ -222,7 +222,7 @@ class Moderation(commands.Cog):
         """
 
         await ctx.guild.kick(user, reason=reason)
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="`{}` kicked from `{}`".format(user, ctx.guild),
             d="Reason: `{}`".format(reason)
@@ -242,7 +242,7 @@ class Moderation(commands.Cog):
         Bans a user from the server
         """
         await user.ban(delete_message_days=purgedays, reason=reason)
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="%s Banned." % str(user),
             d="**Reason:** {}\n**Days to purge:** {}".format(
@@ -263,7 +263,7 @@ class Moderation(commands.Cog):
         Unbans a user from the server
         """
         await user.unban(reason=reason)
-        embed = fmte(
+        embed = await fmte(
             ctx,
             t="%s Unbanned." % str(user),
             d="**Reason:** {}".format(

@@ -93,7 +93,7 @@ class InterHelp(commands.Cog):
     def explode(self, l: List[commands.HybridCommand]):
         l = list(l)
         for c in l:
-            if isinstance(c, commands.HybridGroup):
+            if isinstance(c, (commands.HybridGroup, commands.Group)):
                 l.extend(c.commands)
                 l.remove(c)
         return l
@@ -163,7 +163,7 @@ class InterHelp(commands.Cog):
             inter,
             t="Cog: `{}`".format(cog.qualified_name),
             d="**Commands:** {}\n*{}*".format(
-                len(cog.get_commands()), cog.description)
+                len(self.explode(cog.get_commands())), cog.description)
         )
 
     def _group_embed(self, inter, group: commands.HybridGroup):

@@ -1,4 +1,5 @@
 from math import floor
+from multiprocessing.sharedctypes import Value
 from typing import Any, List, Optional
 import discord
 from discord.ext import commands
@@ -7,18 +8,23 @@ from datetime import datetime
 latest_delay: float = None
 
 
-def fmte(
+async def fmte(
         ctx: commands.Context = None,
         t: str = "",
         d: str = "",
         c: discord.Color = discord.Color.teal(),
-        u: discord.User = None) -> discord.Embed:
+        u: discord.User = None,) -> discord.Embed:
     """
     Takes the sent information and returns an embed with a footer and timestamp added, with the default color being teal.
     """
     if not (ctx or u):
         raise Exception("my guy")
     user = ctx.author if not u else u
+    if ctx:
+        ti = ctx.bot.latency
+        latest_delay = ti
+    else:
+        ti = latest_delay if latest_delay else 50 / 1000
     embed = discord.Embed(
         title=t,
         description=d,
@@ -28,25 +34,17 @@ def fmte(
         name="Requested By: %s" %
         str(user), url="https://discordapp.com/users/%s" %
         user.id, icon_url=user.avatar.url)
-    if ctx is not None:
-        embed.set_footer(
-            text="Response in %sms" % round(ctx.bot.latency * 1000, 2)
-        )
-        latest_delay = ctx.bot.latency
-    else:
-        try:
-            embed.set_footer(
-                text="Response in %sms" % round(latest_delay * 1000, 2)
-            )
-        except UnboundLocalError:
-            pass
+
+    embed.set_footer(
+        text="Response in %sms" % round(ti * 1000, 3)
+    )
     embed.timestamp = datetime.now()
     return embed
 
 
-def fmte_i(inter: discord.Interaction, t="", d="",
+async def fmte_i(inter: discord.Interaction, t="", d="",
            c=discord.Color.teal()) -> discord.Embed:
-    return fmte(t=t, d=d, c=c, u=inter.user)
+    return await fmte(t=t, d=d, c=c, u=inter.user)
 
 
 def getReadableValues(seconds):

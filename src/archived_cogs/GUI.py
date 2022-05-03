@@ -63,7 +63,7 @@ class GUI(commands.Cog):
         ctx.start_time = time.time()
         ms = await ctx.send("Creating emulation...")
         while True:
-            embed = fmte(
+            embed = await fmte(
                 ctx=ctx,
                 t="Playing: {}".format(game.replace("\\", ": ")),
                 d="For: {} minutes".format(
@@ -257,7 +257,7 @@ class VBA_View(discord.ui.View):
 
         pyautogui.hotkey("shiftleft", "f1")
         subprocess.Popen("taskkill /IM mGBA.exe")
-        embed = fmte(
+        embed = await fmte(
             ctx=self.ctx,
             t="Emulator closed.",
             d="Thanks for playing! I hope you saved your game."
