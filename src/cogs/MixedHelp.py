@@ -1,8 +1,8 @@
 # Hahha FUCK how many of these damned help commands wil I make?
-from math import ceil
+from math import ceil, floor
 from typing import Any, List, Optional
 import discord
-from discord import Interaction
+from discord import app_commands, Interaction
 from discord.app_commands import describe
 from discord.ext import commands
 
@@ -84,7 +84,7 @@ class MixedHelp(commands.Cog):
         l = list(l)
         nl = []
         for c in l:
-            if isinstance(c, (commands.HybridGroup, commands.Group)):
+            if isinstance(c, (commands.HybridGroup, commands.Group, app_commands.AppCommandGroup, app_commands.Group)):
                 nl.extend(self.explode(c.commands))
             else:
                 nl.append(c)

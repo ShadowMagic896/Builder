@@ -9,6 +9,7 @@ from math import ceil
 
 from _aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
 from _aux.Converters import TimeConvert
+from cogs.MixedHelp import MixedHelp
 
 
 class Dev(commands.Cog):
@@ -90,7 +91,7 @@ class Dev(commands.Cog):
             l: List[app_commands.AppCommand] = await self.bot.tree.sync(guild=ctx.guild)
         else:
             l: List[app_commands.AppCommand] = await self.bot.tree.sync()
-        embed = fmte(ctx, t="%s Commands Synced" % len(l))
+        embed = fmte(ctx, t="%s Commands Synced" % len(MixedHelp(self.bot).explode(l)))
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
