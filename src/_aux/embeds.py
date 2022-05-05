@@ -7,11 +7,13 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
+
 async def getv(inter) -> Union[commands.Context, None]:
     try:
         return await commands.Context.from_interaction(inter)
     except ValueError:
         return None
+
 
 def fmte(
         ctx: commands.Context = None,
@@ -28,7 +30,7 @@ def fmte(
     if ctx:
         ti = ctx.bot.latency
     else:
-        ti = (randint(50, 60) + randint(0, 99) / 100)  / 1000 # This is ethical
+        ti = (randint(50, 60) + randint(0, 99) / 100) / 1000  # This is ethical
     embed = discord.Embed(
         title=t,
         description=d,
@@ -44,6 +46,7 @@ def fmte(
         )
     embed.timestamp = datetime.now()
     return embed
+
 
 def fmte_i(inter: discord.Interaction, t="", d="",
            c=discord.Color.teal()) -> discord.Embed:
@@ -183,8 +186,8 @@ class EmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize * \
-            (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize *
+                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(
@@ -327,8 +330,8 @@ class DMEmbedPaginator(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed) -> discord.Embed:
-        for value in self.values[self.pagesize * \
-            (self.curpos):self.pagesize * (self.curpos + 1)]:
+        for value in self.values[self.pagesize *
+                                 (self.curpos):self.pagesize * (self.curpos + 1)]:
 
             embed.add_field(
                 name=getattr(

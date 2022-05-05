@@ -91,7 +91,8 @@ class Dev(commands.Cog):
             l: List[app_commands.AppCommand] = await self.bot.tree.sync(guild=ctx.guild)
         else:
             l: List[app_commands.AppCommand] = await self.bot.tree.sync()
-        embed = fmte(ctx, t="%s Commands Synced" % len(MixedHelp(self.bot).explode(l)))
+        embed = fmte(ctx, t="%s Commands Synced" %
+                     len(MixedHelp(self.bot).explode(l)))
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()

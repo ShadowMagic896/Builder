@@ -23,30 +23,34 @@ class Time(commands.Cog):
     def ge(self):
         return "⌚"
 
-    @commands.hybrid_command()
+    @commands.hybrid_group()
+    async def timer(self, ctx: commands.Context):
+        pass
+
+    @timer.command()
     @describe(
         ephemeral="Whether to publicly show the response to the command.",
     )
-    async def timer(self, ctx: commands.Context, ephemeral: bool = False):
+    async def new(self, ctx: commands.Context, ephemeral: bool = False):
         """
-        Creates a new timer for the user, with the time starting at 00:00:00.00.
+        Creates a new timer for your, with the time starting at 00:00:00.00.
         """
         self.tab.delete_user(ctx.author.id)
         self.tab.new_user(ctx.author.id)
         embed = fmte(
             ctx=ctx,
             t="New timer made!",
-            d="You can use `/check` to check your time, or `/stop` to delete your timer.")
+            d="You can use `/timer check` to check your time, or `/timer stop` to delete your timer.")
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
-    @commands.hybrid_command()
+    @timer.command()
     @describe(
         user="Whose timer to check",
         ephemeral="Whether to publicly show the response to the command.",
     )
     async def check(self, ctx: commands.Context, user: discord.Member = None, ephemeral: bool = False):
         """
-        Checks the user's time. If no user is given, it used the author instead.
+        Checks your timer's time. If no user is given, it uses you instead.
         """
         user = user if user else ctx.author
         if not self.tab.get_user_exists(user.id):
@@ -98,13 +102,13 @@ class Time(commands.Cog):
             d)
         return formatted
 
-    @commands.hybrid_command()
+    @timer.command()
     @describe(
         ephemeral="Whether to publicly show the response to the command.",
     )
     async def stop(self, ctx: commands.Context, ephemeral: bool = True):
         """
-        Deletes the user's timer, allowing them to create a new one.
+        Deletes your timer, allowing you to create a new one.
         """
         if not self.tab.get_user_exists(ctx.author.id):
             raise commands.errors.BadArgument("This member has no timer.")
@@ -112,7 +116,7 @@ class Time(commands.Cog):
             embed = fmte(
                 ctx=ctx,
                 t="Timer stopped at {}".format(self.__check(ctx.author)),
-                d="You can use `/timer` to create a new one."
+                d="You can use `/timer new` to create a new one."
             )
             self.tab.delete_user(ctx.author.id)
             await ctx.send(embed=embed, ephemeral=ephemeral)
@@ -122,7 +126,7 @@ class Time(commands.Cog):
         zone="The timezone to get the time from.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    async def time(self, ctx: commands.Context, zone: str = "UTC", ephemeral: bool = True):
+    async def time(self, ctx: commands.Context, zone: str = "UTC", ephemeral: bool = False):
         """
         Gets the current time in the desired time zone.
         """

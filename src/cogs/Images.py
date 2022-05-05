@@ -96,7 +96,7 @@ class Images(commands.Cog):
         self.checkAttachment(image)
         extension = self.getExtension(image)
 
-        if extension.lower() not in [".png", ".jpg"]:
+        if extension.lower() not in ["png", "jpg", "jpeg"]:
             raise TypeError(
                 "Only PNG and JPG files are permitted. [Discord limitation]")
 
@@ -339,10 +339,10 @@ class Images(commands.Cog):
             for c in self.getFilters()
             if c.lower() in current.lower() or current.lower() in c.lower()
         ][:25]
-    
+
     @image.command()
     @describe(
-        image = "The image to convert."
+        image="The image to convert."
     )
     async def greyscale(self, ctx: commands.Context, image: discord.Attachment):
         """
@@ -359,15 +359,15 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Conversion Complete"
+            t="Conversion Complete"
         )
         file = discord.File(buffer, "gs.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-        
+
     @image.command()
     @describe(
-        image = "The image to convert",
-        mode = "The Image Type to convert to"
+        image="The image to convert",
+        mode="The Image Type to convert to"
     )
     async def convert(self, ctx: commands.Context, image: discord.Attachment, mode: Literal['1', 'CMYK', 'F', 'HSV', 'I', 'L', 'LAB', 'P', 'RGB', 'RGBA', 'RGBX', 'YCbCr']):
         """
@@ -387,15 +387,15 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Converted"
+            t="Image Successfully Converted"
         )
         file = discord.File(buffer, "conv.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-    
+
     @image.command()
     @describe(
-        image = "The image to transform",
-        size = "The output size of the image"
+        image="The image to transform",
+        size="The output size of the image"
     )
     async def transform(self, ctx: commands.Context, image: discord.Attachment, method: Literal["EXTENT", "AFFINE", "PERSPECTIVE", "QUAD", "MESH"], size: Optional[int], ):
         """
@@ -405,22 +405,26 @@ class Images(commands.Cog):
         await image.save(buffer)
         buffer.seek(0)
         img = Image.open(buffer)
-        img = img.transform(size=size if size else image.size, method=getattr(Image, method))
+        img = img.transform(
+            size=size if size else image.size,
+            method=getattr(
+                Image,
+                method))
         buffer = io.BytesIO()
         img.save(buffer, self.getExtension(image))
         buffer.seek(0)
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Transformed"
+            t="Image Successfully Transformed"
         )
         file = discord.File(buffer, "trfr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-    
+
     @image.command()
     @describe(
-        image = "The image to flip",
-        method = "How to flip the image"
+        image="The image to flip",
+        method="How to flip the image"
     )
     async def flip(self, ctx: commands.Context, image: discord.Attachment, method: Literal["FLIP_LEFT_RIGHT", "FLIP_TOP_BOTTOM", "TRANSPOSE", "TRANSVERSE"]):
         """
@@ -437,14 +441,14 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Flipped"
+            t="Image Successfully Flipped"
         )
         file = discord.File(buffer, "trps.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
     @describe(
-        image = "The image to invert"
+        image="The image to invert"
     )
     async def invert(self, ctx: commands.Context, image: discord.Attachment):
         """
@@ -464,15 +468,16 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Inverted"
+            t="Image Successfully Inverted"
         )
         file = discord.File(buffer, "invr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     def chop(self, s: str, chopsize: int):
-        return [s[c * chopsize:(c + 1) * chopsize] for c in range(0, ceil(len(s) / chopsize))]
+        return [s[c * chopsize:(c + 1) * chopsize]
+                for c in range(0, ceil(len(s) / chopsize))]
 
-    def alignText(self, *, text: str, linesize = 24):
+    def alignText(self, *, text: str, linesize=24):
         lines = []
         linewords = []
         for word in text.split():
@@ -485,7 +490,7 @@ class Images(commands.Cog):
                 continue
             if sum([len(c) for c in linewords]) + len(word) > linesize:
                 lines.extend(linewords)
-                linewords = ["\n", word,]
+                linewords = ["\n", word, ]
                 continue
             else:
                 linewords.append(word)
@@ -494,8 +499,8 @@ class Images(commands.Cog):
 
     @image.command()
     @describe(
-        image = "The image to caption",
-        text = "The caption for the image"
+        image="The image to caption",
+        text="The caption for the image"
     )
     async def caption(self, ctx: commands.Context, image: discord.Attachment, text: str):
         """
@@ -506,14 +511,15 @@ class Images(commands.Cog):
         print(text)
         nls = max(text.count("\n"), 1)
         print(nls + 1)
-        pix = round(average([round(image.height / 10), round(image.width / 10)])) * (nls + 1)
+        pix = round(average([round(image.height / 10),
+                    round(image.width / 10)])) * (nls + 1)
 
         buffer = io.BytesIO()
         await image.save(buffer)
         buffer.seek(0)
-        
+
         img = Image.open(buffer)
-        img = ImageOps.expand(img, pix, fill = "white")
+        img = ImageOps.expand(img, pix, fill="white")
         dimensions = (pix, 0, image.width + pix, image.height + pix)
         img = img.crop(dimensions)
 
@@ -526,28 +532,31 @@ class Images(commands.Cog):
         fill = (0, 0, 0)
         align = "center"
 
-        drawer.multiline_text(xy=xy, text=text, font=font, fill=fill, align=align)
+        drawer.multiline_text(
+            xy=xy,
+            text=text,
+            font=font,
+            fill=fill,
+            align=align)
         buffer = io.BytesIO()
         img.save(buffer, self.getExtension(image))
-        
+
         buffer.seek(0)
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Captioned"
+            t="Image Successfully Captioned"
         )
         file = discord.File(buffer, "cptn.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-    
+
     @image.group()
     async def enhance(self, ctx: commands.Context):
-        pass    
+        pass
 
     @enhance.command()
-    @describe(
-        image = "The image whose contrast to adjust.",
-        factor = "The factor of contrast. 0 is greyscale, 100 is maximum contrast."
-    )
+    @describe(image="The image whose contrast to adjust.",
+              factor="The factor of contrast. 0 is greyscale, 100 is maximum contrast.")
     async def contrast(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
         """
         Adjusts the contrast of an image.
@@ -564,18 +573,14 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Edited"
+            t="Image Successfully Edited"
         )
         file = discord.File(buffer, "cntr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-    
-    
 
     @enhance.command()
-    @describe(
-        image = "The image whose contrast to adjust.",
-        factor = "The factor of brightness. 0 is black, 100 is basically pure white."
-    )
+    @describe(image="The image whose contrast to adjust.",
+              factor="The factor of brightness. 0 is black, 100 is basically pure white.")
     async def brightness(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
         """
         Adjusts the brightness of an image.
@@ -592,15 +597,15 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Edited"
+            t="Image Successfully Edited"
         )
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-    
+
     @enhance.command()
     @describe(
-        image = "The image whose contrast to adjust.",
-        factor = "The factor of brightness. 0 is black & white."
+        image="The image whose contrast to adjust.",
+        factor="The factor of brightness. 0 is black & white."
     )
     async def color(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
         """
@@ -618,15 +623,15 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Edited"
+            t="Image Successfully Edited"
         )
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-    
+
     @enhance.command()
     @describe(
-        image = "The image whose contrast to adjust.",
-        factor = "The factor of brightness. 0 is blurred."
+        image="The image whose contrast to adjust.",
+        factor="The factor of brightness. 0 is blurred."
     )
     async def sharpness(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
         """
@@ -644,12 +649,10 @@ class Images(commands.Cog):
 
         embed = fmte(
             ctx,
-            t = "Image Successfully Edited"
+            t="Image Successfully Edited"
         )
         file = discord.File(buffer, "shrp.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-        
-
 
     @commands.hybrid_command()
     @describe(

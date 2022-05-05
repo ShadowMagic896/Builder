@@ -116,11 +116,13 @@ class Watchers(commands.Cog):
 
         if "jishaku" in ctx.invoked_parents:  # Do not automate command errors for this cog
             return
-        
 
-        while isinstance(error, Union[commands.errors.CommandInvokeError, discord.app_commands.errors.CommandInvokeError, commands.errors.HybridCommandError]):
+        while isinstance(error,
+                         Union[commands.errors.CommandInvokeError,
+                               discord.app_commands.errors.CommandInvokeError,
+                               commands.errors.HybridCommandError]):
             error = error.original
-        
+
         if isinstance(error, CommandNotFound):
             hint = "I couldn't find that command. Try `/help`"
         if isinstance(error, ExtensionNotFound):

@@ -17,6 +17,7 @@ class Graphing(commands.Cog):
     """
     Commands for visualizing data and functions
     """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -111,7 +112,8 @@ class Graphing(commands.Cog):
         color: str = "black",
 
         linewidth: Range[float, 0.1, 100.0] = 5.0,
-        font: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"] = "monospace",
+        font: Literal["serif", "sans-serif", "cursive",
+                      "fantasy", "monospace"] = "monospace",
 
         xticks: Range[int, 0, 30] = 10,
         yticks: Range[int, 0, 30] = 10,
@@ -185,7 +187,8 @@ class Graphing(commands.Cog):
         color: str = "black",
 
         barwidth: Range[float, 0.1, 100.0] = 5.0,
-        font: Literal["serif", "sans-serif", "cursive", "fantasy", "monospace"] = "monospace",
+        font: Literal["serif", "sans-serif", "cursive",
+                      "fantasy", "monospace"] = "monospace",
 
         yticks: Range[int, 0, 30] = 10,
     ):
@@ -271,9 +274,9 @@ class Graphing(commands.Cog):
         buffer = io.BytesIO()
         xvalues = np.linspace(rangelower, rangeupper, plots)
         yvalues = []
-        function = function.replace(" ", "").replace("^", "**").replace("y=", "")
-        
-        
+        function = function.replace(" ", "").replace(
+            "^", "**").replace("y=", "")
+
         def ins(string: str, char: str, pos: int):
             return string[:pos] + char + string[pos:]
 
@@ -281,9 +284,9 @@ class Graphing(commands.Cog):
             if co == 0:
                 continue
             if char == "x":
-                if function[co-1].isdigit:
+                if function[co - 1].isdigit:
                     function = ins(function, "*", co)
-            
+
         for v in xvalues:
             yvalues.append(
                 simpleeval.SimpleEval().eval(
@@ -323,7 +326,6 @@ class Graphing(commands.Cog):
     @psi.autocomplete("color")
     async def psicolor_autocomplete(self, inter: discord.Interaction, current: str):
         return self.color_autocomplete(inter, current)
-    
 
 
 async def setup(bot):
