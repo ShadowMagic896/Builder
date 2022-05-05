@@ -71,8 +71,7 @@ class Table:
 
     def update(self, values: List[str], *, conditions: List[str] = {}) -> Self:
         """Sets all values in the table to `values` whenever all `conditions` are True"""
-        values: str = ", ".join(
-            ["{}={}".format(list(self.values.keys())[c], v) for c, v in enumerate(values)])
+        values: str = ", ".join(values)
         where = "WHERE " if len(conditions) > 0 else ""
         conditions: str = ", ".join(conditions)
 
