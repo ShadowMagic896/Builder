@@ -24,7 +24,7 @@ class Currency(commands.Cog):
     @commands.hybrid_group()
     async def cur(self, ctx: commands.Context):
         pass
-
+        
     @cur.command()
     async def bal(self, ctx: commands.Context, user: Optional[discord.Member]):
         user = user if user else ctx.author
@@ -52,9 +52,7 @@ class Currency(commands.Cog):
         await ctx.send(embed=embed)
 
     def formatBalance(self, bal: int):
-        return "".join(["%s," % char if c %
-                       3 == 0 else char for c, char in enumerate(str(bal))]).strip(",")
-
+        return "".join(["%s," % char if c %3 == 0 else char for c, char in enumerate(str(bal)[::-1])][::-1]).strip(",")
 
     def getUserBal(self, user: discord.User, default: int = 0):
         d = self.tab.select(
@@ -71,13 +69,23 @@ class Currency(commands.Cog):
             return self.getUserBal(user)
 
     def setBal(self, user: discord.Member, amount: int):
+        """
+        Sets the user's current balance
+        """
         self.tab.update(values = ["balance=%s" % str(amount)], conditions = ["userid = %s" % user.id])
         self.tab.commit()
 
-    def addToBal(self, user: discord.Member, amount: int):
+    def addToBal(self, user: discord.Member, amount: int) -> int:
+        """
+        Adds an amount of currency to a user's balance
+        ## Returns
+        The user's new balance
+        """
         v = self.getUserBal(user)
         self.tab.update(values = ["balance=%s" % str(v + amount)], conditions = ["userid = %s" % user.id])
         self.tab.commit()
+        return v + amount
+
 
 
 async def setup(bot):

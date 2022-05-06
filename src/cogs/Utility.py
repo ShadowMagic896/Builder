@@ -1,15 +1,23 @@
+from contextlib import redirect_stdout
 import io
-import os
-from typing import Any, Iterable, List, Mapping, Optional, Type, Union
+from re import A
+import textwrap
+import time
+import traceback
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-import requests
+import os
+from typing import Any, List, Optional
+from math import (radians, sin, cos, tan, asin, acos, atan, sinh, cosh, tanh)
+import PythonSafeEval
+
 import bs4
+import requests
+import simpleeval
 
 from _aux.embeds import fmte
-from _aux.userio import convCodeBlock
 
 
 class Utility(commands.Cog):
@@ -19,6 +27,7 @@ class Utility(commands.Cog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
+        self._last_result: Optional[Any] = None
         pass
 
     def ge(self):
@@ -286,6 +295,64 @@ class Utility(commands.Cog):
                 value="-------------------------------------------------------------------",
                 inline=False)
         await ctx.send(embed=embed, ephemeral=ephemeral)
+    
+    @commands.hybrid_command()
+    async def math(self, ctx: commands.Context, equation: str, ephemeral: bool = False):
+        """
+        Evaluates a simple mathematical expression. Supports basic operators and trig fuctions
+        """
+        st = time.time()
+        eq = equation.replace("^", "**")
+        res = simpleeval.SimpleEval(functions=self.newOps()).eval(eq)
+        embed = fmte(
+            ctx,
+            t = res,
+            d = "Solved in `%sms`" % round((time.time() - st) * 1000, 5)
+        )
+        await ctx.send(embed=embed, ephemeral=ephemeral)
+    
+    def newOps(self):
+        f = simpleeval.DEFAULT_FUNCTIONS
+        f.update({
+            "sin": lambda n: sin(radians(n)),
+            "cos": lambda n: cos(radians(n)),
+            "tan": lambda n: tan(radians(n)),
+            "asin": lambda n: asin(radians(n)),
+            "acos": lambda n: acos(radians(n)),
+            "atan": lambda n: atan(radians(n)),
+            "sinh": lambda n: sinh(radians(n)),
+            "cosh": lambda n: cosh(radians(n)),
+            "tanh": lambda n: tanh(radians(n)),
+            "root": lambda n, b: n ** (1/b)})
+        return f
+    
+#     @commands.hybrid_command()
+#     async def eval(self, ctx: commands.Context):
+#         """
+#         Evaluates code.
+#         """
+#         await ctx.interaction.response.send_modal(CodeModal(ctx))
+    
+#     async def _eval(self, ctx: commands.Context, code: str):
+#         result = PythonSafeEval.SafeEval(version="3.8", modules = ["numpy", "discord", "re"]).eval(code, time_limit=10).stdout.decode("utf-8")
+#         embed = fmte(
+#             ctx,
+#             d = "```py\n%s\n```" % result
+#         )
+#         await ctx.send(embed=embed)
+
+
+
+# class CodeModal(discord.ui.Modal):
+#     def __init__(self, ctx) -> None:
+#         self.ctx: commands.Context = ctx
+#         super().__init__(title="Code Evaluation")
+#     code = discord.ui.TextInput(
+#         label="Please paste / type code here",
+#         style = discord.TextStyle.long
+#     )
+#     async def on_submit(self, interaction: discord.Interaction) -> None:
+#         await interaction.response.send_message(embed=await Utility(self.ctx.bot)._eval(self.ctx, code=self.code.value))
 
 
 async def setup(bot):

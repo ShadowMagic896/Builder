@@ -13,6 +13,7 @@ import pytz
 
 from _aux.embeds import fmte
 from _aux.sql3OOP import Table
+from simpleeval import NumberTooHigh
 
 from archived_cogs.InterHelp import InterHelp
 
@@ -110,8 +111,9 @@ class Watchers(commands.Cog):
                 tz=pytz.timezone("UTC")), ctx.invoked_parents,)
         open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
+        # print(error)
         hint = None
 
         if "jishaku" in ctx.invoked_parents:  # Do not automate command errors for this cog
@@ -151,6 +153,8 @@ class Watchers(commands.Cog):
             hint = "You gave an incorrect parameter for a file."
         elif isinstance(error, LanguageTagError):
             hint = "You gave an invalid language tag or name."
+        elif isinstance(error, NumberTooHigh):
+            hint = "Your number is too big for me to compute."
         else:
             hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
         hintEmbed = fmte(
