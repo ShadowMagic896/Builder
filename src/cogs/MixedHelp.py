@@ -213,6 +213,10 @@ class CommandView(discord.ui.View):
                 b.style = discord.ButtonStyle.success
             else:
                 b.style = discord.ButtonStyle.secondary
+                
+    async def on_timeout(self) -> None:
+        for c in self.children:
+            c.disabled = True
 
 
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
