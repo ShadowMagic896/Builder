@@ -23,11 +23,6 @@ class Watchers(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print(f"Client online [User: {self.bot.user}, ID: {self.bot.user.id}]")
-        # await self.prep_channels()
-
     async def prep_channels(self):
         channel: discord.TextChannel = ...
         for guild in self.bot.guilds:
@@ -113,7 +108,7 @@ class Watchers(commands.Cog):
 
     # @commands.Cog.listener()  
     async def on_command_error(self, ctx: commands.Context, error: Exception):
-        # print(error)
+        print(error)
         hint = None
 
         if "jishaku" in ctx.invoked_parents:  # Do not automate command errors for this cog

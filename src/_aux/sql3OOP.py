@@ -37,21 +37,25 @@ class Table:
         self.cur.execute(command,)
 
     def select(self, *, values: List[str] = "*",
-               conditions: List[str] = {}) -> sqlite3.Cursor:
+               conditions: List[str] = {},
+               orderby: str = "") -> sqlite3.Cursor:
         """Gets all `values` from all rows where all `conditions` are True. Retuns a `sqlite3.Cursor` for easier fetching."""
         values: str = ", ".join(values) if isinstance(values, List) else "*"
         where = "WHERE " if len(conditions) > 0 else ""
+        orderby = "ORDER BY %s" % orderby if orderby else ""
         conditions: str = ", ".join(conditions)
 
         command = """
             SELECT {}
             FROM {}
             {}{}
+            {}
         """.format(
             values,
             self.table,
             where,
-            conditions
+            conditions,
+            orderby
         )
         return self.cur.execute(command)
 

@@ -1,3 +1,4 @@
+import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import when_mentioned_or
@@ -31,6 +32,7 @@ class Builder(commands.AutoShardedBot):
         activity = discord.Activity(
             type=discord.ActivityType.listening, name="/help")
         help_command = None
+        self.session: aiohttp.ClientSession = None
 
         super().__init__(
             command_prefix=command_prefix,
@@ -40,6 +42,11 @@ class Builder(commands.AutoShardedBot):
             application_id="963411905018466314",
             help_command=help_command
         )
+
+    async def setup_hook(self) -> None:
+        print("Client online [User: {}, ID: {}]".format(self.user, self.user.id))
+        self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+
 
 
 async def main():
