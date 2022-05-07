@@ -184,16 +184,14 @@ class Watchers(commands.Cog):
             raise e
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.author.bot:
+    async def on_message(self, message: discord.Message):
+        if message.content is None or message.author.bot:
             return
-        if not message.guild and message.author is not self.bot.user:
+        if message.guild is None:
             data = "{} at {}: {}\n".format(
                 message.author, datetime.fromtimestamp(
                     time.time()), message.content)
             open("data/logs/_dmlog.txt", "a").write(data)
-        # await self.bot.process_commands(message) # This is no longer
-        # necessary in 2.0.0?
 
 
 async def setup(bot):

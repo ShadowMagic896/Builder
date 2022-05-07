@@ -28,7 +28,7 @@ logger.addHandler(handler)
 class Builder(commands.AutoShardedBot):
     def __init__(self):
         command_prefix = when_mentioned_or("dev>>")
-        intents = discord.Intents.all()
+        intents = discord.Intents.default()
         activity = discord.Activity(
             type=discord.ActivityType.listening, name="/help")
         help_command = None
