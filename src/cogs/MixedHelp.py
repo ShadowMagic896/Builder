@@ -8,6 +8,7 @@ from discord.ext import commands
 
 import os
 from _aux.embeds import Desc, fmte, fmte_i
+from _aux.userio import explode
 from archived_cogs.InterHelp import CogSelect
 
 
@@ -82,20 +83,6 @@ class MixedHelp(commands.Cog):
             )
         )
 
-    def explode(self, l: List[commands.HybridCommand]):
-        """
-        A recursive func to flatten all commands into one list
-        """
-        l = list(l)
-        nl = []
-        for c in l:
-            if isinstance(c, (commands.HybridGroup, commands.Group,
-                          app_commands.AppCommandGroup, app_commands.Group)):
-                nl.extend(self.explode(c.commands))
-            else:
-                nl.append(c)
-        return nl
-
 
 class BaseView(discord.ui.View):
     def __init__(self, *, timeout: Optional[float] = 180):
@@ -109,8 +96,7 @@ class CommandView(discord.ui.View):
         self.ephemeral = ephemeral
 
         self.vals = sorted(
-            MixedHelp(bot).explode(
-                cog.get_commands()),
+            explode(cog.get_commands()),
             key=lambda c: c.qualified_name)
         self.pos = 1
         self.maxpos = ceil((len(self.vals) / pagesize))

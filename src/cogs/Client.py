@@ -92,7 +92,7 @@ class Client(commands.Cog):
                 raise commands.errors.CommandNotFound(ctx.args[1])
             elif not (cog := self.bot.get_cog(cog)):
                 raise commands.errors.ExtensionNotFound(ctx.args[0])
-            if command in self.explode(cog.get_commands()):
+            if command in explode(cog.get_commands()):
                 src = command.callback.__code__
                 note = ""
             else:
@@ -126,22 +126,14 @@ class Client(commands.Cog):
                 discord.app_commands.Choice(
                     name="[{}] {}".format(
                         c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
-                    self.explode([c for c in self.bot.commands]) if not getattr(
-                        inter.namespace, "cog") else self.explode(self.bot.get_cog(
+                    explode([c for c in self.bot.commands]) if not getattr(
+                        inter.namespace, "cog") else explode(self.bot.get_cog(
                             inter.namespace.cog).get_commands()) if inter.namespace.cog in [
                                 c for c, v in self.bot.cogs.items()] else []) if (
                                     (current.lower() in c.qualified_name.lower()) or (
                                         c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
                                             :25], key=lambda c: c.name[
                                                 c.name.index("]") + 1:])
-
-    def explode(self, l: List[commands.HybridCommand]):
-        l = list(l)
-        for c in l:
-            if isinstance(c, commands.HybridGroup):
-                l.extend(c.commands)
-                l.remove(c)
-        return l
 
 
 class FeedbackModal(ui.Modal, title="Anonymous Feedback Forum"):

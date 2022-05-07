@@ -3,7 +3,6 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 
 from _aux.embeds import fmte
-from _aux.userio import explode
 from _aux.Converters import ListConverter
 
 import io

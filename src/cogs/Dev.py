@@ -8,6 +8,7 @@ from typing import Any, List, Literal, Mapping
 from math import ceil
 
 from _aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
+from _aux.userio import explode
 from _aux.Converters import TimeConvert
 from cogs.MixedHelp import MixedHelp
 
@@ -92,7 +93,7 @@ class Dev(commands.Cog):
         else:
             l: List[app_commands.AppCommand] = await self.bot.tree.sync()
         embed = fmte(ctx, t="%s Commands Synced" %
-                     len(MixedHelp(self.bot).explode(l)))
+                     len(explode(l)))
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()

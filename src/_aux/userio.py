@@ -1,8 +1,7 @@
-from inspect import trace
-from multiprocessing.sharedctypes import Value
-from types import coroutine
+
 from typing import List
 import discord
+from discord import app_commands
 from discord.ext import commands
 import re
 
@@ -82,8 +81,14 @@ def convCodeBlock(code: str):
 
 def explode(l: List[commands.HybridCommand]):
     l = list(l)
+    nl = []
     for c in l:
-        if isinstance(c, commands.HybridGroup):
-            l.extend(c.commands)
-            l.remove(c)
-    return l
+        if isinstance(c, (
+            commands.HybridGroup, commands.Group,
+            app_commands.AppCommandGroup, app_commands.Group)):
+            nl.extend(explode(c.commands))
+        else:
+            # if isinstance(c, commands.):
+            #     continue # ignore text commands, just dev stuff
+            nl.append(c)
+    return nl
