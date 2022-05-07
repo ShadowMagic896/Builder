@@ -1,7 +1,7 @@
 import asyncio
 import io
 import time
-from typing import List
+from typing import List, Optional
 import aiohttp
 import bs4
 import discord
@@ -13,9 +13,10 @@ import math
 import random
 import shutil
 from bs4 import BeautifulSoup
+import requests
 import wget
 
-from _aux.embeds import fmte
+from _aux.embeds import fmte, fmte_i
 
 
 class NSFW(commands.Cog):
@@ -142,62 +143,11 @@ class NSFW(commands.Cog):
         """
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
         """
-        file_chunk_size = 10
-        await ctx.interaction.response.defer(thinking=True)
-        baseurl = "nhentai.xxx/g/%s/" % code
-
-        
-        embed = fmte(
-            ctx,
-            t = "Downloading Next Batch..."
-        )
-        m = await ctx.send(embed=embed)
-        
-        files: List[discord.File] = []
-        page = -1
-        batch = 0
-        start_t = time.time()
-        batch_t = time.time()
-        file_t = time.time()
-        while True:
-            page += 1
-            soup = bs4.BeautifulSoup(await (await self.bot.session.get("https://%s%s" % (baseurl, page+1))).text(), "html.parser")
-            try:
-                dataurl = soup.select("body > div#page-container > section#image-container > a > img")[0]["src"]
-            except IndexError:
-                await ctx.send(files=files)
-                files.clear()
-                return
-            res = await self.bot.session.get(dataurl)
-            b: io.BytesIO = io.BytesIO(await res.read())
-            b.seek(0)
-            files.append(discord.File(b, filename="%s_%s.jpg" % (code, page+1)))
-            if len(files) % file_chunk_size == 0:
-                # await m.remove_attachments(embed)
-                embed = fmte(
-                    ctx,
-                    t = "Batch #%s Done" % (batch + 1),
-                    d = "File Time: `{}s`\nBatch Time: `{}s`\nTotal Time: `{}s`".format(
-                        round(t - file_t), round(t - batch_t), round(t - start_t)
-                    )
-                )
-                m = await ctx.send(embed=embed, files=files)
-                files.clear()
-                batch_t = time.time()
-                batch += 1
-                continue
-            else:
-                t = time.time()
-                embed = fmte(
-                    ctx,
-                    t = "Batch #%s File #%s Done" % (batch + 1, (page + 1) % file_chunk_size),
-                    d = "File Time: `{}s`\nBatch Time: `{}s`\nTotal Time: `{}s`".format(
-                        round(t - file_t), round(t - batch_t), round(t - start_t)
-                    )
-                )
-                await m.edit(embed=embed)
-                file_t = time.time()
-                continue
+        inst = NHentaiView(ctx, self.bot, False, code)
+        embed = inst.page_zero(ctx.interaction)
+        view = inst
+        await view.checkButtons()
+        await ctx.send(embed=embed, view=view)
 
     @commands.hybrid_command()
     @commands.is_nsfw()
@@ -265,6 +215,107 @@ class NSFW(commands.Cog):
             )
             embed.set_image(url=url)
             await ctx.author.send(embed=embed)
+
+
+class NHentaiView(discord.ui.View):
+    def __init__(self, ctx: commands.Context, bot: commands.Bot, ephemeral: bool, code: int, *, timeout: Optional[float] = 180):
+        self.ctx = ctx
+        self.bot = bot
+        self.ephemeral = ephemeral
+        # text = await (await self.bot.session.get("https://nhentai.xxx/%s/1" % code)).text()
+        text = requests.get("https://nhentai.xxx/g/%s/1" % code).text
+        soup = bs4.BeautifulSoup(text, "html.parser")
+        dataurl = soup.select("body > div#page-container > section#image-container > a > img")[0]["src"]
+        datacode = dataurl[26:-6]
+        self.code = datacode
+        self.baseurl = "https://cdn.nhentai.xxx/g/%s/" % datacode
+        self.pos = 1
+
+        super().__init__(timeout=timeout)
+
+    @discord.ui.button(emoji="<:BArrow:971590903837913129>", custom_id="b")
+    async def back(self, inter: discord.Interaction, button: discord.ui.Button):
+        self.pos -= 1
+        await self.checkButtons(button)
+
+        embed = self.embed(inter)
+        await inter.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(emoji="❌", style=discord.ButtonStyle.red, custom_id="x")
+    async def close(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.message.delete()
+
+    @discord.ui.button(emoji="📜", custom_id="c")
+    async def cust(self, inter: discord.Interaction, button: discord.ui.button):
+        q = await self.ctx.send("Please send a new page number...", ephemeral=False)
+        r = await self.bot.wait_for("message", check = lambda m: m.channel == self.ctx.channel and m.author == self.ctx.author and m.content.isdigit())
+        self.pos = int(r.content)
+        try: await q.delete()
+        except: pass
+        
+        try: await q.delete()
+        except: pass
+        await self.checkButtons(button)
+        embed = self.embed(inter)
+        await inter.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.button(emoji="<:FArrow:971591003893006377>", custom_id="f")
+    async def next(self, inter: discord.Interaction, button: discord.ui.Button):
+        self.pos += 1
+        await self.checkButtons(button)
+    
+
+        embed = self.embed(inter)
+        await inter.response.edit_message(embed=embed, view=self)
+    
+
+    def embed(self, inter: discord.Interaction):
+        embed = fmte_i(
+            inter,
+            t="`{}`: Page `{}`".format(self.code, self.pos)
+        )
+        embed.set_image(url = self.baseurl + "%s.jpg" % self.pos)
+        return embed
+
+    def page_zero(self, interaction: discord.Interaction):
+        self.pos = 1
+        return self.embed(interaction)
+
+    async def checkButtons(self, button: discord.Button = None):
+        l = await self.bot.session.get(self.baseurl + "%s.jpg" % (self.pos - 1))
+        n = await self.bot.session.get(self.baseurl + "%s.jpg" % (self.pos + 1))
+        if l.status != 200:
+            for b in self.children:
+                if isinstance(b, discord.ui.Button):
+                    if b.custom_id in ("b", "bb"):
+                        b.disabled = True
+        else:
+            for b in self.children:
+                if isinstance(b, discord.ui.Button):
+                    if b.custom_id in ("b", "bb"):
+                        b.disabled = False
+        if n.status != 200:
+            for b in self.children:
+                if isinstance(b, discord.ui.Button):
+                    if b.custom_id in ("f", "ff"):
+                        b.disabled = True
+        else:
+            for b in self.children:
+                if isinstance(b, discord.ui.Button):
+                    if b.custom_id in ("f", "ff"):
+                        b.disabled = False
+        if button is None:
+            return
+        for b in [c for c in self.children if isinstance(
+                c, discord.ui.Button) and c.custom_id != "x"]:
+            if b == button:
+                b.style = discord.ButtonStyle.success
+            else:
+                b.style = discord.ButtonStyle.secondary
+                
+    async def on_timeout(self) -> None:
+        for c in self.children:
+            c.disabled = True
 
 
 async def setup(bot):
