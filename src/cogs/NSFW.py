@@ -39,9 +39,9 @@ class NSFW(commands.Cog):
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
         """
         querey = querey.replace(" ", "+")
-        res = self.bot.session.get(
+        res = await (await self.bot.session.get(
             f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % querey
-        ).text
+        )).text
         soup = BeautifulSoup(res, 'html.parser')
 
         tags = soup.select(
@@ -82,9 +82,9 @@ class NSFW(commands.Cog):
         data = []
 
         for co in range(amount):
-            res = self.bot.session.get(
+            res = await (await self.bot.session.get(
                 f"https://nekos.life"
-            ).text
+            )).text()
             soup = BeautifulSoup(res, 'html.parser')
             img = soup.find_all("img")
             data.append(img[0]["src"])
@@ -135,7 +135,7 @@ class NSFW(commands.Cog):
             await asyncio.sleep(1)
 
     @commands.hybrid_command()
-    @commands.cooldown(1, 60*60*24, commands.BucketType.user)
+    @commands.cooldown(1, 60 * 60 * 24, commands.BucketType.user)
     @commands.is_nsfw()
     @describe(code="The code to search for.",
               ephemeral="Whether to public send the response or not. All images are sent in DMs.")
@@ -218,14 +218,23 @@ class NSFW(commands.Cog):
 
 
 class NHentaiView(discord.ui.View):
-    def __init__(self, ctx: commands.Context, bot: commands.Bot, ephemeral: bool, code: int, *, timeout: Optional[float] = 180):
+    def __init__(
+            self,
+            ctx: commands.Context,
+            bot: commands.Bot,
+            ephemeral: bool,
+            code: int,
+            *,
+            timeout: Optional[float] = 180):
         self.ctx = ctx
         self.bot = bot
         self.ephemeral = ephemeral
-        # text = await (await self.bot.session.get("https://nhentai.xxx/%s/1" % code)).text()
+        # text = await (await self.bot.session.get("https://nhentai.xxx/%s/1" %
+        # code)).text()
         text = requests.get("https://nhentai.xxx/g/%s/1" % code).text
         soup = bs4.BeautifulSoup(text, "html.parser")
-        dataurl = soup.select("body > div#page-container > section#image-container > a > img")[0]["src"]
+        dataurl = soup.select(
+            "body > div#page-container > section#image-container > a > img")[0]["src"]
         datacode = dataurl[26:-6]
         self.code = datacode
         self.baseurl = "https://cdn.nhentai.xxx/g/%s/" % datacode
@@ -248,13 +257,17 @@ class NHentaiView(discord.ui.View):
     @discord.ui.button(emoji="📜", custom_id="c")
     async def cust(self, inter: discord.Interaction, button: discord.ui.button):
         q = await self.ctx.send("Please send a new page number...", ephemeral=False)
-        r = await self.bot.wait_for("message", check = lambda m: m.channel == self.ctx.channel and m.author == self.ctx.author and m.content.isdigit())
+        r = await self.bot.wait_for("message", check=lambda m: m.channel == self.ctx.channel and m.author == self.ctx.author and m.content.isdigit())
         self.pos = int(r.content)
-        try: await q.delete()
-        except: pass
-        
-        try: await q.delete()
-        except: pass
+        try:
+            await q.delete()
+        except BaseException:
+            pass
+
+        try:
+            await q.delete()
+        except BaseException:
+            pass
         await self.checkButtons(button)
         embed = self.embed(inter)
         await inter.response.edit_message(embed=embed, view=self)
@@ -263,18 +276,16 @@ class NHentaiView(discord.ui.View):
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos += 1
         await self.checkButtons(button)
-    
 
         embed = self.embed(inter)
         await inter.response.edit_message(embed=embed, view=self)
-    
 
     def embed(self, inter: discord.Interaction):
         embed = fmte_i(
             inter,
             t="`{}`: Page `{}`".format(self.code, self.pos)
         )
-        embed.set_image(url = self.baseurl + "%s.jpg" % self.pos)
+        embed.set_image(url=self.baseurl + "%s.jpg" % self.pos)
         return embed
 
     def page_zero(self, interaction: discord.Interaction):
@@ -312,7 +323,7 @@ class NHentaiView(discord.ui.View):
                 b.style = discord.ButtonStyle.success
             else:
                 b.style = discord.ButtonStyle.secondary
-                
+
     async def on_timeout(self) -> None:
         for c in self.children:
             c.disabled = True

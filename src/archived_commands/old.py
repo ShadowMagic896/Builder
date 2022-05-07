@@ -6,13 +6,13 @@
 #         await ctx.interaction.response.defer(thinking=True)
 #         baseurl = "nhentai.xxx/g/%s/" % code
 
-        
+
 #         embed = fmte(
 #             ctx,
 #             t = "Downloading Next Batch..."
 #         )
 #         m = await ctx.send(embed=embed)
-        
+
 #         files: List[discord.File] = []
 #         page = -1
 #         batch = 0

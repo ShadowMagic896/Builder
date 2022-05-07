@@ -44,9 +44,11 @@ class Builder(commands.AutoShardedBot):
         )
 
     async def setup_hook(self) -> None:
-        print("Client online [User: {}, ID: {}]".format(self.user, self.user.id))
+        print(
+            "Client online [User: {}, ID: {}]".format(
+                self.user,
+                self.user.id))
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
-
 
 
 async def main():

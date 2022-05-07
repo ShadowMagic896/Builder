@@ -75,7 +75,7 @@ class Dev(commands.Cog):
     @describe(
         params="The arguments to pass to Popen & autopep8"
     )
-    async def fmtcode(self, ctx, params: str = "-air"):
+    async def fmtcode(self, ctx, params: str = "-aaair"):
         """
         Formats the bot's code using autopep8
         """

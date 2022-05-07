@@ -26,11 +26,11 @@ class Currency(commands.Cog):
     @commands.hybrid_group()
     async def cur(self, ctx: commands.Context):
         pass
-        
+
     @cur.command()
     @commands.cooldown(2, 15, commands.BucketType.user)
     @describe(
-        user = "The user to get the balance of"
+        user="The user to get the balance of"
     )
     async def balance(self, ctx: commands.Context, user: Optional[discord.Member]):
         """
@@ -46,12 +46,12 @@ class Currency(commands.Cog):
             t="Balance: `%s`" % self.formatBalance(data)
         )
         await ctx.send(embed=embed)
-    
+
     @cur.command()
     @commands.cooldown(2, 30, commands.BucketType.user)
     @describe(
-        user = "The user to give money to",
-        amount = "How much money to give"
+        user="The user to give money to",
+        amount="How much money to give"
     )
     async def give(self, ctx: commands.Context, user: discord.Member, amount: int):
         """
@@ -65,16 +65,16 @@ class Currency(commands.Cog):
             raise ValueError("You don't have that much money!")
         embed = fmte(
             ctx,
-            t = "Are You Sure You Want to Give `%s` Sheckels to `%s`?" % (amount, user),
-            d = f"This is `{round((amount / cv) * 100, 2)}%` of your money."
+            t="Are You Sure You Want to Give `%s` Sheckels to `%s`?" % (amount, user),
+            d=f"This is `{round((amount / cv) * 100, 2)}%` of your money."
         )
         await ctx.send(embed=embed, view=GiveView(self.bot, ctx, amount, ctx.author, user))
-    
+
     @cur.command()
     @commands.cooldown(2, 120, commands.BucketType.user)
     @describe(
-        user = "The user to request money from",
-        amount = "How much money to request"
+        user="The user to request money from",
+        amount="How much money to request"
     )
     async def request(self, ctx: commands.Context, user: discord.Member, amount: int):
         """
@@ -91,11 +91,13 @@ class Currency(commands.Cog):
             raise ValueError("They don't have that much money!")
         embed = fmte(
             ctx,
-            t = "`{}`, Do You Want to Give `{}` `{}` Sheckels?".format(user, ctx.author, amount),
-            d = f"This is `{round((amount / cv) * 100, 2)}%` of your money."
-        )
+            t="`{}`, Do You Want to Give `{}` `{}` Sheckels?".format(
+                user,
+                ctx.author,
+                amount),
+            d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.")
         await ctx.send(user.mention, embed=embed, view=RequestView(self.bot, ctx, amount, ctx.author, user))
-    
+
     @cur.command()
     @commands.cooldown(1, 30, commands.BucketType.user)
     async def beg(self, ctx: commands.Context):
@@ -105,13 +107,13 @@ class Currency(commands.Cog):
         amount = random.randint(max(-500, -self.getUserBal(ctx.author)), 1000)
         if amount < 0:
             k = random.choice([
-                "Some villain saw you begging and mugged you. Sucks to suck.", 
+                "Some villain saw you begging and mugged you. Sucks to suck.",
                 "You tripped on the curb and somehow lost your wallet. Nice job...",
                 "You ate the coins. For some reason."
             ])
         elif amount > 0:
             k = random.choice([
-                "You saw someone begging and decied to mug them. You villain!", 
+                "You saw someone begging and decied to mug them. You villain!",
                 "Some buffoon left some coins out on the road, might as well keep them for good fortune.",
                 "You found some coins in the toilet... why were you looking there!?"
             ])
@@ -120,11 +122,11 @@ class Currency(commands.Cog):
         self.addToBal(ctx.author, amount)
         embed = fmte(
             ctx,
-            t = "{}{} Sheckels".format("+" if amount >= 0 else "", amount),
-            d = k
+            t="{}{} Sheckels".format("+" if amount >= 0 else "", amount),
+            d=k
         )
         await ctx.send(embed=embed)
-    
+
     @cur.command()
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def leaderboard(self, ctx: commands.Context):
@@ -132,18 +134,20 @@ class Currency(commands.Cog):
         See who's the wealthiest in this server
         """
         data = self.tab.select(values=["userid", "balance"])
-        values: Mapping[discord.Member, int] = {ctx.guild.get_member(userid): balance for userid, balance in data if userid in [member.id for member in ctx.guild.members]}
+        values: Mapping[discord.Member,
+                        int] = {ctx.guild.get_member(userid): balance for userid,
+                                balance in data if userid in [member.id for member in ctx.guild.members]}
         inst = LeaderboardView(self.bot, False, values, 5)
         embed = inst.page_zero(ctx.interaction)
         view = inst
         view.checkButtons()
         await ctx.send(embed=embed, view=view)
-    
+
     @commands.command()
     @commands.is_owner()
     async def manualadd(self, ctx: commands.Context, user: Optional[discord.Member], amount: Optional[int] = 1000):
         self.addToBal(user or ctx.author, amount)
-    
+
     @commands.command()
     @commands.is_owner()
     async def manualset(self, ctx: commands.Context, user: Optional[discord.Member], amount: Optional[int]):
@@ -153,19 +157,22 @@ class Currency(commands.Cog):
     @commands.is_owner()
     async def manualdel(self, ctx: commands.Context, user: Optional[discord.Member]):
         self.tab.delete(conditions=["userid=%s" % (user or ctx.author).id])
-    
-    def clamp(self, value: int, lower_bound: int = None, upper_bound: int = None):
-        return max(min(value, upper_bound or value), lower_bound or value)
-    
 
-    
+    def clamp(
+            self,
+            value: int,
+            lower_bound: int = None,
+            upper_bound: int = None):
+        return max(min(value, upper_bound or value), lower_bound or value)
+
     async def cine(self, user: discord.Member, newbal: int = 0):
         if not self.tab.select(conditions="userid=%s" % user.id):
             self.tab.insert(values=[self.user.id, newbal])
             self.tab.commit()
 
     def formatBalance(self, bal: int):
-        return "".join(["%s," % char if c %3 == 0 else char for c, char in enumerate(str(bal)[::-1])][::-1]).strip(",")
+        return "".join(["%s," % char if c % 3 == 0 else char for c,
+                       char in enumerate(str(bal)[::-1])][::-1]).strip(",")
 
     def getUserBal(self, user: discord.User, default: int = 0) -> int:
         d = self.tab.select(
@@ -173,7 +180,7 @@ class Currency(commands.Cog):
             conditions=[
                 "userid == %s" %
                 user.id]).fetchone()
-            
+
         if d is not None:
             return d[0]
         else:
@@ -186,7 +193,13 @@ class Currency(commands.Cog):
         Sets the user's current balance
         """
         self.cine(user)
-        self.tab.update(values = ["balance=%s" % str(amount)], conditions = ["userid = %s" % user.id])
+        self.tab.update(
+            values=[
+                "balance=%s" %
+                str(amount)],
+            conditions=[
+                "userid = %s" %
+                user.id])
         self.tab.commit()
 
     def addToBal(self, user: discord.Member, amount: int) -> int:
@@ -196,9 +209,15 @@ class Currency(commands.Cog):
         The user's new balance
         """
         v = self.getUserBal(user)
-        self.tab.update(values = ["balance=%s" % str(v + amount)], conditions = ["userid = %s" % user.id])
+        self.tab.update(
+            values=[
+                "balance=%s" % str(
+                    v + amount)],
+            conditions=[
+                "userid = %s" % user.id])
         self.tab.commit()
         return v + amount
+
 
 class GiveView(discord.ui.View):
     def __init__(self, bot, ctx, amount, auth, user):
@@ -208,8 +227,9 @@ class GiveView(discord.ui.View):
         self.auth: discord.Member = auth
         self.user: discord.Member = user
         super().__init__()
-    
-    @discord.ui.button(label="Accept", emoji="✅", style=discord.ButtonStyle.primary)
+
+    @discord.ui.button(label="Accept", emoji="✅",
+                       style=discord.ButtonStyle.primary)
     async def ack(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.auth:
             await inter.response.send_message("This is not your interaction.")
@@ -219,31 +239,33 @@ class GiveView(discord.ui.View):
         usernew = inst.addToBal(self.user, self.amount)
         embed = fmte(
             self.ctx,
-            t = "Transaction Completed",
-            d = "`{}` balance: `{}`\n`{}` balance: `{}`".format(
+            t="Transaction Completed",
+            d="`{}` balance: `{}`\n`{}` balance: `{}`".format(
                 self.auth, authnew,
                 self.user, usernew
             )
         )
         await inter.response.edit_message(content=None, embed=embed, view=None)
-    
-    @discord.ui.button(label="Decline", emoji="❌", style=discord.ButtonStyle.danger)
+
+    @discord.ui.button(label="Decline", emoji="❌",
+                       style=discord.ButtonStyle.danger)
     async def dec(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.auth:
             await inter.response.send_message("This is not your interaction.")
             return
         embed = fmte(
             self.ctx,
-            t = "Transaction Declined",
-            d = "No currency has been transfered."
+            t="Transaction Declined",
+            d="No currency has been transfered."
         )
         for c in self.children:
             c.disabled = True
         await inter.response.edit_message(content=None, embed=embed, view=None)
-                    
+
     async def on_timeout(self) -> None:
         for c in self.children:
             c.disabled = True
+
 
 class RequestView(discord.ui.View):
     def __init__(self, bot, ctx, amount, auth, user):
@@ -253,8 +275,9 @@ class RequestView(discord.ui.View):
         self.auth: discord.Member = auth
         self.user: discord.Member = user
         super().__init__()
-    
-    @discord.ui.button(label="Accept", emoji="✅", style=discord.ButtonStyle.primary)
+
+    @discord.ui.button(label="Accept", emoji="✅",
+                       style=discord.ButtonStyle.primary)
     async def ack(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.user:
             await inter.response.send_message("This is not your interaction.")
@@ -264,38 +287,51 @@ class RequestView(discord.ui.View):
         usernew = inst.addToBal(self.user, -self.amount)
         embed = fmte(
             self.ctx,
-            t = "Transaction Completed",
-            d = "`{}` balance: `{}`\n`{}` balance: `{}`".format(
+            t="Transaction Completed",
+            d="`{}` balance: `{}`\n`{}` balance: `{}`".format(
                 self.auth, authnew,
                 self.user, usernew
             )
         )
         await inter.response.edit_message(embed=embed, view=None)
-    
-    @discord.ui.button(label="Decline", emoji="❌", style=discord.ButtonStyle.danger)
+
+    @discord.ui.button(label="Decline", emoji="❌",
+                       style=discord.ButtonStyle.danger)
     async def dec(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.user:
             await inter.response.send_message("This is not your interaction.")
             return
         embed = fmte(
             self.ctx,
-            t = "Transaction Declined",
-            d = "No currency has been transfered."
+            t="Transaction Declined",
+            d="No currency has been transfered."
         )
         for c in self.children:
             c.disabled = True
         await inter.response.edit_message(embed=embed, view=None)
-                
+
     async def on_timeout(self) -> None:
         for c in self.children:
             c.disabled = True
 
+
 class LeaderboardView(discord.ui.View):
-    def __init__(self, bot: commands.Bot, ephemeral: bool, values: Mapping[discord.Member, int],
-                 pagesize: int, *, timeout: Optional[float] = 180, ):
+    def __init__(self,
+                 bot: commands.Bot,
+                 ephemeral: bool,
+                 values: Mapping[discord.Member,
+                                 int],
+                 pagesize: int,
+                 *,
+                 timeout: Optional[float] = 180,
+                 ):
         self.bot = bot
         self.ephemeral = ephemeral
-        self.vals = sorted(list(values.items()), key = lambda v: v[1], reverse=True)
+        self.vals = sorted(
+            list(
+                values.items()),
+            key=lambda v: v[1],
+            reverse=True)
         self.pos = 1
         self.maxpos = math.ceil((len(self.vals) / pagesize))
         self.pagesize = pagesize
@@ -337,7 +373,7 @@ class LeaderboardView(discord.ui.View):
 
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
-        
+
     def embed(self, inter: discord.Interaction):
         return fmte_i(
             inter,
@@ -345,11 +381,11 @@ class LeaderboardView(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed):
-        for c, t in enumerate(self.vals[self.pagesize *
-                                 (self.pos - 1):self.pagesize * (self.pos)]):
+        for c, t in enumerate(
+                self.vals[self.pagesize * (self.pos - 1):self.pagesize * (self.pos)]):
             user, bal = t[0], t[1]
             embed.add_field(
-                name="{}: {}".format((c+1) + (self.pos-1) * self.pagesize, user),
+                name="{}: {}".format((c + 1) + (self.pos - 1) * self.pagesize, user),
                 value="`%s`" % Currency(self.bot).formatBalance(bal),
                 inline=False
             )
@@ -394,11 +430,10 @@ class LeaderboardView(discord.ui.View):
                 b.style = discord.ButtonStyle.success
             else:
                 b.style = discord.ButtonStyle.secondary
-                
+
     async def on_timeout(self) -> None:
         for c in self.children:
             c.disabled = True
-
 
 
 async def setup(bot):

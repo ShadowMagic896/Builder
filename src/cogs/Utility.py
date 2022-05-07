@@ -295,7 +295,7 @@ class Utility(commands.Cog):
                 value="-------------------------------------------------------------------",
                 inline=False)
         await ctx.send(embed=embed, ephemeral=ephemeral)
-    
+
     @commands.hybrid_command()
     async def math(self, ctx: commands.Context, equation: str, ephemeral: bool = False):
         """
@@ -306,11 +306,11 @@ class Utility(commands.Cog):
         res = simpleeval.SimpleEval(functions=self.newOps()).eval(eq)
         embed = fmte(
             ctx,
-            t = res,
-            d = "Solved in `%sms`" % round((time.time() - st) * 1000, 5)
+            t=res,
+            d="Solved in `%sms`" % round((time.time() - st) * 1000, 5)
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
-    
+
     def newOps(self):
         f = simpleeval.DEFAULT_FUNCTIONS
         f.update({
@@ -323,16 +323,16 @@ class Utility(commands.Cog):
             "sinh": lambda n: sinh(radians(n)),
             "cosh": lambda n: cosh(radians(n)),
             "tanh": lambda n: tanh(radians(n)),
-            "root": lambda n, b: n ** (1/b)})
+            "root": lambda n, b: n ** (1 / b)})
         return f
-    
+
 #     @commands.hybrid_command()
 #     async def eval(self, ctx: commands.Context):
 #         """
 #         Evaluates code.
 #         """
 #         await ctx.interaction.response.send_modal(CodeModal(ctx))
-    
+
 #     async def _eval(self, ctx: commands.Context, code: str):
 #         result = PythonSafeEval.SafeEval(version="3.8", modules = ["numpy", "discord", "re"]).eval(code, time_limit=10).stdout.decode("utf-8")
 #         embed = fmte(
@@ -340,7 +340,6 @@ class Utility(commands.Cog):
 #             d = "```py\n%s\n```" % result
 #         )
 #         await ctx.send(embed=embed)
-
 
 
 # class CodeModal(discord.ui.Modal):
@@ -352,7 +351,8 @@ class Utility(commands.Cog):
 #         style = discord.TextStyle.long
 #     )
 #     async def on_submit(self, interaction: discord.Interaction) -> None:
-#         await interaction.response.send_message(embed=await Utility(self.ctx.bot)._eval(self.ctx, code=self.code.value))
+# await interaction.response.send_message(embed=await
+# Utility(self.ctx.bot)._eval(self.ctx, code=self.code.value))
 
 
 async def setup(bot):
