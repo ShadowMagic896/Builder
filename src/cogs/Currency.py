@@ -311,9 +311,8 @@ class Currency(commands.Cog):
     def getUserBal(self, user: discord.User, default: int = 0) -> int:
         d = self.tab.select(
             values=["balance"],
-            conditions=[
-                "userid == %s" %
-                user.id]).fetchone()
+            conditions=[f"userid == %{user.id}"]
+        ).fetchone()
 
         if d is not None:
             return d[0]
@@ -328,12 +327,9 @@ class Currency(commands.Cog):
         """
         self.cine(user)
         self.tab.update(
-            values=[
-                "balance=%s" %
-                str(amount)],
-            conditions=[
-                "userid = %s" %
-                user.id])
+            values=[f"balance={amount}"],
+            conditions=[f"userid={user.id}"]
+        )
         self.tab.commit()
 
     def addToBal(self, user: discord.User, amount: int) -> int:
@@ -344,11 +340,9 @@ class Currency(commands.Cog):
         """
         v = self.getUserBal(user)
         self.tab.update(
-            values=[
-                "balance=%s" % str(
-                    v + amount)],
-            conditions=[
-                "userid = %s" % user.id])
+            values=[f"balance={v + amount}"],
+            conditions=[f"userid={user.id}"]
+        )
         self.tab.commit()
         return v + amount
 
@@ -749,40 +743,37 @@ class QuizQuestionSubmit(discord.ui.Button):
         self._view.pos += 1
         if self._view.pos == self._view.maxpos + 1:
             cc = [x for x in self._view.selected]
-            desc = "\n".join(["ㅤ**Question:** *\"{}\"*\nㅤ**Response:** {}\nㅤ**Answer[s]:** {}\n".format(
-                entry[0], entry[4], ", ".join(entry[5])) for entry in self._view.selected])
-            score = "\n`{} / {} [{}%]`".format([x[3] for x in cc].count(True), len(
-                self._view.selected), round([x[3] for x in cc].count(True) / len(self._view.selected) * 100))
+            jr = ", ".join
+            desc = "\n".join(
+                [
+                    f"ㅤ**Question:** *\"{entry[0]}\"*\nㅤ**Response:** {entry[4]}\nㅤ**Answer[s]:** {jr(entry[5])}\n" for entry in self._view.selected
+                ]
+            )
+            cor = [x[3] for x in cc].count(True)
+            tot = len(self._view.selected)
+            per = (cor / tot) * 100
+            score = f"\n`{cor} / {tot} [{per}%]`"
 
-            perc = 5000
-            perc = round(perc * ([x[3]
-                         for x in cc].count(True) / self._view.maxpos))
+            base_winnings = 5000
             mults = {
-                "Easy": 1,
-                "Medium": 2,
-                "Hard": 3
+                "Easy": 0.75,
+                "Medium": 1,
+                "Hard": 1.25
             }
-            perc = round(perc * mults[self._view.dif])
+            perc = round(base_winnings * mults[self._view.dif] * ([x[3]
+                         for x in cc].count(True) / self._view.maxpos))
+            formatted = "".join([
+                f"{char},"
+                if c % 3 == 0 
+                else char 
+                for c, char in enumerate(str(perc)[::-1])
+            ][::-1])
+            coin = os.getenv("COIN_ID")
             embed = fmte_i(
                 interaction,
-                t="Quiz Finished! You Earned `{}`{}!\nCategory: `{}`\nDifficulty: `{}`".format(
-                    "".join(
-                        [
-                            "%s," %
-                            char if c %
-                            3 == 0 else char for c,
-                            char in enumerate(
-                                str(perc)[
-                                    ::-
-                                    1])][
-                            ::-
-                            1]).strip(","),
-                    os.getenv("COIN_ID"),
-                    self._view.cat,
-                    self._view.dif),
-                d="**Results:**\n" +
-                desc +
-                score)
+                t=f"Quiz Finished! You Earned `{formatted}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
+                d=f"**Results:**\n{desc}{score}"
+            )
             self.tab: Table = self._view.tab
             user = self._view.ctx.author
 
@@ -790,27 +781,23 @@ class QuizQuestionSubmit(discord.ui.Button):
             # without recreating connection, because the connection was sent
             # through inits
             d = self.tab.select(
-                values=["balance"],
-                conditions=[
-                    "userid == %s" %
-                    user.id]).fetchone()
+                values=["balance"], 
+                conditions=[f"userid == {user.id}"]
+            ).fetchone()
 
             if d is not None:
                 v = d[0]
             else:
                 self.tab.insert(values=[user.id, 0])
                 v = self.tab.select(
-                    values=["balance"],
-                    conditions=[
-                        "userid == %s" %
-                        user.id]).fetchone()
+                    values=["balance"], 
+                    conditions=[f"userid == {user.id}"]
+                ).fetchone()
 
             self.tab.update(
-                values=[
-                    "balance=%s" % str(
-                        v + perc)],
-                conditions=[
-                    "userid = %s" % user.id])
+                values=[f"balance={v + perc}"],
+                conditions=[f"userid={user.id}"]
+            )
 
             self.tab.commit()
             await interaction.response.edit_message(embed=embed, view=None)

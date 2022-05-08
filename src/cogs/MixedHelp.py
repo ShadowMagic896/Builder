@@ -1,12 +1,13 @@
-# Hahha FUCK how many of these damned help commands wil I make?
-from math import ceil, floor
-from typing import Any, List, Optional
+
 import discord
-from discord import app_commands, Interaction
+from discord import Interaction
 from discord.app_commands import describe
 from discord.ext import commands
 
 import os
+from math import ceil
+from typing import Any, List, Optional
+
 from _aux.embeds import Desc, fmte, fmte_i
 from _aux.userio import explode
 from archived_cogs.InterHelp import CogSelect
@@ -55,22 +56,22 @@ class MixedHelp(commands.Cog):
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
         return sorted([discord.app_commands.Choice(name=c, value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower(
         ) or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name)
-
+    commands.Command.ca
     # @help.autocomplete("command")
-    # async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-    #     return sorted(
-    #         [
-    #             discord.app_commands.Choice(
-    #                 name="[{}] {}".format(
-    #                     c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
-    #                 self.explode([c for c in self.bot.commands]) if not getattr(
-    #                     inter.namespace, "cog") else self.explode(self.bot.get_cog(
-    #                         inter.namespace.cog).get_commands()) if inter.namespace.cog in [
-    #                             c for c, v in self.bot.cogs.items()] else []) if (
-    #                                 (current.lower() in c.qualified_name.lower()) or (
-    #                                     c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
-    #                                         :25], key=lambda c: c.name[
-    #                                             c.name.index("]") + 1:])
+    async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+        return sorted(
+            [
+                discord.app_commands.Choice(
+                    name="[{}] {}".format(
+                        c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
+                    self.explode([c for c in self.bot.commands]) if not getattr(
+                        inter.namespace, "cog") else self.explode(self.bot.get_cog(
+                            inter.namespace.cog).get_commands()) if inter.namespace.cog in [
+                                c for c, _ in self.bot.cogs.items()] else []) if (
+                                    (current.lower() in c.qualified_name.lower()) or (
+                                        c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
+                                            :25], key=lambda c: c.name[
+                                                c.name.index("]") + 1:])
 
     async def main_embed(self, ctx: commands.Context, bot: commands.Bot):
         return fmte(
