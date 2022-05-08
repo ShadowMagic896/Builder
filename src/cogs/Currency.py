@@ -20,7 +20,7 @@ class Currency(commands.Cog):
             values={
                 "userid": "integer",
                 "balance": "integer",})
-        self.coin = "<:Coin:972565900110745630>"
+        self.coin = os.getenv("COIN_ID")
 
     def ge(self):
         return "💰"
@@ -136,7 +136,7 @@ class Currency(commands.Cog):
         """
         See who's the wealthiest in this server
         """
-        data = self.tab.select(values=["userid", "balance"])
+        data = self.tab.select(values=["userid", "balance"]).fetchall()
         values: Mapping[discord.User,
                         int] = {ctx.guild.get_member(userid): balance for userid,
                                 balance in data if userid in [member.id for member in ctx.guild.members]}
@@ -251,7 +251,7 @@ class Currency(commands.Cog):
             t = "Select Options",
             d = "Once you are finished, press `Start`"
         )
-        view = StartQuizView(ctx)
+        view = StartQuizView(ctx, self.tab)
         await ctx.send(embed=embed, view=view)
 
 
@@ -428,8 +428,7 @@ class LeaderboardView(discord.ui.View):
     def __init__(self,
                  bot: commands.Bot,
                  ephemeral: bool,
-                 values: Mapping[discord.User,
-                                 int],
+                 values: Mapping[discord.User,int],
                  pagesize: int,
                  *,
                  timeout: Optional[float] = 180,
@@ -447,7 +446,7 @@ class LeaderboardView(discord.ui.View):
 
         super().__init__(timeout=timeout)
 
-    @discord.ui.button(emoji="<:BBArrow:971590922611601408> ", custom_id="bb")
+    @discord.ui.button(emoji=os.getenv("BBARROW_ID"), custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = 1
         self.checkButtons(button)
@@ -455,7 +454,7 @@ class LeaderboardView(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji="<:BArrow:971590903837913129>", custom_id="b")
+    @discord.ui.button(emoji=os.getenv("BARROW_ID"), custom_id="b")
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos -= 1
         self.checkButtons(button)
@@ -467,7 +466,7 @@ class LeaderboardView(discord.ui.View):
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.message.delete()
 
-    @discord.ui.button(emoji="<:FArrow:971591003893006377>", custom_id="f")
+    @discord.ui.button(emoji=os.getenv("FARROW_ID"), custom_id="f")
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos += 1
         self.checkButtons(button)
@@ -475,7 +474,7 @@ class LeaderboardView(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji="<:FFArrow:971591109874704455>", custom_id="ff")
+    @discord.ui.button(emoji=os.getenv("FFARROW_ID"), custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = self.maxpos
         self.checkButtons(button)
@@ -546,10 +545,11 @@ class LeaderboardView(discord.ui.View):
 
 
 class StartQuizView(discord.ui.View):
-    def __init__(self, ctx: commands.Context):
+    def __init__(self, ctx: commands.Context, tab: Table):
         self.ctx = ctx
         self.dif = None
         self.cat = None
+        self.tab: Table = tab
         self.questions = None
         super().__init__()
     
@@ -558,7 +558,7 @@ class StartQuizView(discord.ui.View):
         self.dif = inter.data["values"][0]
         await self.sil(inter)
 
-    @discord.ui.select(placeholder="Please choose a category...", options=[discord.SelectOption(label=x, value=x) for x in ["Linux", "Bash", "Uncategorized", "Docker", "SQL", "CMS", "Code", "DevOps"]])
+    @discord.ui.select(placeholder="Please choose a category...", options=[discord.SelectOption(label=x, value=x) for x in ["Linux", "Bash", "Docker", "SQL", "CMS", "Code", "DevOps"]])
     async def cat(self, inter: discord.Interaction, _: Any):
         self.cat = inter.data["values"][0]
         await self.sil(inter)
@@ -569,12 +569,20 @@ class StartQuizView(discord.ui.View):
             key = os.getenv("QUIZAPI_KEY")
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
             self.questions = await (await self.ctx.bot.session.get(url)).json()
-            view = MainQuizView(self.questions, self.cat, self.dif)
-            s = QuizAnsSelect(self.questions[0])
+            view = MainQuizView(self.questions, self.cat, self.dif, self.tab, self.ctx)
+            s = QuizAnsSelect(self.questions[0], self.ctx)
             view.add_item(s)
             view.add_item(QuizQuestionSubmit(view, s))
+            view.add_item(QuizClose(self.ctx))
             embed = view.embed(self.ctx)
             await inter.response.edit_message(embed=embed, view=view)
+
+    @discord.ui.button(style=discord.ButtonStyle.danger, label="Close", emoji="❌")
+    async def close(self, interaction: discord.Interaction) -> Any:
+        if interaction.user != self.ctx.author:
+            await interaction.response.send_message("You are not taking this quiz!")
+            return
+        await interaction.message.delete()
     
     async def sil(self, inter: discord.Interaction):
         try:
@@ -584,17 +592,20 @@ class StartQuizView(discord.ui.View):
 
 
 class MainQuizView(discord.ui.View):
-    def __init__(self, questions: List[dict], cat, dif, *, timeout: Optional[float] = 180):
+    def __init__(self, questions: List[dict], cat: str, dif: str, tab: Table, ctx, *, timeout: Optional[float] = 180):
         self.pos = 1
         self.maxpos = 5
         self.questions = questions
         self.cat = cat
         self.dif = dif
+        self.tab = tab
+        self.ctx = ctx
 
         # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
         self.selected: List[List[str, str, List[str], bool, str, List[str]]] = []
 
         super().__init__(timeout=timeout)
+    
     def embed(self, ctx_or_inter):
         q = self.questions[self.pos-1]
         if isinstance(ctx_or_inter, commands.Context):
@@ -611,7 +622,8 @@ class MainQuizView(discord.ui.View):
             )
 
 class QuizAnsSelect(discord.ui.Select):
-    def __init__(self, question: dict):
+    def __init__(self, question: dict, ctx):
+        self.ctx = ctx
         self.qname = question["question"]
         self.description = question["description"]
         self.ops = [discord.SelectOption(label=x[1][:100], value=x[0]) for x in list(question["answers"].items()) if x[1] is not None]
@@ -623,6 +635,9 @@ class QuizAnsSelect(discord.ui.Select):
         return [c.label for c in self.ops if c.value == val][0]
 
     async def callback(self, interaction: discord.Interaction) -> Any:
+        if interaction.user != self.ctx.author:
+            await interaction.response.send_message("You are not taking this quiz!", ephemeral=True)
+            return
         try:
             await interaction.response.send_message()
         except:
@@ -631,11 +646,15 @@ class QuizAnsSelect(discord.ui.Select):
 class QuizQuestionSubmit(discord.ui.Button):
     def __init__(self, view: discord.ui.View, select: discord.ui.Select):
         self._view = view
+        self.ctx = self._view.ctx
         self.select = select
         super().__init__(style=discord.ButtonStyle.green, emoji="▶️", label="Submit")
         
     async def callback(self, interaction: discord.Interaction) -> Any:
         if not self.select.values:
+            return
+        if interaction.user != self.ctx.author:
+            await interaction.response.send_message("You are not taking this quiz!", ephemeral=True)
             return
         # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
         self._view.selected.append([self.select.qname, self.select.values[0], self.select.correct, self.select.values[0] in self.select.correct, self.select.getValueReadable(self.select.values[0]), [self.select.getValueReadable(x) for x in self.select.correct]])
@@ -644,24 +663,68 @@ class QuizQuestionSubmit(discord.ui.Button):
             cc = [x for x in self._view.selected]
             desc = "\n".join(["ㅤ**Question:** *\"{}\"*\nㅤ**Response:** {}\nㅤ**Answer[s]:** {}\n".format(entry[0], entry[4], ", ".join(entry[5])) for entry in self._view.selected])
             score = "\n`{} / {} [{}%]`".format([x[3] for x in cc].count(True), len(self._view.selected), round([x[3] for x in cc].count(True) / len(self._view.selected) * 100))
+            
+            perc = 5000
+            perc = round(perc * ([x[3] for x in cc].count(True) / self._view.maxpos))
+            mults = {
+                "Easy": 1,
+                "Medium": 2,
+                "Hard": 3
+            }
+            perc = round(perc * mults[self._view.dif])
             embed = fmte_i(
                 interaction,
-                t = "Quiz Finished!\nCategory: `{}`\nDifficulty: `{}`".format(self._view.cat, self._view.dif),
+                t = "Quiz Finished! You Earned `{}`{}!\nCategory: `{}`\nDifficulty: `{}`".format(perc, os.getenv("COIN_ID"), self._view.cat, self._view.dif),
                 d = "**Results:**\n" + desc + score
             )
+            self.tab: Table = self._view.tab
+            user = self._view.ctx.author
+            
+
+            # Basically copy/paste from funcs in Currency to manipulate db without recreating connection, because the connection was sent through inits
+            d = self.tab.select(
+                values=["balance"],
+                conditions=[
+                    "userid == %s" %
+                    user.id]).fetchone()
+
+            if d is not None:
+                v = d[0]
+            else:
+                self.tab.insert(values=[user.id, 0])
+                v = self.tab.select(values=["balance"],conditions=["userid == %s" %user.id]).fetchone()
+
+            self.tab.update(
+                values=[
+                    "balance=%s" % str(
+                        v + perc)],
+                conditions=[
+                    "userid = %s" % user.id])
+
+            self.tab.commit()
             await interaction.response.edit_message(embed=embed, view=None)
         else:
             # print(self._view.pos, self.select.values)
             question = self._view.questions[self._view.pos-1]
             embed = self._view.embed(interaction)
-            view = MainQuizView(self._view.questions, self._view.cat, self._view.dif)
+            view = MainQuizView(self._view.questions, self._view.cat, self._view.dif, self._view.tab, self._view.ctx)
             view.pos = self._view.pos
             view.selected = self._view.selected
-            s = QuizAnsSelect(question)
+            s = QuizAnsSelect(question, self._view.ctx)
             view.add_item(s)
             view.add_item(QuizQuestionSubmit(view, s))
+            view.add_item(QuizClose(self._view.ctx))
             await interaction.response.edit_message(embed=embed, view=view)
         
-
+class QuizClose(discord.ui.Button):
+    def __init__(self, ctx):
+        self.ctx = ctx
+        super().__init__(style=discord.ButtonStyle.danger, label="Close", emoji="❌")
+    async def callback(self, interaction: discord.Interaction) -> Any:
+        if interaction.user != self.ctx.author:
+            await interaction.response.send_message("You are not taking this quiz!")
+            return
+        await interaction.message.delete()
+        
 async def setup(bot):
     await bot.add_cog(Currency(bot))

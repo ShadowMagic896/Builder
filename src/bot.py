@@ -29,6 +29,7 @@ class Builder(commands.Bot):
     def __init__(self):
         command_prefix = when_mentioned_or("dev>>")
         intents = discord.Intents.default()
+        intents.members = True
         activity = discord.Activity(
             type=discord.ActivityType.listening, name="/help")
         help_command = None
