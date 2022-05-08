@@ -427,6 +427,7 @@ class RequestView(discord.ui.View):
 class LeaderboardView(discord.ui.View):
     def __init__(self,
                  bot: commands.Bot,
+                 ctx: commands.Context,
                  ephemeral: bool,
                  values: Mapping[discord.User,int],
                  pagesize: int,
@@ -449,6 +450,9 @@ class LeaderboardView(discord.ui.View):
     @discord.ui.button(emoji=os.getenv("BBARROW_ID"), custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = 1
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         self.checkButtons(button)
 
         embed = self.add_fields(self.embed(inter))
@@ -457,6 +461,9 @@ class LeaderboardView(discord.ui.View):
     @discord.ui.button(emoji=os.getenv("BARROW_ID"), custom_id="b")
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos -= 1
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         self.checkButtons(button)
 
         embed = self.add_fields(self.embed(inter))
@@ -464,11 +471,17 @@ class LeaderboardView(discord.ui.View):
 
     @discord.ui.button(emoji="❌", style=discord.ButtonStyle.red, custom_id="x")
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         await inter.message.delete()
 
     @discord.ui.button(emoji=os.getenv("FARROW_ID"), custom_id="f")
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos += 1
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         self.checkButtons(button)
 
         embed = self.add_fields(self.embed(inter))
@@ -477,6 +490,9 @@ class LeaderboardView(discord.ui.View):
     @discord.ui.button(emoji=os.getenv("FFARROW_ID"), custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = self.maxpos
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         self.checkButtons(button)
 
         embed = self.add_fields(self.embed(inter))
@@ -555,16 +571,25 @@ class StartQuizView(discord.ui.View):
     
     @discord.ui.select(placeholder="Please choose a difficulty...", options=[discord.SelectOption(label=x, value=x) for x in ["Easy", "Medium", "Hard"]])
     async def dif(self, inter: discord.Interaction, _: Any):
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         self.dif = inter.data["values"][0]
         await self.sil(inter)
 
     @discord.ui.select(placeholder="Please choose a category...", options=[discord.SelectOption(label=x, value=x) for x in ["Linux", "Bash", "Docker", "SQL", "CMS", "Code", "DevOps"]])
     async def cat(self, inter: discord.Interaction, _: Any):
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         self.cat = inter.data["values"][0]
         await self.sil(inter)
 
     @discord.ui.button( emoji="▶️", label = "Start", style=discord.ButtonStyle.green,)
     async def start(self, inter: discord.Interaction, _: Any):
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            return
         if self.dif is not None and self.cat is not None:
             key = os.getenv("QUIZAPI_KEY")
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
@@ -578,11 +603,11 @@ class StartQuizView(discord.ui.View):
             await inter.response.edit_message(embed=embed, view=view)
 
     @discord.ui.button(style=discord.ButtonStyle.danger, label="Close", emoji="❌")
-    async def close(self, interaction: discord.Interaction) -> Any:
-        if interaction.user != self.ctx.author:
-            await interaction.response.send_message("You are not taking this quiz!")
+    async def close(self, inter: discord.Interaction) -> Any:
+        if inter.user != self.ctx.author:
+            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
             return
-        await interaction.message.delete()
+        await inter.message.delete()
     
     async def sil(self, inter: discord.Interaction):
         try:
