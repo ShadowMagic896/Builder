@@ -5,7 +5,7 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 
 import random
-from typing import Mapping, Optional
+from typing import Any, List, Literal, Mapping, Optional
 
 from _aux.sql3OOP import Table
 from _aux.embeds import fmte, fmte_i
@@ -243,6 +243,15 @@ class Currency(commands.Cog):
             d = "You now have: `%s`%s" % (self.formatBalance(self.addToBal(ctx.author, rate)), self.coin)
         )
         await ctx.send(embed=embed)
+    
+    @cur.command()
+    async def quiz(self, ctx: commands.Context, category: Literal, difficulty: Literal):
+        limit = 5
+        key = os.getenv("QUIZAPI_KEY")
+        url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={category}&difficulty={difficulty}&limit={limit}"
+        result = await (await self.bot.session.get(url)).json()
+        # await ctx.send(embed)
+
 
     @commands.command()
     @commands.is_owner()
@@ -463,7 +472,7 @@ class LeaderboardView(discord.ui.View):
 
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
-        
+
     @discord.ui.button(emoji="<:FFArrow:971591109874704455>", custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = self.maxpos
@@ -533,6 +542,88 @@ class LeaderboardView(discord.ui.View):
         for c in self.children:
             c.disabled = True
 
+
+class StartQuizView(discord.ui.View):
+    def __init__(self, ctx: commands.Context, questions: List):
+        self.ctx = ctx,
+        self.dif = None
+        self.cat = None
+        self.questions = questions
+        super().__init__()
+    
+    @discord.ui.select(placeholder="Please choose a difficulty...", options=[discord.SelectOption(label=x, value=x) for x in ["Easy", "Medium", "Hard"]])
+    async def dif(self, ctx: commands.Context, inter: discord.Interaction, _: Any):
+        self.dif = inter.data["values"][0]
+        self.sil(inter)
+
+    @discord.ui.select(placeholder="Please choose a category...", options=[discord.SelectOption(label=x, value=x) for x in ["Linux", "Bash", "Uncategorized", "Docker", "SQL", "CMS", "Code", "DevOps"]])
+    async def cat(self, ctx: commands.Context, inter: discord.Interaction, _: Any):
+        self.cat = inter.data["values"][0]
+        self.sil(inter)
+
+    @discord.ui.button( emoji="▶️", label = "Start", style=discord.ButtonStyle.green,)
+    async def start(self, inter: discord.Interaction, _: Any):
+        if self.dif is not None and self.cat is not None:
+            key = os.getenv("QUIZAPI_KEY")
+            url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
+            self.questions = await (await self.bot.session.get(url)).json()
+            view = MainQuizView(self.questions)
+            embed = view.embed()
+            await inter.response.edit_message(embed=embed, view=view)
+    
+    async def sil(self, inter: discord.Interaction):
+        try:
+            await inter.response.send_message()
+        except:
+            pass
+
+
+class MainQuizView(discord.ui.View):
+    def __init__(self, questions: List[dict], *, timeout: Optional[float] = 180):
+        self.pos = 1
+        self.maxpos = 5
+        self.questions = questions
+
+        # Question, response, answer[s] correct
+        self.selected: List[List[str, List[str], bool]]
+
+        super().__init__(timeout=timeout)
+
+class QuizAnsSelect(discord.ui.Select):
+    def __init__(self, question: dict):
+        self.qname = question["question"]
+        self.description = question["description"]
+        self.options = [discord.SelectOption(label=x, value=x) for x in question["answers"] if x is not None]
+        self.correct = question["correct_answers"]
+        super().__init__(placeholder="Please choose an answer!", options = self.options)
+
+    async def callback(self, interaction: discord.Interaction) -> Any:
+        return await super().callback(interaction)
+
+class QuizQuestionSubmit(discord.ui.Button):
+    def __init__(self, view: discord.ui.View, select: discord.ui.Select):
+        self.view = view
+        self.select = select
+        
+    async def callback(self, interaction: discord.Interaction) -> Any:
+        if not self.select.values:
+            return
+        self.view.selected.append([self.select.qname, self.select.values[0], self.select.correct, self.select.values[0] in self.select.correct])
+
+        self.view.pos += 1
+        if self.view.pos == self.view.maxpos:
+            desc = "\n".join(["ㅤ**\"{}\"**\nㅤㅤ**Response:** {}\nㅤㅤ**Answer[s]:** {}".format(entry[0], entry[1], ", ".join(entry[2])) for entry in self.view.selected])
+            cc = [x[3] for x in self.view.selected].count(True)
+            score = "\n`{} / {} [{}%]`".format([entry[3] for entry in self.view.selected].count(True), 5, round(cc / 5) * 100)
+            embed = fmte(
+                self.view.ctx,
+                t = "Quiz Finished!",
+                d = "**Results:**\n" + desc + score
+            )
+            await interaction.response.edit_message(emed=embed, view=None)
+        else:
+            question = self.view.questions[self.pos-1]
+        
 
 async def setup(bot):
     await bot.add_cog(Currency(bot))
