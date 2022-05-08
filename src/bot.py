@@ -25,7 +25,7 @@ logger.addHandler(handler)
 # -----------------------------------------------------------
 
 
-class Builder(commands.AutoShardedBot):
+class Builder(commands.Bot):
     def __init__(self):
         command_prefix = when_mentioned_or("dev>>")
         intents = discord.Intents.default()
@@ -33,7 +33,6 @@ class Builder(commands.AutoShardedBot):
             type=discord.ActivityType.listening, name="/help")
         help_command = None
         self.session: aiohttp.ClientSession = None
-
         super().__init__(
             command_prefix=command_prefix,
             case_insensitive=True,

@@ -463,7 +463,7 @@ class LeaderboardView(discord.ui.View):
 
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
-
+        
     @discord.ui.button(emoji="<:FFArrow:971591109874704455>", custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = self.maxpos

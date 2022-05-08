@@ -1,9 +1,7 @@
-from contextlib import redirect_stdout
-import io
-from re import A
-import textwrap
+import math
+import re
 import time
-import traceback
+import typing
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
@@ -11,11 +9,13 @@ from discord.ext import commands
 import os
 from typing import Any, List, Optional
 from math import (radians, sin, cos, tan, asin, acos, atan, sinh, cosh, tanh)
-import PythonSafeEval
 
 import bs4
+import numpy
 import requests
 import simpleeval
+import warnings
+warnings.filterwarnings("error")
 
 from _aux.embeds import fmte
 
@@ -299,17 +299,20 @@ class Utility(commands.Cog):
     @commands.hybrid_command()
     async def math(self, ctx: commands.Context, equation: str, ephemeral: bool = False):
         """
-        Evaluates a simple mathematical expression. Supports basic operators and trig fuctions
+        Evaluates a simple mathematical expression. Supports operators, trig funcs, Numpy, and typing.
         """
         st = time.time()
-        eq = equation.replace("^", "**")
-        res = simpleeval.SimpleEval(functions=self.newOps()).eval(eq)
+        res = simpleeval.SimpleEval(functions=self.newOps(), names=self.newNames(ctx, False)).eval(equation)
         embed = fmte(
             ctx,
             t=res,
             d="Solved in `%sms`" % round((time.time() - st) * 1000, 5)
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
+    
+    @commands.hybrid_command()
+    async def eval(self, ctx: commands.Context):
+        await ctx.interaction.response.send_modal(CodeModal(ctx))
 
     def newOps(self):
         f = simpleeval.DEFAULT_FUNCTIONS
@@ -323,37 +326,59 @@ class Utility(commands.Cog):
             "sinh": lambda n: sinh(radians(n)),
             "cosh": lambda n: cosh(radians(n)),
             "tanh": lambda n: tanh(radians(n)),
-            "root": lambda n, b: n ** (1 / b)})
+            "root": lambda n, b: n ** (1 / b),
+            "round": lambda n, b: round(n, b)})
+        return f
+    
+    def newNames(self, ctx: commands.Context, expanded: bool):
+        f = simpleeval.DEFAULT_NAMES
+        f.update(
+            (key, getattr(typing, key)) for key in dir(typing) if not key.startswith("_")
+        )
+        f.update(
+            {
+                "numpy": numpy,
+                "discord": discord
+            }
+        )
+        if expanded:
+            f.update(
+                {
+                    "discord": discord,
+                    "math": math,
+                    "re": re,
+                    "time": time,
+                }
+            )
         return f
 
-#     @commands.hybrid_command()
-#     async def eval(self, ctx: commands.Context):
-#         """
-#         Evaluates code.
-#         """
-#         await ctx.interaction.response.send_modal(CodeModal(ctx))
 
-#     async def _eval(self, ctx: commands.Context, code: str):
-#         result = PythonSafeEval.SafeEval(version="3.8", modules = ["numpy", "discord", "re"]).eval(code, time_limit=10).stdout.decode("utf-8")
-#         embed = fmte(
-#             ctx,
-#             d = "```py\n%s\n```" % result
-#         )
-#         await ctx.send(embed=embed)
-
-
-# class CodeModal(discord.ui.Modal):
-#     def __init__(self, ctx) -> None:
-#         self.ctx: commands.Context = ctx
-#         super().__init__(title="Code Evaluation")
-#     code = discord.ui.TextInput(
-#         label="Please paste / type code here",
-#         style = discord.TextStyle.long
-#     )
-#     async def on_submit(self, interaction: discord.Interaction) -> None:
-# await interaction.response.send_message(embed=await
-# Utility(self.ctx.bot)._eval(self.ctx, code=self.code.value))
-
+class CodeModal(discord.ui.Modal):
+    def __init__(self, ctx) -> None:
+        self.ctx: commands.Context = ctx
+        super().__init__(title="Code Evaluation")
+    code = discord.ui.TextInput(
+        label="Please paste / type code here",
+        style = discord.TextStyle.long
+    )
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        estart = time.time()    
+        inst = Utility(self.ctx.bot)
+        value = self.code.value.replace("^", "**")
+        try:
+            result = simpleeval.SimpleEval(functions = inst.newOps(), names = inst.newNames(self.ctx, True)).eval(value)
+            self.err = None
+        except (simpleeval.AssignmentAttempted, simpleeval.FeatureNotAvailable) as err:
+            self.err = err 
+            result = "ERROR OCCURRED"
+            
+        embed = fmte(
+            self.ctx,
+            t = result,
+            d = "```py\n%s\n#Computed in %sms```\n**WARNINGS:** ```%s```" % (value, (time.time() - estart) / 1000, self.err or "No warnings detected!"),
+            c = discord.Color.teal() if self.err else None
+        )
+        await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))

@@ -97,14 +97,16 @@ class Watchers(commands.Cog):
         mes = "[INTERACTION] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
             interaction.user, interaction.command.name, datetime.now(
                 tz=pytz.timezone("UTC")), interaction.command.parent,)
-        open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
+        with open("data/logs/_commandlog.txt", "ab") as f:
+            f.write(mes.encode("UTF-8"))
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
         mes = "[COMMAND] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
             ctx.author, ctx.command.qualified_name, datetime.now(
                 tz=pytz.timezone("UTC")), ctx.invoked_parents,)
-        open("data/logs/_commandlog.txt", "ab").write(mes.encode("UTF-8"))
+        with open("data/logs/_commandlog.txt", "ab") as f:
+            f.write(mes.encode("UTF-8"))
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
