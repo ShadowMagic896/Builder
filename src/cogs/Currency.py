@@ -245,12 +245,14 @@ class Currency(commands.Cog):
         await ctx.send(embed=embed)
     
     @cur.command()
-    async def quiz(self, ctx: commands.Context, category: Literal, difficulty: Literal):
-        limit = 5
-        key = os.getenv("QUIZAPI_KEY")
-        url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={category}&difficulty={difficulty}&limit={limit}"
-        result = await (await self.bot.session.get(url)).json()
-        # await ctx.send(embed)
+    async def quiz(self, ctx: commands.Context):
+        embed = fmte(
+            ctx,
+            t = "Select Options",
+            d = "Once you are finished, press `Start`"
+        )
+        view = StartQuizView(ctx)
+        await ctx.send(embed=embed, view=view)
 
 
     @commands.command()
@@ -544,31 +546,34 @@ class LeaderboardView(discord.ui.View):
 
 
 class StartQuizView(discord.ui.View):
-    def __init__(self, ctx: commands.Context, questions: List):
-        self.ctx = ctx,
+    def __init__(self, ctx: commands.Context):
+        self.ctx = ctx
         self.dif = None
         self.cat = None
-        self.questions = questions
+        self.questions = None
         super().__init__()
     
     @discord.ui.select(placeholder="Please choose a difficulty...", options=[discord.SelectOption(label=x, value=x) for x in ["Easy", "Medium", "Hard"]])
-    async def dif(self, ctx: commands.Context, inter: discord.Interaction, _: Any):
+    async def dif(self, inter: discord.Interaction, _: Any):
         self.dif = inter.data["values"][0]
-        self.sil(inter)
+        await self.sil(inter)
 
     @discord.ui.select(placeholder="Please choose a category...", options=[discord.SelectOption(label=x, value=x) for x in ["Linux", "Bash", "Uncategorized", "Docker", "SQL", "CMS", "Code", "DevOps"]])
-    async def cat(self, ctx: commands.Context, inter: discord.Interaction, _: Any):
+    async def cat(self, inter: discord.Interaction, _: Any):
         self.cat = inter.data["values"][0]
-        self.sil(inter)
+        await self.sil(inter)
 
     @discord.ui.button( emoji="▶️", label = "Start", style=discord.ButtonStyle.green,)
     async def start(self, inter: discord.Interaction, _: Any):
         if self.dif is not None and self.cat is not None:
             key = os.getenv("QUIZAPI_KEY")
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
-            self.questions = await (await self.bot.session.get(url)).json()
-            view = MainQuizView(self.questions)
-            embed = view.embed()
+            self.questions = await (await self.ctx.bot.session.get(url)).json()
+            view = MainQuizView(self.questions, self.cat, self.dif)
+            s = QuizAnsSelect(self.questions[0])
+            view.add_item(s)
+            view.add_item(QuizQuestionSubmit(view, s))
+            embed = view.embed(self.ctx)
             await inter.response.edit_message(embed=embed, view=view)
     
     async def sil(self, inter: discord.Interaction):
@@ -579,50 +584,83 @@ class StartQuizView(discord.ui.View):
 
 
 class MainQuizView(discord.ui.View):
-    def __init__(self, questions: List[dict], *, timeout: Optional[float] = 180):
+    def __init__(self, questions: List[dict], cat, dif, *, timeout: Optional[float] = 180):
         self.pos = 1
         self.maxpos = 5
         self.questions = questions
+        self.cat = cat
+        self.dif = dif
 
-        # Question, response, answer[s] correct
-        self.selected: List[List[str, List[str], bool]]
+        # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
+        self.selected: List[List[str, str, List[str], bool, str, List[str]]] = []
 
         super().__init__(timeout=timeout)
+    def embed(self, ctx_or_inter):
+        q = self.questions[self.pos-1]
+        if isinstance(ctx_or_inter, commands.Context):
+            return fmte(
+                ctx_or_inter,
+                t = "Question `{}`:\n{}".format(self.pos, q["question"]),
+                d = "Category: `{}`\nDifficulty: `{}`".format(self.cat, self.dif)
+            )
+        else:
+            return fmte_i(
+                ctx_or_inter,
+                t = "Question `{}`:\n{}".format(self.pos, q["question"]),
+                d = "Category: `{}`\nDifficulty: `{}`".format(self.cat, self.dif)
+            )
 
 class QuizAnsSelect(discord.ui.Select):
     def __init__(self, question: dict):
         self.qname = question["question"]
         self.description = question["description"]
-        self.options = [discord.SelectOption(label=x, value=x) for x in question["answers"] if x is not None]
-        self.correct = question["correct_answers"]
-        super().__init__(placeholder="Please choose an answer!", options = self.options)
+        self.ops = [discord.SelectOption(label=x[1][:100], value=x[0]) for x in list(question["answers"].items()) if x[1] is not None]
+        self.correct = [k[:-8] for k, v in list(question["correct_answers"].items()) if v != "false"]
+        self.correct_readable = [v for k, v in list(question["answers"].items()) if k in self.correct]
+        super().__init__(placeholder="Please choose an answer!", options = self.ops)
+    
+    def getValueReadable(self, val):
+        return [c.label for c in self.ops if c.value == val][0]
 
     async def callback(self, interaction: discord.Interaction) -> Any:
-        return await super().callback(interaction)
+        try:
+            await interaction.response.send_message()
+        except:
+            pass
 
 class QuizQuestionSubmit(discord.ui.Button):
     def __init__(self, view: discord.ui.View, select: discord.ui.Select):
-        self.view = view
+        self._view = view
         self.select = select
+        super().__init__(style=discord.ButtonStyle.green, emoji="▶️", label="Submit")
         
     async def callback(self, interaction: discord.Interaction) -> Any:
         if not self.select.values:
             return
-        self.view.selected.append([self.select.qname, self.select.values[0], self.select.correct, self.select.values[0] in self.select.correct])
-
-        self.view.pos += 1
-        if self.view.pos == self.view.maxpos:
-            desc = "\n".join(["ㅤ**\"{}\"**\nㅤㅤ**Response:** {}\nㅤㅤ**Answer[s]:** {}".format(entry[0], entry[1], ", ".join(entry[2])) for entry in self.view.selected])
-            cc = [x[3] for x in self.view.selected].count(True)
-            score = "\n`{} / {} [{}%]`".format([entry[3] for entry in self.view.selected].count(True), 5, round(cc / 5) * 100)
-            embed = fmte(
-                self.view.ctx,
-                t = "Quiz Finished!",
+        # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
+        self._view.selected.append([self.select.qname, self.select.values[0], self.select.correct, self.select.values[0] in self.select.correct, self.select.getValueReadable(self.select.values[0]), [self.select.getValueReadable(x) for x in self.select.correct]])
+        self._view.pos += 1
+        if self._view.pos == self._view.maxpos + 1:
+            cc = [x for x in self._view.selected]
+            desc = "\n".join(["ㅤ**Question:** *\"{}\"*\nㅤ**Response:** {}\nㅤ**Answer[s]:** {}\n".format(entry[0], entry[4], ", ".join(entry[5])) for entry in self._view.selected])
+            score = "\n`{} / {} [{}%]`".format([x[3] for x in cc].count(True), len(self._view.selected), round([x[3] for x in cc].count(True) / len(self._view.selected) * 100))
+            embed = fmte_i(
+                interaction,
+                t = "Quiz Finished!\nCategory: `{}`\nDifficulty: `{}`".format(self._view.cat, self._view.dif),
                 d = "**Results:**\n" + desc + score
             )
-            await interaction.response.edit_message(emed=embed, view=None)
+            await interaction.response.edit_message(embed=embed, view=None)
         else:
-            question = self.view.questions[self.pos-1]
+            # print(self._view.pos, self.select.values)
+            question = self._view.questions[self._view.pos-1]
+            embed = self._view.embed(interaction)
+            view = MainQuizView(self._view.questions, self._view.cat, self._view.dif)
+            view.pos = self._view.pos
+            view.selected = self._view.selected
+            s = QuizAnsSelect(question)
+            view.add_item(s)
+            view.add_item(QuizQuestionSubmit(view, s))
+            await interaction.response.edit_message(embed=embed, view=view)
         
 
 async def setup(bot):

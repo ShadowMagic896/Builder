@@ -1,4 +1,5 @@
 import discord
+from discord import Interaction, app_commands
 from discord.app_commands import describe
 from discord.ext import commands
 
@@ -10,7 +11,7 @@ import pycountry
 
 from typing import Optional
 
-from _aux.embeds import Desc, fmte
+from _aux.embeds import Desc, fmte, fmte_i
 
 
 class Language(commands.Cog):
@@ -41,6 +42,17 @@ class Language(commands.Cog):
             ), googletrans.LANGUAGES[trans.dest].capitalize())
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
+    
+    @app_commands.context_menu(name="Translate Message")
+    async def translateMenu(inter: Interaction, message: discord.Message):
+        trans = googletrans.Translator().translate(text=message.content, dest="en", src="auto")
+        embed = fmte_i(
+            inter,
+            t=trans.text,
+            d="**From:** `{}`\n**To:** `{}`\n".format(googletrans.LANGUAGES[trans.src].capitalize(
+            ), googletrans.LANGUAGES[trans.dest].capitalize())
+        )
+        await inter.response.send_message(embed=embed)
 
     @commands.hybrid_command()
     @describe(
