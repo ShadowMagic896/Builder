@@ -42,10 +42,11 @@ class Language(commands.Cog):
             ), googletrans.LANGUAGES[trans.dest].capitalize())
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
-    
+
     @app_commands.context_menu(name="Translate Message")
     async def translateMenu(inter: Interaction, message: discord.Message):
-        trans = googletrans.Translator().translate(text=message.content, dest="en", src="auto")
+        trans = googletrans.Translator().translate(
+            text=message.content, dest="en", src="auto")
         embed = fmte_i(
             inter,
             t=trans.text,

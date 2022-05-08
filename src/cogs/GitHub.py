@@ -6,10 +6,11 @@ import subprocess
 
 from _aux.embeds import fmte
 
+
 class GitHub(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-    
+
     @commands.group()
     @commands.is_owner()
     async def git(self, ctx: commands.Context):
@@ -21,10 +22,11 @@ class GitHub(commands.Cog):
         os.system(command)
         embed = fmte(
             ctx,
-            t = "Code Successfully Pushed",
-            d = "```\n%s\n```" % command
+            t="Code Successfully Pushed",
+            d="```\n%s\n```" % command
         )
         await ctx.send(embed=embed)
-    
+
+
 async def setup(bot):
     await bot.add_cog(GitHub(bot))

@@ -84,8 +84,8 @@ def explode(l: List[commands.HybridCommand]):
     nl = []
     for c in l:
         if isinstance(c, (
-            commands.HybridGroup, commands.Group,
-            app_commands.AppCommandGroup, app_commands.Group)):
+                commands.HybridGroup, commands.Group,
+                app_commands.AppCommandGroup, app_commands.Group)):
             nl.extend(explode(c.commands))
         else:
             # if isinstance(c, commands.):
