@@ -1,3 +1,4 @@
+from urllib.parse import quote_plus
 import aiohttp
 import discord
 from discord.ext import commands
@@ -5,6 +6,8 @@ from discord.ext.commands import when_mentioned_or
 
 import asyncio
 from dotenv import load_dotenv
+import pymongo
+from pymongo.server_api import ServerApi
 import logging
 import os
 
@@ -34,6 +37,7 @@ class Builder(commands.Bot):
             type=discord.ActivityType.listening, name="/help")
         help_command = None
         self.session: aiohttp.ClientSession = None
+        self.tab_balances = None
         super().__init__(
             command_prefix=command_prefix,
             case_insensitive=True,
@@ -44,11 +48,18 @@ class Builder(commands.Bot):
         )
 
     async def setup_hook(self) -> None:
-        print(
-            "Client online [User: {}, ID: {}]".format(
-                self.user,
-                self.user.id))
+        print(f"Client online [User: {self.user}, ID: {self.user.id}]")
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+
+        username = os.getenv("DB_USERNAME")
+        password = os.getenv("DB_PASSWORD")
+        databasename = "values"
+        host = f"mongodb+srv://{quote_plus(username)}:{quote_plus(password)}@cluster0.sywtj.mongodb.net/{quote_plus(databasename)}?retryWrites=true&w=majority"
+        server_api = pymongo.ServerApi('1')
+
+        self.client = pymongo.MongoClient(host=host, server_api=server_api)
+        self.database = self.client["database"]
+        self.collections = {"balances": self.database["balances"], "items": self.database["items"]}
 
 
 async def main():

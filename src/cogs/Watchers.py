@@ -12,7 +12,6 @@ from numpy import isin
 import pytz
 
 from _aux.embeds import fmte
-from _aux.sql3OOP import Table
 from simpleeval import NumberTooHigh
 
 from archived_cogs.InterHelp import InterHelp
@@ -22,73 +21,6 @@ class Watchers(commands.Cog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-
-    async def prep_channels(self):
-        channel: discord.TextChannel = ...
-        for guild in self.bot.guilds:
-            for chan in guild.channels:
-                if "log" in chan.name.lower():
-                    channel = chan
-                    break
-            else:
-                channel = await guild.create_text_channel(
-                    name="Mod-Log",
-                    reason="Automatic mod-log channel creation",
-                    category=guild.categories[0],  # Uppermost category,
-                    position=len(
-                        guild.categories[0].text_channels) - 1  # Last spot
-                )
-            embed = discord.Embed(
-                title="Mod Log Channel Made / Found",
-                description="All logging will be sent here.",
-                color=discord.Color.teal()
-            )
-            embed.timestamp = datetime.utcnow()
-            await channel.send(embed=embed)
-            tab = Table("data/guild_settings", "mod_channels",
-                        {"guildid": "int", "channelid": "int"})
-            if tab.select(values=["channelid"], conditions=[
-                          f"guildid={guild.id}"]).fetchone():
-                tab.update(values=[str(guild.id), str(channel.id)], conditions=[
-                           f"guildid={str(guild.id)}"])
-            else:
-                tab.insert([guild.id, channel.id])
-        tab.finish()
-
-    async def prep_guild_channels(self, guild: discord.Guild):
-        for chan in guild.channels:
-            if "log" in chan.name.lower():
-                channel = chan
-                break
-        else:
-            channel = await guild.create_text_channel(
-                name="Mod Log",
-                reason="Automatic mod-log channel creation",
-                category=guild.categories[0],  # Uppermost category,
-                position=len(
-                    guild.categories[0].text_channels) - 1  # Last spot
-            )
-        embed = discord.Embed(
-            title="Mod Log Channel Made / Found",
-            description="All logging will be sent here.",
-            color=discord.Color.teal()
-        )
-        embed.timestamp = datetime.utcnow()
-        await channel.send(embed=embed)
-        tab = Table("data/guild_settings", "mod_channels",
-                    {"guildid": "int", "channelid": "int"})
-        if tab.select(values=["channelid"], conditions=[
-                      f"guildid={guild.id}"]).fetchone():
-            tab.update(values=[str(guild.id), str(channel.id)],
-                       conditions=[f"guildid={str(guild.id)}"])
-        else:
-            tab.insert([guild.id, channel.id])
-        tab.finish()
-
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild: discord.Guild):
-        # await self.prep_guild_channels(guild)
-        pass
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):

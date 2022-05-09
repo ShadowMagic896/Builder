@@ -1,3 +1,4 @@
+from calendar import day_abbr
 import math
 import os
 import discord
@@ -6,20 +7,19 @@ from discord.ext import commands
 
 import random
 from typing import Any, List, Literal, Mapping, Optional
+from h11 import Data
 
-from _aux.sql3OOP import Table
+import pymongo
+from pymongo.database import Database
+from pymongo.collection import Collection
+
+# from _aux.sql3OOP import Table
 from _aux.embeds import fmte, fmte_i
 
 
 class Currency(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.tab: Table = Table(
-            "data/currency",
-            "balances",
-            values={
-                "userid": "integer",
-                "balance": "integer", })
         self.coin = os.getenv("COIN_ID")
 
     def ge(self):
@@ -272,7 +272,7 @@ class Currency(commands.Cog):
             t="Select Options",
             d="Once you are finished, press `Start`"
         )
-        view = StartQuizView(ctx, self.tab)
+        view = StartQuizView(ctx)
         await ctx.send(embed=embed, view=view)
 
     @commands.command()
@@ -572,11 +572,10 @@ class LeaderboardView(discord.ui.View):
 
 
 class StartQuizView(discord.ui.View):
-    def __init__(self, ctx: commands.Context, tab: Table):
+    def __init__(self, ctx: commands.Context):
         self.ctx = ctx
         self.dif = None
         self.cat = None
-        self.tab: Table = tab
         self.questions = None
         super().__init__()
 
@@ -660,7 +659,6 @@ class MainQuizView(discord.ui.View):
             questions: List[dict],
             cat: str,
             dif: str,
-            tab: Table,
             ctx,
             *,
             timeout: Optional[float] = 180):
@@ -669,7 +667,6 @@ class MainQuizView(discord.ui.View):
         self.questions = questions
         self.cat = cat
         self.dif = dif
-        self.tab = tab
         self.ctx = ctx
 
         # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
@@ -774,7 +771,6 @@ class QuizQuestionSubmit(discord.ui.Button):
                 t=f"Quiz Finished! You Earned `{formatted}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
                 d=f"**Results:**\n{desc}{score}"
             )
-            self.tab: Table = self._view.tab
             user = self._view.ctx.author
 
             # Basically copy/paste from funcs in Currency to manipulate db
@@ -830,6 +826,54 @@ class QuizClose(discord.ui.Button):
             await interaction.response.send_message("You are not taking this quiz!")
             return
         await interaction.message.delete()
+
+
+class BalanceDatabase:
+    def __init__(self, bot: commands.Bot):
+        self.bot: commands.Bot = bot
+        self.database: Database = self.bot.database
+        self.collections: Mapping[str, Collection] = self.bot.collections
+    
+    async def checkForExist(self, user: discord.User, default_value: int = 0) -> bool:
+        """
+        Checks for a user's existence in the database. If it is not there, it creates a new entry with the ID of the user and the value of defualt_value.
+        Returns whether a new entry was created.
+        """
+        if self.collections["balances"].find_one({"userid": user.id}) is None:
+            self.collections["balances"].insert_one({"userid": user.id, "balance": default_value})
+            return True
+        return False
+    
+    async def addToBalance(self, user: discord.User, value: int) -> int:
+        """
+        Safely updates a user's balance.
+        Returns the user's new balance
+        """
+        self.checkForExist(user, 0)
+        user_current = self.collections["balances"].find_one({"userid":user.id})
+        result = self.collections["balances"].find_one_and_update({"userid": user.id}, {"&set": {"balance": user_current + value}})
+        if result is None:
+            raise IOError(f"An error occurred when updating database: User {user.id} was just checked, but does not exist.")
+        return user_current + value
+    
+    async def setBalance(self, user: discord.User, value: int) -> None:
+        """
+        Safely sets a user's balance.
+        """
+        self.checkForExist(user, 0)
+        result = self.collections["balances"].find_one_and_update({"userid": user.id}, {"&set": {"balance": value}})
+        if result is None:
+            raise IOError(f"An error occurred when updating database: User {user.id} was just checked, but does not exist.")
+
+    async def getBalance(self, user: discord.User) -> int:
+        """
+        Safely gets a user's balance
+        """
+        self.checkForExist(user, 0)
+        entry = self.collections["balances"].find_one({"userid": user.id})
+        if entry is None:
+            raise IOError(f"An error occurred when updating database: User {user.id} was just checked, but does not exist.")
+        return entry["balance"]
 
 
 async def setup(bot):

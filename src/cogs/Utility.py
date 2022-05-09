@@ -1,3 +1,5 @@
+from datetime import datetime
+import pytz
 from _aux.embeds import fmte
 import math
 import re
@@ -330,6 +332,34 @@ class Utility(commands.Cog):
             "root": lambda n, b: n ** (1 / b),
             "round": lambda n, b: round(n, b)})
         return f
+    
+    @commands.hybrid_command()
+    @describe(
+        zone="The timezone to get the time from.",
+        ephemeral="Whether to publicly show the response to the command.",
+    )
+    async def time(self, ctx: commands.Context, zone: str = "UTC", ephemeral: bool = False):
+        """
+        Gets the current time in the desired time zone.
+        """
+        lowered = [x.lower() for x in pytz.all_timezones]
+        if not lowered.__contains__(zone.lower()):
+            raise commands.errors.BadArgument(zone)
+        else:
+            time = pytz.timezone(zone)
+            embed = fmte(
+                ctx=ctx,
+                t="Current datetime in zone {}:".format(time.zone),
+                d="```{}```".format(datetime.now(pytz.timezone(zone)))
+            )
+            await ctx.send(embed=embed, ephemeral=ephemeral)
+
+    @time.autocomplete("zone")
+    async def time_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+        return [
+            discord.app_commands.Choice(name=zone, value=zone)
+            for zone in pytz.all_timezones if current.lower() in zone.lower()
+        ][:25]
 
     def newNames(self, ctx: commands.Context, expanded: bool):
         f = simpleeval.DEFAULT_NAMES

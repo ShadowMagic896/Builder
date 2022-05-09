@@ -56,7 +56,7 @@ class MixedHelp(commands.Cog):
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
         return sorted([discord.app_commands.Choice(name=c, value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower(
         ) or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name)
-    commands.Command.ca
+
     # @help.autocomplete("command")
     async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
         return sorted(
