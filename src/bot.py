@@ -55,7 +55,7 @@ class Builder(commands.Bot):
         password = os.getenv("DB_PASSWORD")
         databasename = "values"
         host = f"mongodb+srv://{quote_plus(username)}:{quote_plus(password)}@cluster0.sywtj.mongodb.net/{quote_plus(databasename)}?retryWrites=true&w=majority"
-        server_api = pymongo.ServerApi('1')
+        server_api = ServerApi('1')
 
         self.client = pymongo.MongoClient(host=host, server_api=server_api)
         self.database = self.client["database"]

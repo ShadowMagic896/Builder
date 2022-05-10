@@ -6,7 +6,7 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 
 import random
-from typing import Any, List, Literal, Mapping, Optional
+from typing import Any, List, Literal, Mapping, Optional, Union
 from h11 import Data
 
 import pymongo
@@ -41,11 +41,16 @@ class Currency(commands.Cog):
         user = user or ctx.author
         if user.bot:
             raise TypeError("User cannot be a bot.")
-        data = self.getUserBal(user, 0)
+
+        db = BalanceDatabase(ctx)
+        balance = await db.getBalance(user)
+        
+        f_balance = self.formatBalance(balance)
 
         embed = fmte(
-            ctx, t="`%s`'s Balance: `%s`%s" %
-            (user, self.formatBalance(data), self.coin))
+            ctx, 
+            t=f"`{user}`'s Balance: `{f_balance}`{self.coin}"
+        )
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -62,15 +67,15 @@ class Currency(commands.Cog):
             raise TypeError("User cannot be a bot.")
         if amount < 1:
             raise ValueError("You can't give a negative amount, silly!")
-        if (cv := self.getUserBal(ctx.author)) < amount:
+        db = BalanceDatabase(ctx)
+        if (cv := (await db.getBalance(ctx.author))) < amount:
             raise ValueError("You don't have that much money!")
+
         embed = fmte(
             ctx,
-            t="Are You Sure You Want to Give `%s`%s to `%s`?" %
-            (amount,
-             self.coin,
-             user),
-            d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.")
+            t=f"Are You Sure You Want to Give `{self.formatBalance(amount)}`{self.coin} to `{user}`?",
+            d=f"This is `{round((amount / cv) * 100, 2)}%` of your money."
+        )
         await ctx.send(embed=embed, view=GiveView(self.bot, ctx, amount, ctx.author, user))
 
     @cur.command()
@@ -90,7 +95,9 @@ class Currency(commands.Cog):
             raise TypeError("That user cannot see this channel.")
         if amount < 1:
             raise ValueError("You can't ask for a negative amount, silly!")
-        if (cv := self.getUserBal(user)) < amount:
+
+        db = BalanceDatabase(ctx)
+        if (cv := await db.getBalance(user)) < amount:
             raise ValueError("They don't have that much money!")
         embed = fmte(
             ctx,
@@ -108,7 +115,8 @@ class Currency(commands.Cog):
         """
         Begs for money. You can win some, but you can also lose some.
         """
-        amount = random.randint(max(-500, -self.getUserBal(ctx.author)), 1000)
+        db = BalanceDatabase(ctx)
+        amount = random.randint(max(-500, -await db.getBalance(ctx.author)), 1000)
         if amount < 0:
             k = random.choice([
                 "Some villain saw you begging and mugged you. Sucks to suck.",
@@ -123,25 +131,30 @@ class Currency(commands.Cog):
             ])
         else:
             k = "You did nothing, and nothing happened."
-        self.addToBal(ctx.author, amount)
+
+        db = BalanceDatabase(ctx)
+        await db.addToBalance(ctx.author, amount)
+        
+        sign = "+" if amount >= 0 else ""
+        f_amt = self.formatBalance(amount)
         embed = fmte(
             ctx,
-            t="`{}{}`{}".format("+" if amount >= 0 else "", amount, self.coin),
+            t=f"`{sign}{f_amt}`{self.coin}",
             d=k
         )
         await ctx.send(embed=embed)
 
     @cur.command()
-    @commands.cooldown(1, 60, commands.BucketType.user)
+    # @commands.cooldown(1, 60, commands.BucketType.user)
     async def leaderboard(self, ctx: commands.Context):
         """
         See who's the wealthiest in this server
         """
-        data = self.tab.select(values=["userid", "balance"]).fetchall()
-        values: Mapping[discord.User,
-                        int] = {ctx.guild.get_member(userid): balance for userid,
-                                balance in data if userid in [member.id for member in ctx.guild.members]}
-        view = LeaderboardView(self.bot, False, values, 5)
+        db = BalanceDatabase(ctx)
+        data = await db.leaderboard(ctx.guild.members)
+        values = [{ctx.guild.get_member(entry["userid"]): entry["balance"]} for entry in data]
+        # print(f"Sending Values: {values}")
+        view = LeaderboardView(ctx, values, 5)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
         await ctx.send(embed=embed, view=view)
@@ -160,8 +173,11 @@ class Currency(commands.Cog):
             raise TypeError("Cannot steal from bots!")
         if user == ctx.author:
             raise ValueError("Cannot steal from yourself!")
-        user_bal = self.getUserBal(user, 0)
-        auth_bal = self.getUserBal(ctx.author, 0)
+
+        db = BalanceDatabase(ctx)
+        auth_bal = await db.getBalance(ctx.author)
+        user_bal = await db.getBalance(user)
+
         if amount > auth_bal:
             raise ValueError("You cannot risk more than you own!")
         if amount > user_bal:
@@ -171,53 +187,50 @@ class Currency(commands.Cog):
         chnc = 0.60
 
         success = random.random() < chnc
+        db = BalanceDatabase(ctx)
         if success:
-            na = self.addToBal(ctx.author, amount)
-            nu = self.addToBal(user, -amount)
+            na = await db.addToBalance(ctx.author, amount)
+            nu = await db.addToBalance(user, -amount)
+            
+            f_amt = self.formatBalance(amount)
+
+            fmt_ao = self.formatBalance(auth_bal)
+            fmt_uo = self.formatBalance(user_bal)
+
+            fmt_an = self.formatBalance(na)
+            fmt_un = self.formatBalance(nu)
+
+
             embed = fmte(
                 ctx,
-                t="Successful! You Stole `%s`%s." %
-                (self.formatBalance(amount),
-                 self.coin),
-                d="**You Now Have:** `{}`{} [Before: `{}`{}]\n**{} Now Has:** `{}`{} [Before: `{}`{}]".format(
-                    self.formatBalance(na),
-                    self.coin,
-                    self.formatBalance(auth_bal),
-                    self.coin,
-                    user.display_name,
-                    self.formatBalance(user_bal),
-                    self.coin,
-                    self.formatBalance(nu),
-                    self.coin),
+                t=f"Successful! You Stole `{f_amt}`{self.coin}.",
+                d=f"**You Now Have:** `{fmt_an}`{self.coin} [Before: `{fmt_ao}`{self.coin}]\n**{user.name} Now Has:** `{fmt_un}`{self.coin} [Before: `{fmt_uo}`{self.coin}]"
             )
             await ctx.send(embed=embed)
             embed = fmte(
                 ctx,
-                t="`%s`%s Were Stolen From You!" % (self.formatBalance(amount), self.coin),
-                d="**Guild:** `{}`\n**User:** `{}`".format(
-                    ctx.guild, ctx.author
-                )
+                t=f"`{f_amt}`{self.coin} Were Stolen From You!",
+                d=f"**Guild:** `{ctx.guild}`\n**User:** `{ctx.author}`"
             )
             await user.send(embed=embed)
         else:
-            na = self.addToBal(ctx.author, -amount)
-            nu = self.addToBal(user, amount)
+            na = await db.addToBalance(ctx.author, -amount)
+            nu = await db.addToBalance(user, amount)
+            
+            f_amt = self.formatBalance(amount)
+
+            fmt_ao = self.formatBalance(auth_bal)
+            fmt_uo = self.formatBalance(user_bal)
+
+            fmt_an = self.formatBalance(na)
+            fmt_un = self.formatBalance(nu)
+
+
             embed = fmte(
                 ctx,
-                t="Failure! You Gave Away `%s`%s" %
-                (self.formatBalance(amount),
-                 self.coin),
-                d="**You Now Have:** `{}`{} [Before: `{}`{}]\n**{} Now Has:** `{}`{} [Before: `{}`{}]".format(
-                    self.formatBalance(na),
-                    self.coin,
-                    self.formatBalance(auth_bal),
-                    self.coin,
-                    user.display_name,
-                    self.formatBalance(user_bal),
-                    self.coin,
-                    self.formatBalance(nu),
-                    self.coin),
-                c=discord.Color.red())
+                t=f"Failure! You Lost `{f_amt}`{self.coin}.",
+                d=f"**You Now Have:** `{fmt_an}`{self.coin} [Before: `{fmt_ao}`{self.coin}]\n**{user.name} Now Has:** `{fmt_un}`{self.coin} [Before: `{fmt_uo}`{self.coin}]"
+            )
             await ctx.send(embed=embed)
 
     @cur.command()
@@ -227,12 +240,18 @@ class Currency(commands.Cog):
         Claim your hourly Coins!
         """
         rate = int(os.getenv("HOURLY_CUR_RATE"))
+        _rate = self.formatBalance(rate)
+
+        db = BalanceDatabase(ctx)
+        balance = await db.addToBalance(ctx.author, rate)
+        
+        _balance = self.formatBalance(balance)
+
         embed = fmte(
-            ctx, t="`%s`%s Gained!" %
-            (self.formatBalance(rate), self.coin), d="You now have: `%s`%s" %
-            (self.formatBalance(
-                self.addToBal(
-                    ctx.author, rate)), self.coin))
+            ctx, 
+            t=f"`{_rate}`{self.coin} Gained!",
+            d=f"You now have: `{_balance}`{self.coin}"
+        )
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -242,12 +261,18 @@ class Currency(commands.Cog):
         Claim your daily Coins!
         """
         rate = int(os.getenv("DAILY_CUR_RATE"))
+        _rate = self.formatBalance(rate)
+
+        db = BalanceDatabase(ctx)
+        balance = await db.addToBalance(ctx.author, rate)
+        
+        _balance = self.formatBalance(balance)
+
         embed = fmte(
-            ctx, t="`%s`%s Gained!" %
-            (self.formatBalance(rate), self.coin), d="You now have: `%s`%s" %
-            (self.formatBalance(
-                self.addToBal(
-                    ctx.author, rate)), self.coin))
+            ctx, 
+            t=f"`{_rate}`{self.coin} Gained!",
+            d=f"You now have: `{_balance}`{self.coin}"
+        )
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -257,12 +282,18 @@ class Currency(commands.Cog):
         Claim your daily Coins!
         """
         rate = int(os.getenv("WEEKLY_CUR_RATE"))
+        _rate = self.formatBalance(rate)
+
+        db = BalanceDatabase(ctx)
+        balance = await db.addToBalance(ctx.author, rate)
+
+        _balance = self.formatBalance(balance)
+
         embed = fmte(
-            ctx, t="`%s`%s Gained!" %
-            (self.formatBalance(rate), self.coin), d="You now have: `%s`%s" %
-            (self.formatBalance(
-                self.addToBal(
-                    ctx.author, rate)), self.coin))
+            ctx, 
+            t=f"`{_rate}`{self.coin} Gained!",
+            d=f"You now have: `{_balance}`{self.coin}"
+        )
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -275,20 +306,23 @@ class Currency(commands.Cog):
         view = StartQuizView(ctx)
         await ctx.send(embed=embed, view=view)
 
-    @commands.command()
-    @commands.is_owner()
+    # @cur.command()
+    # @commands.is_owner()
     async def manualadd(self, ctx: commands.Context, user: Optional[discord.User], amount: Optional[int] = 1000):
-        self.addToBal(user or ctx.author, amount)
+        db = BalanceDatabase(ctx)
+        await db.addToBalance(user or ctx.author, amount)
 
-    @commands.command()
-    @commands.is_owner()
+    # @cur.command()
+    # @commands.is_owner()
     async def manualset(self, ctx: commands.Context, user: Optional[discord.User], amount: Optional[int]):
-        self.setBal(user or ctx.author, amount)
+        db = BalanceDatabase(ctx)
+        await db.setBalance(user or ctx.author, amount)
 
-    @commands.command()
-    @commands.is_owner()
+    # @cur.command()
+    # @commands.is_owner()
     async def manualdel(self, ctx: commands.Context, user: Optional[discord.User]):
-        self.tab.delete(conditions=["userid=%s" % (user or ctx.author).id])
+        db = BalanceDatabase(ctx)
+        await db.delete(user or ctx.author)
 
     def clamp(
             self,
@@ -299,60 +333,17 @@ class Currency(commands.Cog):
         upper_bound = upper_bound or value
         return max([min([value, upper_bound]), lower_bound])
 
-    async def cine(self, user: discord.User, newbal: int = 0):
-        if not self.tab.select(conditions="userid=%s" % user.id):
-            self.tab.insert(values=[self.user.id, newbal])
-            self.tab.commit()
-
     def formatBalance(self, bal: int):
         return "".join(["%s," % char if c % 3 == 0 else char for c,
                        char in enumerate(str(bal)[::-1])][::-1]).strip(",")
-
-    def getUserBal(self, user: discord.User, default: int = 0) -> int:
-        d = self.tab.select(
-            values=["balance"],
-            conditions=[f"userid == %{user.id}"]
-        ).fetchone()
-
-        if d is not None:
-            return d[0]
-        else:
-            self.tab.insert(values=[user.id, default])
-            self.tab.commit()
-            return self.getUserBal(user)
-
-    def setBal(self, user: discord.User, amount: int):
-        """
-        Sets the user's current balance
-        """
-        self.cine(user)
-        self.tab.update(
-            values=[f"balance={amount}"],
-            conditions=[f"userid={user.id}"]
-        )
-        self.tab.commit()
-
-    def addToBal(self, user: discord.User, amount: int) -> int:
-        """
-        Adds an amount of currency to a user's balance
-        ## Returns
-        The user's new balance
-        """
-        v = self.getUserBal(user)
-        self.tab.update(
-            values=[f"balance={v + amount}"],
-            conditions=[f"userid={user.id}"]
-        )
-        self.tab.commit()
-        return v + amount
 
 
 class GiveView(discord.ui.View):
     def __init__(self, bot, ctx, amount, auth, user):
         self.bot: commands.AutoShardedBot = bot
-        self.ctx: commands.Context = ctx
         self.amount: int = amount
         self.auth: discord.User = auth
+        self.ctx: commands.Context = ctx
         self.user: discord.User = user
         super().__init__()
 
@@ -362,13 +353,17 @@ class GiveView(discord.ui.View):
         if inter.user != self.auth:
             await inter.response.send_message("This is not your interaction.")
             return
-        inst = Currency(self.bot)
-        authnew = inst.addToBal(self.auth, -self.amount)
-        usernew = inst.addToBal(self.user, self.amount)
+
+        db = BalanceDatabase(self.ctx)
+        authnew = await db.addToBalance(self.auth, -self.amount)
+        usernew = await db.addToBalance(self.user, self.amount)
+        coin = os.getenv("COIN_ID")
+        f = Currency(self.ctx).formatBalance
+
         embed = fmte(
             self.ctx,
-            t=f"Transaction Completed\nTransferred `{self.amount}`{inst.coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
-            d=f"**`{self.auth}` balance:** `{authnew}`{inst.coin}\n**`{self.user}` balance:** `{usernew}`{inst.coin}")
+            t=f"Transaction Completed\nTransferred `{f(self.amount)}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
+            d=f"**`{self.auth}` balance:** `{f(authnew)}`{coin}\n**`{self.user}` balance:** `{f(usernew)}`{coin}")
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
     @discord.ui.button(label="Decline", emoji="❌",
@@ -406,13 +401,16 @@ class RequestView(discord.ui.View):
         if inter.user != self.user:
             await inter.response.send_message("This is not your interaction.")
             return
-        inst = Currency(self.bot)
-        authnew = inst.addToBal(self.auth, self.amount)
-        usernew = inst.addToBal(self.user, -self.amount)
+        
+        db = BalanceDatabase(self.ctx)
+        authnew = await db.addToBalance(self.auth, self.amount)
+        usernew = await db.addToBalance(self.user, -self.amount)
+        coin = os.getenv("COIN_ID")
+        f = Currency(self.ctx).formatBalance
         embed = fmte(
             self.ctx,
-            t=f"Transaction Completed\nTransferred `{self.amount}`{inst.coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
-            d=f"**`{self.auth}` balance:** `{authnew}`{inst.coin}\n**`{self.user}` balance:** `{usernew}`{inst.coin}")
+            t=f"Transaction Completed\nTransferred `{f(self.amount)}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
+            d=f"**`{self.auth}` balance:** `{f(authnew)}`{coin}\n**`{self.user}` balance:** `{f(usernew)}`{coin}")
         await inter.response.edit_message(embed=embed, view=None)
 
     @discord.ui.button(label="Decline", emoji="❌",
@@ -436,25 +434,16 @@ class RequestView(discord.ui.View):
 
 
 class LeaderboardView(discord.ui.View):
-    def __init__(self,
-                 bot: commands.Bot,
-                 ctx: commands.Context,
-                 ephemeral: bool,
-                 values: Mapping[discord.User, int],
-                 pagesize: int,
-                 *,
-                 timeout: Optional[float] = 180,
-                 ):
-        self.bot = bot
-        self.ephemeral = ephemeral
-        self.vals = [v for v in sorted(
-            list(
-                values.items()),
-            key=lambda v: v[1],
-            reverse=True) if v[1] != 0]
-        self.pos = 1
-        self.maxpos = math.ceil((len(self.vals) / pagesize))
+    def __init__(self, ctx: commands.Context, values: Mapping[discord.User, int], pagesize: int, *,
+                 timeout: Optional[float] = 180):
+        self.ctx = ctx
         self.pagesize = pagesize
+
+        self.pos = 1
+
+        self.vals = values
+        
+        self.maxpos = math.ceil((len(self.vals) / pagesize))
 
         super().__init__(timeout=timeout)
 
@@ -516,12 +505,13 @@ class LeaderboardView(discord.ui.View):
         )
 
     def add_fields(self, embed: discord.Embed):
-        for c, t in enumerate(
-                self.vals[self.pagesize * (self.pos - 1):self.pagesize * (self.pos)]):
-            user, bal = t[0], t[1]
+        _slice = self.vals[self.pagesize * (self.pos - 1):self.pagesize * (self.pos)]
+        for place, entry in enumerate(_slice):
+            user, bal = list(entry.keys())[0], list(entry.values())[0]
+            f_bal = Currency(self.ctx.bot).formatBalance(bal)
             embed.add_field(
-                name="{}: {}".format((c + 1) + (self.pos - 1) * self.pagesize, user),
-                value="`%s`" % Currency(self.bot).formatBalance(bal),
+                name=f"{place + 1 + (self.pos - 1) * self.pagesize}: {user}",
+                value=f"`{f_bal}`",
                 inline=False
             )
         return embed
@@ -720,7 +710,7 @@ class QuizAnsSelect(discord.ui.Select):
 class QuizQuestionSubmit(discord.ui.Button):
     def __init__(self, view: discord.ui.View, select: discord.ui.Select):
         self._view = view
-        self.ctx = self._view.ctx
+        self.ctx: commands.Context = self._view.ctx
         self.select = select
         super().__init__(style=discord.ButtonStyle.green, emoji="▶️", label="Submit")
 
@@ -765,37 +755,17 @@ class QuizQuestionSubmit(discord.ui.Button):
                 else char 
                 for c, char in enumerate(str(perc)[::-1])
             ][::-1])
+
             coin = os.getenv("COIN_ID")
             embed = fmte_i(
                 interaction,
                 t=f"Quiz Finished! You Earned `{formatted}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
                 d=f"**Results:**\n{desc}{score}"
             )
-            user = self._view.ctx.author
 
-            # Basically copy/paste from funcs in Currency to manipulate db
-            # without recreating connection, because the connection was sent
-            # through inits
-            d = self.tab.select(
-                values=["balance"], 
-                conditions=[f"userid == {user.id}"]
-            ).fetchone()
+            db = BalanceDatabase(self.ctx)
+            await db.addToBalance(self.ctx.author, perc)
 
-            if d is not None:
-                v = d[0]
-            else:
-                self.tab.insert(values=[user.id, 0])
-                v = self.tab.select(
-                    values=["balance"], 
-                    conditions=[f"userid == {user.id}"]
-                ).fetchone()
-
-            self.tab.update(
-                values=[f"balance={v + perc}"],
-                conditions=[f"userid={user.id}"]
-            )
-
-            self.tab.commit()
             await interaction.response.edit_message(embed=embed, view=None)
         else:
             # print(self._view.pos, self.select.values)
@@ -809,10 +779,12 @@ class QuizQuestionSubmit(discord.ui.Button):
                 self._view.ctx)
             view.pos = self._view.pos
             view.selected = self._view.selected
+
             s = QuizAnsSelect(question, self._view.ctx)
             view.add_item(s)
             view.add_item(QuizQuestionSubmit(view, s))
             view.add_item(QuizClose(self._view.ctx))
+
             await interaction.response.edit_message(embed=embed, view=view)
 
 
@@ -829,8 +801,8 @@ class QuizClose(discord.ui.Button):
 
 
 class BalanceDatabase:
-    def __init__(self, bot: commands.Bot):
-        self.bot: commands.Bot = bot
+    def __init__(self, ctx: commands.Context):
+        self.bot: commands.Bot = ctx.bot
         self.database: Database = self.bot.database
         self.collections: Mapping[str, Collection] = self.bot.collections
     
@@ -846,35 +818,50 @@ class BalanceDatabase:
     
     async def addToBalance(self, user: discord.User, value: int) -> int:
         """
-        Safely updates a user's balance.
-        Returns the user's new balance
+        Updates a user's balance.
+        Returns the user's new balance.
         """
-        self.checkForExist(user, 0)
-        user_current = self.collections["balances"].find_one({"userid":user.id})
-        result = self.collections["balances"].find_one_and_update({"userid": user.id}, {"&set": {"balance": user_current + value}})
-        if result is None:
-            raise IOError(f"An error occurred when updating database: User {user.id} was just checked, but does not exist.")
-        return user_current + value
+        result = self.collections["balances"].find_one_and_update({"userid": user.id}, {"$inc": {"balance": value}}, upsert=True, return_document=True)
+        return result["balance"]
     
     async def setBalance(self, user: discord.User, value: int) -> None:
         """
-        Safely sets a user's balance.
+        Sets a user's balance.
         """
-        self.checkForExist(user, 0)
-        result = self.collections["balances"].find_one_and_update({"userid": user.id}, {"&set": {"balance": value}})
-        if result is None:
-            raise IOError(f"An error occurred when updating database: User {user.id} was just checked, but does not exist.")
+        self.collections["balances"].replace_one(
+            filter={"userid": user.id}, 
+            replacement={"$set": {"balance": value}}, 
+            upsert=True
+        )
 
     async def getBalance(self, user: discord.User) -> int:
         """
-        Safely gets a user's balance
+        Gets a user's balance.
         """
-        self.checkForExist(user, 0)
-        entry = self.collections["balances"].find_one({"userid": user.id})
-        if entry is None:
-            raise IOError(f"An error occurred when updating database: User {user.id} was just checked, but does not exist.")
-        return entry["balance"]
-
+        result = self.collections["balances"].find_one({"userid": user.id})
+        if result is None:
+            result = self.collections["balances"].insert_one({"userid": user.id, "balance": 0})
+            value = 0
+        else:
+            value = result["balance"]
+        return value
+    
+    async def delete(self, user: discord.User) -> None:
+        """
+        Deletes a user's entry
+        """
+        self.collections["balances"].delete_one({"userid": user.id})
+    
+    async def leaderboard(self, members: List[Union[discord.Member, discord.User]]) -> Mapping[int, int]:
+        """
+        Returns a sorted list of {UserID: Balance}
+        """
+        ids = [member.id for member in members]
+        _values = self.collections["balances"].find({"userid": {"$in": ids}})
+        # print([x for x in _values.clone()])
+        values = _values.sort("balance", pymongo.DESCENDING)
+        # print([x for x in values.clone()])
+        return values.clone()
 
 async def setup(bot):
     await bot.add_cog(Currency(bot))

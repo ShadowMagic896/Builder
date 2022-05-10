@@ -11,7 +11,7 @@ class Items(commands.Cog):
     @commands.hybrid_group()
     async def item(self, ctx: commands.Context):
         pass
-
+    
 async def setup(bot):
     await bot.add_cog(Items(bot))
     

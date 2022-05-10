@@ -135,7 +135,7 @@ class NSFW(commands.Cog):
             await asyncio.sleep(1)
 
     @commands.hybrid_command()
-    @commands.cooldown(1, 60 * 60 * 24, commands.BucketType.user)
+    # @commands.cooldown(1, 60 * 60 * 24, commands.BucketType.user)
     @commands.is_nsfw()
     @describe(code="The code to search for.",
               ephemeral="Whether to public send the response or not. All images are sent in DMs.")
