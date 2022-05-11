@@ -1,3 +1,4 @@
+from socket import gaierror, socket
 from urllib.parse import quote_plus
 import aiohttp
 import discord
@@ -11,7 +12,7 @@ from pymongo.server_api import ServerApi
 import logging
 import os
 
-from _aux.extensions import load_extensions
+from src._aux.extensions import load_extensions
 
 load_dotenv()
 
@@ -67,5 +68,4 @@ async def main():
     await bot.load_extension("jishaku")
     await load_extensions(bot, False, True)
     await bot.start(os.getenv("BOT_KEY"))
-
 asyncio.run(main())

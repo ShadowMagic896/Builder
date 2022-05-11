@@ -8,13 +8,12 @@ import asyncio
 import time
 from datetime import datetime
 from langcodes import LanguageTagError
-from numpy import isin
 import pytz
 
-from _aux.embeds import fmte
+from src._aux.embeds import fmte
 from simpleeval import NumberTooHigh
 
-from archived_cogs.InterHelp import InterHelp
+from src.archived_cogs.InterHelp import InterHelp
 
 
 class Watchers(commands.Cog):
@@ -40,7 +39,7 @@ class Watchers(commands.Cog):
         with open("data/logs/_commandlog.txt", "ab") as f:
             f.write(mes.encode("UTF-8"))
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         print(error)
         hint = None

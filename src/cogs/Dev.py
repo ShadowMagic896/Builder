@@ -7,10 +7,9 @@ from discord.ext import commands
 from typing import Any, List, Literal, Mapping
 from math import ceil
 
-from _aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
-from _aux.userio import explode
-from _aux.Converters import TimeConvert
-from cogs.MixedHelp import MixedHelp
+from src._aux.embeds import fmte, fmte_i, EmbedPaginator, DMEmbedPaginator
+from src._aux.userio import explode
+from src._aux.Converters import TimeConvert
 
 
 class Dev(commands.Cog):

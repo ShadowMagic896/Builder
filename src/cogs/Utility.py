@@ -1,6 +1,6 @@
 from datetime import datetime
 import pytz
-from _aux.embeds import fmte
+from src._aux.embeds import fmte
 import math
 import re
 import time

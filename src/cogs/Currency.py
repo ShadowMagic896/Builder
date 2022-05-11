@@ -1,4 +1,3 @@
-from calendar import day_abbr
 import math
 import os
 import discord
@@ -6,21 +5,21 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 
 import random
-from typing import Any, List, Literal, Mapping, Optional, Union
-from h11 import Data
+from typing import Any, List, Mapping, Optional, Union
 
 import pymongo
 from pymongo.database import Database
 from pymongo.collection import Collection
 
 # from _aux.sql3OOP import Table
-from _aux.embeds import fmte, fmte_i
+from src._aux.embeds import fmte, fmte_i
+from data.CONSTANTS import CONSTANTS
 
 
 class Currency(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.coin = os.getenv("COIN_ID")
+        self.coin = CONSTANTS.Emojis().COIN_ID
 
     def ge(self):
         return "💰"
@@ -239,7 +238,7 @@ class Currency(commands.Cog):
         """
         Claim your hourly Coins!
         """
-        rate = int(os.getenv("HOURLY_CUR_RATE"))
+        rate = CONSTANTS.Rates().HOURLY
         _rate = self.formatBalance(rate)
 
         db = BalanceDatabase(ctx)
@@ -260,7 +259,7 @@ class Currency(commands.Cog):
         """
         Claim your daily Coins!
         """
-        rate = int(os.getenv("DAILY_CUR_RATE"))
+        rate = CONSTANTS.Rates().DAILY
         _rate = self.formatBalance(rate)
 
         db = BalanceDatabase(ctx)
@@ -281,7 +280,7 @@ class Currency(commands.Cog):
         """
         Claim your daily Coins!
         """
-        rate = int(os.getenv("WEEKLY_CUR_RATE"))
+        rate = CONSTANTS.Rates().WEEKLY
         _rate = self.formatBalance(rate)
 
         db = BalanceDatabase(ctx)
@@ -357,7 +356,7 @@ class GiveView(discord.ui.View):
         db = BalanceDatabase(self.ctx)
         authnew = await db.addToBalance(self.auth, -self.amount)
         usernew = await db.addToBalance(self.user, self.amount)
-        coin = os.getenv("COIN_ID")
+        coin = CONSTANTS.Emojis().COIN_ID
         f = Currency(self.ctx).formatBalance
 
         embed = fmte(
@@ -405,7 +404,7 @@ class RequestView(discord.ui.View):
         db = BalanceDatabase(self.ctx)
         authnew = await db.addToBalance(self.auth, self.amount)
         usernew = await db.addToBalance(self.user, -self.amount)
-        coin = os.getenv("COIN_ID")
+        coin = CONSTANTS.Emojis().COIN_ID
         f = Currency(self.ctx).formatBalance
         embed = fmte(
             self.ctx,
@@ -447,7 +446,7 @@ class LeaderboardView(discord.ui.View):
 
         super().__init__(timeout=timeout)
 
-    @discord.ui.button(emoji=os.getenv("BBARROW_ID"), custom_id="bb")
+    @discord.ui.button(emoji=CONSTANTS.Emojis().BBARROW_ID, custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = 1
         if inter.user != self.ctx.author:
@@ -458,7 +457,7 @@ class LeaderboardView(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=os.getenv("BARROW_ID"), custom_id="b")
+    @discord.ui.button(emoji=CONSTANTS.Emojis().BARROW_ID, custom_id="b")
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos -= 1
         if inter.user != self.ctx.author:
@@ -476,7 +475,7 @@ class LeaderboardView(discord.ui.View):
             return
         await inter.message.delete()
 
-    @discord.ui.button(emoji=os.getenv("FARROW_ID"), custom_id="f")
+    @discord.ui.button(emoji=CONSTANTS.Emojis().FARROW_ID, custom_id="f")
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos += 1
         if inter.user != self.ctx.author:
@@ -487,7 +486,7 @@ class LeaderboardView(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=os.getenv("FFARROW_ID"), custom_id="ff")
+    @discord.ui.button(emoji=CONSTANTS.Emojis().FFARROW_ID, custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.pos = self.maxpos
         if inter.user != self.ctx.author:
@@ -521,7 +520,7 @@ class LeaderboardView(discord.ui.View):
         return self.add_fields(self.embed(interaction))
 
     def checkButtons(self, button: discord.Button = None):
-        if self.maxpos == 1:
+        if self.maxpos <= 1:
             for b in self.children:
                 if isinstance(b, discord.ui.Button) and b.custom_id != "x":
                     b.disabled = True
@@ -619,7 +618,6 @@ class StartQuizView(discord.ui.View):
                 self.questions,
                 self.cat,
                 self.dif,
-                self.tab,
                 self.ctx)
             s = QuizAnsSelect(self.questions[0], self.ctx)
             view.add_item(s)
@@ -630,7 +628,7 @@ class StartQuizView(discord.ui.View):
 
     @discord.ui.button(style=discord.ButtonStyle.danger,
                        label="Close", emoji="❌")
-    async def close(self, inter: discord.Interaction) -> Any:
+    async def close(self, inter: discord.Interaction, _: Any) -> Any:
         if inter.user != self.ctx.author:
             await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
             return
@@ -749,14 +747,9 @@ class QuizQuestionSubmit(discord.ui.Button):
             }
             perc = round(base_winnings * mults[self._view.dif] * ([x[3]
                          for x in cc].count(True) / self._view.maxpos))
-            formatted = "".join([
-                f"{char},"
-                if c % 3 == 0 
-                else char 
-                for c, char in enumerate(str(perc)[::-1])
-            ][::-1])
+            formatted = Currency(self.ctx.bot).formatBalance(perc)
 
-            coin = os.getenv("COIN_ID")
+            coin = CONSTANTS.Emojis().COIN_ID
             embed = fmte_i(
                 interaction,
                 t=f"Quiz Finished! You Earned `{formatted}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
@@ -775,7 +768,6 @@ class QuizQuestionSubmit(discord.ui.Button):
                 self._view.questions,
                 self._view.cat,
                 self._view.dif,
-                self._view.tab,
                 self._view.ctx)
             view.pos = self._view.pos
             view.selected = self._view.selected

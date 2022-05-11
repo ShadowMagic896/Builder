@@ -6,9 +6,10 @@ from discord.ext import commands
 import os
 
 from typing import Any, List, Optional
+from data.CONSTANTS import CONSTANTS
 
 
-from _aux.embeds import fmte, fmte_i, Desc
+from src._aux.embeds import fmte, fmte_i, Desc
 
 
 class InterHelp(commands.Cog):
@@ -106,7 +107,7 @@ class InterHelp(commands.Cog):
     @help.autocomplete("cog")
     async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
         return sorted([discord.app_commands.Choice(name=c, value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower(
-        ) or (c.lower()) in current.lower())) and c not in os.getenv("FORBIDDEN_COGS").split(";")][:25], key=lambda c: c.name)
+        ) or (c.lower()) in current.lower())) and c not in CONSTANTS.Cogs().FORBIDDEN_COGS][:25], key=lambda c: c.name)
 
     @help.autocomplete("command")
     async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
@@ -120,7 +121,7 @@ class InterHelp(commands.Cog):
                             inter.namespace.cog).get_commands()) if inter.namespace.cog in [
                                 c for c, v in self.bot.cogs.items()] else []) if (
                                     (current.lower() in c.qualified_name.lower()) or (
-                                        c.qualified_name.lower() in current.lower())) and c.cog_name not in os.getenv("FORBIDDEN_COGS").split(";")][
+                                        c.qualified_name.lower() in current.lower())) and c.cog_name not in CONSTANTS.Cogs().FORBIDDEN_COGS][
                                             :25], key=lambda c: c.name[
                                                 c.name.index("]") + 1:])
 
@@ -280,7 +281,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         self.ephemeral = ephemeral
 
         for name, cog in bot.cogs.items():
-            if name in os.getenv("FORBIDDEN_COGS").split(";"):
+            if name in CONSTANTS.Cogs().FORBIDDEN_COGS:
                 continue
             options.append(
                 discord.SelectOption(

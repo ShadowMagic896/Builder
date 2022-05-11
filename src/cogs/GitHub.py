@@ -2,9 +2,8 @@ import discord
 from discord.ext import commands
 
 import os
-import subprocess
 
-from _aux.embeds import fmte
+from src._aux.embeds import fmte
 
 
 class GitHub(commands.Cog):

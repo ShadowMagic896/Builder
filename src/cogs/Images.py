@@ -13,7 +13,8 @@ from typing import Literal, Optional
 from numpy import average
 
 
-from _aux.embeds import fmte, Desc
+from src._aux.embeds import fmte, Desc
+from data.CONSTANTS import CONSTANTS
 
 
 class Images(commands.Cog):
@@ -523,7 +524,7 @@ class Images(commands.Cog):
         dimensions = (pix, 0, image.width + pix, image.height + pix)
         img = img.crop(dimensions)
 
-        font = os.getenv("FONT_PATH") + "courbd.ttf"
+        font = CONSTANTS.Paths().FONT + "courbd.ttf"
         font = ImageFont.FreeTypeFont(font=font, size=pix)
 
         drawer = ImageDraw.Draw(img)

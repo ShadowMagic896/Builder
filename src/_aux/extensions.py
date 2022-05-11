@@ -1,8 +1,10 @@
 import os
 import discord
 
+from discord.ext import commands
 
-async def load_extensions(bot, ignore_errors=False, logging=True):
+
+async def load_extensions(bot: commands.Bot, ignore_errors=False, logging=True):
     """
     bot: Yout bot. Send when calling this command in your main
     ignore_errors: Whether to simply say that a cog has had an error and continue, or to stop all cog loading and give full traceback. Useful when degbugging
@@ -29,7 +31,7 @@ async def load_extensions(bot, ignore_errors=False, logging=True):
         for cog in os.listdir("./src/cogs"):
             try:
                 if cog.endswith(".py") and not cog.startswith("_"):
-                    await bot.load_extension(f"cogs.{cog[:-3]}")
+                    await bot.load_extension(f"src.cogs.{cog[:-3]}")
                     log += f"✅ {cog}\n" if logging else ""
 
             except discord.ext.commands.errors.ExtensionAlreadyLoaded:

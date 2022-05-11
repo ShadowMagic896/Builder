@@ -9,7 +9,7 @@ import pyfiglet
 from pyfiglet import Figlet
 from typing import List
 
-from _aux.embeds import fmte, Desc
+from src._aux.embeds import fmte, Desc
 
 
 class Fun(commands.Cog):

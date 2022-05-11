@@ -6,8 +6,6 @@ from discord.ext import commands
 from typing import Literal
 
 from _aux.embeds import fmte_i, fmte, Desc
-from _aux.sql3OOP import Table
-from _aux.userio import clean
 
 
 class Guild(commands.Cog):
