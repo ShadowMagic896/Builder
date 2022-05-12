@@ -21,6 +21,15 @@ class Language(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self._translateMenu: app_commands.ContextMenu = app_commands.ContextMenu(
+            name = "Translate Message",
+            callback = self.translateMenu,
+        )
+        self.bot.tree.add_command(self._translateMenu)
+    
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.ctx_menu.name, type=self._translateMenu.type)
+        return await super().cog_unload()
 
     def ge(self):
         return "🌎"
@@ -43,8 +52,8 @@ class Language(commands.Cog):
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
-    @app_commands.context_menu(name="Translate Message")
-    async def translateMenu(inter: Interaction, message: discord.Message):
+    # @app_commands.context_menu(name="Translate Message")
+    async def translateMenu(self, inter: Interaction, message: discord.Message) -> None:
         trans = googletrans.Translator().translate(
             text=message.content, dest="en", src="auto")
         embed = fmte_i(

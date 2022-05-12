@@ -30,7 +30,8 @@ class Items(commands.Cog):
         view = InventoryView(ctx, values, "name")
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
-        await ctx.send(embed=embed, view=view)
+        message = await ctx.send(embed=embed, view=view)
+        view.message = message
         
     @inv.command()
     async def add(self, ctx: commands.Context, item: str, amount: int, user: Optional[discord.User]):
@@ -101,8 +102,7 @@ class ItemDatabase:
         """
         Deletes a user's entry
         """
-        self.collections["balances"].delete_one({"userid": user.id})
-    
+        self.collections["balances"].delete_one({"userid": user.id})    
     #TODO: Add values for each item
     #TODO: Create net command, getting the sum of all item values in their inventory
 

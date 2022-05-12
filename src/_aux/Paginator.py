@@ -10,13 +10,14 @@ from data.CONSTANTS import CONSTANTS
 
 class Paginator(discord.ui.View):
     def __init__(self, ctx: commands.Context, values: Iterable, pagesize: int, *,
-                 timeout: Optional[float] = 180):
+                 timeout: Optional[float] = 45):
         self.ctx = ctx
         self.pagesize = pagesize
 
         self.position = 1
 
         self.vals = values
+        self.message: Optional[discord.Message] = None
         
         self.maxpos = math.ceil((len(self.vals) / pagesize))
 
@@ -160,3 +161,6 @@ class Paginator(discord.ui.View):
     async def on_timeout(self) -> None:
         for c in self.children:
             c.disabled = True
+        if self.message is None:
+            raise commands.errors.MissingRequiredArgument("bozo you forgor to add the message to the view, imagine")
+        await self.message.edit(view=self)
