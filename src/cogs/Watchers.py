@@ -10,7 +10,7 @@ from datetime import datetime
 from langcodes import LanguageTagError
 import pytz
 
-from src._aux.embeds import fmte
+from auxiliary.Embeds import fmte
 from simpleeval import NumberTooHigh
 
 from src.archived_cogs.InterHelp import InterHelp
@@ -22,24 +22,6 @@ class Watchers(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_interaction(self, interaction: discord.Interaction):
-        if not interaction.command:
-            return
-        mes = "[INTERACTION] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
-            interaction.user, interaction.command.name, datetime.now(
-                tz=pytz.timezone("UTC")), interaction.command.parent,)
-        with open("data/logs/_commandlog.txt", "ab") as f:
-            f.write(mes.encode("UTF-8"))
-
-    @commands.Cog.listener()
-    async def on_command(self, ctx: commands.Context):
-        mes = "[COMMAND] Auth: {}; Com: {}; T: {}; Parents: {};\n".format(
-            ctx.author, ctx.command.qualified_name, datetime.now(
-                tz=pytz.timezone("UTC")), ctx.invoked_parents,)
-        with open("data/logs/_commandlog.txt", "ab") as f:
-            f.write(mes.encode("UTF-8"))
-
-    # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         print(error)
         hint = None

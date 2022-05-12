@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from typing import Literal
 
-from _aux.embeds import fmte_i, fmte, Desc
+from auxiliary.Embeds import fmte_i, fmte, Desc
 
 
 class Guild(commands.Cog):

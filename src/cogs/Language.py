@@ -11,7 +11,7 @@ import pycountry
 
 from typing import Optional
 
-from src._aux.embeds import Desc, fmte, fmte_i
+from auxiliary.Embeds import Desc, fmte, fmte_i
 
 
 class Language(commands.Cog):
@@ -22,7 +22,7 @@ class Language(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._translateMenu: app_commands.ContextMenu = app_commands.ContextMenu(
-            name = "Translate Message",
+            name = "Translate",
             callback = self.translateMenu,
         )
         self.bot.tree.add_command(self._translateMenu)

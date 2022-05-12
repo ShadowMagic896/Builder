@@ -12,7 +12,7 @@ from pymongo.server_api import ServerApi
 import logging
 import os
 
-from src._aux.extensions import load_extensions
+from botAuxiliary.Extensions import load_extensions
 
 load_dotenv()
 
@@ -66,6 +66,7 @@ class Builder(commands.Bot):
 async def main():
     bot = Builder()
     await bot.load_extension("jishaku")
-    await load_extensions(bot, False, True)
+    log = await load_extensions(bot, ["./src/cogs", "./src/economy",], spaces = 20)
+    print(log)
     await bot.start(os.getenv("BOT_KEY"))
 asyncio.run(main())
