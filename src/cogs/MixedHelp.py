@@ -11,9 +11,9 @@ from typing import Any, List, Optional
 
 from auxiliary.Embeds import Desc, fmte, fmte_i
 from auxiliary.UserIO import explode
-from src.archived_cogs.InterHelp import InterHelp
+from src._archived_cogs.InterHelp import InterHelp
 
-from botAuxiliary.CONSTANTS import CONSTANTS
+from botAuxiliary.Constants import CONSTANTS
 
 
 class MixedHelp(commands.Cog):
@@ -124,7 +124,7 @@ class CommandView(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji="❌", style=discord.ButtonStyle.red, custom_id="x")
+    @discord.ui.button(emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x")
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.message.delete()
 
@@ -212,7 +212,7 @@ class CommandView(discord.ui.View):
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
     def __init__(self, bot: commands.Bot,
                  context: commands.Context, ephemeral: bool):
-        placeholder = "⚪ Cog Selection..."
+        placeholder = "\N{MEDIUM WHITE CIRCLE} Cog Selection..."
         options = []
 
         self.bot = bot

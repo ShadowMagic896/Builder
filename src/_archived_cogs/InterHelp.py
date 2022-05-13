@@ -6,7 +6,7 @@ from discord.ext import commands
 import os
 
 from typing import Any, List, Optional
-from botAuxiliary.CONSTANTS import CONSTANTS
+from botAuxiliary.Constants import CONSTANTS
 
 
 from auxiliary.Embeds import fmte, fmte_i, Desc

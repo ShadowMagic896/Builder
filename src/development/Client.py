@@ -24,7 +24,7 @@ class Client(commands.Cog):
         self.bot = bot
 
     def ge(self):
-        return "🤖"
+        return "\N{ROBOT FACE}"
 
     @commands.hybrid_command()
     @commands.cooldown(2, 3600, commands.BucketType.user)

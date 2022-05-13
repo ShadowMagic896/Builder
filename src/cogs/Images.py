@@ -14,19 +14,19 @@ from numpy import average
 
 
 from auxiliary.Embeds import fmte, Desc
-from botAuxiliary.CONSTANTS import CONSTANTS
+from botAuxiliary.Constants import CONSTANTS
 
 
 class Images(commands.Cog):
     """
-    Commands to manipulate and change images!
+    Commands to manipulate and format images
     """
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     def ge(self):
-        return "🖼️"
+        return "\N{FRAME WITH PICTURE}\N{VARIATION SELECTOR-16}"
 
     def getExtension(self, image: discord.Attachment):
         fn = image.filename

@@ -5,7 +5,6 @@ import os
 
 from auxiliary.Embeds import fmte
 
-
 class GitHub(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -25,7 +24,6 @@ class GitHub(commands.Cog):
             d="```\n%s\n```" % command
         )
         await ctx.send(embed=embed)
-
 
 async def setup(bot):
     await bot.add_cog(GitHub(bot))

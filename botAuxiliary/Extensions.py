@@ -10,23 +10,13 @@ def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):
     return d[k] if k in d else default
 
 async def load_extensions(bot: commands.Bot, extension_paths: Iterable[str], **opts) -> str:
-    """
-    bot: Yout bot. Send when calling this command in your main
-    logging: Whether to return the log of successes / failues after loading cogs. Will not print if ignore_errors is False and an error is encountered.
-    """
     log: str = ""
 
-    # Is this just getattr? idk
-    GIE: Callable[[dict, Literal, type, Any]] = lambda mapping, key, expected_type, default: mapping[key] if key in mapping and type(mapping[key]) == expected_type else default
-    spaces: int = GIE(opts, "spaces", int,  15)
-    ignore: bool = GIE(opts, "ignore_errors", bool, True)
+    spaces: int = opts.get("spaces", 15)
+    ignore: bool = opts.get("ignore_errors", True)
 
-    files: List[Tuple[str, List[str]]] = []
-    [
-        files.extend([(
-            path.replace("/", ".").strip("./_"), 
-            os.listdir(path)
-        )]) 
+    files: List[Tuple[str, List[str]]] = [
+        (path.replace("/", ".").strip("./_"), os.listdir(path))
         for path in extension_paths
     ]
 
@@ -43,9 +33,9 @@ async def load_extensions(bot: commands.Bot, extension_paths: Iterable[str], **o
             except BaseException as e:
                 if ignore:
                     raise e
-                log += f"❌ {cog} {exp} [{source}.{cog[:-3]}] [{str(e)[str(e).index(':')+2:]}]\n"
+                log += f"\N{CROSS MARK} {cog} {exp} [{source}.{cog[:-3]}] [{str(e)[str(e).index(':')+2:]}]\n"
                 continue
 
-            log += f"✅ {cog} {exp} [{source}.{cog[:-3]}]\n"
+            log += f"\N{WHITE HEAVY CHECK MARK} {cog} {exp} [{source}.{cog[:-3]}]\n"
 
     return log

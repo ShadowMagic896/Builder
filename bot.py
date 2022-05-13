@@ -1,4 +1,7 @@
+from email.mime import application
 from socket import gaierror, socket
+import time
+from typing import List, Type, Union
 from urllib.parse import quote_plus
 import aiohttp
 import discord
@@ -13,6 +16,7 @@ import logging
 import os
 
 from botAuxiliary.Extensions import load_extensions
+from botAuxiliary.Stats import Stats
 
 load_dotenv()
 
@@ -31,42 +35,51 @@ logger.addHandler(handler)
 
 class Builder(commands.Bot):
     def __init__(self):
-        command_prefix = when_mentioned_or("dev>>")
-        intents = discord.Intents.default()
-        intents.members = True
-        activity = discord.Activity(
-            type=discord.ActivityType.listening, name="/help")
-        help_command = None
-        self.session: aiohttp.ClientSession = None
-        self.tab_balances = None
+        command_prefix: List[str] = when_mentioned_or("dev>>")
+        help_command: Union[commands.HelpCommand, None] = None
+        tree_cls: type = discord.app_commands.CommandTree
+        status: str = f"Online Since: <t:{round(time.time())}:R>"
+        intents: discord.Intents = discord.Intents.default(); intents.members = True
+        
+        activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name=f"{Stats.lineCount(['.'])} LINES")
+        application_id: str = "963411905018466314"
+        case_insensitive: bool = True
+        
         super().__init__(
             command_prefix=command_prefix,
-            case_insensitive=True,
+            help_command=help_command,
+            tree_cls=tree_cls,
             intents=intents,
-            activity=activity,
-            application_id="963411905018466314",
-            help_command=help_command
-        )
 
-    async def setup_hook(self) -> None:
-        print(f"Client online [User: {self.user}, ID: {self.user.id}]")
+            activity=activity,
+            application_id=application_id,
+            case_insensitive=case_insensitive,
+        )
+        status: str = "idle"
+        self.status = discord.Status(status)
+
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 
-        username = os.getenv("DB_USERNAME")
-        password = os.getenv("DB_PASSWORD")
-        databasename = "values"
-        host = f"mongodb+srv://{quote_plus(username)}:{quote_plus(password)}@cluster0.sywtj.mongodb.net/{quote_plus(databasename)}?retryWrites=true&w=majority"
-        server_api = ServerApi('1')
+        username = quote_plus(os.getenv("DB_USERNAME"))
+        password = quote_plus(os.getenv("DB_PASSWORD"))
+        databasename = quote_plus("values")
+        host = f"mongodb+srv://{username}:{password}@cluster0.sywtj.mongodb.net/{databasename}?retryWrites=true&w=majority"
+        server_api = ServerApi("1")
 
         self.client = pymongo.MongoClient(host=host, server_api=server_api)
         self.database = self.client["database"]
+
+        # This exists purely to protect me from typos. If I misspell a collection, instead of creating a new one, I will just get a key error.
         self.collections = {"balances": self.database["balances"], "items": self.database["items"]}
+
+    async def setup_hook(self) -> None:
+        print(f"Client online [User: {self.user}, ID: {self.user.id}]")
 
 
 async def main():
     bot = Builder()
     await bot.load_extension("jishaku")
-    log = await load_extensions(bot, ["./src/cogs", "./src/economy",], spaces = 20)
+    log = await load_extensions(bot, ["./src/cogs", "./src/economy", "./src/development"], spaces = 20)
     print(log)
     await bot.start(os.getenv("BOT_KEY"))
 asyncio.run(main())

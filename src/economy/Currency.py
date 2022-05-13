@@ -12,7 +12,7 @@ from pymongo.database import Database
 from pymongo.collection import Collection
 
 from auxiliary.Embeds import fmte, fmte_i
-from botAuxiliary.CONSTANTS import CONSTANTS
+from botAuxiliary.Constants import CONSTANTS
 
 
 class Currency(commands.Cog):
@@ -21,7 +21,7 @@ class Currency(commands.Cog):
         self.coin = CONSTANTS.Emojis().COIN_ID
 
     def ge(self):
-        return "💰"
+        return "\N{MONEY BAG}"
 
     @commands.hybrid_group()
     async def cur(self, ctx: commands.Context):
@@ -345,7 +345,7 @@ class GiveView(discord.ui.View):
         self.user: discord.User = user
         super().__init__()
 
-    @discord.ui.button(label="Accept", emoji="✅",
+    @discord.ui.button(label="Accept", emoji="\N{WHITE HEAVY CHECK MARK}",
                        style=discord.ButtonStyle.primary)
     async def ack(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.auth:
@@ -364,7 +364,7 @@ class GiveView(discord.ui.View):
             d=f"**`{self.auth}` balance:** `{f(authnew)}`{coin}\n**`{self.user}` balance:** `{f(usernew)}`{coin}")
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
-    @discord.ui.button(label="Decline", emoji="❌",
+    @discord.ui.button(label="Decline", emoji="\N{CROSS MARK}",
                        style=discord.ButtonStyle.danger)
     async def dec(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.auth:
@@ -393,7 +393,7 @@ class RequestView(discord.ui.View):
         self.user: discord.User = user
         super().__init__()
 
-    @discord.ui.button(label="Accept", emoji="✅",
+    @discord.ui.button(label="Accept", emoji="\N{WHITE HEAVY CHECK MARK}",
                        style=discord.ButtonStyle.primary)
     async def ack(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.user:
@@ -411,7 +411,7 @@ class RequestView(discord.ui.View):
             d=f"**`{self.auth}` balance:** `{f(authnew)}`{coin}\n**`{self.user}` balance:** `{f(usernew)}`{coin}")
         await inter.response.edit_message(embed=embed, view=None)
 
-    @discord.ui.button(label="Decline", emoji="❌",
+    @discord.ui.button(label="Decline", emoji="\N{CROSS MARK}",
                        style=discord.ButtonStyle.danger)
     async def dec(self, inter: discord.Interaction, button: discord.Button):
         if inter.user != self.user:
@@ -467,7 +467,7 @@ class LeaderboardView(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji="❌", style=discord.ButtonStyle.red, custom_id="x")
+    @discord.ui.button(emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x")
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user != self.ctx.author:
             await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
@@ -603,7 +603,7 @@ class StartQuizView(discord.ui.View):
         self.cat = inter.data["values"][0]
         await self.sil(inter)
 
-    @discord.ui.button(emoji="▶️", label="Start",
+    @discord.ui.button(emoji="\N{BLACK RIGHTWARDS ARROW}", label="Start",
                        style=discord.ButtonStyle.green,)
     async def start(self, inter: discord.Interaction, _: Any):
         if inter.user != self.ctx.author:
@@ -626,7 +626,7 @@ class StartQuizView(discord.ui.View):
             await inter.response.edit_message(embed=embed, view=view)
 
     @discord.ui.button(style=discord.ButtonStyle.danger,
-                       label="Close", emoji="❌")
+                       label="Close", emoji="\N{CROSS MARK}")
     async def close(self, inter: discord.Interaction, _: Any) -> Any:
         if inter.user != self.ctx.author:
             await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
@@ -709,7 +709,7 @@ class QuizQuestionSubmit(discord.ui.Button):
         self._view = view
         self.ctx: commands.Context = self._view.ctx
         self.select = select
-        super().__init__(style=discord.ButtonStyle.green, emoji="▶️", label="Submit")
+        super().__init__(style=discord.ButtonStyle.green, emoji="\N{BLACK RIGHTWARDS ARROW}", label="Submit")
 
     async def callback(self, interaction: discord.Interaction) -> Any:
         if not self.select.values:
@@ -782,7 +782,7 @@ class QuizQuestionSubmit(discord.ui.Button):
 class QuizClose(discord.ui.Button):
     def __init__(self, ctx):
         self.ctx = ctx
-        super().__init__(style=discord.ButtonStyle.danger, label="Close", emoji="❌")
+        super().__init__(style=discord.ButtonStyle.danger, label="Close", emoji="\N{CROSS MARK}")
 
     async def callback(self, interaction: discord.Interaction) -> Any:
         if interaction.user != self.ctx.author:

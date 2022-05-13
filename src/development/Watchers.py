@@ -13,7 +13,7 @@ import pytz
 from auxiliary.Embeds import fmte
 from simpleeval import NumberTooHigh
 
-from src.archived_cogs.InterHelp import InterHelp
+from src._archived_cogs.InterHelp import InterHelp
 
 
 class Watchers(commands.Cog):
@@ -90,9 +90,9 @@ class Watchers(commands.Cog):
             return
         try:
             if ctx.command_failed:
-                await ctx.message.add_reaction("‼️")
+                await ctx.message.add_reaction("\N{DOUBLE EXCLAMATION MARK}")
             else:
-                await ctx.message.add_reaction("☑️")
+                await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         except discord.errors.NotFound:
             pass
         except Exception as e:

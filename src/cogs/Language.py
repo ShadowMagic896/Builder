@@ -32,7 +32,7 @@ class Language(commands.Cog):
         return await super().cog_unload()
 
     def ge(self):
-        return "🌎"
+        return "\N{EARTH GLOBE AMERICAS}"
 
     @commands.hybrid_command()
     @describe(message="The message to translate.",

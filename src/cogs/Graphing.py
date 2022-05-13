@@ -21,7 +21,7 @@ class Graphing(commands.Cog):
         self.bot = bot
 
     def ge(self):
-        return "📊"
+        return u"\U0001f4ca"
 
     def color_autocomplete(self, inter, current: str):
         colors = [

@@ -19,9 +19,11 @@ class Fun(commands.Cog):
 
     def __init__(self, bot) -> None:
         self.bot = bot
+        self.emoji_check = "\N{WHITE HEAVY CHECK MARK}"
+        self.emoji_cross = "\N{CROSS MARK}"
 
     def ge(self):
-        return "⚽"
+        return "\N{SOCCER BALL}"
 
     @commands.hybrid_command()
     @describe(
@@ -29,7 +31,7 @@ class Fun(commands.Cog):
         text="The text to translate.",
         ephemeral=Desc.ephemeral
     )
-    async def font(self, ctx, font: str, text: str, ephemeral: bool = False):
+    async def font(self, ctx: commands.context.Context, font: str, text: str, ephemeral: bool = False):
         """
         Translates your text into a new font!
         """
@@ -101,11 +103,11 @@ class Fun(commands.Cog):
             )
 
             ms: discord.Message = await ctx.send(embed=embed)
-            await ms.add_reaction("✅")
-            await ms.add_reaction("❌")
+            await ms.add_reaction(self.emoji_check)
+            await ms.add_reaction(self.emoji_cross)
 
-            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout=30)
-            if (r.emoji) == "✅":
+            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: u == user and str(r.emoji) in [self.emoji_check, self.emoji_cross] and r.message == ms, timeout=30)
+            if (r.emoji) == self.emoji_check:
                 embed = Fun.getTTTEmbed(ctx, (ctx.author, user), ctx.author)
                 await ms.edit(embed=embed, view=TTT_GameView(ctx, (ctx.author, user), ctx.author))
             else:
@@ -124,11 +126,11 @@ class Fun(commands.Cog):
                     ctx.author)
             )
             ms = await ctx.send(embed=embed)
-            await ms.add_reaction("✅")
-            await ms.add_reaction("❌")
-            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: Fun.check(ctx, r, u, ms), timeout=30)
+            await ms.add_reaction(self.emoji_check)
+            await ms.add_reaction(self.emoji_cross)
+            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: Fun(self.bot).check(ctx, r, u, ms), timeout=30)
 
-            if str(r.emoji) == "❌":
+            if str(r.emoji) == self.emoji_cross:
                 embed = fmte(
                     ctx,
                     t="{} has closed the game offering".format(ctx.author),
@@ -137,7 +139,7 @@ class Fun(commands.Cog):
                 await ms.edit(embed=embed)
                 await ms.clear_reactions()
                 return
-            elif r.emoji == "✅":
+            elif r.emoji == self.emoji_check:
                 embed = Fun.getTTTEmbed(ctx, (ctx.author, u), ctx.author)
                 await ms.edit(embed=embed, view=TTT_GameView(ctx, (ctx.author, u), ctx.author))
                 await ms.clear_reactions()
@@ -163,10 +165,10 @@ class Fun(commands.Cog):
             )
 
             ms: discord.Message = await ctx.send(embed=embed)
-            await ms.add_reaction("✅")
-            await ms.add_reaction("❌")
-            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: u == user and str(r.emoji) in ["✅", "❌"] and r.message == ms, timeout=30)
-            if (r.emoji) == "✅":
+            await ms.add_reaction(self.emoji_check)
+            await ms.add_reaction(self.emoji_cross)
+            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: u == user and str(r.emoji) in [self.emoji_check, self.emoji_cross] and r.message == ms, timeout=30)
+            if (r.emoji) == self.emoji_check:
                 embed = Fun.getRPSEmbed(ctx, (ctx.author, user), ctx.author)
                 await ms.edit(embed=embed, view=RPS_View(ctx, ctx.author, user))
             else:
@@ -184,14 +186,14 @@ class Fun(commands.Cog):
                 d="React to this message to play Rock Paper Scissors with {}!".format(
                     ctx.author))
             ms = await ctx.send(embed=embed)
-            await ms.add_reaction("✅")
-            await ms.add_reaction("❌")
+            await ms.add_reaction(self.emoji_check)
+            await ms.add_reaction(self.emoji_cross)
 
-            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: Fun.check(ctx, r, u, ms), timeout=30)
+            r, u = await self.bot.wait_for("reaction_add", check=lambda r, u: Fun(self.bot).check(ctx, r, u, ms), timeout=30)
             # From here, I know that if it is a check mark, it was not the
             # author and if it was an X, it was not the author thanks to the
             # Check above
-            if str(r.emoji) == "❌":
+            if str(r.emoji) == self.emoji_cross:
                 embed = fmte(
                     ctx,
                     t="{} has closed the game offering".format(ctx.author),
@@ -200,7 +202,7 @@ class Fun(commands.Cog):
                 await ms.edit(embed=embed)
                 await ms.clear_reactions()
                 return
-            elif r.emoji == "✅":
+            elif r.emoji == self.emoji_check:
                 embed = Fun.getRPSEmbed(ctx, (ctx.author, u), ctx.author)
                 await ms.edit(embed=embed, view=RPS_View(ctx, ctx.author, user))
                 await ms.clear_reactions()
@@ -222,17 +224,14 @@ class Fun(commands.Cog):
         )
         return embed
 
-    def check(ctx, r, u, ms):
-        # I would do this in a lambda but it's so big
+    def check(self, ctx, r, u, ms):
         return all([
-            not u.bot,  # User isn't a bot
-            str(r.emoji) in ["✅", "❌"],
-            r.message == ms,  # On the message I sent
+            not u.bot,
+            str(r.emoji) in [self.emoji_check, self.emoji_cross],
+            r.message == ms,
             u == ctx.author if str(
-                r.emoji) == "❌" else True,
-            # If it's an X, it was the author
-            # If it's an check, it was the author
-            u != ctx.author if str(r.emoji) == "✅" else True
+                r.emoji) == self.emoji_cross else True,
+            u != ctx.author if str(r.emoji) == self.emoji_check else True
         ])
 
 

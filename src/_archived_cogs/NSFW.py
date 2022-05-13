@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 import requests
 import wget
 
-from _aux.embeds import fmte, fmte_i
+from auxiliary.Embeds import fmte, fmte_i
 
 
 class NSFW(commands.Cog):

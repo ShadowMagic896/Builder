@@ -13,7 +13,7 @@ class Items(commands.Cog):
         self.bot: commands.Bot = bot
     
     def ge(self):
-        return "🎒"
+        return "\N{SCHOOL SATCHEL}"
 
     @commands.hybrid_group()
     async def inv(self, ctx: commands.Context):

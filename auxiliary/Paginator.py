@@ -5,7 +5,7 @@ import math
 from typing import Iterable, Mapping, Optional
 
 from auxiliary.Embeds import fmte_i
-from botAuxiliary.CONSTANTS import CONSTANTS
+from botAuxiliary.Constants import CONSTANTS
 
 
 class Paginator(discord.ui.View):
@@ -45,7 +45,7 @@ class Paginator(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji="❌", style=discord.ButtonStyle.red, custom_id="x")
+    @discord.ui.button(emoji=":x:", style=discord.ButtonStyle.red, custom_id="x")
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user != self.ctx.author:
             await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)

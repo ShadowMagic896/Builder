@@ -32,7 +32,7 @@ class Utility(commands.Cog):
         pass
 
     def ge(self):
-        return "🔢"
+        return "\N{INPUT SYMBOL FOR NUMBERS}"
 
     @commands.hybrid_command()
     @describe(
@@ -64,10 +64,10 @@ class Utility(commands.Cog):
         Returns the bot's latency, in milliseconds.
         """
         ping = self.bot.latency
-        emt = "`🛑 [HIGH]`" if ping > 0.4 else "`⚠ [MEDIUM]`"
-        emt = emt if ping > 0.2 else "`✅ [LOW]`"
+        emt = "`\N{OCTAGONAL SIGN} [HIGH]`" if ping > 0.4 else "`\N{WARNING SIGN} [MEDIUM]`"
+        emt = emt if ping > 0.2 else "`\N{WHITE HEAVY CHECK MARK} [LOW]`"
 
-        await ctx.send(embed=fmte(ctx, "🏓 Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"), ephemeral=ephemeral)
+        await ctx.send(embed=fmte(ctx, "\N{TABLE TENNIS PADDLE AND BALL} Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"), ephemeral=ephemeral)
 
     @commands.hybrid_command()
     @describe(
