@@ -10,7 +10,7 @@ from datetime import datetime
 from langcodes import LanguageTagError
 import pytz
 
-from auxiliary.Embeds import fmte
+from src.auxUser.Embeds import fmte
 from simpleeval import NumberTooHigh
 
 from src._archived_cogs.InterHelp import InterHelp

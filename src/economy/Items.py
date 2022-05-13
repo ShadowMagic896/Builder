@@ -5,8 +5,8 @@ from pymongo.database import Database
 from pymongo.collection import Collection
 from typing import Literal, Mapping, List, Optional, Tuple
 
-from auxiliary.Embeds import fmte
-from auxiliary.Paginator import Paginator
+from src.auxUser.Embeds import fmte
+from src.auxUser.Paginator import Paginator
 
 class Items(commands.Cog):
     def __init__(self, bot: commands.Bot):

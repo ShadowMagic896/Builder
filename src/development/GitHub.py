@@ -3,7 +3,7 @@ from discord.ext import commands
 
 import os
 
-from auxiliary.Embeds import fmte
+from src.auxUser.Embeds import fmte
 
 class GitHub(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:

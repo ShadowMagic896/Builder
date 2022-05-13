@@ -13,8 +13,8 @@ from typing import Literal, Optional
 from numpy import average
 
 
-from auxiliary.Embeds import fmte, Desc
-from botAuxiliary.Constants import CONSTANTS
+from src.auxUser.Embeds import fmte, Desc
+from src.auxBot.Constants import CONSTANTS
 
 
 class Images(commands.Cog):

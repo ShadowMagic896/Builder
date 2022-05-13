@@ -4,8 +4,8 @@ from discord.ext import commands
 import math
 from typing import Iterable, Mapping, Optional
 
-from auxiliary.Embeds import fmte_i
-from botAuxiliary.Constants import CONSTANTS
+from src.auxUser.Embeds import fmte_i
+from src.auxBot.Constants import CONSTANTS
 
 
 class Paginator(discord.ui.View):

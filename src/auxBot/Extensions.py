@@ -31,7 +31,7 @@ async def load_extensions(bot: commands.Bot, extension_paths: Iterable[str], **o
                 await bot.load_extension(f"cogs.{cog[:-3]}")
             
             except BaseException as e:
-                if ignore:
+                if not ignore:
                     raise e
                 log += f"\N{CROSS MARK} {cog} {exp} [{source}.{cog[:-3]}] [{str(e)[str(e).index(':')+2:]}]\n"
                 continue

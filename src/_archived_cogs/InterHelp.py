@@ -6,10 +6,10 @@ from discord.ext import commands
 import os
 
 from typing import Any, List, Optional
-from botAuxiliary.Constants import CONSTANTS
+from src.auxBot.Constants import CONSTANTS
 
 
-from auxiliary.Embeds import fmte, fmte_i, Desc
+from src.auxUser.Embeds import fmte, fmte_i, Desc
 
 
 class InterHelp(commands.Cog):

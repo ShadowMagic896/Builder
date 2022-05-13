@@ -15,8 +15,8 @@ from pymongo.server_api import ServerApi
 import logging
 import os
 
-from botAuxiliary.Extensions import load_extensions
-from botAuxiliary.Stats import Stats
+from src.auxBot.Extensions import load_extensions
+from src.auxBot.Stats import Stats
 
 load_dotenv()
 

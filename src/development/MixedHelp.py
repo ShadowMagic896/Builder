@@ -9,11 +9,11 @@ import os
 from math import ceil
 from typing import Any, List, Optional
 
-from auxiliary.Embeds import Desc, fmte, fmte_i
-from auxiliary.UserIO import explode
+from src.auxUser.Embeds import Desc, fmte, fmte_i
+from src.auxUser.UserIO import explode
 from src._archived_cogs.InterHelp import InterHelp
 
-from botAuxiliary.Constants import CONSTANTS
+from src.auxBot.Constants import CONSTANTS
 
 
 class MixedHelp(commands.Cog):
