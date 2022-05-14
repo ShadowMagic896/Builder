@@ -1,6 +1,6 @@
 import math
-import os
 import discord
+from discord import Interaction, app_commands
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
@@ -75,7 +75,7 @@ class Currency(commands.Cog):
             t=f"Are You Sure You Want to Give `{self.formatBalance(amount)}`{self.coin} to `{user}`?",
             d=f"This is `{round((amount / cv) * 100, 2)}%` of your money."
         )
-        await ctx.send(embed=embed, view=GiveView(self.bot, ctx, amount, ctx.author, user))
+        await ctx.send(embed=embed, view=GiveView(ctx, amount, ctx.author, user))
 
     @cur.command()
     @commands.cooldown(2, 120, commands.BucketType.user)
@@ -322,6 +322,13 @@ class Currency(commands.Cog):
     async def manualdel(self, ctx: commands.Context, user: Optional[discord.User]):
         db = BalanceDatabase(ctx)
         await db.delete(user or ctx.author)
+    
+
+    @app_commands.context_menu(name = "\N{MONEY BAG} Give Money")
+    async def giveMenu(inter: discord.Interaction, member: discord.Member):
+        ctx: commands.Context = await commands.Context.from_interaction(inter)
+        ctx.author = inter.user
+        await inter.response.send_modal(GiveContextModal(ctx, member))
 
     def clamp(
             self,
@@ -336,10 +343,25 @@ class Currency(commands.Cog):
         return "".join(["%s," % char if c % 3 == 0 else char for c,
                        char in enumerate(str(bal)[::-1])][::-1]).strip(",")
 
+class GiveContextModal(discord.ui.Modal):
+    def __init__(self, ctx: commands.Context, member: discord.Member):
+        self.ctx = ctx
+        self.member = member
+        super().__init__(title=f"Give Coins to {member}")
+
+    amount = discord.ui.TextInput(label = "How Much Would You Like to Give?")
+    
+    async def on_submit(self, interaction: Interaction) -> None:
+        try:
+            amount = int(self.amount)
+        except TypeError:
+            raise commands.errors.UserInputError("Not a valid amount")
+        self.ctx.interaction = interaction
+        return await Currency(self.ctx.bot).give(self.ctx, self.member, amount)
+
 
 class GiveView(discord.ui.View):
-    def __init__(self, bot, ctx, amount, auth, user):
-        self.bot: commands.AutoShardedBot = bot
+    def __init__(self, ctx, amount, auth, user):
         self.amount: int = amount
         self.auth: discord.User = auth
         self.ctx: commands.Context = ctx
@@ -386,8 +408,7 @@ class GiveView(discord.ui.View):
 
 
 class RequestView(discord.ui.View):
-    def __init__(self, bot, ctx, amount, auth, user):
-        self.bot: commands.AutoShardedBot = bot
+    def __init__(self, ctx, amount, auth, user):
         self.ctx: commands.Context = ctx
         self.amount: int = amount
         self.auth: discord.User = auth

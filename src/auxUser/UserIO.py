@@ -83,9 +83,8 @@ def explode(l: List[commands.HybridCommand]):
     l = list(l)
     nl = []
     for c in l:
-        if isinstance(c, (
-                commands.HybridGroup, commands.Group,
-                app_commands.AppCommandGroup, app_commands.Group)):
+        print(type(c))
+        if hasattr(c, "commands"):
             nl.extend(explode(c.commands))
         else:
             # if isinstance(c, commands.):

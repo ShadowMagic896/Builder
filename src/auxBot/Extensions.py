@@ -28,7 +28,7 @@ async def load_extensions(bot: commands.Bot, extension_paths: Iterable[str], **o
                 await bot.load_extension(f"{source}.{cog[:-3]}")
 
             except discord.ext.commands.errors.ExtensionAlreadyLoaded:
-                await bot.load_extension(f"cogs.{cog[:-3]}")
+                await bot.load_extension(f"{source}.{cog[:-3]}")
             
             except BaseException as e:
                 if not ignore:

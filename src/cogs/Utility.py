@@ -262,24 +262,16 @@ class Utility(commands.Cog):
         types = []
 
         for defi in response:
-            defs.append(("".join(defi["shortdef"][0])).capitalize())
-            dates.append(defi["date"])
-            types.append(defi["fl"])
+            defs.append(("".join(defi.get("shortdef", ["Unknown",])[0]).capitalize()))
+            dates.append(defi.get("date", "Unknown"))
+            types.append(defi.get("fl", "Unknown"))
 
-        embed = fmte(
-            ctx,
-            t="Definition(s) for the word: {} [{}]".format(
-                term.capitalize(),
-                len(defs)
-            ),
-        )
+        embed = fmte(ctx,)
         if len(defs) < 1:
             raise ValueError('Word not found/no definition')
 
-        cut = None if len(defs) <= 5 else len(defs) - 5
-        defs = defs[:5]
 
-        for c, item in enumerate(defs):
+        for c, item in enumerate(defs[:5]):
             embed.add_field(
                 name="Definition {}, {}: *`[{}]`*".format(
                     c + 1,
@@ -290,12 +282,6 @@ class Utility(commands.Cog):
                 value=item,
                 inline=False
             )
-        if cut:
-            embed.add_field(
-                name="...and %s more definitions." %
-                cut,
-                value="-------------------------------------------------------------------",
-                inline=False)
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @commands.hybrid_command()
