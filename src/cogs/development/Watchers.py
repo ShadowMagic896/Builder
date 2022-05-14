@@ -8,12 +8,11 @@ import asyncio
 import time
 from datetime import datetime
 from langcodes import LanguageTagError
-import pytz
 
-from src.auxUser.Embeds import fmte
+from src.auxiliary.user.Embeds import fmte
 from simpleeval import NumberTooHigh
 
-from src._archived_cogs.InterHelp import InterHelp
+from src.__archives__.cogs.InterHelp import InterHelp
 
 
 class Watchers(commands.Cog):

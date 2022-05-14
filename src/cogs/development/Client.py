@@ -11,9 +11,9 @@ from discord.ext import commands
 import inspect
 from typing import List, Optional
 
-from src.auxUser.UserIO import explode
-from src.auxUser.Embeds import Desc, fmte
-from src.auxBot.Constants import CONSTANTS
+from src.auxiliary.user.UserIO import explode
+from src.auxiliary.user.Embeds import Desc, fmte
+from src.auxiliary.bot.Constants import CONSTANTS
 
 
 class Client(commands.Cog):

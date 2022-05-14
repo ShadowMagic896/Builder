@@ -12,8 +12,8 @@ from pymongo.server_api import ServerApi
 import logging
 import os
 
-from src.auxBot.Extensions import load_extensions
-from src.auxBot.Stats import Stats
+from src.auxiliary.bot.Extensions import load_extensions
+from src.auxiliary.bot.Stats import Stats
 from data.config import Config
 
 # Logging ---------------------------------------------------
@@ -74,7 +74,7 @@ class Builder(commands.Bot):
 async def main():
     bot = Builder()
     await bot.load_extension("jishaku")
-    log = await load_extensions(bot, ["./src/cogs", "./src/economy", "./src/development"], spaces = 20, ignore_errors = False)
+    log = await load_extensions(bot, ["./src/cogs/development", "./src/cogs/economy", "./src/cogs/main"], spaces = 20, ignore_errors = False)
     print(log)
     await bot.start(Config().BOT_KEY)
 asyncio.run(main())

@@ -12,8 +12,8 @@ from pymongo.database import Database
 from pymongo.collection import Collection
 from data.config import Config
 
-from src.auxUser.Embeds import fmte, fmte_i
-from src.auxBot.Constants import CONSTANTS
+from src.auxiliary.user.Embeds import fmte, fmte_i
+from src.auxiliary.bot.Constants import CONSTANTS
 
 
 class Currency(commands.Cog):

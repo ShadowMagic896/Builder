@@ -7,9 +7,9 @@ from discord.ext import commands
 from typing import Any, List, Literal, Mapping
 from math import ceil
 
-from src.auxUser.Embeds import fmte, fmte_i
-from src.auxUser.UserIO import explode
-from src.auxUser.Converters import TimeConvert
+from src.auxiliary.user.Embeds import fmte, fmte_i
+from src.auxiliary.user.UserIO import explode
+from src.auxiliary.user.Converters import TimeConvert
 
 
 class Dev(commands.Cog):

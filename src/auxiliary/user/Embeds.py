@@ -1,8 +1,6 @@
-import asyncio
-from math import floor
-from multiprocessing.sharedctypes import Value
-from random import randint, random
-from typing import Any, List, Optional, Union
+
+from random import randint
+from typing import Union
 import discord
 from discord.ext import commands
 from datetime import datetime

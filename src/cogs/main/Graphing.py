@@ -2,8 +2,8 @@ import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
-from src.auxUser.Embeds import fmte
-from src.auxUser.Converters import ListConverter
+from src.auxiliary.user.Embeds import fmte
+from src.auxiliary.user.Converters import ListConverter
 
 import io
 import simpleeval

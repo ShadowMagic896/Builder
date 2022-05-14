@@ -16,6 +16,7 @@ class Stats:
                 if not path.endswith(".py"):
                     continue
                 with open(path) as f:
+                    print(path)
                     yield len(f.readlines())
 
     def lineCount(directories: List[os.PathLike]):

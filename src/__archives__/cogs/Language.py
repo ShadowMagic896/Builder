@@ -11,7 +11,7 @@ import pycountry
 
 from typing import Optional
 
-from src.auxUser.Embeds import Desc, fmte, fmte_i
+from src.auxiliary.user.Embeds import Desc, fmte, fmte_i
 
 
 class Language(commands.Cog):
