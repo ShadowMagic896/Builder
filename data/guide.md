@@ -159,8 +159,7 @@ Use that method on `main`, passing your bot key as the `token` argument.
 
 A quick note about keys:
 
-If you plan to upload your code to a public repository, create a `.env` file, store the key in there, and use the `python-dotenv` PIP module to get it. Then, make a `.gitignore` file and add your `.env` file to it, so that the `.env` file doesn't get uploaded to the repository. There are tons of guides for these online, so I won't be covering them here.
-This just makes it so that the code for the actual bot is uploaded, but the bot key is in a seperate, ignored file that nobody else can see.
+If you plan to upload your code to a public repository, be sure to place that token in a different file, and have github ignore that file when you commit.
 
 Here's what our code looks like now:
 

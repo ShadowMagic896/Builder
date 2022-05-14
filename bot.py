@@ -1,7 +1,5 @@
-from email.mime import application
-from socket import gaierror, socket
-import time
-from typing import List, Type, Union
+from codecs import ignore_errors
+from typing import List, Union
 from urllib.parse import quote_plus
 import aiohttp
 import discord
@@ -9,7 +7,6 @@ from discord.ext import commands
 from discord.ext.commands import when_mentioned_or
 
 import asyncio
-from dotenv import load_dotenv
 import pymongo
 from pymongo.server_api import ServerApi
 import logging
@@ -17,8 +14,7 @@ import os
 
 from src.auxBot.Extensions import load_extensions
 from src.auxBot.Stats import Stats
-
-load_dotenv()
+from data.config import Config
 
 # Logging ---------------------------------------------------
 logger = logging.getLogger('discord')
@@ -60,8 +56,8 @@ class Builder(commands.Bot):
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 
-        username = quote_plus(os.getenv("DB_USERNAME"))
-        password = quote_plus(os.getenv("DB_PASSWORD"))
+        username = quote_plus(Config().DB_USERNAME)
+        password = quote_plus(Config().DB_PASSWORD)
         databasename = quote_plus("values")
         host = f"mongodb+srv://{username}:{password}@cluster0.sywtj.mongodb.net/{databasename}?retryWrites=true&w=majority"
         server_api = ServerApi("1")
@@ -78,7 +74,7 @@ class Builder(commands.Bot):
 async def main():
     bot = Builder()
     await bot.load_extension("jishaku")
-    log = await load_extensions(bot, ["./src/cogs", "./src/economy", "./src/development"], spaces = 20)
+    log = await load_extensions(bot, ["./src/cogs", "./src/economy", "./src/development"], spaces = 20, ignore_errors = False)
     print(log)
-    await bot.start(os.getenv("BOT_KEY"))
+    await bot.start(Config().BOT_KEY)
 asyncio.run(main())

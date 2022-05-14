@@ -10,6 +10,7 @@ from typing import Any, List, Mapping, Optional, Union
 import pymongo
 from pymongo.database import Database
 from pymongo.collection import Collection
+from data.config import Config
 
 from src.auxUser.Embeds import fmte, fmte_i
 from src.auxBot.Constants import CONSTANTS
@@ -610,7 +611,7 @@ class StartQuizView(discord.ui.View):
             await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
             return
         if self.dif is not None and self.cat is not None:
-            key = os.getenv("QUIZAPI_KEY")
+            key = Config().QUIZAPI_KEY
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
             self.questions = await (await self.ctx.bot.session.get(url)).json()
             view = MainQuizView(

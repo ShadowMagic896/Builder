@@ -12,6 +12,7 @@ from discord.ext import commands
 import os
 from typing import Any, List, Optional
 from math import (radians, sin, cos, tan, asin, acos, atan, sinh, cosh, tanh)
+from data.config import Config
 
 import bs4
 import numpy
@@ -225,7 +226,7 @@ class Utility(commands.Cog):
 
         headers = {
             "X-RapidAPI-Host": "mashape-community-urban-dictionary.p.rapidapi.com",
-            "X-RapidAPI-Key": os.getenv("X_RAPID_API_KEY")}
+            "X-RapidAPI-Key": Config().X_RAPID_API_KEY}
 
         response = requests.request("GET", url, headers=headers, params=params)
         res = response.json()["list"]
@@ -255,7 +256,7 @@ class Utility(commands.Cog):
         """
         response = requests.get(
             "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
-                term.lower(), os.getenv("DICT_API_KEY"))).json()
+                term.lower(), Config().DICT_API_KEY)).json()
         defs = []
         dates = []
         types = []
@@ -315,6 +316,9 @@ class Utility(commands.Cog):
 
     @commands.hybrid_command()
     async def eval(self, ctx: commands.Context):
+        """
+        Evaluates code. Does not support loops for everyone's safety.
+        """
         await ctx.interaction.response.send_modal(CodeModal(ctx))
 
     def newOps(self):
@@ -378,6 +382,7 @@ class Utility(commands.Cog):
                     "math": math,
                     "re": re,
                     "time": time,
+                    "__ctx__": ctx
                 }
             )
         return f
@@ -401,20 +406,16 @@ class CodeModal(discord.ui.Modal):
                 functions=inst.newOps(), names=inst.newNames(
                     self.ctx, True)).eval(value)
             self.err = None
-        except (simpleeval.AssignmentAttempted, simpleeval.FeatureNotAvailable) as err:
+        except Exception as err:
             self.err = err
             result = "ERROR OCCURRED"
-
+        self._err = self.err or "No warnings detected!"
+        _type = "fix" if self.err else ""
         embed = fmte(
             self.ctx,
             t=result,
-            d="```py\n%s\n#Computed in %sms```\n**WARNINGS:** ```%s```" %
-            (value,
-             (time.time() -
-              estart) /
-                1000,
-                self.err or "No warnings detected!"),
-            c=discord.Color.teal() if self.err else None)
+            d=f"```py\n{value}\n#Computed in {(time.time() - estart) /1000}ms```\n**WARNINGS:** ```{_type}\n{self._err}\n```",
+            c=discord.Color.teal() if self.err is None else discord.Color.red())
         await interaction.response.send_message(embed=embed)
 
 
