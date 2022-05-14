@@ -38,8 +38,8 @@ class Builder(commands.Bot):
         command_prefix: List[str] = when_mentioned_or("dev>>")
         help_command: Union[commands.HelpCommand, None] = None
         tree_cls: type = discord.app_commands.CommandTree
-        status: str = f"Online Since: <t:{round(time.time())}:R>"
-        intents: discord.Intents = discord.Intents.default(); intents.members = True
+        intents: discord.Intents = discord.Intents.default()
+        intents.members = True
         
         activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name=f"{Stats.lineCount(['.'])} LINES")
         application_id: str = "963411905018466314"
@@ -74,7 +74,6 @@ class Builder(commands.Bot):
 
     async def setup_hook(self) -> None:
         print(f"Client online [User: {self.user}, ID: {self.user.id}]")
-
 
 async def main():
     bot = Builder()
