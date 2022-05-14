@@ -15,7 +15,7 @@ from src.auxiliary.user.Converters import TimeConvert
 class Dev(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
-
+    
     @commands.hybrid_command()
     @commands.is_owner()
     @describe(

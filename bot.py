@@ -69,7 +69,21 @@ class Builder(commands.Bot):
         self.collections = {"balances": self.database["balances"], "items": self.database["items"]}
 
     async def setup_hook(self) -> None:
-        print(f"Client online [User: {self.user}, ID: {self.user.id}]")
+        spaces = len("                         ")
+        client = str(self.user) + " " * (spaces - len(str(self.user)))
+        ID = str(self.user.id) + " " * (spaces - len(str(self.user.id)))
+        version = discord.__version__ + " " * (spaces - len(str(discord.__version__)))
+        s = """
+              \N{WHITE HEAVY CHECK MARK} ONLINE 
++-----------------------------------+
+| Client: %s |
++-----------------------------------+
+| ID Num: %s |
++-----------------------------------+
+| Version: %s|
++-----------------------------------+
+        """ % (client, ID, version)
+        print(s)
 
 async def main():
     bot = Builder()
