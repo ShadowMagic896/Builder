@@ -3,4 +3,5 @@ _dmlog.txt
 _discord.log
 _commandlog.txt
 
-**/__pycache__
+**/__pycache__/
+**/*.pyc
