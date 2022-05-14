@@ -1,3 +1,4 @@
+from dataclasses import MISSING
 from datetime import datetime
 import pytz
 from src.auxiliary.user.Embeds import fmte
@@ -45,9 +46,8 @@ class Utility(commands.Cog):
         """
         link = discord.utils.oauth_url(
             self.bot.application_id,
-            permissions=discord.Permissions(8),
+            permissions=discord.Permissions(0),
             scopes=["bot", "applications.commands"],
-            guild=ctx.guild,
         )
         embed = fmte(
             ctx,

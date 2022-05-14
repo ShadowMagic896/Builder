@@ -6,7 +6,9 @@ from pymongo.collection import Collection
 from typing import Literal, Mapping, List, Optional, Tuple
 
 from src.auxiliary.user.Embeds import fmte
-from src.auxiliary.user.Paginator import Paginator
+from src.auxiliary.user.Subclass import Paginator
+from data.ItemMaps import Chemistry
+chem = Chemistry()
 
 class Items(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -24,7 +26,6 @@ class Items(commands.Cog):
         user = user or ctx.author
         items = await ItemDatabase(ctx).getItems(user)
 
-        find = lambda x, m: list(getattr(x, m)())[0]
         values = [(item[0], item[1]) for item in items.items()]
         
         view = InventoryView(ctx, values, "name")
@@ -36,6 +37,14 @@ class Items(commands.Cog):
     @inv.command()
     async def add(self, ctx: commands.Context, item: str, amount: int, user: Optional[discord.User]):
         user = user or ctx.author
+        item = item.lower()
+        # Helium
+        # Helium: He
+        # He: Helium
+        if (item := chem.name_to_sym.get(item, None)) is None: # Check if not full name
+            if (item := chem.sym_to_name.get(item, None) is None): # Check if not symbol
+                raise ValueError("Invalid element")
+        print(item)
         v = await ItemDatabase(ctx).addItem(user, item, amount)
         await ctx.send(v)
 
@@ -102,9 +111,7 @@ class ItemDatabase:
         """
         Deletes a user's entry
         """
-        self.collections["balances"].delete_one({"userid": user.id})    
-    #TODO: Add values for each item
-    #TODO: Create net command, getting the sum of all item values in their inventory
+        self.collections["balances"].delete_one({"userid": user.id})
 
 
 

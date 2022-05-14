@@ -14,12 +14,20 @@ from data.config import Config
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.bot.Constants import CONSTANTS
+from src.auxiliary.user.Subclass import AutoModal
 
 
 class Currency(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot, add_commands: bool = False):
         self.bot = bot
         self.coin = CONSTANTS.Emojis().COIN_ID
+        if add_commands:
+            self.bot.tree.add_command(
+                app_commands.ContextMenu(name = "\N{MONEY BAG} Give Money", callback=self.giveMenu)
+            )
+            self.bot.tree.add_command(
+                app_commands.ContextMenu(name = "\N{MONEY BAG} Request Money", callback=self.requestMenu)
+            )
 
     def ge(self):
         return "\N{MONEY BAG}"
@@ -106,7 +114,7 @@ class Currency(commands.Cog):
                 amount,
                 self.coin),
             d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.")
-        await ctx.send(user.mention, embed=embed, view=RequestView(self.bot, ctx, amount, ctx.author, user))
+        await ctx.send(user.mention, embed=embed, view=RequestView(ctx, amount, ctx.author, user))
 
     @cur.command()
     @commands.cooldown(1, 30, commands.BucketType.user)
@@ -324,11 +332,15 @@ class Currency(commands.Cog):
         await db.delete(user or ctx.author)
     
 
-    @app_commands.context_menu(name = "\N{MONEY BAG} Give Money")
-    async def giveMenu(inter: discord.Interaction, member: discord.Member):
+    async def giveMenu(self, inter: discord.Interaction, member: discord.Member):
         ctx: commands.Context = await commands.Context.from_interaction(inter)
         ctx.author = inter.user
         await inter.response.send_modal(GiveContextModal(ctx, member))
+    
+    async def requestMenu(self, inter: discord.Interaction, member: discord.Member):
+        ctx: commands.Context = await commands.Context.from_interaction(inter)
+        ctx.author = inter.user
+        await inter.response.send_modal(RequestContextModal(ctx, member))
 
     def clamp(
             self,
@@ -343,7 +355,7 @@ class Currency(commands.Cog):
         return "".join(["%s," % char if c % 3 == 0 else char for c,
                        char in enumerate(str(bal)[::-1])][::-1]).strip(",")
 
-class GiveContextModal(discord.ui.Modal):
+class GiveContextModal(AutoModal):
     def __init__(self, ctx: commands.Context, member: discord.Member):
         self.ctx = ctx
         self.member = member
@@ -353,11 +365,27 @@ class GiveContextModal(discord.ui.Modal):
     
     async def on_submit(self, interaction: Interaction) -> None:
         try:
-            amount = int(self.amount)
+            amount = int(self.amount.value)
         except TypeError:
             raise commands.errors.UserInputError("Not a valid amount")
         self.ctx.interaction = interaction
-        return await Currency(self.ctx.bot).give(self.ctx, self.member, amount)
+        return await Currency.give.callback(Currency(self.ctx.bot), self.ctx, self.member, amount)
+
+class RequestContextModal(AutoModal):
+    def __init__(self, ctx: commands.Context, member: discord.Member):
+        self.ctx = ctx
+        self.member = member
+        super().__init__(title=f"Request Coins from {member}")
+
+    amount = discord.ui.TextInput(label = "How Much Would You Like to Request?")
+    
+    async def on_submit(self, interaction: Interaction) -> None:
+        try:
+            amount = int(self.amount.value)
+        except TypeError:
+            raise commands.errors.UserInputError("Not a valid amount")
+        self.ctx.interaction = interaction
+        return await Currency.request.callback(Currency(self.ctx.bot), self.ctx, self.member, amount)
 
 
 class GiveView(discord.ui.View):
@@ -877,4 +905,4 @@ class BalanceDatabase:
         return values.clone()
 
 async def setup(bot):
-    await bot.add_cog(Currency(bot))
+    await bot.add_cog(Currency(bot, True))

@@ -83,7 +83,6 @@ def explode(l: List[commands.HybridCommand]):
     l = list(l)
     nl = []
     for c in l:
-        print(type(c))
         if hasattr(c, "commands"):
             nl.extend(explode(c.commands))
         else:
