@@ -1,4 +1,6 @@
+import os
 from subprocess import Popen
+import time
 import discord
 from discord import app_commands
 from discord.app_commands import describe
@@ -44,6 +46,61 @@ class Dev(commands.Cog):
     @commands.hybrid_command()
     async def timetest(self, ctx: commands.Context, time: TimeConvert):
         await ctx.send(str(time))
+    
+    @commands.hybrid_command()
+    async def docker(self, ctx: commands.Context):
+        await ctx.interaction.response.send_modal(CodeModal(ctx))
+
+class CodeModal(discord.ui.Modal):
+    def __init__(self, ctx) -> None:
+        self.ctx: commands.Context = ctx
+        super().__init__(title="Code Evaluation")
+    code = discord.ui.TextInput(
+        label="Please paste / type code here",
+        style=discord.TextStyle.long
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(thinking=True)
+        estart = time.time()
+        value = self.code.value.replace("^", "**")
+
+        basepath = "data\containers"
+
+        # Create a new directory that will contain the Dockerfile and python file
+        _dir = len(os.listdir(basepath))
+        _dir = 0
+        dirpath = f"{basepath}\{_dir}"
+        os.system(f"cd {os.getcwd()}\{dirpath}")
+
+        # The user's code
+        pypath = f"{dirpath}\main.py"
+        # The Dockerfile
+        dockerpath = f"{dirpath}\Dockerfile"
+        # Dockerfile template
+        templatepath = "data\DockerfileTemplate.txt"
+
+        with open(pypath, "w") as pyfile:
+            pyfile.write(value)
+
+        with open(dockerpath, "w") as dockerfile:
+            with open(templatepath, "r") as template:
+                dockerfile.write(template.read())
+
+
+        pylog = f"{os.getcwd()}\\{dirpath}\\pythonlog.log"
+        os.system(f"cd {dirpath} && docker build -t {_dir} . && docker run --stop-timeout 3 {_dir} > {pylog}")
+        with open(pylog, "r") as log:
+            # To manage the line and character output
+            fmtlog = "".join(log.readlines()[:20])[:3900]
+            embed = fmte(
+                self.ctx,
+                d = f"**Code:**\n```py\n{value}\n```\n**Result:**```\n{fmtlog}\nFinished in: {time.time() - estart} seconds```"
+            )
+            await interaction.followup.send(content=None, embed=embed)
+        os.system("docker system prune -fa")
+        os.remove(dirpath)
+
 
 
 async def setup(bot):

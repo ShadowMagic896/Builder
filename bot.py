@@ -37,7 +37,7 @@ class Builder(commands.Bot):
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
         
-        activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name=f"{Stats.lineCount(['.'])} LINES")
+        activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name=f"{Stats.lineCount(['./data', './src'])} LINES")
         application_id: str = "963411905018466314"
         case_insensitive: bool = True
         

@@ -7,7 +7,6 @@ from discord.errors import *
 import asyncio
 import time
 from datetime import datetime
-from langcodes import LanguageTagError
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
@@ -60,8 +59,6 @@ class Watchers(commands.Cog):
             hint = "You gave something of the wrong value or type. Check the error for more information."
         elif isinstance(error, IOError):
             hint = "You gave an incorrect parameter for a file."
-        elif isinstance(error, LanguageTagError):
-            hint = "You gave an invalid language tag or name."
         elif isinstance(error, NumberTooHigh):
             hint = "Your number is too big for me to compute."
         else:
@@ -119,8 +116,6 @@ class Watchers(commands.Cog):
             hint = "You gave something of the wrong value or type. Check the error for more information."
         elif isinstance(error, IOError):
             hint = "You gave an incorrect parameter for a file."
-        elif isinstance(error, LanguageTagError):
-            hint = "You gave an invalid language tag or name."
         elif isinstance(error, NumberTooHigh):
             hint = "Your number is too big for me to compute."
         else:

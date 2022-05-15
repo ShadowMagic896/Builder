@@ -171,7 +171,7 @@ class Utility(commands.Cog):
         objectid="The ID of the object to look for.",
         ephemeral="Whether to publicly show the response to the command.",
     )
-    async def find(self, ctx: commands.Context, objectid: int, ephemeral: bool = False):
+    async def find(self, ctx: commands.Context, objectid: str, ephemeral: bool = False):
         """
         Finds a user, role, custom emoji, sticker, channel, or server based on the ID given
         """
