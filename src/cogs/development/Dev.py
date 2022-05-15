@@ -6,8 +6,8 @@ from discord import app_commands
 from discord.app_commands import describe
 from discord.ext import commands
 
-from typing import Any, List, Literal, Mapping
-from math import ceil
+from typing import List
+from src.auxiliary.user.Subclass import AutoModal
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.user.UserIO import explode
@@ -51,6 +51,7 @@ class Dev(commands.Cog):
     async def docker(self, ctx: commands.Context):
         await ctx.interaction.response.send_modal(CodeModal(ctx))
 
+# class CodeModal(AutoModal):
 class CodeModal(discord.ui.Modal):
     def __init__(self, ctx) -> None:
         self.ctx: commands.Context = ctx
@@ -63,43 +64,49 @@ class CodeModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(thinking=True)
         estart = time.time()
-        value = self.code.value.replace("^", "**")
+        value: str = self.code.value
 
-        basepath = "data\containers"
+        basepath = f"{os.getcwd()}\docker"
 
         # Create a new directory that will contain the Dockerfile and python file
-        _dir = len(os.listdir(basepath))
-        _dir = 0
-        dirpath = f"{basepath}\{_dir}"
-        os.system(f"cd {os.getcwd()}\{dirpath}")
+        _dir = len(os.listdir(f"{basepath}\containers"))
+        dirpath = f"{basepath}\containers\{_dir}"
 
-        # The user's code
+        os.system(f"mkdir {dirpath}")
+
+
         pypath = f"{dirpath}\main.py"
-        # The Dockerfile
-        dockerpath = f"{dirpath}\Dockerfile"
-        # Dockerfile template
-        templatepath = "data\DockerfileTemplate.txt"
+
+        targ_dockerfile = f"{dirpath}\Dockerfile"
+        tmpl_dockerfile = f"{basepath}\Dockerfile"
+
+        targ_dockerignore = f"{dirpath}\.dockerignore"
+        tmpl_doclerignore = f"{basepath}\.dockerignore"
 
         with open(pypath, "w") as pyfile:
             pyfile.write(value)
 
-        with open(dockerpath, "w") as dockerfile:
-            with open(templatepath, "r") as template:
-                dockerfile.write(template.read())
+        with open(targ_dockerfile, "w") as target:
+            with open(tmpl_dockerfile, "r") as template:
+                target.write(template.read())
+            
+        with open(targ_dockerignore, "w") as target:
+            with open(tmpl_doclerignore, "r") as template:
+                target.write(template.read())
 
 
-        pylog = f"{os.getcwd()}\\{dirpath}\\pythonlog.log"
-        os.system(f"cd {dirpath} && docker build -t {_dir} . && docker run --stop-timeout 3 {_dir} > {pylog}")
+        pylog = f"{dirpath}\\pythonlog.txt"
+        os.system(f"cd {dirpath} && docker build -t {_dir} . && docker run {_dir} > {pylog}")
         with open(pylog, "r") as log:
             # To manage the line and character output
-            fmtlog = "".join(log.readlines()[:20])[:3900]
+            fmtlog = "".join(log.readlines()[::])[:3900]
             embed = fmte(
                 self.ctx,
-                d = f"**Code:**\n```py\n{value}\n```\n**Result:**```\n{fmtlog}\nFinished in: {time.time() - estart} seconds```"
+                d = f"**Code:**\n```py\n{value}\n```\n**Result:**```\n{fmtlog}\n# Finished in: {time.time() - estart} seconds```"
             )
             await interaction.followup.send(content=None, embed=embed)
-        os.system("docker system prune -fa")
-        os.remove(dirpath)
+        os.system(f"docker image rm {_dir}")
+        os.system(f"rd /Q /S {dirpath}")
 
 
 
