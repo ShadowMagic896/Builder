@@ -1,8 +1,7 @@
 import asyncio
 from dataclasses import MISSING
 from datetime import datetime
-from re import L
-import threading
+from concurrent import futures
 import pytz
 from src.auxiliary.user.Converters import TimeConvert
 from src.auxiliary.user.Subclass import AutoModal
@@ -331,7 +330,7 @@ class Utility(commands.Cog):
             raise commands.err
         await ctx.interaction.response.send_modal(CodeModal(ctx))
 
-class CodeModal(AutoModal):
+class CodeModal(discord.ui.Modal):
     def __init__(self, ctx) -> None:
         self.ctx: commands.Context = ctx
         super().__init__(title="Python Evaluation")
@@ -340,39 +339,24 @@ class CodeModal(AutoModal):
         style=discord.TextStyle.long
     )
 
-    async def threadContianer(self, command) -> None:
-        t = threading.Thread(target = os.system, args = [command,])
-        t.daemon = True
-        t.start()
-        async def w():
-            if not t.is_alive():
-                return
-            else:
-                await asyncio.sleep(0.1)
-                await w()
-        await w()
+    def makeContainer(self) -> os.PathLike:
+        """
+        Runs a contianer. Returns the result log path.
+        """
 
-    async def on_submit(self, interaction: discord.Interaction) -> None:
-        await interaction.response.defer(thinking=True)
-        estart = time.time()
         value: str = self.code.value
 
         basepath = f"{os.getcwd()}\docker"
 
-        # Create a new directory that will contain the Dockerfile and python file
+        # Prepare Files for Building
         _dir = len(os.listdir(f"{basepath}\containers"))
         dirpath = f"{basepath}\containers\{_dir}"
-
         os.system(f"mkdir {dirpath}")
-
 
         pypath = f"{dirpath}\main.py"
 
         targ_dockerfile = f"{dirpath}\Dockerfile"
         tmpl_dockerfile = f"{basepath}\Dockerfile"
-
-        # targ_dockerignore = f"{dirpath}\.dockerignore"
-        # tmpl_doclerignore = f"{basepath}\.dockerignore"
 
         with open(pypath, "w") as pyfile:
             pyfile.write(value)
@@ -380,24 +364,31 @@ class CodeModal(AutoModal):
         with open(targ_dockerfile, "w") as target:
             with open(tmpl_dockerfile, "r") as template:
                 target.write(template.read())
-            
-        # with open(targ_dockerignore, "w") as target:
-        #     with open(tmpl_doclerignore, "r") as template:
-        #         target.write(template.read())
-
 
         pylog = f"{dirpath}\\pythonlog.txt"
-        # Writes to pylog
-        # self.threadContianer(path=dirpath, tag=_dir, log=pylog)
-        await self.threadContianer(command = f"cd {dirpath} && docker build -t {_dir} . && docker run -t {_dir} > {pylog}")
+        os.system(f"cd {dirpath} && docker build -t {_dir} . && docker run -t {_dir} > {pylog}")
+        
+        # Cleanup
+        os.system(f"docker container prune --force && docker image prune -a --force")
+        return pylog
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(thinking=True)
+        estart = time.time()
+
+        loop = asyncio.get_event_loop()
+        with futures.ThreadPoolExecutor() as pool:
+            logpath: os.PathLike = await loop.run_in_executor(pool, self.makeContainer)
+
         embed = fmte(
             self.ctx,
-            d = f"**Code:**\n```py\n{value}\n\n# Finished in: {time.time() - estart} seconds```"
+            d = f"**Code:**\n```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds```"
         )
-        file = discord.File(pylog, "pythonlog.txt")
+
+        file = discord.File(logpath, "pythonlog.txt")
         await interaction.followup.send(content=None, embed=embed, file=file)
-        os.system(f"docker container prune --force && docker image prune -a --force")
-        os.system(f"rd /Q /S {dirpath}")
+        file.close()
+        os.system(f"rd /Q /S {logpath}\\..\\")
 
 
 async def setup(bot):

@@ -1,3 +1,4 @@
+from multiprocessing import freeze_support
 from os import PathLike
 from typing import Callable, List, Literal, Mapping, Optional, Union
 from urllib.parse import quote_plus
@@ -91,4 +92,6 @@ async def main():
     extension_directories: List[PathLike] = ["./src/cogs/development", "./src/cogs/economy", "./src/cogs/main"]
     await load_extensions(bot, extension_directories, spaces = 20, ignore_errors = False, print_log = True)
     await bot.start(Config().BOT_KEY)
-asyncio.run(main())
+if __name__ == "__main__":
+    freeze_support()
+    asyncio.run(main())
