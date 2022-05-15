@@ -1,26 +1,25 @@
+import asyncio
 from dataclasses import MISSING
 from datetime import datetime
+from re import L
+import threading
 import pytz
 from src.auxiliary.user.Converters import TimeConvert
 from src.auxiliary.user.Subclass import AutoModal
 from src.auxiliary.user.Embeds import fmte
-import math
-import re
 import time
-import typing
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
 import os
-from typing import Any, List, Optional
-from math import (radians, sin, cos, tan, asin, acos, atan, sinh, cosh, tanh)
+from typing import Any, List
 from data.config import Config
 
+import aiofiles
+
 import bs4
-import numpy
 import requests
-import simpleeval
 import warnings
 warnings.filterwarnings("error")
 
@@ -286,22 +285,6 @@ class Utility(commands.Cog):
                 inline=False
             )
         await ctx.send(embed=embed, ephemeral=ephemeral)
-
-    @commands.hybrid_command()
-    async def math(self, ctx: commands.Context, equation: str, ephemeral: bool = False):
-        """
-        Evaluates a simple mathematical expression. Supports operators, trig funcs, Numpy, and typing.
-        """
-        st = time.time()
-        res = simpleeval.SimpleEval(
-            functions=self.newOps(), names=self.newNames(
-                ctx, False)).eval(equation)
-        embed = fmte(
-            ctx,
-            t=res,
-            d="Solved in `%sms`" % round((time.time() - st) * 1000, 5)
-        )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
     
     @commands.hybrid_command()
     @describe(
@@ -336,7 +319,7 @@ class Utility(commands.Cog):
         """
         Converts a string such as "1 hour 13 minutes" to a UNIX timestamp.
         """
-        await ctx.send(str(time))
+        await ctx.send(str(time) + time.time())
 
     @commands.hybrid_command()
     @commands.cooldown(2, 60*60*4, commands.BucketType.user)
@@ -357,6 +340,18 @@ class CodeModal(AutoModal):
         style=discord.TextStyle.long
     )
 
+    async def threadContianer(self, command) -> None:
+        t = threading.Thread(target = os.system, args = [command,])
+        t.daemon = True
+        t.start()
+        async def w():
+            if not t.is_alive():
+                return
+            else:
+                await asyncio.sleep(0.1)
+                await w()
+        await w()
+
     async def on_submit(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(thinking=True)
         estart = time.time()
@@ -376,8 +371,8 @@ class CodeModal(AutoModal):
         targ_dockerfile = f"{dirpath}\Dockerfile"
         tmpl_dockerfile = f"{basepath}\Dockerfile"
 
-        targ_dockerignore = f"{dirpath}\.dockerignore"
-        tmpl_doclerignore = f"{basepath}\.dockerignore"
+        # targ_dockerignore = f"{dirpath}\.dockerignore"
+        # tmpl_doclerignore = f"{basepath}\.dockerignore"
 
         with open(pypath, "w") as pyfile:
             pyfile.write(value)
@@ -386,22 +381,22 @@ class CodeModal(AutoModal):
             with open(tmpl_dockerfile, "r") as template:
                 target.write(template.read())
             
-        with open(targ_dockerignore, "w") as target:
-            with open(tmpl_doclerignore, "r") as template:
-                target.write(template.read())
+        # with open(targ_dockerignore, "w") as target:
+        #     with open(tmpl_doclerignore, "r") as template:
+        #         target.write(template.read())
 
 
         pylog = f"{dirpath}\\pythonlog.txt"
-        os.system(f"cd {dirpath} && docker build -t {_dir} . && docker run {_dir} > {pylog}")
-        with open(pylog, "r") as log:
-            # To manage the line and character output
-            fmtlog = "".join(log.readlines()[::])[:3900]
-            embed = fmte(
-                self.ctx,
-                d = f"**Code:**\n```py\n{value}\n```\n**Result:**```\n{fmtlog}\n# Finished in: {time.time() - estart} seconds```"
-            )
-            await interaction.followup.send(content=None, embed=embed)
-        os.system(f"docker image rm {_dir}")
+        # Writes to pylog
+        # self.threadContianer(path=dirpath, tag=_dir, log=pylog)
+        await self.threadContianer(command = f"cd {dirpath} && docker build -t {_dir} . && docker run -t {_dir} > {pylog}")
+        embed = fmte(
+            self.ctx,
+            d = f"**Code:**\n```py\n{value}\n\n# Finished in: {time.time() - estart} seconds```"
+        )
+        file = discord.File(pylog, "pythonlog.txt")
+        await interaction.followup.send(content=None, embed=embed, file=file)
+        os.system(f"docker container prune --force && docker image prune -a --force")
         os.system(f"rd /Q /S {dirpath}")
 
 

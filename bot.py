@@ -1,4 +1,5 @@
-from typing import Callable, List, Optional, Union
+from os import PathLike
+from typing import Callable, List, Literal, Mapping, Optional, Union
 from urllib.parse import quote_plus
 import aiohttp
 import discord
@@ -69,29 +70,25 @@ class Builder(commands.Bot):
         self.collections = {"balances": self.database["balances"], "items": self.database["items"]}
 
     async def setup_hook(self) -> None:
-        fmt: Callable[[str, Optional[int]]] = lambda string, size=25: str(string) + " " * (size - len(str(string)))
+        _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = lambda value, size=25, style="before":\
+            str(value) + " " * (size - len(str(value))) if style == "after" else\
+            " " * (size - len(str(value))) + str(value)
+        fmt: Callable[[str, str, Optional[int], Optional[int]]] = lambda name, value, buf1=10, buf2=22:\
+            "%s: %s|" % (_fmt(name, buf1, "after"), _fmt(value, buf2, "after"))
 
-        client = fmt(self.user)
-        ID = fmt(self.user.id)
-        version = fmt(discord.__version__)
-        print(
-            """
-              \N{WHITE HEAVY CHECK MARK} ONLINE 
-+-----------------------------------+
-| Client: %s |
-+-----------------------------------+
-| ID Num: %s |
-+-----------------------------------+
-| Version: %s|
-+-----------------------------------+
-            """ % (client, ID, version)
-        )
+        client: str = fmt("Client", self.user)
+        userid: str = fmt("User ID", self.user.id)
+        dpyver: str = fmt("Version", discord.__version__)
+
+        bdr = "\n+-----------------------------------+\n"
+
+        print(f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}")
         
 
 async def main():
-    bot = Builder()
+    bot: commands.Bot = Builder()
     await bot.load_extension("jishaku")
-    log = await load_extensions(bot, ["./src/cogs/development", "./src/cogs/economy", "./src/cogs/main"], spaces = 20, ignore_errors = False)
-    print(log)
+    extension_directories: List[PathLike] = ["./src/cogs/development", "./src/cogs/economy", "./src/cogs/main"]
+    await load_extensions(bot, extension_directories, spaces = 20, ignore_errors = False, print_log = True)
     await bot.start(Config().BOT_KEY)
 asyncio.run(main())

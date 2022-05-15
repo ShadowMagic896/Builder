@@ -14,6 +14,7 @@ async def load_extensions(bot: commands.Bot, extension_paths: Iterable[str], **o
 
     spaces: int = opts.get("spaces", 15)
     ignore: bool = opts.get("ignore_errors", True)
+    pl: bool = opts.get("print_log", True)
 
     files: List[Tuple[str, List[str]]] = [
         (path.replace("/", ".").strip("./_"), os.listdir(path))
@@ -37,5 +38,5 @@ async def load_extensions(bot: commands.Bot, extension_paths: Iterable[str], **o
                 continue
 
             log += f"\N{WHITE HEAVY CHECK MARK} {cog} {exp} [{source}.{cog[:-3]}]\n"
-
+    if pl: print(log)
     return log
