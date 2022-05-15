@@ -238,7 +238,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
     async def callback(self, interaction: Interaction) -> Any:
         opt = interaction.data["values"][0]
         obj = self.bot.get_cog(opt)
-        self.placeholder = "%s Cog Selection..." % obj.ge()
+        self.placeholder = f"{obj.ge()} Cog Selection..."
         if self.lastrem:
             self.append_option(self.lastrem)
         self.lastrem = discord.utils.get(

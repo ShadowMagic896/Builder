@@ -1,6 +1,8 @@
 from dataclasses import MISSING
 from datetime import datetime
 import pytz
+from src.auxiliary.user.Converters import TimeConvert
+from src.auxiliary.user.Subclass import AutoModal
 from src.auxiliary.user.Embeds import fmte
 import math
 import re
@@ -30,7 +32,7 @@ class Utility(commands.Cog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
-        self._last_result: Optional[Any] = None
+        self.container_users: List[int] = []
         pass
 
     def ge(self):
@@ -260,8 +262,9 @@ class Utility(commands.Cog):
         defs = []
         dates = []
         types = []
-
         for defi in response:
+            if isinstance(defi, str):
+                raise commands.errors.BadArgument(term)
             defs.append(("".join(defi.get("shortdef", ["Unknown",])[0]).capitalize()))
             dates.append(defi.get("date", "Unknown"))
             types.append(defi.get("fl", "Unknown"))
@@ -299,29 +302,6 @@ class Utility(commands.Cog):
             d="Solved in `%sms`" % round((time.time() - st) * 1000, 5)
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
-
-    @commands.hybrid_command()
-    async def eval(self, ctx: commands.Context):
-        """
-        Evaluates code. Does not support loops for everyone's safety.
-        """
-        await ctx.interaction.response.send_modal(CodeModal(ctx))
-
-    def newOps(self):
-        f = simpleeval.DEFAULT_FUNCTIONS
-        f.update({
-            "sin": lambda n: sin(radians(n)),
-            "cos": lambda n: cos(radians(n)),
-            "tan": lambda n: tan(radians(n)),
-            "asin": lambda n: asin(radians(n)),
-            "acos": lambda n: acos(radians(n)),
-            "atan": lambda n: atan(radians(n)),
-            "sinh": lambda n: sinh(radians(n)),
-            "cosh": lambda n: cosh(radians(n)),
-            "tanh": lambda n: tanh(radians(n)),
-            "root": lambda n, b: n ** (1 / b),
-            "round": lambda n, b: round(n, b)})
-        return f
     
     @commands.hybrid_command()
     @describe(
@@ -351,58 +331,78 @@ class Utility(commands.Cog):
             for zone in pytz.all_timezones if current.lower() in zone.lower()
         ][:25]
 
-    def newNames(self, ctx: commands.Context, expanded: bool):
-        f = simpleeval.DEFAULT_NAMES
-        f.update((key, getattr(typing, key))
-                 for key in dir(typing) if not key.startswith("_"))
-        f.update(
-            {
-                "numpy": numpy,
-                "discord": discord
-            }
-        )
-        if expanded:
-            f.update(
-                {
-                    "discord": discord,
-                    "math": math,
-                    "re": re,
-                    "time": time,
-                    "__ctx__": ctx
-                }
-            )
-        return f
+    @commands.hybrid_command()
+    async def timestamp(self, ctx: commands.Context, time: TimeConvert):
+        """
+        Converts a string such as "1 hour 13 minutes" to a UNIX timestamp.
+        """
+        await ctx.send(str(time))
 
+    @commands.hybrid_command()
+    @commands.cooldown(2, 60*60*4, commands.BucketType.user)
+    async def container(self, ctx: commands.Context):
+        """
+        Creates a docker container and runs Python code inside of it.
+        """
+        if ctx.author.id in self.container_users:
+            raise commands.err
+        await ctx.interaction.response.send_modal(CodeModal(ctx))
 
-class CodeModal(discord.ui.Modal):
+class CodeModal(AutoModal):
     def __init__(self, ctx) -> None:
         self.ctx: commands.Context = ctx
-        super().__init__(title="Code Evaluation")
+        super().__init__(title="Python Evaluation")
     code = discord.ui.TextInput(
         label="Please paste / type code here",
         style=discord.TextStyle.long
     )
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(thinking=True)
         estart = time.time()
-        inst = Utility(self.ctx.bot)
-        value = self.code.value.replace("^", "**")
-        try:
-            result = simpleeval.SimpleEval(
-                functions=inst.newOps(), names=inst.newNames(
-                    self.ctx, True)).eval(value)
-            self.err = None
-        except Exception as err:
-            self.err = err
-            result = "ERROR OCCURRED"
-        self._err = self.err or "No warnings detected!"
-        _type = "fix" if self.err else ""
-        embed = fmte(
-            self.ctx,
-            t=result,
-            d=f"```py\n{value}\n#Computed in {(time.time() - estart) /1000}ms```\n**WARNINGS:** ```{_type}\n{self._err}\n```",
-            c=discord.Color.teal() if self.err is None else discord.Color.red())
-        await interaction.response.send_message(embed=embed)
+        value: str = self.code.value
+
+        basepath = f"{os.getcwd()}\docker"
+
+        # Create a new directory that will contain the Dockerfile and python file
+        _dir = len(os.listdir(f"{basepath}\containers"))
+        dirpath = f"{basepath}\containers\{_dir}"
+
+        os.system(f"mkdir {dirpath}")
+
+
+        pypath = f"{dirpath}\main.py"
+
+        targ_dockerfile = f"{dirpath}\Dockerfile"
+        tmpl_dockerfile = f"{basepath}\Dockerfile"
+
+        targ_dockerignore = f"{dirpath}\.dockerignore"
+        tmpl_doclerignore = f"{basepath}\.dockerignore"
+
+        with open(pypath, "w") as pyfile:
+            pyfile.write(value)
+
+        with open(targ_dockerfile, "w") as target:
+            with open(tmpl_dockerfile, "r") as template:
+                target.write(template.read())
+            
+        with open(targ_dockerignore, "w") as target:
+            with open(tmpl_doclerignore, "r") as template:
+                target.write(template.read())
+
+
+        pylog = f"{dirpath}\\pythonlog.txt"
+        os.system(f"cd {dirpath} && docker build -t {_dir} . && docker run {_dir} > {pylog}")
+        with open(pylog, "r") as log:
+            # To manage the line and character output
+            fmtlog = "".join(log.readlines()[::])[:3900]
+            embed = fmte(
+                self.ctx,
+                d = f"**Code:**\n```py\n{value}\n```\n**Result:**```\n{fmtlog}\n# Finished in: {time.time() - estart} seconds```"
+            )
+            await interaction.followup.send(content=None, embed=embed)
+        os.system(f"docker image rm {_dir}")
+        os.system(f"rd /Q /S {dirpath}")
 
 
 async def setup(bot):

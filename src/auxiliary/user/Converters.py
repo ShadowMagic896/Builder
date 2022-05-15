@@ -61,6 +61,7 @@ class TimeConvert(commands.Converter):
         breaker = "([0-9]+.{1})+"
 
         replacements = {
+            "y": ["year", "years", "yr", "yrs", "ys"],
             "w": ["week", "weeks", "ws"],
             "d": ["day", "days", "ds"],
             "h": ["hour", "hours", "hr", "hrs", "hs"],

@@ -4,3 +4,4 @@ _discord.log
 _commandlog.txt
 
 **/__pycache__/
+docker/containers/*
