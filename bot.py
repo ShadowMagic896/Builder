@@ -1,5 +1,4 @@
-from codecs import ignore_errors
-from typing import List, Union
+from typing import Callable, List, Optional, Union
 from urllib.parse import quote_plus
 import aiohttp
 import discord
@@ -10,21 +9,22 @@ import asyncio
 import pymongo
 from pymongo.server_api import ServerApi
 import logging
-import os
 
 from src.auxiliary.bot.Extensions import load_extensions
 from src.auxiliary.bot.Stats import Stats
 from data.config import Config
 
 # Logging ---------------------------------------------------
-logger = logging.getLogger('discord')
+logger = logging.getLogger("discord")
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(
-    filename='data\\logs\\_discord.log',
-    encoding='utf-8',
-    mode='w')
-handler.setFormatter(logging.Formatter(
-    '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+
+filename = "data\\logs\\_discord.log"
+encoding = "UTF-8"
+mode = "w"
+
+handler = logging.FileHandler(filename=filename, encoding=encoding, mode=mode)
+formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+handler.setFormatter(formatter)
 logger.addHandler(handler)
 # -----------------------------------------------------------
 
@@ -69,11 +69,13 @@ class Builder(commands.Bot):
         self.collections = {"balances": self.database["balances"], "items": self.database["items"]}
 
     async def setup_hook(self) -> None:
-        spaces = len("                         ")
-        client = str(self.user) + " " * (spaces - len(str(self.user)))
-        ID = str(self.user.id) + " " * (spaces - len(str(self.user.id)))
-        version = discord.__version__ + " " * (spaces - len(str(discord.__version__)))
-        s = """
+        fmt: Callable[[str, Optional[int]]] = lambda string, size=25: str(string) + " " * (size - len(str(string)))
+
+        client = fmt(self.user)
+        ID = fmt(self.user.id)
+        version = fmt(discord.__version__)
+        print(
+            """
               \N{WHITE HEAVY CHECK MARK} ONLINE 
 +-----------------------------------+
 | Client: %s |
@@ -82,8 +84,9 @@ class Builder(commands.Bot):
 +-----------------------------------+
 | Version: %s|
 +-----------------------------------+
-        """ % (client, ID, version)
-        print(s)
+            """ % (client, ID, version)
+        )
+        
 
 async def main():
     bot = Builder()
