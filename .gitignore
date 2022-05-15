@@ -5,3 +5,4 @@ _commandlog.txt
 
 **/__pycache__/
 docker/containers/*
+pipdeptree.py
