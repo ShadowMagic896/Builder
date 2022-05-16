@@ -33,10 +33,7 @@ class Watchers(commands.Cog):
                                discord.app_commands.errors.CommandInvokeError,
                                commands.errors.HybridCommandError]):
             error = error.original
-            
-        if isinstance(error, CommandOnCooldown):
-            if ctx.author.id == 724811595976409119:
-                ctx.command.reset_cooldown(ctx)
+
 
         if isinstance(error, CommandNotFound):
             hint = "I couldn't find that command. Try `/help`"

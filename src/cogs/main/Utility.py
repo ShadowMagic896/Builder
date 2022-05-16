@@ -1,7 +1,10 @@
 import asyncio
+from asyncio.subprocess import Process
 from dataclasses import MISSING
 from datetime import datetime
 from concurrent import futures
+import io
+from numpy import str_
 import pytz
 from src.auxiliary.user.Converters import TimeConvert
 from src.auxiliary.user.Subclass import AutoModal
@@ -12,7 +15,7 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 import os
-from typing import Any, List
+from typing import Any, List, Optional, Tuple
 from data.config import Config
 
 import aiofiles
@@ -38,9 +41,8 @@ class Utility(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        ephemeral="Whether to publicly show the response to the command.",
     )
-    async def invite(self, ctx: commands.Context, ephemeral: bool = False):
+    async def invite(self, ctx: commands.Context):
         """
         Gets a link to invite me to a server!
         """
@@ -54,13 +56,12 @@ class Utility(commands.Cog):
             t="Invite Me to a Server!",
             d="[Invite Link]({})".format(link)
         )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
     @commands.hybrid_command()
     @describe(
-        ephemeral="Whether to publicly show the response to the command.",
     )
-    async def ping(self, ctx: commands.Context, ephemeral: bool = False):
+    async def ping(self, ctx: commands.Context):
         """
         Returns the bot's latency, in milliseconds.
         """
@@ -68,14 +69,13 @@ class Utility(commands.Cog):
         emt = "`\N{OCTAGONAL SIGN} [HIGH]`" if ping > 0.4 else "`\N{WARNING SIGN} [MEDIUM]`"
         emt = emt if ping > 0.2 else "`\N{WHITE HEAVY CHECK MARK} [LOW]`"
 
-        await ctx.send(embed=fmte(ctx, "\N{TABLE TENNIS PADDLE AND BALL} Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"), ephemeral=ephemeral)
+        await ctx.send(embed=fmte(ctx, "\N{TABLE TENNIS PADDLE AND BALL} Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
 
     @commands.hybrid_command()
     @describe(
         user="The user to get information on.",
-        ephemeral="Whether to publicly show the response to the command.",
     )
-    async def info(self, ctx: commands.Context, user: discord.Member = None, ephemeral: bool = False):
+    async def info(self, ctx: commands.Context, user: discord.Member = None):
         """
         Gets information about the user requested.
         """
@@ -107,13 +107,12 @@ class Utility(commands.Cog):
                 s=b
             )
         )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
     @commands.hybrid_command()
     @describe(
-        ephemeral="Whether to publicly show the response to the command.",
     )
-    async def bot(self, ctx: commands.Context, ephemeral: bool = False):
+    async def bot(self, ctx: commands.Context):
         """
         Returns information about the bot.
         """
@@ -131,15 +130,14 @@ class Utility(commands.Cog):
                 s=b
             )
         )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
     @commands.hybrid_command()
     @commands.is_nsfw()
     @describe(
         querey="What to search for.",
-        ephemeral="Whether to publicly show the response to the command.",
     )
-    async def search(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
+    async def search(self, ctx: commands.Context, querey: str):
         """
         Searches the web for a website and returns the first result.
         """
@@ -164,57 +162,61 @@ class Utility(commands.Cog):
             ctx,
             t="Result found!",
         )
-        await ctx.send("https://google.com{}".format(link), embed=embed, ephemeral=ephemeral)
+        await ctx.send("https://google.com{}".format(link), embed=embed)
 
     @commands.hybrid_command()
     @describe(
         objectid="The ID of the object to look for.",
-        ephemeral="Whether to publicly show the response to the command.",
     )
-    async def find(self, ctx: commands.Context, objectid: str, ephemeral: bool = False):
+    async def find(self, ctx: commands.Context, objectid: str):
         """
-        Finds a user, role, custom emoji, sticker, channel, or server based on the ID given
+        Finds a Member, Role, Channel, Message, Custom Emoji, Sticker, Server, or User from its ID.
         """
+        objectid = int(objectid)
         found: Any = ...
         name: str = ...
         objtype: Any = ...
         attempts: List = [
-            self.bot.get_user,
+            ctx.guild.get_member,
             ctx.guild.get_role,
+            ctx.guild.get_channel,
+            ctx.channel.get_partial_message,
             self.bot.get_emoji,
-            self.bot.get_channel,
             self.bot.get_sticker,
             self.bot.get_guild,
+            self.bot.get_user,
         ]
-
         for t in attempts:
-            if not (res := t(int(objectid))):
+            if not (found := t(objectid)):
                 continue
+            
+            objtype = type(found).__name__
+            name = str(found)
 
-            found = res
-            objtype = type(found)
-            if isinstance(found, discord.User):
-                name = str(found)
-            else:
-                name = res.name
+            if isinstance(found, discord.PartialMessage):
+                name = found.jump_url
 
             embed = fmte(
                 ctx,
                 t="Object Found!",
-                d="**Name: ** %s\n**Type:** %s" %
-                (name, objtype.__name__)
             )
-            await ctx.send(embed=embed, ephemeral=ephemeral)
-            return
+            embed.add_field(
+                name = "NAME",
+                value = name,
+            )
+            embed.add_field(
+                name = "TYPE",
+                value = objtype
+            )
+            return await ctx.send(embed=embed)
         else:
             raise commands.errors.BadArgument(
-                "Cannot find object: %s. Make sure this bot can see it. If it was an emoji, make sure it was not a default one." %
-                str(objectid))
+                f"Cannot find object: {objectid}. Make sure this bot can see it. If it was an emoji, make sure it was not a default one."
+            )
 
     @commands.hybrid_command()
     @describe(
         term="The term to search urbanDictionary for.",
-        ephemeral="Whether to publicly show the response to the command.",
     )
     async def urban(self, ctx: commands.Context, term: str, ephemeral: bool = False):
         """
@@ -248,7 +250,6 @@ class Utility(commands.Cog):
     @commands.hybrid_command()
     @describe(
         term="The term to search urbanDictionary for.",
-        ephemeral="Whether to publicly show the response to the command.",
     )
     async def define(self, ctx: commands.Context, term: str, ephemeral: bool = False):
         """
@@ -283,14 +284,13 @@ class Utility(commands.Cog):
                 value=item,
                 inline=False
             )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
     
     @commands.hybrid_command()
     @describe(
         zone="The timezone to get the time from.",
-        ephemeral="Whether to publicly show the response to the command.",
     )
-    async def time(self, ctx: commands.Context, zone: str = "UTC", ephemeral: bool = False):
+    async def time(self, ctx: commands.Context, zone: str = "UTC"):
         """
         Gets the current time in the desired time zone.
         """
@@ -304,7 +304,7 @@ class Utility(commands.Cog):
                 t="Current datetime in zone {}:".format(time.zone),
                 d="```{}```".format(datetime.now(pytz.timezone(zone)))
             )
-            await ctx.send(embed=embed, ephemeral=ephemeral)
+            await ctx.send(embed=embed)
 
     @time.autocomplete("zone")
     async def time_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
@@ -339,9 +339,9 @@ class CodeModal(discord.ui.Modal):
         style=discord.TextStyle.long
     )
 
-    def makeContainer(self) -> os.PathLike:
+    async def makeContainer(self, ctx: commands.Context):
         """
-        Runs a contianer. Returns the result log path.
+        Runs a contianer. Returns the result STDOUT, STDERR, and return code.
         """
 
         value: str = self.code.value
@@ -365,30 +365,68 @@ class CodeModal(discord.ui.Modal):
             with open(tmpl_dockerfile, "r") as template:
                 target.write(template.read())
 
-        pylog = f"{dirpath}\\pythonlog.txt"
-        os.system(f"cd {dirpath} && docker build -t {_dir} . && docker run -t {_dir} > {pylog}")
-        
+        options = {
+            "--rm": "",
+            "--memory":  "4GB",
+            "-t": _dir,
+        }
+        opts = " ".join(f"{x}{' ' if y != '' else y}{y}" for x, y in list(options.items()))
+
+        # Build the Container
+        await (await asyncio.create_subprocess_shell(
+            f"cd {dirpath} && docker build -t {_dir} . ",
+            stdout = asyncio.subprocess.PIPE,
+            stderr = asyncio.subprocess.PIPE
+        )).communicate()
+        embed = fmte(
+            ctx,
+            t = "Container Created",
+            d = "Running Code..."
+        )
+        await ctx.send(embed=embed)
+        proc: Process = await asyncio.create_subprocess_shell(
+            f"cd {dirpath} && docker run {opts}",
+            stdout = asyncio.subprocess.PIPE,
+            stderr = asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await proc.communicate()
+        if stderr:
+            raise 
+
         # Cleanup
-        os.system(f"docker container prune --force && docker image prune -a --force")
-        return pylog
+        os.system(f"docker image prune -a --force")
+
+        return (_dir, stdout, (proc.returncode or 0))
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(thinking=True)
         estart = time.time()
 
-        loop = asyncio.get_event_loop()
-        with futures.ThreadPoolExecutor() as pool:
-            logpath: os.PathLike = await loop.run_in_executor(pool, self.makeContainer)
+        _dir, stdout, return_code = await self.makeContainer(self.ctx)
 
+        file: discord.File = ...
+        color: discord.Color = ...
+
+        color = discord.Color.teal() if return_code == 0 else discord.Color.red()
+
+        buffer = io.BytesIO()
+        buffer.write(stdout)
+        buffer.seek(0)
+
+        file = discord.File(buffer)
+        file.filename = f"result.{self.ctx.author.id}.py"
+        file.description = f"This is the result of a Python script written by Discord user {self.ctx.author.id}, and run in a Docker container."
+            
         embed = fmte(
             self.ctx,
-            d = f"**Code:**\n```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds```"
+            t = f"**Code:**",
+            d = "```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds```",
+            c = color
         )
 
-        file = discord.File(logpath, "pythonlog.txt")
-        await interaction.followup.send(content=None, embed=embed, file=file)
-        file.close()
-        os.system(f"rd /Q /S {logpath}\\..\\")
+        await self.ctx.send(content=None, embed=embed, file=file)
+        ddir = os.getcwd() + f"\\docker\\containers\\{_dir}"
+        os.system(f"rd /Q /S {ddir}")
 
 
 async def setup(bot):
