@@ -335,7 +335,7 @@ class CodeModal(discord.ui.Modal):
         style=discord.TextStyle.long
     )
 
-    async def makeContainer(self, ctx: commands.Context):
+    async def makeContainer(self, ctx: commands.Context, inter: discord.Interaction):
         """
         Runs a contianer. Returns the result STDOUT, STDERR, and return code.
         """
@@ -362,7 +362,8 @@ class CodeModal(discord.ui.Modal):
         options = {
             "--rm": "",
             "--memory":  "6MB",
-            "--stop-timeout": 3,
+            "--ulimit": "cpu=3",
+            "--read-only": "",
             "-t": _dir,
         }
         opts = " ".join(f"{x}{' ' if y != '' else y}{y}" for x, y in list(options.items()))
@@ -378,7 +379,7 @@ class CodeModal(discord.ui.Modal):
             t = f"Container Created `[ID: {_dir}]`",
             d = "Compiling and running code..."
         )
-        await ctx.send(embed=embed)
+        await inter.followup.send(embed=embed)
         proc: Process = await asyncio.create_subprocess_shell(
             f"cd {dirpath} && docker run {opts}",
             stdout = asyncio.subprocess.PIPE,
@@ -400,10 +401,9 @@ class CodeModal(discord.ui.Modal):
         return (_dir, stdout, (proc.returncode or 0))
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        await interaction.response.defer(thinking=True)
         estart = time.time()
-
-        _dir, stdout, return_code = await self.makeContainer(self.ctx)
+        await interaction.response.defer(thinking=True)
+        _dir, stdout, return_code = await self.makeContainer(self.ctx, interaction)
 
         file: discord.File = ...
         color: discord.Color = ...
@@ -424,7 +424,7 @@ class CodeModal(discord.ui.Modal):
             c = color
         )
 
-        await self.ctx.send(content=None, embed=embed, file=file)
+        await (await interaction.original_message()).edit(content=None, embed=embed, attachments=(file,))
         ddir = os.getcwd() + f"\\docker\\containers\\{_dir}"
         os.system(f"rd /Q /S {ddir}")
 
