@@ -322,11 +322,12 @@ class Utility(commands.Cog):
         Creates a docker container and runs Python code inside of it.
         """
         if ctx.author.id in self.container_users:
-            raise commands.err
-        await ctx.interaction.response.send_modal(CodeModal(ctx))
+            raise commands.errors.MissingPermissions("You are already running a container.")
+        await ctx.interaction.response.send_modal(CodeModal(self, ctx))
 
 class CodeModal(discord.ui.Modal):
-    def __init__(self, ctx) -> None:
+    def __init__(self, util: Utility, ctx: commands.Context) -> None:
+        self.util = util
         self.ctx: commands.Context = ctx
         super().__init__(title="Python Evaluation")
     code = discord.ui.TextInput(
@@ -338,9 +339,9 @@ class CodeModal(discord.ui.Modal):
         """
         Runs a contianer. Returns the result STDOUT, STDERR, and return code.
         """
-
+        if ctx.author.id not in [mem.id for mem in (await ctx.bot.application_info()).team.members]:
+            self.util.container_users.append(ctx.author.id)
         value: str = self.code.value
-
         basepath = f"{os.getcwd()}\docker"
 
         # Prepare Files for Building
@@ -349,20 +350,19 @@ class CodeModal(discord.ui.Modal):
         os.system(f"mkdir {dirpath}")
 
         pypath = f"{dirpath}\main.py"
-
-        targ_dockerfile = f"{dirpath}\Dockerfile"
-        tmpl_dockerfile = f"{basepath}\Dockerfile"
-
         with open(pypath, "w") as pyfile:
             pyfile.write(value)
 
-        with open(targ_dockerfile, "w") as target:
-            with open(tmpl_dockerfile, "r") as template:
-                target.write(template.read())
+        for f in os.listdir(f"{basepath}\\template"):
+            with open(f"{basepath}\\template\\{f}", "r") as template:
+                with open(f"{dirpath}\\{f}", "w") as file:
+                    file.write(template.read())
+
 
         options = {
             "--rm": "",
             "--memory":  "6MB",
+            "--stop-timeout": 3,
             "-t": _dir,
         }
         opts = " ".join(f"{x}{' ' if y != '' else y}{y}" for x, y in list(options.items()))
@@ -375,8 +375,8 @@ class CodeModal(discord.ui.Modal):
         )).communicate()
         embed = fmte(
             ctx,
-            t = "Container Created",
-            d = "Running Code..."
+            t = f"Container Created `[ID: {_dir}]`",
+            d = "Compiling and running code..."
         )
         await ctx.send(embed=embed)
         proc: Process = await asyncio.create_subprocess_shell(
@@ -386,12 +386,16 @@ class CodeModal(discord.ui.Modal):
         )
         stdout, stderr = await proc.communicate()
         if stderr:
-            raise 
+            print(stderr.decode())
 
         # Cleanup
         await (await asyncio.create_subprocess_shell(
             f"docker image prune -a --force",
         )).communicate()
+        try:
+            self.util.container_users.remove(self.ctx.author.id)
+        except ValueError:
+            pass
 
         return (_dir, stdout, (proc.returncode or 0))
 
@@ -416,8 +420,7 @@ class CodeModal(discord.ui.Modal):
             
         embed = fmte(
             self.ctx,
-            t = f"**Code:**",
-            d = f"```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds```",
+            d = f"```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds\n# Written by: {self.ctx.author.id}```",
             c = color
         )
 
