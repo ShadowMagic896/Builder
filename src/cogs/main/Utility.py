@@ -1,11 +1,7 @@
 import asyncio
 from asyncio.subprocess import Process
-from dataclasses import MISSING
 from datetime import datetime
-from concurrent import futures
 import io
-import logging
-from numpy import str_
 import pytz
 from src.auxiliary.user.Converters import TimeConvert
 from src.auxiliary.user.Subclass import AutoModal
@@ -16,11 +12,9 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 import os
-from typing import Any, List, Optional, Tuple
+from typing import Any, List
 from data.config import Config
-
-import aiofiles
-
+from data.errors import *
 import bs4
 import requests
 import warnings
@@ -364,7 +358,7 @@ class Utility(commands.Cog):
         await ctx.interaction.response.send_modal(CodeModal(self, ctx))
 
 
-class CodeModal(discord.ui.Modal):
+class CodeModal(AutoModal):
     def __init__(self, util: Utility, ctx: commands.Context) -> None:
         self.util = util
         self.ctx: commands.Context = ctx
@@ -431,7 +425,7 @@ class CodeModal(discord.ui.Modal):
         )
         stdout, stderr = await proc.communicate()
         if stderr:
-            print(stderr.decode())
+            raise InternalError("This server's Docker daemon is not running right now.")
 
         # Cleanup
         await (

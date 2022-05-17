@@ -7,6 +7,7 @@ from discord.errors import *
 import asyncio
 import time
 from datetime import datetime
+from data.errors import InternalError
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
@@ -90,7 +91,6 @@ class Watchers(commands.Cog):
 
     async def _interaction_error_handler(inter: discord.Interaction, error: Exception):
         print(error)
-        hint = None
 
         while isinstance(
             error,
@@ -101,49 +101,38 @@ class Watchers(commands.Cog):
             ],
         ):
             error = error.original
+        errorDir = {
+            CommandNotFound: "I couldn't find that command. Try `/help`",
+            ExtensionNotFound: "I couldn't find that cog. Try `/help`",
+            NotFound: "I couldn't find that. Try `/help`, or check the error for more info.",
+            Forbidden: "I'm not allowed to do that.",
+            MissingRequiredArgument: "You need to supply more information to use that command.",
+            NSFWChannelRequired: "You must be in an NSFW channel to use that.",
+            UserNotFound: "That user was not found in discord.",
+            MemberNotFound: "That member was not found in this server.",
+            BadArgument: "You passed an invalid option.",
+            TimeoutError: "This has timed out. Next time, try to be quicker.",
+            CommandOnCooldown: "Slow down! You can't use that right now.",
+            ValueError: "You gave something of the wrong value or type. Check the error for more information.",
+            TypeError: "You gave something of the wrong value or type. Check the error for more information.",
+            IOError: "You gave an incorrect parameter for a file.",
+            NumberTooHigh: "Your number is too big for me to compute.",
+            InternalError: "An internal error occurred.",
+        }
+        hint: str = errorDir.get(
+            error, "An unknown erorr has occurred. Please use `/bug` to report this."
+        )
 
-        if isinstance(error, CommandNotFound):
-            hint = "I couldn't find that command. Try `/help`"
-        if isinstance(error, ExtensionNotFound):
-            hint = "I couldn't find that cog. Try `/help`"
-        elif isinstance(error, NotFound):
-            hint = (
-                "I couldn't find that. Try `/help`, or check the error for more info."
-            )
-        elif isinstance(error, Forbidden):
-            hint = "I'm not allowed to do that."
-        elif isinstance(error, MissingRequiredArgument):
-            hint = "You need to supply more information to use that command. Try `/help [command]`"
-        elif isinstance(error, NSFWChannelRequired):
-            hint = "You must be in an NSFW channel to use that."
-        elif isinstance(error, UserNotFound):
-            hint = "That user was not found in discord."
-        elif isinstance(error, MemberNotFound):
-            hint = "That member was not found in this server."
-        elif isinstance(error, BadArgument):
-            hint = "You passed an invalid option."
-        elif isinstance(error, asyncio.TimeoutError):
-            hint = "This has timed out. Next time, try to be quicker."
-        elif isinstance(error, CommandOnCooldown):
-            hint = "Slow down! You can't use that right now."
-        elif isinstance(error, ValueError) or isinstance(error, TypeError):
-            hint = "You gave something of the wrong value or type. Check the error for more information."
-        elif isinstance(error, IOError):
-            hint = "You gave an incorrect parameter for a file."
-        elif isinstance(error, NumberTooHigh):
-            hint = "Your number is too big for me to compute."
-        else:
-            hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
-        hintEmbed = fmte_i(
+        embed = fmte_i(
             inter,
-            t="An Error Occurred.",
-            d="**Hint:**\n{}\n**Error:**\n`{}`".format(hint, error),
+            t=hint,
+            d=f"**Error:**\n`{error}`",
             c=discord.Color.red(),
         )
         try:
-            await inter.response.send_message(embeds=[hintEmbed], ephemeral=True)
+            await inter.response.send_message(embed=embed, ephemeral=True)
         except InteractionResponded:
-            await inter.followup.send(embeds=[hintEmbed], ephemeral=True)
+            await inter.followup.send(embed=embed, ephemeral=True)
 
     async def handle_modal_error(interaction: discord.Interaction, error: Exception):
         try:
