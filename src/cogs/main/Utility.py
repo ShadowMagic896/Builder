@@ -4,6 +4,7 @@ from dataclasses import MISSING
 from datetime import datetime
 from concurrent import futures
 import io
+import logging
 from numpy import str_
 import pytz
 from src.auxiliary.user.Converters import TimeConvert
@@ -87,25 +88,19 @@ class Utility(commands.Cog):
             ctx,
             t="Information on {}".format(user)
         )
+        made = round(user.created_at.timestamp()) if user.created_at is not None else "`Unknown`"
+        joined = round(user.joined_at.timestamp()) if user.joined_at is not None else "`Unknown`"
+        prem = round(user.premium_since.timestamp()) if user.premium_since is not None else "`None`"
+
         embed.add_field(
             name="***__General Info__***",
-            value="{s}**Name:** `{}`{s}**Nickname:** `{}`{s}**ID:** `{}`{s}**Nitro Since:** {}{s}".format(
-                user,
-                user.nick,
-                user.id,
-                ("t<:%s>" %
-                 round(
-                     user.premium_since.timestamp())) if user.premium_since else "`None`",
-                s=b),
-            inline=False)
+            value=f"**Name:** `{user}`{b}**Nickname:** `{user.nick}`{b}**ID:** `{user.id}`{b}**Nitro Since:** {prem}{b}",
+            inline=False
+        )
         embed.add_field(
             name="***__Statistics__***",
-            value="{s}**Status:** `{}`{s}**Creation Date:** <t:{}>{s}**Join Date:** <t:{}>{s}**System User:** `{}`{s}".format(
-                user.status, round(
-                    user.joined_at.timestamp()) if user.joined_at else "`Unknown`", round(
-                    user.created_at.timestamp()) if user.created_at else "`Unknown`", user.system,
-                s=b
-            )
+            value=f"{b}**Status:** `{user.status}`\n**Creation Date:** <t:{made}>{b}**Join Date:** <t:{joined}>{b}**System User:** `{user.system}`",
+            inline=False
         )
         await ctx.send(embed=embed)
 
@@ -367,7 +362,7 @@ class CodeModal(discord.ui.Modal):
 
         options = {
             "--rm": "",
-            "--memory":  "4GB",
+            "--memory":  "6MB",
             "-t": _dir,
         }
         opts = " ".join(f"{x}{' ' if y != '' else y}{y}" for x, y in list(options.items()))
@@ -394,7 +389,9 @@ class CodeModal(discord.ui.Modal):
             raise 
 
         # Cleanup
-        os.system(f"docker image prune -a --force")
+        await (await asyncio.create_subprocess_shell(
+            f"docker image prune -a --force",
+        )).communicate()
 
         return (_dir, stdout, (proc.returncode or 0))
 
@@ -420,7 +417,7 @@ class CodeModal(discord.ui.Modal):
         embed = fmte(
             self.ctx,
             t = f"**Code:**",
-            d = "```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds```",
+            d = f"```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds```",
             c = color
         )
 

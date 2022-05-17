@@ -1,17 +1,19 @@
+import asyncio
 import io
+from io import BytesIO
 from math import ceil
-from markupsafe import escape
+import functools
+import os
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
-import os
 
-from PIL import Image, ImageDraw, ImageColor, ImageFilter, ImageEnhance, ImageOps, ImageFont
-from typing import Literal, Optional
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageOps, ImageFont
+from typing import Any, Callable, Literal, Optional
 
 from numpy import average
-
+from data.config import Config
 
 from src.auxiliary.user.Embeds import fmte, Desc
 from src.auxiliary.bot.Constants import CONSTANTS
@@ -24,6 +26,7 @@ class Images(commands.Cog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.loop = self.bot.loop
 
     def ge(self):
         return "\N{FRAME WITH PICTURE}\N{VARIATION SELECTOR-16}"
@@ -37,21 +40,33 @@ class Images(commands.Cog):
             raise IOError(
                 "Attachment is too large. Please keep files under 40MB")
 
-    async def _resize(self, image: discord.Attachment, width, height) -> io.BytesIO:
-        buffer = io.BytesIO()
+    async def run(self, func: Callable, *args, **kwargs) -> Any:
+        """
+        Runs a synchronous method in the current async loop's executor
+        All *args and **kwargs get passed to the function
+        """
+        partial = functools.partial(func, *args, **kwargs)
+        return await asyncio.get_event_loop().run_in_executor(None, partial)
+    
+    def callOnImage(self, buffer: BytesIO, function: str, *args, **kwargs) -> Any:
+        img = Image.open(buffer)
+        img: Image.Image = getattr(img, function)(*args, **kwargs)
+        buffer: io.BytesIO = io.BytesIO()
+        img.save(buffer, "png")
+        buffer.seek(0)
+        return buffer
+
+    async def tobuf(self, image: discord.Attachment, check: bool = True) -> io.BytesIO:
+        if check:
+            ...
+
+        buffer: io.BytesIO = io.BytesIO()
         await image.save(buffer)
         buffer.seek(0)
-
-        img = Image.open(buffer)
-        img = img.resize((width, height))
-
-        buffer = io.BytesIO()  # Reset the buffer
-
-        img.save(buffer, "png")
-        img.close()
-        buffer.seek(0)
-
         return buffer
+    
+    async def toimg(self, image: discord.Attachment, check: bool = True) -> Image.Image:
+        return Image.open(await self.tobuf(image, check))
 
     @commands.hybrid_group()
     async def image(self, ctx: commands.Context):
@@ -62,16 +77,14 @@ class Images(commands.Cog):
     @describe(
         width="The new image's width.",
         height="The new image's height.",
-        ephemeral=Desc.ephemeral,
     )
-    async def resize(self, ctx: commands.Context, image: discord.Attachment, width: int, height: int, ephemeral: bool = False):
+    async def resize(self, ctx: commands.Context, image: discord.Attachment, width: int, height: int):
         """
         Resizes an image to a certain width and height
         """
-        self.checkAttachment(image)
         ogsize = (image.width, image.height)
-
-        buffer: io.BytesIO = await self._resize(image, width, height)
+    
+        buffer: io.BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "resize", (width, height))
 
         embed = fmte(
             ctx,
@@ -81,31 +94,20 @@ class Images(commands.Cog):
         )
 
         file = discord.File(buffer, filename="resize.%s" % image.filename)
-        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+        await ctx.send(embed=embed, file=file)
 
     @image.command()
     @commands.cooldown(10, 60 * 60, commands.BucketType.user)
     @describe(
         name="What to name the new emoji.",
         reason="The reason for creating the emoji. Shows up in audit logs.",
-        ephemeral=Desc.ephemeral,
     )
-    async def steal(self, ctx: commands.Context, name: str, image: discord.Attachment, reason: Optional[str] = "No reason given", ephemeral: bool = False):
+    async def steal(self, ctx: commands.Context, name: str, image: discord.Attachment, reason: Optional[str] = "No reason given"):
         """
         Copies an image image and adds it to the guild as an emoji
         """
-        self.checkAttachment(image)
-        extension = self.getExtension(image)
 
-        if extension.lower() not in ["png", "jpg", "jpeg"]:
-            raise TypeError(
-                "Only PNG and JPG files are permitted. [Discord limitation]")
-
-        buffer = io.BytesIO()
-
-        await image.save(buffer)
-
-        buffer = await self._resize(image, 128, 128)
+        buffer: io.BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "resize", (128, 128))
 
         e: discord.Emoji = await ctx.guild.create_custom_emoji(name=name, image=buffer.read(), reason=reason)
         embed = fmte(
@@ -114,8 +116,9 @@ class Images(commands.Cog):
             d="**Emoji:** %s\n**Name:** %s\n**Reason:** %s" %
             ("<:{}:{}>".format(e.name, e.id), e.name, reason)
         )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
+        
     @image.command()
     @commands.cooldown(10, 60 * 60, commands.BucketType.user)
     @describe(
@@ -124,64 +127,65 @@ class Images(commands.Cog):
         xpos="The X-Position for the top-left corner of the text.",
         ypos="The Y-Position for the top-left corner of the text.",
 
-        # direction = "The direction of the text. Right to left, Left to Right, or Top to Bottom.",
-        # align = "Where to align the text. Left, Center, or Right.",
-
-        # font = "The font to use.",
-        # strokeweight = "The width of the font, in pixels.",
+        font = "The font to use.",
+        strokeweight = "The width of the font, in pixels.",
 
         r="The RED component of the text color.",
         g="The GREEN component of the text color.",
         b="The BLUE component of the text color.",
-        ephemeral=Desc.ephemeral,
     )
     async def text(
         self,
         ctx: commands.Context,
-        text: str,
         image: discord.Attachment,
+        text: str,
         xpos: int, ypos: int,
 
-        # direction: Literal["rtl", "ltr", "ttb"] = "rtl",
-        # align: Literal["left", "center", "right"] = "left",
-
-        # font: str = "C:\\Windows\\Fonts\\PERTILI.TTF",
-        # strokeweight: Range[int, 1, 75] = 5,
+        font: str = "pertili",
+        strokeweight: Range[int, 1, 200] = 5,
 
         r: Range[int, 0, 255] = 255,
         g: Range[int, 0, 255] = 255,
         b: Range[int, 0, 255] = 255,
-
-        ephemeral: bool = False
     ):
         """
-        Adds text to an image. More featues are a WIP
+        Adds text to an image.
         """
+        font = font.lower()
+        if font not in [p.lower() for p in os.listdir(Config().FONT_PATH)]:
+            raise ValueError("Not a valid font. Please use the autocomplete.")
+        try:
+            font = ImageFont.FreeTypeFont(Config().FONT_PATH + font, strokeweight)
+        except BaseException as e:
+            print(e)
+        img = await self.toimg(image)
 
-        buffer = io.BytesIO()
-
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        drawer = ImageDraw.Draw(img)
-
-        drawer.text(
-            (xpos, ypos),
-            text, fill=(r, g, b),
-            # direction=direction,
-            # align=align,
-            # font=font
+        await self.run(
+            lambda i: i.text(xy=(xpos, ypos), text=text, fill=(r,g,b), font=font), 
+            ImageDraw.ImageDraw(img)
         )
-        buffer = io.BytesIO()
+
+        buffer: BytesIO = BytesIO()
         img.save(buffer, "png")
         buffer.seek(0)
+
         file = discord.File(buffer, filename="text.%s" % image.filename)
+
         embed = fmte(
             ctx,
             t="File Successfully Edited!"
         )
-        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
-
+        await ctx.send(embed=embed, file=file)
+    
+    @text.autocomplete(name="font")
+    async def textfont_autocomplete(self, inter: discord.Interaction, current: str):
+        return [
+            discord.app_commands.Choice(name = p[:-4], value = p)
+            for p in os.listdir(Config().FONT_PATH)
+            if (p.lower() in current.lower() or current.lower() in p.lower()) and p.lower().endswith(".ttf")
+        ][:25]
+    
+    
     @image.command()
     @describe(
         image="The image to crop.",
@@ -189,41 +193,30 @@ class Images(commands.Cog):
         upper="The upper point to start cropping.",
         right="The right point to stop cropping.",
         lower="The lower point to start cropping.",
-        ephemeral=Desc.ephemeral,
     )
     async def crop(
         self,
         ctx: commands.Context,
         image: discord.Attachment,
         left: int, upper: int, right: int, lower: int,
-        ephemeral: bool = False,
     ):
         """
         Crops an image to the given dimensions
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-
-        img: Image.Image = Image.open(buffer)
-        buffer = io.BytesIO()
-        img = img.crop((left, upper, right, lower))
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "crop", (left, upper, right, lower))
 
         embed = fmte(
             ctx,
             t="Image Cropped"
         )
         file = discord.File(buffer, "crop.%s" % image.filename)
-        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
-
+        await ctx.send(embed=embed, file=file)
+        
     @image.command()
     @describe(
         image="The image to get information on.",
-        ephemeral=Desc.ephemeral,
     )
-    async def info(self, ctx: commands.Context, image: discord.Attachment, ephemeral: bool = False):
+    async def info(self, ctx: commands.Context, image: discord.Attachment):
         """
         Retrieves information about the image
         """
@@ -246,19 +239,15 @@ class Images(commands.Cog):
             value="`%s`" % image.content_type,
             inline=False
         )
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        file = discord.File(buffer, filename=image.filename)
-        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+        file = discord.File(await self.tobuf(image), filename=image.filename)
+        await ctx.send(embed=embed, file=file)
 
     @image.command()
     @describe(image="The image to rotate",
               degrees="The amount of degrees to rotate the image.",
               centerx="The X Coordinate of the center of rotation.",
               centery="The Y Coordinate of the center of rotation.",
-              fillcolor="The color to fill the remaining parts of the image after rotation.",
-              ephemeral=Desc.ephemeral)
+              fillcolor="The color to fill the remaining parts of the image after rotation.",)
     async def rotate(
         self,
         ctx: commands.Context,
@@ -266,37 +255,23 @@ class Images(commands.Cog):
         degrees: int,
         centerx: Optional[int] = None, centery: Optional[int] = None,
         fillcolor: str = "white",
-        ephemeral: bool = False,
     ):
         """
         Rotates an image by a given amount of degrees
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        if not (centerx and centery):
-            center = None
-        else:
-            center = (centerx, centery)
-
-        img = Image.open(buffer)
-        fillcolor = ImageColor.getrgb(fillcolor)
-        img = img.rotate(
-            degrees %
-            360,
-            center=center,
-            fillcolor=fillcolor,
-            expand=True)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "rotate", 
+            degrees, 
+            center=(centerx or round(image.width/2), centery or round(image.height/2)), 
+            fillcolor=fillcolor, 
+            expand=True
+        )
 
         embed = fmte(
             ctx,
             t="Image Rotated"
         )
         file = discord.File(buffer, "rotate.%s" % image.filename)
-        await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+        await ctx.send(embed=embed, file=file)
 
     def getFilters(self):
         """Basically get all constants in ImageFilter"""
@@ -305,26 +280,18 @@ class Images(commands.Cog):
     @image.command()
     @describe(
         image="The image to apply the filter to.",
-        imagefilter="The filter to apply.",
+        filter="The filter to apply.",
     )
-    async def filter(self, ctx: commands.Context, imagefilter: str, image: discord.Attachment, ):
+    async def filter(self, ctx: commands.Context, image: discord.Attachment, filter: str,):
         """
         Applies a filter onto the image
         """
         filts = self.getFilters()
-        if imagefilter not in filts:
-            raise commands.BadArgument(imagefilter)
+        if filter not in filts:
+            raise commands.BadArgument(filter)
 
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-
-        _filter = getattr(ImageFilter, imagefilter)
-        img = img.filter(_filter)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        filter: ImageFilter = getattr(ImageFilter, filter)
+        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "filter", filter)
 
         embed = fmte(
             ctx,
@@ -333,13 +300,14 @@ class Images(commands.Cog):
         file = discord.File(buffer, "filter.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
-    @filter.autocomplete("imagefilter")
+    @filter.autocomplete("filter")
     async def filterimagefilter_autocomplete(self, inter: discord.Interaction, current: str):
         return [
             discord.app_commands.Choice(name=c, value=c)
             for c in self.getFilters()
             if c.lower() in current.lower() or current.lower() in c.lower()
         ][:25]
+
 
     @image.command()
     @describe(
@@ -349,14 +317,7 @@ class Images(commands.Cog):
         """
         Convert an image to a grey-scale color scheme
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        img = img.convert("L")
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "convert", "L")
 
         embed = fmte(
             ctx,
@@ -364,6 +325,7 @@ class Images(commands.Cog):
         )
         file = discord.File(buffer, "gs.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
+
 
     @image.command()
     @describe(
@@ -374,17 +336,7 @@ class Images(commands.Cog):
         """
         Attempts to convert the image into the specified mode.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        try:
-            img = img.convert(mode=mode)
-        except OSError or TypeError as e:
-            raise TypeError(e)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer = await self.run(self.callOnImage, await self.tobuf(image), "convert", mode)
 
         embed = fmte(
             ctx,
@@ -402,18 +354,7 @@ class Images(commands.Cog):
         """
         Transforms an image's colors, pixel by pixel using a method.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        img = img.transform(
-            size=size if size else image.size,
-            method=getattr(
-                Image,
-                method))
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = self.run(self.callOnImage, await self.tobuf(image), "transform", size=size or image.size, method=getattr(Image, method))
 
         embed = fmte(
             ctx,
@@ -431,14 +372,7 @@ class Images(commands.Cog):
         """
         Flips an image.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        img = img.transpose(method=getattr(Image, method))
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "transpose", method=getattr(Image, method))
 
         embed = fmte(
             ctx,
@@ -658,9 +592,8 @@ class Images(commands.Cog):
     @commands.hybrid_command()
     @describe(
         user=Desc.user,
-        ephemeral=Desc.ephemeral
     )
-    async def avatar(self, ctx: commands.Context, user: Optional[discord.Member], ephemeral: bool = False):
+    async def avatar(self, ctx: commands.Context, user: Optional[discord.Member]):
         """
         Gets the avatar / profile picture of a member.
         """

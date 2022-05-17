@@ -55,6 +55,7 @@ class Builder(commands.Bot):
         )
         status: str = "idle"
         self.status = discord.Status(status)
+        self.tree.fallback_to_global = False
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 

@@ -19,7 +19,7 @@ class Watchers(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         print(error)
         hint = None
@@ -152,8 +152,9 @@ class Watchers(commands.Cog):
                 await ctx.message.add_reaction("\N{DOUBLE EXCLAMATION MARK}")
             else:
                 await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        except discord.errors.NotFound:
+        except HTTPException:
             pass
+        
         except Exception as e:
             raise e
 
