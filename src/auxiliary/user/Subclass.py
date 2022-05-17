@@ -10,8 +10,14 @@ from src.auxiliary.bot.Constants import CONSTANTS
 
 
 class Paginator(discord.ui.View):
-    def __init__(self, ctx: commands.Context, values: Iterable, pagesize: int, *,
-                 timeout: Optional[float] = 45):
+    def __init__(
+        self,
+        ctx: commands.Context,
+        values: Iterable,
+        pagesize: int,
+        *,
+        timeout: Optional[float] = 45,
+    ):
         self.ctx = ctx
         self.pagesize = pagesize
 
@@ -19,7 +25,7 @@ class Paginator(discord.ui.View):
 
         self.vals = values
         self.message: Optional[discord.Message] = None
-        
+
         self.maxpos = math.ceil((len(self.vals) / pagesize))
 
         super().__init__(timeout=timeout)
@@ -28,7 +34,9 @@ class Paginator(discord.ui.View):
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = 1
         if inter.user != self.ctx.author:
-            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            await inter.response.send_message(
+                "You are not the owner of this interaction", ephemeral=True
+            )
             return
         self.checkButtons(button)
 
@@ -39,7 +47,9 @@ class Paginator(discord.ui.View):
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position -= 1
         if inter.user != self.ctx.author:
-            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            await inter.response.send_message(
+                "You are not the owner of this interaction", ephemeral=True
+            )
             return
         self.checkButtons(button)
 
@@ -49,7 +59,9 @@ class Paginator(discord.ui.View):
     @discord.ui.button(emoji=":x:", style=discord.ButtonStyle.red, custom_id="x")
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user != self.ctx.author:
-            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            await inter.response.send_message(
+                "You are not the owner of this interaction", ephemeral=True
+            )
             return
         await inter.message.delete()
 
@@ -57,7 +69,9 @@ class Paginator(discord.ui.View):
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position += 1
         if inter.user != self.ctx.author:
-            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            await inter.response.send_message(
+                "You are not the owner of this interaction", ephemeral=True
+            )
             return
         self.checkButtons(button)
 
@@ -68,7 +82,9 @@ class Paginator(discord.ui.View):
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = self.maxpos
         if inter.user != self.ctx.author:
-            await inter.response.send_message("You are not the owner of this interaction", ephemeral=True)
+            await inter.response.send_message(
+                "You are not the owner of this interaction", ephemeral=True
+            )
             return
         self.checkButtons(button)
 
@@ -82,22 +98,19 @@ class Paginator(discord.ui.View):
         def embed(self, inter: discord.Interaction):
         ```
         """
-        return fmte_i(
-            inter,
-            t=f"Pages: `{self.position}` of `{self.maxpos}`"
-        )
+        return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos}`")
 
     def add_fields(self, embed: discord.Embed):
         """
         This must be overwritten by inheriting classes.
         Should return an embed with self.pagesize fields. Example:
-        
+
         ```py
         #------------------------------------------------------------------
 
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
-    
+
         values = self.vals[start:stop]
         # In this scenario, 'values' is a list of tups of (user, integer)
 
@@ -152,8 +165,11 @@ class Paginator(discord.ui.View):
                             b.disabled = False
         if button is None:
             return
-        for b in [c for c in self.children if isinstance(
-                c, discord.ui.Button) and c.custom_id != "x"]:
+        for b in [
+            c
+            for c in self.children
+            if isinstance(c, discord.ui.Button) and c.custom_id != "x"
+        ]:
             if b == button:
                 b.style = discord.ButtonStyle.success
             else:
@@ -163,15 +179,23 @@ class Paginator(discord.ui.View):
         for c in self.children:
             c.disabled = True
         if self.message is None:
-            raise commands.errors.MissingRequiredArgument("bozo you forgor to add the message to the view, imagine")
+            raise commands.errors.MissingRequiredArgument(
+                "bozo you forgor to add the message to the view, imagine"
+            )
         await self.message.edit(view=self)
 
-class AutoModal(discord.ui.Modal):
-    def __init__(self, *, title: str, timeout: Optional[float] = None, custom_id: str = None) -> None:
-        super().__init__(title=title, timeout=timeout, custom_id=custom_id)\
-        if custom_id else\
-        super().__init__(title=title, timeout=timeout)
 
-    
-    async def on_error(self, interaction: discord.Interaction, error: Exception, ) -> None:
+class AutoModal(discord.ui.Modal):
+    def __init__(
+        self, *, title: str, timeout: Optional[float] = None, custom_id: str = None
+    ) -> None:
+        super().__init__(
+            title=title, timeout=timeout, custom_id=custom_id
+        ) if custom_id else super().__init__(title=title, timeout=timeout)
+
+    async def on_error(
+        self,
+        interaction: discord.Interaction,
+        error: Exception,
+    ) -> None:
         return await Watchers.handle_modal_error(interaction, error)

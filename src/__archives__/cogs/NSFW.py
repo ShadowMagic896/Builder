@@ -32,28 +32,29 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(querey="The keywords to search for.",
-              ephemeral="Whether to publicly send the response or not. All images are sent in DMs.")
+    @describe(
+        querey="The keywords to search for.",
+        ephemeral="Whether to publicly send the response or not. All images are sent in DMs.",
+    )
     async def rule34(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
         """
         querey = querey.replace(" ", "+")
-        res = await (await self.bot.session.get(
-            f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % querey
-        )).text
-        soup = BeautifulSoup(res, 'html.parser')
+        res = await (
+            await self.bot.session.get(
+                f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % querey
+            )
+        ).text
+        soup = BeautifulSoup(res, "html.parser")
 
         tags = soup.select(
-            "div[id=content] > div[id=post-list] > div[class=content] > div[class=image-list] > *")
+            "div[id=content] > div[id=post-list] > div[class=content] > div[class=image-list] > *"
+        )
 
         urls = []
 
-        embed = fmte(
-            ctx,
-            t="Results found...",
-            d="Sending to author."
-        )
+        embed = fmte(ctx, t="Results found...", d="Sending to author.")
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
         for tag in tags:
@@ -65,16 +66,23 @@ class NSFW(commands.Cog):
             embed = fmte(
                 ctx,
                 t="R34 Request For: `{}`".format(" ".join(querey)),
-                d="[Source]({})".format(url)
+                d="[Source]({})".format(url),
             )
             embed.set_image(url=url)
             await ctx.author.send(embed=embed)
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(amount="The amount of images to send.",
-              ephemeral="Whether to publicly show the response to the command. All images are sent in DMs.")
-    async def neko(self, ctx: commands.Context, amount: Range[int, 1, 20] = 1, ephemeral: bool = False):
+    @describe(
+        amount="The amount of images to send.",
+        ephemeral="Whether to publicly show the response to the command. All images are sent in DMs.",
+    )
+    async def neko(
+        self,
+        ctx: commands.Context,
+        amount: Range[int, 1, 20] = 1,
+        ephemeral: bool = False,
+    ):
         """
         Gets an image response from [nekos.life](https://nekos.life) and sends it to you.
         """
@@ -82,10 +90,8 @@ class NSFW(commands.Cog):
         data = []
 
         for co in range(amount):
-            res = await (await self.bot.session.get(
-                f"https://nekos.life"
-            )).text()
-            soup = BeautifulSoup(res, 'html.parser')
+            res = await (await self.bot.session.get(f"https://nekos.life")).text()
+            soup = BeautifulSoup(res, "html.parser")
             img = soup.find_all("img")
             data.append(img[0]["src"])
 
@@ -93,20 +99,28 @@ class NSFW(commands.Cog):
             ctx,
             t="Fetched Images",
             d="Sending...",
-
         )
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
         for l in data:
-            embed = fmte(ctx, )
+            embed = fmte(
+                ctx,
+            )
             embed.set_image(url=l)
             await ctx.author.send(embed=embed)
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(amount="The amount of images to send.",
-              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
-    async def nekolewd(self, ctx: commands.Context, amount: Range[int, 1, 20] = 1, ephemeral: bool = False):
+    @describe(
+        amount="The amount of images to send.",
+        ephemeral="Whether to public send the response or not. All images are sent in DMs.",
+    )
+    async def nekolewd(
+        self,
+        ctx: commands.Context,
+        amount: Range[int, 1, 20] = 1,
+        ephemeral: bool = False,
+    ):
         """
         Gets an image response from [nekos.life/lewd](https://nekos.life/lewd) and sends it to you.
         """
@@ -115,10 +129,7 @@ class NSFW(commands.Cog):
 
         for co in range(amount):
             data.append(
-                discord.File(
-                    mdir + random.choice(os.listdir(mdir)),
-                    "Neko.jpg"
-                )
+                discord.File(mdir + random.choice(os.listdir(mdir)), "Neko.jpg")
             )
 
         embed = fmte(
@@ -130,15 +141,19 @@ class NSFW(commands.Cog):
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
         for l in data:
-            embed = fmte(ctx, )
+            embed = fmte(
+                ctx,
+            )
             await ctx.author.send(embed=embed, file=l)
             await asyncio.sleep(1)
 
     @commands.hybrid_command()
     # @commands.cooldown(1, 60 * 60 * 24, commands.BucketType.user)
     @commands.is_nsfw()
-    @describe(code="The code to search for.",
-              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
+    @describe(
+        code="The code to search for.",
+        ephemeral="Whether to public send the response or not. All images are sent in DMs.",
+    )
     async def nhentai(self, ctx: commands.Context, code: int, ephemeral: bool = False):
         """
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
@@ -151,27 +166,25 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_nsfw()
-    @describe(querey="The keywords to search for.",
-              ephemeral="Whether to public send the response or not. All images are sent in DMs.")
-    async def nhsearch(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
+    @describe(
+        querey="The keywords to search for.",
+        ephemeral="Whether to public send the response or not. All images are sent in DMs.",
+    )
+    async def nhsearch(
+        self, ctx: commands.Context, querey: str, ephemeral: bool = False
+    ):
         """
         Searches for manga on [nhentai.xxx](https://nhentai.xxx) and returns the top results.
         """
         querey = querey.replace(" ", "+")
         url = "https://nhentai.xxx/search/?q=%s" % querey
         res = await (await self.bot.session.get(url)).text()
-        parse = BeautifulSoup(
-            res, "html.parser"
-        )
+        parse = BeautifulSoup(res, "html.parser")
         codes = []
         images = []
         names = []
 
-        embed = fmte(
-            ctx,
-            t="Fetched Images",
-            d="Sending..."
-        )
+        embed = fmte(ctx, t="Fetched Images", d="Sending...")
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
         for i in parse.find_all("div")[3:-1]:
@@ -188,44 +201,35 @@ class NSFW(commands.Cog):
         if not len(codes) == len(images) == len(names):
             embed = fmte(
                 ctx,
-                t="Something odd happened, results may be incorrect. If so, please try another search."
+                t="Something odd happened, results may be incorrect. If so, please try another search.",
             )
         else:
             embed = fmte(
-                ctx,
-                t="{} results found, sending to author...".format(len(codes))
+                ctx, t="{} results found, sending to author...".format(len(codes))
             )
         await ctx.send(embed=embed, ephemeral=ephemeral)
-        for n in range(
-                min(codes.__len__(), images.__len__(), names.__len__())):
+        for n in range(min(codes.__len__(), images.__len__(), names.__len__())):
             c = n + 1
             tot = min(codes.__len__(), images.__len__(), names.__len__())
 
             name = str(names[n])[21:-6][:235]
             code = str(codes[n])
             url = str(images[n])
-            embed = fmte(
-                ctx,
-                t="{} / {}\n{} [{}]".format(
-                    c,
-                    tot,
-                    name,
-                    code
-                )
-            )
+            embed = fmte(ctx, t="{} / {}\n{} [{}]".format(c, tot, name, code))
             embed.set_image(url=url)
             await ctx.author.send(embed=embed)
 
 
 class NHentaiView(discord.ui.View):
     def __init__(
-            self,
-            ctx: commands.Context,
-            bot: commands.Bot,
-            ephemeral: bool,
-            code: int,
-            *,
-            timeout: Optional[float] = 180):
+        self,
+        ctx: commands.Context,
+        bot: commands.Bot,
+        ephemeral: bool,
+        code: int,
+        *,
+        timeout: Optional[float] = 180,
+    ):
         self.ctx = ctx
         self.bot = bot
         self.ephemeral = ephemeral
@@ -234,7 +238,8 @@ class NHentaiView(discord.ui.View):
         text = requests.get("https://nhentai.xxx/g/%s/1" % code).text
         soup = bs4.BeautifulSoup(text, "html.parser")
         dataurl = soup.select(
-            "body > div#page-container > section#image-container > a > img")[0]["src"]
+            "body > div#page-container > section#image-container > a > img"
+        )[0]["src"]
         datacode = dataurl[26:-6]
         self.code = datacode
         self.baseurl = "https://cdn.nhentai.xxx/g/%s/" % datacode
@@ -257,7 +262,12 @@ class NHentaiView(discord.ui.View):
     @discord.ui.button(emoji="📜", custom_id="c")
     async def cust(self, inter: discord.Interaction, button: discord.ui.button):
         q = await self.ctx.send("Please send a new page number...", ephemeral=False)
-        r = await self.bot.wait_for("message", check=lambda m: m.channel == self.ctx.channel and m.author == self.ctx.author and m.content.isdigit())
+        r = await self.bot.wait_for(
+            "message",
+            check=lambda m: m.channel == self.ctx.channel
+            and m.author == self.ctx.author
+            and m.content.isdigit(),
+        )
         self.pos = int(r.content)
         try:
             await q.delete()
@@ -281,10 +291,7 @@ class NHentaiView(discord.ui.View):
         await inter.response.edit_message(embed=embed, view=self)
 
     def embed(self, inter: discord.Interaction):
-        embed = fmte_i(
-            inter,
-            t="`{}`: Page `{}`".format(self.code, self.pos)
-        )
+        embed = fmte_i(inter, t="`{}`: Page `{}`".format(self.code, self.pos))
         embed.set_image(url=self.baseurl + "%s.jpg" % self.pos)
         return embed
 
@@ -317,8 +324,11 @@ class NHentaiView(discord.ui.View):
                         b.disabled = False
         if button is None:
             return
-        for b in [c for c in self.children if isinstance(
-                c, discord.ui.Button) and c.custom_id != "x"]:
+        for b in [
+            c
+            for c in self.children
+            if isinstance(c, discord.ui.Button) and c.custom_id != "x"
+        ]:
             if b == button:
                 b.style = discord.ButtonStyle.success
             else:

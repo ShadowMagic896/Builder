@@ -21,8 +21,10 @@ class UserConverter(commands.Converter):
                 _id = int(user)  # Just an ID
             except ValueError:
                 for m in ctx.guild.members:  # Try to catch a name
-                    if m.name == user or "{}#{}".format(
-                            m.name, m.discriminator) == user:
+                    if (
+                        m.name == user
+                        or "{}#{}".format(m.name, m.discriminator) == user
+                    ):
                         _id = m.id
                 else:
                     commands.errors.UserNotFound(user)
@@ -74,7 +76,7 @@ class TimeConvert(commands.Converter):
             "d": 86400,
             "h": 3600,
             "m": 60,
-            "s": 1
+            "s": 1,
         }
 
         for key, value in list(replacements.items()):
@@ -101,15 +103,20 @@ class ListConverter(commands.Converter):
 
     async def convert(self, ctx: Context, argument: str):
         argument = argument.replace(" ", "")
-        match = "\\[?(\\-?[\\d\\.]+,?\\s*)+\\]?" if self.convtype in [float,
-                                                                      int] else "\\[?(\\-?[^,]+,?\\s*)+\\]?"
+        match = (
+            "\\[?(\\-?[\\d\\.]+,?\\s*)+\\]?"
+            if self.convtype in [float, int]
+            else "\\[?(\\-?[^,]+,?\\s*)+\\]?"
+        )
         if not (res := re.search(match, argument).group()):
             raise commands.errors.BadArgument(argument)
         return self.strToList(res, self.convtype)
 
     def strToList(self, string: str, convtype: Type) -> List[int]:
         return [
-            self.convtype(a) for a in string.replace(
-                "[", "").replace(
-                "]", "").replace(
-                " ", "").split(",")]
+            self.convtype(a)
+            for a in string.replace("[", "")
+            .replace("]", "")
+            .replace(" ", "")
+            .split(",")
+        ]

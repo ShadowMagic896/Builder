@@ -5,6 +5,7 @@ import os
 
 from src.auxiliary.user.Embeds import fmte
 
+
 class GitHub(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -18,12 +19,9 @@ class GitHub(commands.Cog):
     async def push(self, ctx: commands.Context, message: str):
         command = "git add -A && git commit -am '%s' && git push origin main" % message
         os.system(command)
-        embed = fmte(
-            ctx,
-            t="Code Successfully Pushed",
-            d="```\n%s\n```" % command
-        )
+        embed = fmte(ctx, t="Code Successfully Pushed", d="```\n%s\n```" % command)
         await ctx.send(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(GitHub(bot))

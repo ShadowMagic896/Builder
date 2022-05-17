@@ -33,12 +33,11 @@ class Images(commands.Cog):
 
     def getExtension(self, image: discord.Attachment):
         fn = image.filename
-        return fn[fn.replace(".", "_", fn.count(".") - 1).index(".") + 1:]
+        return fn[fn.replace(".", "_", fn.count(".") - 1).index(".") + 1 :]
 
     def checkAttachment(self, image: discord.Attachment):
         if image.size > 40000000:
-            raise IOError(
-                "Attachment is too large. Please keep files under 40MB")
+            raise IOError("Attachment is too large. Please keep files under 40MB")
 
     async def run(self, func: Callable, *args, **kwargs) -> Any:
         """
@@ -47,7 +46,7 @@ class Images(commands.Cog):
         """
         partial = functools.partial(func, *args, **kwargs)
         return await asyncio.get_event_loop().run_in_executor(None, partial)
-    
+
     def callOnImage(self, buffer: BytesIO, function: str, *args, **kwargs) -> Any:
         img = Image.open(buffer)
         img: Image.Image = getattr(img, function)(*args, **kwargs)
@@ -64,7 +63,7 @@ class Images(commands.Cog):
         await image.save(buffer)
         buffer.seek(0)
         return buffer
-    
+
     async def toimg(self, image: discord.Attachment, check: bool = True) -> Image.Image:
         return Image.open(await self.tobuf(image, check))
 
@@ -78,19 +77,23 @@ class Images(commands.Cog):
         width="The new image's width.",
         height="The new image's height.",
     )
-    async def resize(self, ctx: commands.Context, image: discord.Attachment, width: int, height: int):
+    async def resize(
+        self, ctx: commands.Context, image: discord.Attachment, width: int, height: int
+    ):
         """
         Resizes an image to a certain width and height
         """
         ogsize = (image.width, image.height)
-    
-        buffer: io.BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "resize", (width, height))
+
+        buffer: io.BytesIO = await self.run(
+            self.callOnImage, await self.tobuf(image), "resize", (width, height)
+        )
 
         embed = fmte(
             ctx,
             t="Image successfully resized!",
-            d="File of dimensions (%s, %s) converted to file of dimensions (%s, %s)" %
-            (ogsize[0], ogsize[1], width, height)
+            d="File of dimensions (%s, %s) converted to file of dimensions (%s, %s)"
+            % (ogsize[0], ogsize[1], width, height),
         )
 
         file = discord.File(buffer, filename="resize.%s" % image.filename)
@@ -102,23 +105,32 @@ class Images(commands.Cog):
         name="What to name the new emoji.",
         reason="The reason for creating the emoji. Shows up in audit logs.",
     )
-    async def steal(self, ctx: commands.Context, name: str, image: discord.Attachment, reason: Optional[str] = "No reason given"):
+    async def steal(
+        self,
+        ctx: commands.Context,
+        name: str,
+        image: discord.Attachment,
+        reason: Optional[str] = "No reason given",
+    ):
         """
         Copies an image image and adds it to the guild as an emoji
         """
 
-        buffer: io.BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "resize", (128, 128))
+        buffer: io.BytesIO = await self.run(
+            self.callOnImage, await self.tobuf(image), "resize", (128, 128)
+        )
 
-        e: discord.Emoji = await ctx.guild.create_custom_emoji(name=name, image=buffer.read(), reason=reason)
+        e: discord.Emoji = await ctx.guild.create_custom_emoji(
+            name=name, image=buffer.read(), reason=reason
+        )
         embed = fmte(
             ctx,
             t="Emoji created!",
-            d="**Emoji:** %s\n**Name:** %s\n**Reason:** %s" %
-            ("<:{}:{}>".format(e.name, e.id), e.name, reason)
+            d="**Emoji:** %s\n**Name:** %s\n**Reason:** %s"
+            % ("<:{}:{}>".format(e.name, e.id), e.name, reason),
         )
         await ctx.send(embed=embed)
 
-        
     @image.command()
     @commands.cooldown(10, 60 * 60, commands.BucketType.user)
     @describe(
@@ -126,10 +138,8 @@ class Images(commands.Cog):
         image="The image to add the text to.",
         xpos="The X-Position for the top-left corner of the text.",
         ypos="The Y-Position for the top-left corner of the text.",
-
-        font = "The font to use.",
-        strokeweight = "The width of the font, in pixels.",
-
+        font="The font to use.",
+        strokeweight="The width of the font, in pixels.",
         r="The RED component of the text color.",
         g="The GREEN component of the text color.",
         b="The BLUE component of the text color.",
@@ -139,11 +149,10 @@ class Images(commands.Cog):
         ctx: commands.Context,
         image: discord.Attachment,
         text: str,
-        xpos: int, ypos: int,
-
+        xpos: int,
+        ypos: int,
         font: str = "pertili",
         strokeweight: Range[int, 1, 200] = 5,
-
         r: Range[int, 0, 255] = 255,
         g: Range[int, 0, 255] = 255,
         b: Range[int, 0, 255] = 255,
@@ -161,8 +170,8 @@ class Images(commands.Cog):
         img = await self.toimg(image)
 
         await self.run(
-            lambda i: i.text(xy=(xpos, ypos), text=text, fill=(r,g,b), font=font), 
-            ImageDraw.ImageDraw(img)
+            lambda i: i.text(xy=(xpos, ypos), text=text, fill=(r, g, b), font=font),
+            ImageDraw.ImageDraw(img),
         )
 
         buffer: BytesIO = BytesIO()
@@ -171,21 +180,18 @@ class Images(commands.Cog):
 
         file = discord.File(buffer, filename="text.%s" % image.filename)
 
-        embed = fmte(
-            ctx,
-            t="File Successfully Edited!"
-        )
+        embed = fmte(ctx, t="File Successfully Edited!")
         await ctx.send(embed=embed, file=file)
-    
+
     @text.autocomplete(name="font")
     async def textfont_autocomplete(self, inter: discord.Interaction, current: str):
         return [
-            discord.app_commands.Choice(name = p[:-4], value = p)
+            discord.app_commands.Choice(name=p[:-4], value=p)
             for p in os.listdir(Config().FONT_PATH)
-            if (p.lower() in current.lower() or current.lower() in p.lower()) and p.lower().endswith(".ttf")
+            if (p.lower() in current.lower() or current.lower() in p.lower())
+            and p.lower().endswith(".ttf")
         ][:25]
-    
-    
+
     @image.command()
     @describe(
         image="The image to crop.",
@@ -198,20 +204,25 @@ class Images(commands.Cog):
         self,
         ctx: commands.Context,
         image: discord.Attachment,
-        left: int, upper: int, right: int, lower: int,
+        left: int,
+        upper: int,
+        right: int,
+        lower: int,
     ):
         """
         Crops an image to the given dimensions
         """
-        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "crop", (left, upper, right, lower))
-
-        embed = fmte(
-            ctx,
-            t="Image Cropped"
+        buffer: BytesIO = await self.run(
+            self.callOnImage,
+            await self.tobuf(image),
+            "crop",
+            (left, upper, right, lower),
         )
+
+        embed = fmte(ctx, t="Image Cropped")
         file = discord.File(buffer, "crop.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
-        
+
     @image.command()
     @describe(
         image="The image to get information on.",
@@ -227,49 +238,49 @@ class Images(commands.Cog):
         embed.add_field(
             name="Dimensions",
             value="`{}x{}`".format(image.width, image.height),
-            inline=False
+            inline=False,
         )
+        embed.add_field(name="File Size", value="`%s bytes`" % image.size, inline=False)
         embed.add_field(
-            name="File Size",
-            value="`%s bytes`" % image.size,
-            inline=False
-        )
-        embed.add_field(
-            name="File Type",
-            value="`%s`" % image.content_type,
-            inline=False
+            name="File Type", value="`%s`" % image.content_type, inline=False
         )
         file = discord.File(await self.tobuf(image), filename=image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
-    @describe(image="The image to rotate",
-              degrees="The amount of degrees to rotate the image.",
-              centerx="The X Coordinate of the center of rotation.",
-              centery="The Y Coordinate of the center of rotation.",
-              fillcolor="The color to fill the remaining parts of the image after rotation.",)
+    @describe(
+        image="The image to rotate",
+        degrees="The amount of degrees to rotate the image.",
+        centerx="The X Coordinate of the center of rotation.",
+        centery="The Y Coordinate of the center of rotation.",
+        fillcolor="The color to fill the remaining parts of the image after rotation.",
+    )
     async def rotate(
         self,
         ctx: commands.Context,
         image: discord.Attachment,
         degrees: int,
-        centerx: Optional[int] = None, centery: Optional[int] = None,
+        centerx: Optional[int] = None,
+        centery: Optional[int] = None,
         fillcolor: str = "white",
     ):
         """
         Rotates an image by a given amount of degrees
         """
-        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "rotate", 
-            degrees, 
-            center=(centerx or round(image.width/2), centery or round(image.height/2)), 
-            fillcolor=fillcolor, 
-            expand=True
+        buffer: BytesIO = await self.run(
+            self.callOnImage,
+            await self.tobuf(image),
+            "rotate",
+            degrees,
+            center=(
+                centerx or round(image.width / 2),
+                centery or round(image.height / 2),
+            ),
+            fillcolor=fillcolor,
+            expand=True,
         )
 
-        embed = fmte(
-            ctx,
-            t="Image Rotated"
-        )
+        embed = fmte(ctx, t="Image Rotated")
         file = discord.File(buffer, "rotate.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -282,7 +293,12 @@ class Images(commands.Cog):
         image="The image to apply the filter to.",
         filter="The filter to apply.",
     )
-    async def filter(self, ctx: commands.Context, image: discord.Attachment, filter: str,):
+    async def filter(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        filter: str,
+    ):
         """
         Applies a filter onto the image
         """
@@ -291,100 +307,120 @@ class Images(commands.Cog):
             raise commands.BadArgument(filter)
 
         filter: ImageFilter = getattr(ImageFilter, filter)
-        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "filter", filter)
-
-        embed = fmte(
-            ctx,
-            t="Image Filter Applied"
+        buffer: BytesIO = await self.run(
+            self.callOnImage, await self.tobuf(image), "filter", filter
         )
+
+        embed = fmte(ctx, t="Image Filter Applied")
         file = discord.File(buffer, "filter.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @filter.autocomplete("filter")
-    async def filterimagefilter_autocomplete(self, inter: discord.Interaction, current: str):
+    async def filterimagefilter_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ):
         return [
             discord.app_commands.Choice(name=c, value=c)
             for c in self.getFilters()
             if c.lower() in current.lower() or current.lower() in c.lower()
         ][:25]
 
-
     @image.command()
-    @describe(
-        image="The image to convert."
-    )
+    @describe(image="The image to convert.")
     async def greyscale(self, ctx: commands.Context, image: discord.Attachment):
         """
         Convert an image to a grey-scale color scheme
         """
-        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "convert", "L")
-
-        embed = fmte(
-            ctx,
-            t="Conversion Complete"
+        buffer: BytesIO = await self.run(
+            self.callOnImage, await self.tobuf(image), "convert", "L"
         )
+
+        embed = fmte(ctx, t="Conversion Complete")
         file = discord.File(buffer, "gs.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
-
     @image.command()
-    @describe(
-        image="The image to convert",
-        mode="The Image Type to convert to"
-    )
-    async def convert(self, ctx: commands.Context, image: discord.Attachment, mode: Literal['1', 'CMYK', 'F', 'HSV', 'I', 'L', 'LAB', 'P', 'RGB', 'RGBA', 'RGBX', 'YCbCr']):
+    @describe(image="The image to convert", mode="The Image Type to convert to")
+    async def convert(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        mode: Literal[
+            "1",
+            "CMYK",
+            "F",
+            "HSV",
+            "I",
+            "L",
+            "LAB",
+            "P",
+            "RGB",
+            "RGBA",
+            "RGBX",
+            "YCbCr",
+        ],
+    ):
         """
         Attempts to convert the image into the specified mode.
         """
-        buffer = await self.run(self.callOnImage, await self.tobuf(image), "convert", mode)
-
-        embed = fmte(
-            ctx,
-            t="Image Successfully Converted"
+        buffer = await self.run(
+            self.callOnImage, await self.tobuf(image), "convert", mode
         )
+
+        embed = fmte(ctx, t="Image Successfully Converted")
         file = discord.File(buffer, "conv.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
-    @describe(
-        image="The image to transform",
-        size="The output size of the image"
-    )
-    async def transform(self, ctx: commands.Context, image: discord.Attachment, method: Literal["EXTENT", "AFFINE", "PERSPECTIVE", "QUAD", "MESH"], size: Optional[int], ):
+    @describe(image="The image to transform", size="The output size of the image")
+    async def transform(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        method: Literal["EXTENT", "AFFINE", "PERSPECTIVE", "QUAD", "MESH"],
+        size: Optional[int],
+    ):
         """
         Transforms an image's colors, pixel by pixel using a method.
         """
-        buffer: BytesIO = self.run(self.callOnImage, await self.tobuf(image), "transform", size=size or image.size, method=getattr(Image, method))
-
-        embed = fmte(
-            ctx,
-            t="Image Successfully Transformed"
+        buffer: BytesIO = self.run(
+            self.callOnImage,
+            await self.tobuf(image),
+            "transform",
+            size=size or image.size,
+            method=getattr(Image, method),
         )
+
+        embed = fmte(ctx, t="Image Successfully Transformed")
         file = discord.File(buffer, "trfr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
-    @describe(
-        image="The image to flip",
-        method="How to flip the image"
-    )
-    async def flip(self, ctx: commands.Context, image: discord.Attachment, method: Literal["FLIP_LEFT_RIGHT", "FLIP_TOP_BOTTOM", "TRANSPOSE", "TRANSVERSE"]):
+    @describe(image="The image to flip", method="How to flip the image")
+    async def flip(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        method: Literal[
+            "FLIP_LEFT_RIGHT", "FLIP_TOP_BOTTOM", "TRANSPOSE", "TRANSVERSE"
+        ],
+    ):
         """
         Flips an image.
         """
-        buffer: BytesIO = await self.run(self.callOnImage, await self.tobuf(image), "transpose", method=getattr(Image, method))
-
-        embed = fmte(
-            ctx,
-            t="Image Successfully Flipped"
+        buffer: BytesIO = await self.run(
+            self.callOnImage,
+            await self.tobuf(image),
+            "transpose",
+            method=getattr(Image, method),
         )
+
+        embed = fmte(ctx, t="Image Successfully Flipped")
         file = discord.File(buffer, "trps.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
-    @describe(
-        image="The image to invert"
-    )
+    @describe(image="The image to invert")
     async def invert(self, ctx: commands.Context, image: discord.Attachment):
         """
         Inverts an image's colors.
@@ -401,16 +437,15 @@ class Images(commands.Cog):
         img.save(buffer, self.getExtension(image))
         buffer.seek(0)
 
-        embed = fmte(
-            ctx,
-            t="Image Successfully Inverted"
-        )
+        embed = fmte(ctx, t="Image Successfully Inverted")
         file = discord.File(buffer, "invr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     def chop(self, s: str, chopsize: int):
-        return [s[c * chopsize:(c + 1) * chopsize]
-                for c in range(0, ceil(len(s) / chopsize))]
+        return [
+            s[c * chopsize : (c + 1) * chopsize]
+            for c in range(0, ceil(len(s) / chopsize))
+        ]
 
     def alignText(self, *, text: str, linesize=24):
         lines = []
@@ -425,7 +460,10 @@ class Images(commands.Cog):
                 continue
             if sum([len(c) for c in linewords]) + len(word) > linesize:
                 lines.extend(linewords)
-                linewords = ["\n", word, ]
+                linewords = [
+                    "\n",
+                    word,
+                ]
                 continue
             else:
                 linewords.append(word)
@@ -433,11 +471,10 @@ class Images(commands.Cog):
         return " ".join([c.strip(" ") for c in lines])
 
     @image.command()
-    @describe(
-        image="The image to caption",
-        text="The caption for the image"
-    )
-    async def caption(self, ctx: commands.Context, image: discord.Attachment, text: str):
+    @describe(image="The image to caption", text="The caption for the image")
+    async def caption(
+        self, ctx: commands.Context, image: discord.Attachment, text: str
+    ):
         """
         Adds a caption to an image
         """
@@ -446,8 +483,9 @@ class Images(commands.Cog):
         print(text)
         nls = max(text.count("\n"), 1)
         print(nls + 1)
-        pix = round(average([round(image.height / 10),
-                    round(image.width / 10)])) * (nls + 1)
+        pix = round(average([round(image.height / 10), round(image.width / 10)])) * (
+            nls + 1
+        )
 
         buffer = io.BytesIO()
         await image.save(buffer)
@@ -467,21 +505,13 @@ class Images(commands.Cog):
         fill = (0, 0, 0)
         align = "center"
 
-        drawer.multiline_text(
-            xy=xy,
-            text=text,
-            font=font,
-            fill=fill,
-            align=align)
+        drawer.multiline_text(xy=xy, text=text, font=font, fill=fill, align=align)
         buffer = io.BytesIO()
         img.save(buffer, self.getExtension(image))
 
         buffer.seek(0)
 
-        embed = fmte(
-            ctx,
-            t="Image Successfully Captioned"
-        )
+        embed = fmte(ctx, t="Image Successfully Captioned")
         file = discord.File(buffer, "cptn.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -490,9 +520,16 @@ class Images(commands.Cog):
         pass
 
     @enhance.command()
-    @describe(image="The image whose contrast to adjust.",
-              factor="The factor of contrast. 0 is greyscale, 100 is maximum contrast.")
-    async def contrast(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
+    @describe(
+        image="The image whose contrast to adjust.",
+        factor="The factor of contrast. 0 is greyscale, 100 is maximum contrast.",
+    )
+    async def contrast(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        factor: Range[float, 0, 100],
+    ):
         """
         Adjusts the contrast of an image.
         """
@@ -506,17 +543,21 @@ class Images(commands.Cog):
         img.save(buffer, self.getExtension(image))
         buffer.seek(0)
 
-        embed = fmte(
-            ctx,
-            t="Image Successfully Edited"
-        )
+        embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "cntr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @enhance.command()
-    @describe(image="The image whose contrast to adjust.",
-              factor="The factor of brightness. 0 is black, 100 is basically pure white.")
-    async def brightness(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
+    @describe(
+        image="The image whose contrast to adjust.",
+        factor="The factor of brightness. 0 is black, 100 is basically pure white.",
+    )
+    async def brightness(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        factor: Range[float, 0, 100],
+    ):
         """
         Adjusts the brightness of an image.
         """
@@ -530,19 +571,21 @@ class Images(commands.Cog):
         img.save(buffer, self.getExtension(image))
         buffer.seek(0)
 
-        embed = fmte(
-            ctx,
-            t="Image Successfully Edited"
-        )
+        embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @enhance.command()
     @describe(
         image="The image whose contrast to adjust.",
-        factor="The factor of brightness. 0 is black & white."
+        factor="The factor of brightness. 0 is black & white.",
     )
-    async def color(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
+    async def color(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        factor: Range[float, 0, 100],
+    ):
         """
         Adjusts the color of an image.
         """
@@ -556,19 +599,21 @@ class Images(commands.Cog):
         img.save(buffer, self.getExtension(image))
         buffer.seek(0)
 
-        embed = fmte(
-            ctx,
-            t="Image Successfully Edited"
-        )
+        embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @enhance.command()
     @describe(
         image="The image whose contrast to adjust.",
-        factor="The factor of brightness. 0 is blurred."
+        factor="The factor of brightness. 0 is blurred.",
     )
-    async def sharpness(self, ctx: commands.Context, image: discord.Attachment, factor: Range[float, 0, 100]):
+    async def sharpness(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        factor: Range[float, 0, 100],
+    ):
         """
         Adjusts the sharpess of an image.
         """
@@ -582,10 +627,7 @@ class Images(commands.Cog):
         img.save(buffer, self.getExtension(image))
         buffer.seek(0)
 
-        embed = fmte(
-            ctx,
-            t="Image Successfully Edited"
-        )
+        embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "shrp.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -601,7 +643,7 @@ class Images(commands.Cog):
         embed = fmte(
             ctx,
             t="%s's Avatar" % user.display_name,
-            d="[View Link](%s)" % user.avatar.url
+            d="[View Link](%s)" % user.avatar.url,
         )
         embed.set_image(url=user.avatar.url)
         await ctx.send(embed=embed)

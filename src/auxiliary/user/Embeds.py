@@ -1,4 +1,3 @@
-
 from random import randint
 from typing import Union
 import discord
@@ -14,11 +13,12 @@ async def getv(inter) -> Union[commands.Context, None]:
 
 
 def fmte(
-        ctx: commands.Context = None,
-        t: str = "",
-        d: str = "",
-        c: discord.Color = discord.Color.teal(),
-        u: discord.User = None,) -> discord.Embed:
+    ctx: commands.Context = None,
+    t: str = "",
+    d: str = "",
+    c: discord.Color = discord.Color.teal(),
+    u: discord.User = None,
+) -> discord.Embed:
     """
     Takes the sent information and returns an embed with a footer and timestamp added, with the default color being teal.
     """
@@ -29,25 +29,21 @@ def fmte(
         ti = ctx.bot.latency
     else:
         ti = (randint(50, 60) + randint(0, 99) / 100) / 1000  # This is ethical
-    embed = discord.Embed(
-        title=t,
-        description=d,
-        color=c
-    )
+    embed = discord.Embed(title=t, description=d, color=c)
     embed.set_author(
-        name="Requested By: %s" %
-        str(user), url="https://discordapp.com/users/%s" %
-        user.id, icon_url=user.avatar.url)
+        name="Requested By: %s" % str(user),
+        url="https://discordapp.com/users/%s" % user.id,
+        icon_url=user.avatar.url,
+    )
     if ti:
-        embed.set_footer(
-            text="Response in %sms" % round(ti * 1000, 3)
-        )
+        embed.set_footer(text="Response in %sms" % round(ti * 1000, 3))
     embed.timestamp = datetime.now()
     return embed
 
 
-def fmte_i(inter: discord.Interaction, t="", d="",
-           c=discord.Color.teal()) -> discord.Embed:
+def fmte_i(
+    inter: discord.Interaction, t="", d="", c=discord.Color.teal()
+) -> discord.Embed:
     return fmte(t=t, d=d, c=c, u=inter.user)
 
 
@@ -58,8 +54,7 @@ def getReadableValues(seconds):
     msec = str(round(seconds - hours * 3600 - mins * 60 - secs, 6))[2:]
     msec += "0" * (6 - len(msec))
 
-    return(hours, mins, secs, msec)
-
+    return (hours, mins, secs, msec)
 
 
 class Desc:

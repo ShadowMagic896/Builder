@@ -47,16 +47,24 @@ class Client(commands.Cog):
     @describe(
         cog="The cog to get the source of.",
         command="The command to get the source of.",
-        ephemeral=Desc.ephemeral
+        ephemeral=Desc.ephemeral,
     )
-    async def source(self, ctx: commands.Context, cog: Optional[str], command: Optional[str], ephemeral: bool = False):
+    async def source(
+        self,
+        ctx: commands.Context,
+        cog: Optional[str],
+        command: Optional[str],
+        ephemeral: bool = False,
+    ):
         """
         Gets the source code for any of the bot's commands.
         """
         if not command and not cog:
             embed = fmte(
-                ctx, t="Source Code!", d="[View on GitHub](%s)" %
-                "https://github.com/ShadowMagic896/Builder")
+                ctx,
+                t="Source Code!",
+                d="[View on GitHub](%s)" % "https://github.com/ShadowMagic896/Builder",
+            )
             await ctx.send(embed=embed, ephemeral=ephemeral)
         elif command and not cog:
             if not (command := self.bot.get_command(command)):
@@ -68,10 +76,7 @@ class Client(commands.Cog):
             src = inspect.getsource(src)
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
-            embed = fmte(
-                ctx,
-                t="Source for Command: %s" % command
-            )
+            embed = fmte(ctx, t="Source for Command: %s" % command)
             file = discord.File(buffer, "source.%s.py" % command)
             await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
         elif cog and not command:
@@ -82,10 +87,7 @@ class Client(commands.Cog):
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
 
-            embed = fmte(
-                ctx,
-                t="Source for Cog: %s" % cog.qualified_name
-            )
+            embed = fmte(ctx, t="Source for Cog: %s" % cog.qualified_name)
             file = discord.File(buffer, "source.%s.py" % cog.qualified_name)
             await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
         else:
@@ -98,43 +100,70 @@ class Client(commands.Cog):
                 note = ""
             else:
                 src = cog.__class__
-                note = "# Command not found in that cog, showing source for cog instead.\n"
+                note = (
+                    "# Command not found in that cog, showing source for cog instead.\n"
+                )
             buffer = io.BytesIO()
             buffer.write((note + inspect.getsource(src)).encode("UTF-8"))
             buffer.seek(0)
 
             embed = fmte(
                 ctx,
-                t="Source for %s" %
-                (("`%s`" %
-                  cog.qualified_name) if note else "`{}` of Cog `{}`".format(
-                    command.qualified_name,
-                    cog.qualified_name)))
+                t="Source for %s"
+                % (
+                    ("`%s`" % cog.qualified_name)
+                    if note
+                    else "`{}` of Cog `{}`".format(
+                        command.qualified_name, cog.qualified_name
+                    )
+                ),
+            )
             file = discord.File(
-                buffer, "source.%s.py" %
-                (cog.qualified_name if note else command.qualified_name))
+                buffer,
+                "source.%s.py"
+                % (cog.qualified_name if note else command.qualified_name),
+            )
             await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
 
     @source.autocomplete("cog")
-    async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-        return sorted([discord.app_commands.Choice(name=c, value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower(
-        ) or (c.lower()) in current.lower())) and c not in CONSTANTS.Cogs().FORBIDDEN_COGS][:25], key=lambda c: c.name)
+    async def cog_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ) -> List[discord.app_commands.Choice[str]]:
+        return sorted(
+            [
+                discord.app_commands.Choice(name=c, value=c)
+                for c in list(self.bot.cogs.keys())
+                if ((current.lower() in c.lower() or (c.lower()) in current.lower()))
+                and c not in CONSTANTS.Cogs().FORBIDDEN_COGS
+            ][:25],
+            key=lambda c: c.name,
+        )
 
     @source.autocomplete("command")
-    async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+    async def command_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ) -> List[discord.app_commands.Choice[str]]:
         return sorted(
             [
                 discord.app_commands.Choice(
-                    name="[{}] {}".format(
-                        c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
-                    explode([c for c in self.bot.commands]) if not getattr(
-                        inter.namespace, "cog") else explode(self.bot.get_cog(
-                            inter.namespace.cog).get_commands()) if inter.namespace.cog in [
-                                c for c, v in self.bot.cogs.items()] else []) if (
-                                    (current.lower() in c.qualified_name.lower()) or (
-                                        c.qualified_name.lower() in current.lower())) and c.cog_name not in CONSTANTS.Cogs().FORBIDDEN_COGS][
-                                            :25], key=lambda c: c.name[
-                                                c.name.index("]") + 1:])
+                    name="[{}] {}".format(c.cog_name, c.qualified_name),
+                    value=c.qualified_name,
+                )
+                for c in (
+                    explode([c for c in self.bot.commands])
+                    if not getattr(inter.namespace, "cog")
+                    else explode(self.bot.get_cog(inter.namespace.cog).get_commands())
+                    if inter.namespace.cog in [c for c, v in self.bot.cogs.items()]
+                    else []
+                )
+                if (
+                    (current.lower() in c.qualified_name.lower())
+                    or (c.qualified_name.lower() in current.lower())
+                )
+                and c.cog_name not in CONSTANTS.Cogs().FORBIDDEN_COGS
+            ][:25],
+            key=lambda c: c.name[c.name.index("]") + 1 :],
+        )
 
 
 class FeedbackModal(ui.Modal, title="Anonymous Feedback Forum"):
@@ -144,14 +173,15 @@ class FeedbackModal(ui.Modal, title="Anonymous Feedback Forum"):
         placeholder="Please give a response...",
         min_length=1,
         max_length=2,
-        required=False)
+        required=False,
+    )
 
     bugs: TextInput = ui.TextInput(
         label="How ofen do you experiece bugs in the bot?",
         style=discord.TextStyle.short,
         placeholder="Please give a response...",
         max_length=150,
-        required=False
+        required=False,
     )
 
     requests: TextInput = ui.TextInput(
@@ -159,26 +189,33 @@ class FeedbackModal(ui.Modal, title="Anonymous Feedback Forum"):
         style=discord.TextStyle.paragraph,
         placeholder="Please give a response...",
         max_length=300,
-        required=False)
+        required=False,
+    )
 
     comments: TextInput = ui.TextInput(
         label="Do you have any other critisism or feedback?",
         style=discord.TextStyle.paragraph,
         placeholder="Please give a response...",
         max_length=300,
-        required=False)
+        required=False,
+    )
 
     async def on_submit(self, interaction: Interaction) -> None:
-        open(
-            "data/logs/feedback.txt",
-            "a").write(
+        open("data/logs/feedback.txt", "a").write(
             "\n---FEEDBACK---\nRating: {}\nBugs: {}\nReqs: {}\nComments: {}\nAt: {}".format(
-                (self.rating.value.strip(),
-                 self.bugs.value.strip(),
-                 self.requests.value.strip(),
-                 self.comments.value.strip(),
-                 datetime.datetime.utcnow())))
-        await interaction.response.send_message("Thank you for your feedback! We look at every single forum, and we respect both your opinion and privacy.", ephemeral=True)
+                (
+                    self.rating.value.strip(),
+                    self.bugs.value.strip(),
+                    self.requests.value.strip(),
+                    self.comments.value.strip(),
+                    datetime.datetime.utcnow(),
+                )
+            )
+        )
+        await interaction.response.send_message(
+            "Thank you for your feedback! We look at every single forum, and we respect both your opinion and privacy.",
+            ephemeral=True,
+        )
 
 
 class SuggestionModal(ui.Modal, title="Suggestion Forum"):
@@ -188,16 +225,15 @@ class SuggestionModal(ui.Modal, title="Suggestion Forum"):
     )
 
     async def on_submit(self, interaction: Interaction) -> None:
-        open(
-            "data/logs/suggestions.txt",
-            "a").write(
-                "\n---SUGGESTION---\nSuggestion: {}\nAt: {}\nBy: {}".format(
-                    self.suggestion.value,
-                    datetime.datetime.utcnow(),
-                    interaction.user
-                )
+        open("data/logs/suggestions.txt", "a").write(
+            "\n---SUGGESTION---\nSuggestion: {}\nAt: {}\nBy: {}".format(
+                self.suggestion.value, datetime.datetime.utcnow(), interaction.user
+            )
         )
-        await interaction.response.send_message("Thank you for your feedback! We look at every single forum, and we respect both your opinion and privacy.", ephemeral=True)
+        await interaction.response.send_message(
+            "Thank you for your feedback! We look at every single forum, and we respect both your opinion and privacy.",
+            ephemeral=True,
+        )
 
 
 async def setup(bot: commands.Bot):

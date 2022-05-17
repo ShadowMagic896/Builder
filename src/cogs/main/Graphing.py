@@ -21,7 +21,7 @@ class Graphing(commands.Cog):
         self.bot = bot
 
     def ge(self):
-        return u"\U0001f4ca"
+        return "\U0001f4ca"
 
     def color_autocomplete(self, inter, current: str):
         colors = [
@@ -73,11 +73,12 @@ class Graphing(commands.Cog):
             "wheat",
             "white",
             "yellow",
-            "yellowgreen"]
+            "yellowgreen",
+        ]
         return [
             discord.app_commands.Choice(name=c, value=c)
-            for c in colors if
-            c in current or current in c
+            for c in colors
+            if c in current or current in c
         ][:25]
 
     @commands.hybrid_group()
@@ -100,20 +101,16 @@ class Graphing(commands.Cog):
     async def plot(
         self,
         ctx: commands.Context,
-
         xvalues: ListConverter(float),
         yvalues: ListConverter(float),
-
         xlabel: str = "X Axis",
         ylabel: str = "Y Axis",
-
         title: Optional[str] = None,
         color: str = "black",
-
         linewidth: Range[float, 0.1, 100.0] = 5.0,
-        font: Literal["serif", "sans-serif", "cursive",
-                      "fantasy", "monospace"] = "monospace",
-
+        font: Literal[
+            "serif", "sans-serif", "cursive", "fantasy", "monospace"
+        ] = "monospace",
         xticks: Range[int, 0, 30] = 10,
         yticks: Range[int, 0, 30] = 10,
     ):
@@ -123,7 +120,9 @@ class Graphing(commands.Cog):
         if len(xvalues) != len(yvalues):
             raise commands.errors.BadArgument(
                 "Values have uneven amounts of data [{} vs {}]".format(
-                    len(xvalues), len(yvalues)))
+                    len(xvalues), len(yvalues)
+                )
+            )
         buffer = io.BytesIO()
 
         plt.plot(xvalues, yvalues, color=color, linewidth=linewidth)
@@ -133,14 +132,14 @@ class Graphing(commands.Cog):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-        xmin, xmax, ymin, ymax = min(xvalues), max(
-            xvalues), min(yvalues), max(yvalues),
-        plt.xticks(
-            np.linspace(xmin, xmax, xticks)
+        xmin, xmax, ymin, ymax = (
+            min(xvalues),
+            max(xvalues),
+            min(yvalues),
+            max(yvalues),
         )
-        plt.yticks(
-            np.linspace(ymin, ymax, yticks)
-        )
+        plt.xticks(np.linspace(xmin, xmax, xticks))
+        plt.yticks(np.linspace(ymin, ymax, yticks))
 
         plt.minorticks_on()
         plt.rcParams.update({"font.family": font})
@@ -148,10 +147,7 @@ class Graphing(commands.Cog):
         plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = fmte(
-            ctx,
-            t="Data Loaded and Graphed"
-        )
+        embed = fmte(ctx, t="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()
@@ -175,20 +171,16 @@ class Graphing(commands.Cog):
     async def bar(
         self,
         ctx: commands.Context,
-
         xvalues: ListConverter(str),
         yvalues: ListConverter(float),
-
         xlabel: str = "X Axis",
         ylabel: str = "Y Axis",
-
         title: Optional[str] = None,
         color: str = "black",
-
         barwidth: Range[float, 0.1, 100.0] = 5.0,
-        font: Literal["serif", "sans-serif", "cursive",
-                      "fantasy", "monospace"] = "monospace",
-
+        font: Literal[
+            "serif", "sans-serif", "cursive", "fantasy", "monospace"
+        ] = "monospace",
         yticks: Range[int, 0, 30] = 10,
     ):
         """
@@ -197,7 +189,9 @@ class Graphing(commands.Cog):
         if len(xvalues) != len(yvalues):
             raise commands.errors.BadArgument(
                 "Values have uneven amounts of data [{} vs {}]".format(
-                    len(xvalues), len(yvalues)))
+                    len(xvalues), len(yvalues)
+                )
+            )
         buffer = io.BytesIO()
 
         plt.bar(xvalues, yvalues, color=color, linewidth=barwidth)
@@ -207,10 +201,11 @@ class Graphing(commands.Cog):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-        ymin, ymax = min(yvalues), max(yvalues),
-        plt.yticks(
-            np.linspace(ymin, ymax, yticks)
+        ymin, ymax = (
+            min(yvalues),
+            max(yvalues),
         )
+        plt.yticks(np.linspace(ymin, ymax, yticks))
 
         plt.minorticks_on()
         plt.rcParams.update({"font.family": font})
@@ -218,10 +213,7 @@ class Graphing(commands.Cog):
         plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = fmte(
-            ctx,
-            t="Data Loaded and Graphed"
-        )
+        embed = fmte(ctx, t="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()
@@ -231,38 +223,35 @@ class Graphing(commands.Cog):
         return self.color_autocomplete(inter, current)
 
     @graph.command()
-    @describe(function="The functiont to graph, in slope-intercept form.",
-              rangelower="Where to start graphing Y.",
-              rangeupper="Where to stop graphing Y.",
-              plots="how many plots of Y to make.",
-              xlabel="The label of the graph's X axis.",
-              ylabel="The label of the graph's Y axis.",
-              title="The title of the graph",
-              color="The color of the line.",
-              linewidth="Width of the line. If left empty, it will be decided automatically.",
-              font="The font of the text for the labels and title.",
-              xticks="How many ticks to place on the X axis.",
-              yticks="How many ticks to place on the Y axis.",
-              )
+    @describe(
+        function="The functiont to graph, in slope-intercept form.",
+        rangelower="Where to start graphing Y.",
+        rangeupper="Where to stop graphing Y.",
+        plots="how many plots of Y to make.",
+        xlabel="The label of the graph's X axis.",
+        ylabel="The label of the graph's Y axis.",
+        title="The title of the graph",
+        color="The color of the line.",
+        linewidth="Width of the line. If left empty, it will be decided automatically.",
+        font="The font of the text for the labels and title.",
+        xticks="How many ticks to place on the X axis.",
+        yticks="How many ticks to place on the Y axis.",
+    )
     async def psi(
         self,
         ctx: commands.Context,
-
         function: str,
         rangelower: float,
         rangeupper: float,
         plots: int = 50,
-
         xlabel: str = "X Axis",
         ylabel: str = "Y Axis",
-
         title: Optional[str] = None,
         color: str = "black",
-
         linewidth: Range[float, 0.1, 100.0] = 5.0,
-        font: Literal["serif", "sans-serif", "cursive",
-                      "fantasy", "monospace"] = "monospace",
-
+        font: Literal[
+            "serif", "sans-serif", "cursive", "fantasy", "monospace"
+        ] = "monospace",
         xticks: Range[int, 0, 30] = 10,
         yticks: Range[int, 0, 30] = 10,
         # autoperspective: bool = False
@@ -273,8 +262,7 @@ class Graphing(commands.Cog):
         buffer = io.BytesIO()
         xvalues = np.linspace(rangelower, rangeupper, plots)
         yvalues = []
-        function = function.replace(" ", "").replace(
-            "^", "**").replace("y=", "")
+        function = function.replace(" ", "").replace("^", "**").replace("y=", "")
 
         def ins(string: str, char: str, pos: int):
             return string[:pos] + char + string[pos:]
@@ -287,10 +275,7 @@ class Graphing(commands.Cog):
                     function = ins(function, "*", co)
 
         for v in xvalues:
-            yvalues.append(
-                simpleeval.SimpleEval().eval(
-                    function.replace(
-                        "x", str(v))))
+            yvalues.append(simpleeval.SimpleEval().eval(function.replace("x", str(v))))
         plt.plot(xvalues, yvalues, color=color, linewidth=linewidth)
         plt.grid(True)
 
@@ -298,15 +283,13 @@ class Graphing(commands.Cog):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-        xmax, ymax = max(
-            xvalues), max(yvalues),
+        xmax, ymax = (
+            max(xvalues),
+            max(yvalues),
+        )
 
-        plt.xticks(
-            np.linspace(0, xmax, xticks)
-        )
-        plt.yticks(
-            np.linspace(0, ymax, yticks)
-        )
+        plt.xticks(np.linspace(0, xmax, xticks))
+        plt.yticks(np.linspace(0, ymax, yticks))
 
         plt.minorticks_on()
         plt.rcParams.update({"font.family": font})
@@ -314,10 +297,7 @@ class Graphing(commands.Cog):
         plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = fmte(
-            ctx,
-            t="Data Loaded and Graphed"
-        )
+        embed = fmte(ctx, t="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()

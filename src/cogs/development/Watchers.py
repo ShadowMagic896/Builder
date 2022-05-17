@@ -15,7 +15,6 @@ from src.__archives__.cogs.InterHelp import InterHelp
 
 
 class Watchers(commands.Cog):
-
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
@@ -24,23 +23,29 @@ class Watchers(commands.Cog):
         print(error)
         hint = None
 
-
-        if "jishaku" in ctx.invoked_parents:  # Do not automate command errors for this cog
+        if (
+            "jishaku" in ctx.invoked_parents
+        ):  # Do not automate command errors for this cog
             return
 
-        while isinstance(error,
-                         Union[commands.errors.CommandInvokeError,
-                               discord.app_commands.errors.CommandInvokeError,
-                               commands.errors.HybridCommandError]):
+        while isinstance(
+            error,
+            Union[
+                commands.errors.CommandInvokeError,
+                discord.app_commands.errors.CommandInvokeError,
+                commands.errors.HybridCommandError,
+            ],
+        ):
             error = error.original
-
 
         if isinstance(error, CommandNotFound):
             hint = "I couldn't find that command. Try `/help`"
         if isinstance(error, ExtensionNotFound):
             hint = "I couldn't find that cog. Try `/help`"
         elif isinstance(error, NotFound):
-            hint = "I couldn't find that. Try `/help`, or check the error for more info."
+            hint = (
+                "I couldn't find that. Try `/help`, or check the error for more info."
+            )
         elif isinstance(error, Forbidden):
             hint = "I'm not allowed to do that."
         elif isinstance(error, MissingRequiredArgument):
@@ -68,28 +73,33 @@ class Watchers(commands.Cog):
         hintEmbed = fmte(
             ctx,
             t="An Error Occurred.",
-            d="**Hint:**\n{}\n**Error:**\n`{}`".format(
-                hint,
-                error
-            ),
-            c=discord.Color.red()
+            d="**Hint:**\n{}\n**Error:**\n`{}`".format(hint, error),
+            c=discord.Color.red(),
         )
-        helpEmbed = InterHelp(self.bot)._command_embed(
-            ctx.interaction, ctx.command, color=discord.Color.red()
-        ) if ctx.interaction else InterHelp(self.bot)._command_embed_ctx(
-            ctx, ctx.command, color=discord.Color.red()
+        helpEmbed = (
+            InterHelp(self.bot)._command_embed(
+                ctx.interaction, ctx.command, color=discord.Color.red()
+            )
+            if ctx.interaction
+            else InterHelp(self.bot)._command_embed_ctx(
+                ctx, ctx.command, color=discord.Color.red()
+            )
         )
         await ctx.send(embeds=[hintEmbed, helpEmbed], ephemeral=True)
         ctx.command_failed = True
-    
+
     async def _interaction_error_handler(inter: discord.Interaction, error: Exception):
         print(error)
         hint = None
 
-        while isinstance(error,
-                         Union[commands.errors.CommandInvokeError,
-                               discord.app_commands.errors.CommandInvokeError,
-                               commands.errors.HybridCommandError]):
+        while isinstance(
+            error,
+            Union[
+                commands.errors.CommandInvokeError,
+                discord.app_commands.errors.CommandInvokeError,
+                commands.errors.HybridCommandError,
+            ],
+        ):
             error = error.original
 
         if isinstance(error, CommandNotFound):
@@ -97,7 +107,9 @@ class Watchers(commands.Cog):
         if isinstance(error, ExtensionNotFound):
             hint = "I couldn't find that cog. Try `/help`"
         elif isinstance(error, NotFound):
-            hint = "I couldn't find that. Try `/help`, or check the error for more info."
+            hint = (
+                "I couldn't find that. Try `/help`, or check the error for more info."
+            )
         elif isinstance(error, Forbidden):
             hint = "I'm not allowed to do that."
         elif isinstance(error, MissingRequiredArgument):
@@ -125,20 +137,19 @@ class Watchers(commands.Cog):
         hintEmbed = fmte_i(
             inter,
             t="An Error Occurred.",
-            d="**Hint:**\n{}\n**Error:**\n`{}`".format(
-                hint,
-                error
-            ),
-            c=discord.Color.red()
+            d="**Hint:**\n{}\n**Error:**\n`{}`".format(hint, error),
+            c=discord.Color.red(),
         )
         try:
             await inter.response.send_message(embeds=[hintEmbed], ephemeral=True)
         except InteractionResponded:
             await inter.followup.send(embeds=[hintEmbed], ephemeral=True)
-    
+
     async def handle_modal_error(interaction: discord.Interaction, error: Exception):
         try:
-            ctx = await commands.Context.from_interaction(interaction) # Guarenteed to work with modals (maybe?)
+            ctx = await commands.Context.from_interaction(
+                interaction
+            )  # Guarenteed to work with modals (maybe?)
             return await Watchers(ctx.bot).on_command_error(ctx, error)
         except ValueError:
             return await Watchers._interaction_error_handler(interaction, error)
@@ -154,7 +165,7 @@ class Watchers(commands.Cog):
                 await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         except HTTPException:
             pass
-        
+
         except Exception as e:
             raise e
 
@@ -164,8 +175,8 @@ class Watchers(commands.Cog):
             return
         if message.guild is None:
             data = "{} at {}: {}\n".format(
-                message.author, datetime.fromtimestamp(
-                    time.time()), message.content)
+                message.author, datetime.fromtimestamp(time.time()), message.content
+            )
             open("data/logs/_dmlog.txt", "a").write(data)
 
 

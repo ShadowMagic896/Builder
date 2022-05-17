@@ -1,4 +1,3 @@
-
 from typing import List
 import discord
 from discord import app_commands
@@ -25,19 +24,19 @@ def iototime(userinput: str):
         return int(c)
 
     if any([e(["s", "sec", "secs", "second", "seconds"])]):
-        return int(t[:findLimit(t)])
+        return int(t[: findLimit(t)])
 
     elif any([e(["m", "min", "mins", "minute", "minutes"])]):
-        return int(t[:findLimit(t)]) * 60
+        return int(t[: findLimit(t)]) * 60
 
     elif any([e(["h", "hr", "hrs", "hour", "hours"])]):
-        return int(t[:findLimit(t)]) * 60 * 60
+        return int(t[: findLimit(t)]) * 60 * 60
 
     elif any([e(["d", "ds", "day", "days"])]):
-        return int(t[:findLimit(t)]) * 60 * 60 * 24
+        return int(t[: findLimit(t)]) * 60 * 60 * 24
 
     elif any([e(["w", "wk", "wks", "week", "weeks"])]):
-        return int(t[:findLimit(t)]) * 60 * 60 * 24 * 7
+        return int(t[: findLimit(t)]) * 60 * 60 * 24 * 7
 
     else:
         return 60 * 60  # Not sure what they meant, so just do an hour.
@@ -48,7 +47,7 @@ async def actual_purge(ctx: commands.Context, limit, user: discord.Member = None
     dels = 0
     async for m in ctx.channel.history(limit=round((limit + 10) * 1.5)):
         # if there is a user, care, otherwise just go on ahead
-        if (m.author == user if user else True):
+        if m.author == user if user else True:
             try:
                 await m.delete()
             except discord.errors.Forbidden or discord.errors.NotFound:
@@ -60,7 +59,7 @@ async def actual_purge(ctx: commands.Context, limit, user: discord.Member = None
 
 
 def clean(_input: str):
-    banned_chars = [";", "\"", "'"]
+    banned_chars = [";", '"', "'"]
     for r in _input:
         if r in banned_chars:
             raise commands.errors.BadArgument(_input)

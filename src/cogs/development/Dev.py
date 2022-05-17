@@ -17,19 +17,17 @@ from src.auxiliary.user.Converters import TimeConvert
 class Dev(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
-    
+
     @commands.hybrid_command()
     @commands.is_owner()
-    @describe(
-        params="The arguments to pass to Popen & autopep8"
-    )
+    @describe(params="The arguments to pass to Popen & autopep8")
     async def fmtcode(self, ctx, params: str = "-aaair"):
         """
         Formats the bot's code using autopep8
         """
         Popen(
-            "py -m autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" %
-            params,).stdout
+            "py -m autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" % params,
+        ).stdout
         await ctx.send("Code formatting completed.")
 
     @commands.hybrid_command()
@@ -39,8 +37,7 @@ class Dev(commands.Cog):
             l: List[app_commands.AppCommand] = await self.bot.tree.sync(guild=ctx.guild)
         else:
             l: List[app_commands.AppCommand] = await self.bot.tree.sync()
-        embed = fmte(ctx, t="%s Commands Synced" %
-                     len(explode(l)))
+        embed = fmte(ctx, t="%s Commands Synced" % len(explode(l)))
         await ctx.send(embed=embed)
 
 

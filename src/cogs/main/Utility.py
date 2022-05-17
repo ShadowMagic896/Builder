@@ -24,6 +24,7 @@ import aiofiles
 import bs4
 import requests
 import warnings
+
 warnings.filterwarnings("error")
 
 
@@ -41,8 +42,7 @@ class Utility(commands.Cog):
         return "\N{INPUT SYMBOL FOR NUMBERS}"
 
     @commands.hybrid_command()
-    @describe(
-    )
+    @describe()
     async def invite(self, ctx: commands.Context):
         """
         Gets a link to invite me to a server!
@@ -53,24 +53,31 @@ class Utility(commands.Cog):
             scopes=["bot", "applications.commands"],
         )
         embed = fmte(
-            ctx,
-            t="Invite Me to a Server!",
-            d="[Invite Link]({})".format(link)
+            ctx, t="Invite Me to a Server!", d="[Invite Link]({})".format(link)
         )
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    @describe(
-    )
+    @describe()
     async def ping(self, ctx: commands.Context):
         """
         Returns the bot's latency, in milliseconds.
         """
         ping = self.bot.latency
-        emt = "`\N{OCTAGONAL SIGN} [HIGH]`" if ping > 0.4 else "`\N{WARNING SIGN} [MEDIUM]`"
+        emt = (
+            "`\N{OCTAGONAL SIGN} [HIGH]`"
+            if ping > 0.4
+            else "`\N{WARNING SIGN} [MEDIUM]`"
+        )
         emt = emt if ping > 0.2 else "`\N{WHITE HEAVY CHECK MARK} [LOW]`"
 
-        await ctx.send(embed=fmte(ctx, "\N{TABLE TENNIS PADDLE AND BALL} Pong!", f"{round(ping*1000, 3)} miliseconds!\n{emt}"))
+        await ctx.send(
+            embed=fmte(
+                ctx,
+                "\N{TABLE TENNIS PADDLE AND BALL} Pong!",
+                f"{round(ping*1000, 3)} miliseconds!\n{emt}",
+            )
+        )
 
     @commands.hybrid_command()
     @describe(
@@ -84,29 +91,37 @@ class Utility(commands.Cog):
         bb = "\n{s}{s}{s}".format(s="ㅤ")
 
         user = user if user else ctx.author
-        embed = fmte(
-            ctx,
-            t="Information on {}".format(user)
+        embed = fmte(ctx, t="Information on {}".format(user))
+        made = (
+            round(user.created_at.timestamp())
+            if user.created_at is not None
+            else "`Unknown`"
         )
-        made = round(user.created_at.timestamp()) if user.created_at is not None else "`Unknown`"
-        joined = round(user.joined_at.timestamp()) if user.joined_at is not None else "`Unknown`"
-        prem = round(user.premium_since.timestamp()) if user.premium_since is not None else "`None`"
+        joined = (
+            round(user.joined_at.timestamp())
+            if user.joined_at is not None
+            else "`Unknown`"
+        )
+        prem = (
+            round(user.premium_since.timestamp())
+            if user.premium_since is not None
+            else "`None`"
+        )
 
         embed.add_field(
             name="***__General Info__***",
             value=f"**Name:** `{user}`{b}**Nickname:** `{user.nick}`{b}**ID:** `{user.id}`{b}**Nitro Since:** {prem}{b}",
-            inline=False
+            inline=False,
         )
         embed.add_field(
             name="***__Statistics__***",
             value=f"{b}**Status:** `{user.status}`\n**Creation Date:** <t:{made}>{b}**Join Date:** <t:{joined}>{b}**System User:** `{user.system}`",
-            inline=False
+            inline=False,
         )
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    @describe(
-    )
+    @describe()
     async def bot(self, ctx: commands.Context):
         """
         Returns information about the bot.
@@ -121,9 +136,11 @@ class Utility(commands.Cog):
             name="**__Statistics__**",
             value="{s}**Creation Date:** <t:{}>{s}**Owners:** {}".format(
                 round(self.bot.user.created_at.timestamp()),
-                "\n{}".format(bb).join([str(c) for c in (await self.bot.application_info()).team.members]),
-                s=b
-            )
+                "\n{}".format(bb).join(
+                    [str(c) for c in (await self.bot.application_info()).team.members]
+                ),
+                s=b,
+            ),
         )
         await ctx.send(embed=embed)
 
@@ -146,7 +163,8 @@ class Utility(commands.Cog):
 
         if len(linkElements) == 0:
             raise commands.errors.BadArgument(
-                "Could not find any valid link elements...")
+                "Could not find any valid link elements..."
+            )
         else:
             link = linkElements[0].get("href")
             i = 0
@@ -184,7 +202,7 @@ class Utility(commands.Cog):
         for t in attempts:
             if not (found := t(objectid)):
                 continue
-            
+
             objtype = type(found).__name__
             name = str(found)
 
@@ -196,13 +214,10 @@ class Utility(commands.Cog):
                 t="Object Found!",
             )
             embed.add_field(
-                name = "NAME",
-                value = name,
+                name="NAME",
+                value=name,
             )
-            embed.add_field(
-                name = "TYPE",
-                value = objtype
-            )
+            embed.add_field(name="TYPE", value=objtype)
             return await ctx.send(embed=embed)
         else:
             raise commands.errors.BadArgument(
@@ -223,22 +238,25 @@ class Utility(commands.Cog):
 
         headers = {
             "X-RapidAPI-Host": "mashape-community-urban-dictionary.p.rapidapi.com",
-            "X-RapidAPI-Key": Config().X_RAPID_API_KEY}
+            "X-RapidAPI-Key": Config().X_RAPID_API_KEY,
+        }
 
         response = requests.request("GET", url, headers=headers, params=params)
         res = response.json()["list"]
-        embed = fmte(ctx, t="`{}`: {} Definitions {}".format(
-            term, len(res), "[Showing 5]" if len(res) > 5 else ""), )
+        embed = fmte(
+            ctx,
+            t="`{}`: {} Definitions {}".format(
+                term, len(res), "[Showing 5]" if len(res) > 5 else ""
+            ),
+        )
         for d in res[:5]:
             embed.add_field(
-                name="[{}]({})".format(
-                    d["author"],
-                    d["permalink"]),
+                name="[{}]({})".format(d["author"], d["permalink"]),
                 value="{}\n**Upvotes:** {}\n**Written On:** {}".format(
-                    d["definition"],
-                    d["thumbs_up"],
-                    d["written_on"]),
-                inline=False)
+                    d["definition"], d["thumbs_up"], d["written_on"]
+                ),
+                inline=False,
+            )
 
         await ctx.send(embed=embed, ephemeral=ephemeral)
 
@@ -252,35 +270,50 @@ class Utility(commands.Cog):
         """
         response = requests.get(
             "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
-                term.lower(), Config().DICT_API_KEY)).json()
+                term.lower(), Config().DICT_API_KEY
+            )
+        ).json()
         defs = []
         dates = []
         types = []
         for defi in response:
             if isinstance(defi, str):
                 raise commands.errors.BadArgument(term)
-            defs.append(("".join(defi.get("shortdef", ["Unknown",])[0]).capitalize()))
+            defs.append(
+                (
+                    "".join(
+                        defi.get(
+                            "shortdef",
+                            [
+                                "Unknown",
+                            ],
+                        )[0]
+                    ).capitalize()
+                )
+            )
             dates.append(defi.get("date", "Unknown"))
             types.append(defi.get("fl", "Unknown"))
 
-        embed = fmte(ctx,)
+        embed = fmte(
+            ctx,
+        )
         if len(defs) < 1:
-            raise ValueError('Word not found/no definition')
-
+            raise ValueError("Word not found/no definition")
 
         for c, item in enumerate(defs[:5]):
             embed.add_field(
                 name="Definition {}, {}: *`[{}]`*".format(
                     c + 1,
                     types[c].capitalize(),
-                    str(dates[c])[:dates[c].index("{")] if "{" in str(
-                        dates[c]) else str(dates[c])
+                    str(dates[c])[: dates[c].index("{")]
+                    if "{" in str(dates[c])
+                    else str(dates[c]),
                 ),
                 value=item,
-                inline=False
+                inline=False,
             )
         await ctx.send(embed=embed)
-    
+
     @commands.hybrid_command()
     @describe(
         zone="The timezone to get the time from.",
@@ -297,15 +330,18 @@ class Utility(commands.Cog):
             embed = fmte(
                 ctx=ctx,
                 t="Current datetime in zone {}:".format(time.zone),
-                d="```{}```".format(datetime.now(pytz.timezone(zone)))
+                d="```{}```".format(datetime.now(pytz.timezone(zone))),
             )
             await ctx.send(embed=embed)
 
     @time.autocomplete("zone")
-    async def time_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+    async def time_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ) -> List[discord.app_commands.Choice[str]]:
         return [
             discord.app_commands.Choice(name=zone, value=zone)
-            for zone in pytz.all_timezones if current.lower() in zone.lower()
+            for zone in pytz.all_timezones
+            if current.lower() in zone.lower()
         ][:25]
 
     @commands.hybrid_command()
@@ -316,30 +352,35 @@ class Utility(commands.Cog):
         await ctx.send(str(time) + time.time())
 
     @commands.hybrid_command()
-    @commands.cooldown(2, 60*60*4, commands.BucketType.user)
+    @commands.cooldown(2, 60 * 60 * 4, commands.BucketType.user)
     async def container(self, ctx: commands.Context):
         """
         Creates a docker container and runs Python code inside of it.
         """
         if ctx.author.id in self.container_users:
-            raise commands.errors.MissingPermissions("You are already running a container.")
+            raise commands.errors.MissingPermissions(
+                "You are already running a container."
+            )
         await ctx.interaction.response.send_modal(CodeModal(self, ctx))
+
 
 class CodeModal(discord.ui.Modal):
     def __init__(self, util: Utility, ctx: commands.Context) -> None:
         self.util = util
         self.ctx: commands.Context = ctx
         super().__init__(title="Python Evaluation")
+
     code = discord.ui.TextInput(
-        label="Please paste / type code here",
-        style=discord.TextStyle.long
+        label="Please paste / type code here", style=discord.TextStyle.long
     )
 
     async def makeContainer(self, ctx: commands.Context, inter: discord.Interaction):
         """
         Runs a contianer. Returns the result STDOUT, STDERR, and return code.
         """
-        if ctx.author.id not in [mem.id for mem in (await ctx.bot.application_info()).team.members]:
+        if ctx.author.id not in [
+            mem.id for mem in (await ctx.bot.application_info()).team.members
+        ]:
             self.util.container_users.append(ctx.author.id)
         value: str = self.code.value
         basepath = f"{os.getcwd()}\docker"
@@ -358,41 +399,46 @@ class CodeModal(discord.ui.Modal):
                 with open(f"{dirpath}\\{f}", "w") as file:
                     file.write(template.read())
 
-
         options = {
             "--rm": "",
-            "--memory":  "6MB",
+            "--memory": "6MB",
             "--ulimit": "cpu=3",
             "--read-only": "",
             "-t": _dir,
         }
-        opts = " ".join(f"{x}{' ' if y != '' else y}{y}" for x, y in list(options.items()))
+        opts = " ".join(
+            f"{x}{' ' if y != '' else y}{y}" for x, y in list(options.items())
+        )
 
         # Build the Container
-        await (await asyncio.create_subprocess_shell(
-            f"cd {dirpath} && docker build -t {_dir} . ",
-            stdout = asyncio.subprocess.PIPE,
-            stderr = asyncio.subprocess.PIPE
-        )).communicate()
+        await (
+            await asyncio.create_subprocess_shell(
+                f"cd {dirpath} && docker build -t {_dir} . ",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+        ).communicate()
         embed = fmte(
             ctx,
-            t = f"Container Created `[ID: {_dir}]`",
-            d = "Compiling and running code..."
+            t=f"Container Created `[ID: {_dir}]`",
+            d="Compiling and running code...",
         )
         await inter.followup.send(embed=embed)
         proc: Process = await asyncio.create_subprocess_shell(
             f"cd {dirpath} && docker run {opts}",
-            stdout = asyncio.subprocess.PIPE,
-            stderr = asyncio.subprocess.PIPE
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await proc.communicate()
         if stderr:
             print(stderr.decode())
 
         # Cleanup
-        await (await asyncio.create_subprocess_shell(
-            f"docker image prune -a --force",
-        )).communicate()
+        await (
+            await asyncio.create_subprocess_shell(
+                f"docker image prune -a --force",
+            )
+        ).communicate()
         try:
             self.util.container_users.remove(self.ctx.author.id)
         except ValueError:
@@ -417,14 +463,16 @@ class CodeModal(discord.ui.Modal):
         file = discord.File(buffer)
         file.filename = f"result.{self.ctx.author.id}.py"
         file.description = f"This is the result of a Python script written by Discord user {self.ctx.author.id}, and run in a Docker container."
-            
+
         embed = fmte(
             self.ctx,
-            d = f"```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds\n# Written by: {self.ctx.author.id}```",
-            c = color
+            d=f"```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds\n# Written by: {self.ctx.author.id}```",
+            c=color,
         )
 
-        await (await interaction.original_message()).edit(content=None, embed=embed, attachments=(file,))
+        await (await interaction.original_message()).edit(
+            content=None, embed=embed, attachments=(file,)
+        )
         ddir = os.getcwd() + f"\\docker\\containers\\{_dir}"
         os.system(f"rd /Q /S {ddir}")
 

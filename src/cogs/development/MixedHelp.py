@@ -1,4 +1,3 @@
-
 from tkinter import N
 import discord
 from discord import Interaction
@@ -21,11 +20,10 @@ class MixedHelp(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command()
-    @describe(
-        cog="The cog to view.",
-        ephemeral=Desc.ephemeral
-    )
-    async def help(self, ctx: commands.Context, cog: Optional[str], ephemeral: bool = False):
+    @describe(cog="The cog to view.", ephemeral=Desc.ephemeral)
+    async def help(
+        self, ctx: commands.Context, cog: Optional[str], ephemeral: bool = False
+    ):
         """
         Creates a menu to navigate all of the bot's commands
         """
@@ -33,48 +31,64 @@ class MixedHelp(commands.Cog):
             embed = fmte(
                 ctx,
                 t="Help",
-                d="*%s*" % (await self.bot.application_info()).description
+                d="*%s*" % (await self.bot.application_info()).description,
             )
             view = BaseView().add_item(CogSelect(self.bot, ctx, ephemeral))
             await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
         else:
             cog: commands.Cog = self.bot.get_cog(cog)
 
-            embed = CommandView(
-                self.bot, ephemeral, cog, 5).page_zero(
-                ctx.interaction)
+            embed = CommandView(self.bot, ephemeral, cog, 5).page_zero(ctx.interaction)
 
             sel = CogSelect(self.bot, ctx, ephemeral)
             sel.placeholder = "%s Cog Selection..." % cog.ge()
-            sel.options.remove(
-                discord.utils.get(
-                    sel.options,
-                    label=cog.qualified_name))
+            sel.options.remove(discord.utils.get(sel.options, label=cog.qualified_name))
             view = CommandView(self.bot, ephemeral, cog, 5).add_item(sel)
             view.checkButtons()
 
             await ctx.send(embed=embed, view=view)
 
     @help.autocomplete("cog")
-    async def cog_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
-        return sorted([discord.app_commands.Choice(name=c, value=c) for c in list(self.bot.cogs.keys())if ((current.lower() in c.lower(
-        ) or (c.lower()) in current.lower())) and c not in CONSTANTS.Cogs().FORBIDDEN_COGS][:25], key=lambda c: c.name)
+    async def cog_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ) -> List[discord.app_commands.Choice[str]]:
+        return sorted(
+            [
+                discord.app_commands.Choice(name=c, value=c)
+                for c in list(self.bot.cogs.keys())
+                if ((current.lower() in c.lower() or (c.lower()) in current.lower()))
+                and c not in CONSTANTS.Cogs().FORBIDDEN_COGS
+            ][:25],
+            key=lambda c: c.name,
+        )
 
     # @help.autocomplete("command")
-    async def command_autocomplete(self, inter: discord.Interaction, current: str) -> List[discord.app_commands.Choice[str]]:
+    async def command_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ) -> List[discord.app_commands.Choice[str]]:
         return sorted(
             [
                 discord.app_commands.Choice(
-                    name="[{}] {}".format(
-                        c.cog_name, c.qualified_name), value=c.qualified_name) for c in (
-                    self.explode([c for c in self.bot.commands]) if not getattr(
-                        inter.namespace, "cog") else self.explode(self.bot.get_cog(
-                            inter.namespace.cog).get_commands()) if inter.namespace.cog in [
-                                c for c, _ in self.bot.cogs.items()] else []) if (
-                                    (current.lower() in c.qualified_name.lower()) or (
-                                        c.qualified_name.lower() in current.lower())) and c.cog_name not in CONSTANTS.Cogs()][
-                                            :25], key=lambda c: c.name[
-                                                c.name.index("]") + 1:])
+                    name="[{}] {}".format(c.cog_name, c.qualified_name),
+                    value=c.qualified_name,
+                )
+                for c in (
+                    self.explode([c for c in self.bot.commands])
+                    if not getattr(inter.namespace, "cog")
+                    else self.explode(
+                        self.bot.get_cog(inter.namespace.cog).get_commands()
+                    )
+                    if inter.namespace.cog in [c for c, _ in self.bot.cogs.items()]
+                    else []
+                )
+                if (
+                    (current.lower() in c.qualified_name.lower())
+                    or (c.qualified_name.lower() in current.lower())
+                )
+                and c.cog_name not in CONSTANTS.Cogs()
+            ][:25],
+            key=lambda c: c.name[c.name.index("]") + 1 :],
+        )
 
     async def main_embed(self, ctx: commands.Context, bot: commands.Bot):
         return fmte(
@@ -83,8 +97,8 @@ class MixedHelp(commands.Cog):
             d="Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
                 (await self.bot.application_info()).description,
                 len(self.bot.cogs),
-                len(self.bot.commands)
-            )
+                len(self.bot.commands),
+            ),
         )
 
 
@@ -94,14 +108,19 @@ class BaseView(discord.ui.View):
 
 
 class CommandView(discord.ui.View):
-    def __init__(self, bot: commands.Bot, ephemeral: bool, cog: commands.Cog,
-                 pagesize: int, *, timeout: Optional[float] = 180):
+    def __init__(
+        self,
+        bot: commands.Bot,
+        ephemeral: bool,
+        cog: commands.Cog,
+        pagesize: int,
+        *,
+        timeout: Optional[float] = 180,
+    ):
         self.bot = bot
         self.ephemeral = ephemeral
 
-        self.vals = sorted(
-            explode(cog.get_commands()),
-            key=lambda c: c.qualified_name)
+        self.vals = sorted(explode(cog.get_commands()), key=lambda c: c.qualified_name)
         self.pos = 1
         self.maxpos = ceil((len(self.vals) / pagesize))
         self.pagesize = pagesize
@@ -124,7 +143,9 @@ class CommandView(discord.ui.View):
         embed = self.add_fields(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x")
+    @discord.ui.button(
+        emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
+    )
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.message.delete()
 
@@ -146,13 +167,13 @@ class CommandView(discord.ui.View):
 
     def embed(self, inter: discord.Interaction):
         return fmte_i(
-            inter,
-            t="Commands: Page `{}` of `{}`".format(self.pos, self.maxpos)
+            inter, t="Commands: Page `{}` of `{}`".format(self.pos, self.maxpos)
         )
 
     def add_fields(self, embed: discord.Embed):
-        for command in self.vals[self.pagesize *
-                                 (self.pos - 1):self.pagesize * (self.pos)]:
+        for command in self.vals[
+            self.pagesize * (self.pos - 1) : self.pagesize * (self.pos)
+        ]:
             command: commands.HybridCommand = command
             # al = command.signature.split()
             embed.add_field(
@@ -160,7 +181,7 @@ class CommandView(discord.ui.View):
                 name="`/%s`" % command.qualified_name,
                 # value = "*%s*\n`%s`" % (command.short_doc, command.signature),
                 value="*%s*" % command.short_doc,
-                inline=False
+                inline=False,
             )
         return embed
 
@@ -197,8 +218,11 @@ class CommandView(discord.ui.View):
                             b.disabled = False
         if button is None:
             return
-        for b in [c for c in self.children if isinstance(
-                c, discord.ui.Button) and c.custom_id != "x"]:
+        for b in [
+            c
+            for c in self.children
+            if isinstance(c, discord.ui.Button) and c.custom_id != "x"
+        ]:
             if b == button:
                 b.style = discord.ButtonStyle.success
             else:
@@ -210,8 +234,7 @@ class CommandView(discord.ui.View):
 
 
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
-    def __init__(self, bot: commands.Bot,
-                 context: commands.Context, ephemeral: bool):
+    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
         placeholder = "\N{MEDIUM WHITE CIRCLE} Cog Selection..."
         options = []
 
@@ -225,9 +248,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
                 continue
             options.append(
                 discord.SelectOption(
-                    label=name,
-                    description=cog.description,
-                    emoji=cog.ge()
+                    label=name, description=cog.description, emoji=cog.ge()
                 )
             )
         super().__init__(
@@ -241,8 +262,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         self.placeholder = f"{obj.ge()} Cog Selection..."
         if self.lastrem:
             self.append_option(self.lastrem)
-        self.lastrem = discord.utils.get(
-            self.options, label=obj.qualified_name)
+        self.lastrem = discord.utils.get(self.options, label=obj.qualified_name)
         self.options.remove(self.lastrem)
         self.options = sorted(self.options, key=lambda o: o.label)
 
@@ -252,6 +272,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         view.add_item(self)
 
         await interaction.response.edit_message(embed=embed, view=view)
+
 
 async def setup(bot):
     await bot.add_cog(MixedHelp(bot))

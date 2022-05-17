@@ -31,20 +31,19 @@ class Guild(commands.Cog):
         b = "\n{s}{s}".format(s="ㅤ")
         bb = "\n{s}{s}{s}".format(s="ㅤ")
         embed = await fmte(
-            ctx,
-            t="Info: {} [{}]".format(guild.name, guild.id),
-            d=guild.description
+            ctx, t="Info: {} [{}]".format(guild.name, guild.id), d=guild.description
         )
         embed.add_field(
             name="***__General Info__***",
             value="{s}**Owner**: {} [{}]{s}**Created:**: <t:{}>{s}**Nitro Level:** {}".format(
                 guild.owner,
                 guild.owner_id,
-                round(
-                    guild.created_at.timestamp()),
+                round(guild.created_at.timestamp()),
                 guild.premium_tier,
-                s=b),
-            inline=False)
+                s=b,
+            ),
+            inline=False,
+        )
         embed.add_field(
             name="***__User Info__***",
             value="{s}**Users:** {}{s}**Bots:** {}{s}**Boosters:** {}{s}**Total:** {}".format(
@@ -52,19 +51,21 @@ class Guild(commands.Cog):
                 len([p for p in guild.members if p.bot]),
                 guild.premium_subscription_count,
                 len(guild.members),
-                s=b
+                s=b,
             ),
-            inline=False
+            inline=False,
         )
         embed.add_field(
             name="***__Customization__***",
             value="{s}**Vanity URL:** {}{s}**Emojis: **{} / {}{s}**Stickers:** {} / {}".format(
                 guild.vanity_url,
-                len(guild.emojis), guild.emoji_limit,
-                len(guild.stickers), guild.sticker_limit,
-                s=b
+                len(guild.emojis),
+                guild.emoji_limit,
+                len(guild.stickers),
+                guild.sticker_limit,
+                s=b,
             ),
-            inline=False
+            inline=False,
         )
         embed.add_field(
             name="***__Statistics__***",
@@ -74,10 +75,12 @@ class Guild(commands.Cog):
                 guild.bitrate_limit,
                 guild.nsfw_level.name.capitalize(),
                 guild.preferred_locale,
-                "\n{}".format(bb).join(
-                    guild.features) if len(
-                    guild.features) > 0 else "{}None\n".format(bb),
-                s=b))
+                "\n{}".format(bb).join(guild.features)
+                if len(guild.features) > 0
+                else "{}None\n".format(bb),
+                s=b,
+            ),
+        )
         if guild.banner:
             embed.set_image(url=guild.banner.url)
         await ctx.send(embed=embed, ephemeral=ephemeral)
@@ -88,20 +91,38 @@ class Guild(commands.Cog):
         datatype="The type of data to return.",
         ephemeral=Desc.ephemeral,
     )
-    async def dump(self, ctx: commands.Context, datatype: Literal["channel", "user", "role"], ephemeral: bool = False):
+    async def dump(
+        self,
+        ctx: commands.Context,
+        datatype: Literal["channel", "user", "role"],
+        ephemeral: bool = False,
+    ):
         """
         Returns all of the available bot data on the datatype given.
         """
         data = ""
         if datatype == "channel":
-            data = "\n".join(["{}: {}".format(c.name, ", ".join(
-                [chan.name for chan in c.channels])) for c in ctx.guild.categories])
+            data = "\n".join(
+                [
+                    "{}: {}".format(
+                        c.name, ", ".join([chan.name for chan in c.channels])
+                    )
+                    for c in ctx.guild.categories
+                ]
+            )
         elif datatype == "user":
-            data = "\n".join(["{} [ID: {}]".format(user, user.id)
-                             for user in ctx.guild.members])
+            data = "\n".join(
+                ["{} [ID: {}]".format(user, user.id) for user in ctx.guild.members]
+            )
         elif datatype == "role":
-            data = "\n".join(["{} [{} Users] [ID: {}]".format(
-                role.name, len(role.members), role.id) for role in ctx.guild.roles])
+            data = "\n".join(
+                [
+                    "{} [{} Users] [ID: {}]".format(
+                        role.name, len(role.members), role.id
+                    )
+                    for role in ctx.guild.roles
+                ]
+            )
         open("commanddump.txt", "wb").write(data.encode("utf-8"))
         file = discord.File("commanddump.txt", "commanddump.txt")
         await ctx.send(file=file, ephemeral=ephemeral)

@@ -38,17 +38,19 @@ class Builder(commands.Bot):
         tree_cls: type = discord.app_commands.CommandTree
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
-        
-        activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name=f"{Stats.lineCount(['./data', './src'])} LINES")
+
+        activity: discord.Activity = discord.Activity(
+            type=discord.ActivityType.watching,
+            name=f"{Stats.lineCount(['./data', './src'])} LINES",
+        )
         application_id: str = "963411905018466314"
         case_insensitive: bool = True
-        
+
         super().__init__(
             command_prefix=command_prefix,
             help_command=help_command,
             tree_cls=tree_cls,
             intents=intents,
-
             activity=activity,
             application_id=application_id,
             case_insensitive=case_insensitive,
@@ -69,14 +71,24 @@ class Builder(commands.Bot):
         self.database = self.client["database"]
 
         # This exists purely to protect me from typos. If I misspell a collection, instead of creating a new one, I will just get a key error.
-        self.collections = {"balances": self.database["balances"], "items": self.database["items"]}
+        self.collections = {
+            "balances": self.database["balances"],
+            "items": self.database["items"],
+        }
 
     async def setup_hook(self) -> None:
-        _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = lambda value, size=25, style="before":\
-            str(value) + " " * (size - len(str(value))) if style == "after" else\
-            " " * (size - len(str(value))) + str(value)
-        fmt: Callable[[str, str, Optional[int], Optional[int]]] = lambda name, value, buf1=10, buf2=22:\
-            "%s: %s|" % (_fmt(name, buf1, "after"), _fmt(value, buf2, "after"))
+        _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = (
+            lambda value, size=25, style="before": str(value)
+            + " " * (size - len(str(value)))
+            if style == "after"
+            else " " * (size - len(str(value))) + str(value)
+        )
+        fmt: Callable[
+            [str, str, Optional[int], Optional[int]]
+        ] = lambda name, value, buf1=10, buf2=22: "%s: %s|" % (
+            _fmt(name, buf1, "after"),
+            _fmt(value, buf2, "after"),
+        )
 
         client: str = fmt("Client", self.user)
         userid: str = fmt("User ID", self.user.id)
@@ -84,15 +96,25 @@ class Builder(commands.Bot):
 
         bdr = "\n+-----------------------------------+\n"
 
-        print(f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}")
-        
+        print(
+            f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
+        )
+
 
 async def main():
     bot: commands.Bot = Builder()
     await bot.load_extension("jishaku")
-    extension_directories: List[PathLike] = ["./src/cogs/development", "./src/cogs/economy", "./src/cogs/main"]
-    await load_extensions(bot, extension_directories, spaces = 20, ignore_errors = False, print_log = True)
+    extension_directories: List[PathLike] = [
+        "./src/cogs/development",
+        "./src/cogs/economy",
+        "./src/cogs/main",
+    ]
+    await load_extensions(
+        bot, extension_directories, spaces=20, ignore_errors=False, print_log=True
+    )
     await bot.start(Config().BOT_KEY)
+
+
 if __name__ == "__main__":
     freeze_support()
     asyncio.run(main())
