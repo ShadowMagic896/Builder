@@ -222,7 +222,7 @@ class Utility(commands.Cog):
     @describe(
         term="The term to search urbanDictionary for.",
     )
-    async def urban(self, ctx: commands.Context, term: str, ephemeral: bool = False):
+    async def urban(self, ctx: commands.Context, term: str):
         """
         Searches the Urban Dictionary and returns the top results for a term
         """
@@ -252,13 +252,13 @@ class Utility(commands.Cog):
                 inline=False,
             )
 
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
     @commands.hybrid_command()
     @describe(
         term="The term to search urbanDictionary for.",
     )
-    async def define(self, ctx: commands.Context, term: str, ephemeral: bool = False):
+    async def define(self, ctx: commands.Context, term: str):
         """
         Searches Merriam-Webster's Collegiate dictionary and returns the top results for a term
         """

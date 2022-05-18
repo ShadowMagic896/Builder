@@ -804,7 +804,6 @@ class QuizQuestionSubmit(discord.ui.Button):
                 "You are not taking this quiz!", ephemeral=True
             )
             return
-        # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
         self._view.selected.append(
             [
                 self.select.qname,

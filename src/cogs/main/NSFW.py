@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 import requests
 import wget
 
-from auxiliary.Embeds import fmte, fmte_i
+from src.auxiliary.user.Embeds import fmte, fmte_i
 
 
 class NSFW(commands.Cog):
@@ -28,7 +28,7 @@ class NSFW(commands.Cog):
         self.bot: commands.Bot = bot
 
     def ge(self):
-        return "🔞"
+        return "\N{NO ONE UNDER EIGHTEEN SYMBOL}"
 
     @commands.hybrid_command()
     @commands.is_nsfw()
@@ -255,11 +255,13 @@ class NHentaiView(discord.ui.View):
         embed = self.embed(inter)
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji="❌", style=discord.ButtonStyle.red, custom_id="x")
+    @discord.ui.button(
+        emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
+    )
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.message.delete()
 
-    @discord.ui.button(emoji="📜", custom_id="c")
+    @discord.ui.button(emoji="\N{SCROLL}", custom_id="c")
     async def cust(self, inter: discord.Interaction, button: discord.ui.button):
         q = await self.ctx.send("Please send a new page number...", ephemeral=False)
         r = await self.bot.wait_for(

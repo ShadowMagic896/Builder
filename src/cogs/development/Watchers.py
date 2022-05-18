@@ -160,13 +160,7 @@ class Watchers(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.content is None or message.author.bot:
-            return
-        if message.guild is None:
-            data = "{} at {}: {}\n".format(
-                message.author, datetime.fromtimestamp(time.time()), message.content
-            )
-            open("data/logs/_dmlog.txt", "a").write(data)
+        pass
 
 
 async def setup(bot):

@@ -29,14 +29,12 @@ class Fun(commands.Cog):
     @describe(
         font="The font to translate to. See http://www.figlet.org/fontdb.cgi for fonts.",
         text="The text to translate.",
-        ephemeral=Desc.ephemeral,
     )
     async def font(
         self,
         ctx: commands.context.Context,
         font: str,
         text: str,
-        ephemeral: bool = False,
     ):
         """
         Translates your text into a new font!
@@ -50,9 +48,7 @@ class Fun(commands.Cog):
                         ctx.author
                     )
                 )
-            await ctx.send(
-                "```{}```".format(t[:1990]), embed=embed, ephemeral=ephemeral
-            )
+            await ctx.send("```{}```".format(t[:1990]), embed=embed)
 
         except pyfiglet.FontNotFound:
             raise commands.errors.BadArgument("Font not found.")
@@ -72,14 +68,12 @@ class Fun(commands.Cog):
     @describe(
         sides="The amount of sides for the dice.",
         times="How many times to roll the dice.",
-        ephemeral=Desc.ephemeral,
     )
     async def roll(
         self,
         ctx,
         sides: Range[int, 1, 20000] = 20,
         times: Range[int, 1, 200] = 1,
-        ephemeral: bool = False,
     ):
         """
         Rolls a dice a certain amount of times.
@@ -102,7 +96,7 @@ class Fun(commands.Cog):
             ),
             d=formatted,
         )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
     @commands.hybrid_command()
     @describe(user=Desc.user)

@@ -9,14 +9,12 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 
 
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageOps, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
 from typing import Any, Callable, Literal, Optional
 
-from numpy import average
 from data.config import Config
 
 from src.auxiliary.user.Embeds import fmte, Desc
-from src.auxiliary.bot.Constants import CONSTANTS
 
 
 class Images(commands.Cog):
@@ -55,9 +53,17 @@ class Images(commands.Cog):
         buffer.seek(0)
         return buffer
 
+    def callForEnhance(self, buffer: BytesIO, function: str, *args, **kwargs) -> Any:
+        img = Image.open(buffer)
+        img: Image.Image = getattr(ImageEnhance, function)(img).enhance(*args, **kwargs)
+        buffer: io.BytesIO = io.BytesIO()
+        img.save(buffer, "png")
+        buffer.seek(0)
+        return buffer
+
     async def tobuf(self, image: discord.Attachment, check: bool = True) -> io.BytesIO:
         if check:
-            ...
+            self.checkAttachment(image)
 
         buffer: io.BytesIO = io.BytesIO()
         await image.save(buffer)
@@ -425,94 +431,13 @@ class Images(commands.Cog):
         """
         Inverts an image's colors.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        try:
-            img = ImageOps.invert(img)
-        except OSError:
-            raise TypeError("Invert not supported for %s" % image.content_type)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+
+        buffer: BytesIO = await self.run(
+            self.callOnImage, await self.tobuf(image), "convert", "L"
+        )
 
         embed = fmte(ctx, t="Image Successfully Inverted")
         file = discord.File(buffer, "invr.%s" % image.filename)
-        await ctx.send(embed=embed, file=file)
-
-    def chop(self, s: str, chopsize: int):
-        return [
-            s[c * chopsize : (c + 1) * chopsize]
-            for c in range(0, ceil(len(s) / chopsize))
-        ]
-
-    def alignText(self, *, text: str, linesize=24):
-        lines = []
-        linewords = []
-        for word in text.split():
-            if len(word) > linesize:
-                if linewords:
-                    lines.extend(linewords)
-                    linewords = []
-                lines.append("\n")
-                lines.extend(["-\n".join(self.chop(word, linesize))])
-                continue
-            if sum([len(c) for c in linewords]) + len(word) > linesize:
-                lines.extend(linewords)
-                linewords = [
-                    "\n",
-                    word,
-                ]
-                continue
-            else:
-                linewords.append(word)
-        lines.extend(linewords)
-        return " ".join([c.strip(" ") for c in lines])
-
-    @image.command()
-    @describe(image="The image to caption", text="The caption for the image")
-    async def caption(
-        self, ctx: commands.Context, image: discord.Attachment, text: str
-    ):
-        """
-        Adds a caption to an image
-        """
-        linesize = round(image.width / 15)
-        text = self.alignText(text=text, linesize=linesize).strip()
-        print(text)
-        nls = max(text.count("\n"), 1)
-        print(nls + 1)
-        pix = round(average([round(image.height / 10), round(image.width / 10)])) * (
-            nls + 1
-        )
-
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-
-        img = Image.open(buffer)
-        img = ImageOps.expand(img, pix, fill="white")
-        dimensions = (pix, 0, image.width + pix, image.height + pix)
-        img = img.crop(dimensions)
-
-        font = CONSTANTS.Paths().FONT + "courbd.ttf"
-        font = ImageFont.FreeTypeFont(font=font, size=pix)
-
-        drawer = ImageDraw.Draw(img)
-
-        xy = (0, 0)
-        fill = (0, 0, 0)
-        align = "center"
-
-        drawer.multiline_text(xy=xy, text=text, font=font, fill=fill, align=align)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-
-        buffer.seek(0)
-
-        embed = fmte(ctx, t="Image Successfully Captioned")
-        file = discord.File(buffer, "cptn.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.group()
@@ -533,15 +458,9 @@ class Images(commands.Cog):
         """
         Adjusts the contrast of an image.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        enh = ImageEnhance.Contrast(img)
-        img = enh.enhance(factor)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = self.callForEnhance(
+            await self.tobuf(image), "Contrast", factor
+        )
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "cntr.%s" % image.filename)
@@ -561,15 +480,9 @@ class Images(commands.Cog):
         """
         Adjusts the brightness of an image.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        enh = ImageEnhance.Brightness(img)
-        img = enh.enhance(factor)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = self.callForEnhance(
+            await self.tobuf(image), "Brightness", factor
+        )
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
@@ -589,15 +502,7 @@ class Images(commands.Cog):
         """
         Adjusts the color of an image.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        enh = ImageEnhance.Color(img)
-        img = enh.enhance(factor)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = self.callForEnhance(await self.tobuf(image), "Color", factor)
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
@@ -617,15 +522,9 @@ class Images(commands.Cog):
         """
         Adjusts the sharpess of an image.
         """
-        buffer = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        img = Image.open(buffer)
-        enh = ImageEnhance.Sharpness(img)
-        img = enh.enhance(factor)
-        buffer = io.BytesIO()
-        img.save(buffer, self.getExtension(image))
-        buffer.seek(0)
+        buffer: BytesIO = self.callForEnhance(
+            await self.tobuf(image), "Sharpness", factor
+        )
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "shrp.%s" % image.filename)
