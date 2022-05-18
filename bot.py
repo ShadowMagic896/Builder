@@ -103,7 +103,7 @@ class Builder(commands.Bot):
         )
 
         proc: Process = await asyncio.create_subprocess_shell(
-            f"py -m black {os.getcwd()}", stdout=PIPE
+            f"py -m black .", stdout=PIPE
         )
         await proc.communicate()
 
