@@ -1,5 +1,7 @@
+from asyncio.subprocess import PIPE, Process
 from multiprocessing import freeze_support
 from os import PathLike
+import os
 from typing import Callable, List, Literal, Mapping, Optional, Union
 from urllib.parse import quote_plus
 import aiohttp
@@ -99,6 +101,11 @@ class Builder(commands.Bot):
         print(
             f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
         )
+
+        proc: Process = await asyncio.create_subprocess_shell(
+            f"py -m black {os.getcwd()}", stdout=PIPE
+        )
+        await proc.communicate()
 
 
 async def main():
