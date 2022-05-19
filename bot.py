@@ -1,10 +1,10 @@
 from asyncio.subprocess import PIPE, Process
 from multiprocessing import freeze_support
 from os import PathLike
-import os
-from typing import Callable, List, Literal, Mapping, Optional, Union
+from typing import Callable, List, Literal, Optional, Union
 from urllib.parse import quote_plus
 import aiohttp
+import asyncpg
 import discord
 from discord.ext import commands
 from discord.ext.commands import when_mentioned_or
@@ -63,21 +63,6 @@ class Builder(commands.Bot):
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 
-        username = quote_plus(Config().DB_USERNAME)
-        password = quote_plus(Config().DB_PASSWORD)
-        databasename = quote_plus("values")
-        host = f"mongodb+srv://{username}:{password}@cluster0.sywtj.mongodb.net/{databasename}?retryWrites=true&w=majority"
-        server_api = ServerApi("1")
-
-        self.client = pymongo.MongoClient(host=host, server_api=server_api)
-        self.database = self.client["database"]
-
-        # This exists purely to protect me from typos. If I misspell a collection, instead of creating a new one, I will just get a key error.
-        self.collections = {
-            "balances": self.database["balances"],
-            "items": self.database["items"],
-        }
-
     async def setup_hook(self) -> None:
         _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = (
             lambda value, size=25, style="before": str(value)
@@ -119,6 +104,22 @@ async def main():
     await load_extensions(
         bot, extension_directories, spaces=20, ignore_errors=False, print_log=True
     )
+
+    user = quote_plus(Config().DB_USERNAME)
+    password = quote_plus(Config().DB_PASSWORD)
+
+    command: str = """
+        CREATE TABLE IF NOT EXISTS users
+        (userid INT PRIMARY KEY, balance INT, items JSON)
+    """
+
+    # Connect to PostgreSQL database
+    connection: asyncpg.connection.Connection = await asyncpg.connect(
+        user=user, password=password
+    )
+    await connection.execute(command)
+
+    bot.apg = connection
     await bot.start(Config().BOT_KEY)
 
 
