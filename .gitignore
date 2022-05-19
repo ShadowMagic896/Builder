@@ -1,8 +1,7 @@
-data/config.py
-_dmlog.txt
-_discord.log
-_commandlog.txt
-
 **/__pycache__/
 docker/containers/*
+data/logs/*
+
+data/config.py
+programTests.py
 pipdeptree.py

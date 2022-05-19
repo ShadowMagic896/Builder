@@ -10,11 +10,10 @@ from discord.ext import commands
 from discord.ext.commands import when_mentioned_or
 
 import asyncio
-import pymongo
-from pymongo.server_api import ServerApi
 import logging
 
 from src.auxiliary.bot.Extensions import load_extensions
+from src.auxiliary.bot.Functions import fmtDict
 from src.auxiliary.bot.Stats import Stats
 from data.config import Config
 

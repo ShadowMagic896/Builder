@@ -1,9 +1,10 @@
+from asyncpg import Connection
 import discord
 from discord.ext import commands
 
 from pymongo.database import Database
 from pymongo.collection import Collection
-from typing import Literal, Mapping, List, Optional, Tuple
+from typing import Literal, Mapping, List, Optional, Tuple, Union
 
 from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.user.Subclass import Paginator
@@ -19,18 +20,32 @@ class Items(commands.Cog):
     def ge(self):
         return "\N{SCHOOL SATCHEL}"
 
+    def getVal(self, item: str):
+        """
+        Either returns the symbol of the element or raises an error
+        """
+        if (item := chem.name_to_sym.get(item, None)) is None:  # Check if not full name
+            if item := chem.sym_to_name.get(item, None) is None:  # Check if not symbol
+                raise ValueError("Invalid element")
+        return item
+
     @commands.hybrid_group()
     async def inv(self, ctx: commands.Context):
         pass
 
     @inv.command()
-    async def show(self, ctx: commands.Context, user: Optional[discord.User]):
+    async def show(
+        self,
+        ctx: commands.Context,
+        user: Optional[discord.User],
+        sortby: Optional[Literal["amount", "name"]] = "amount",
+    ):
         user = user or ctx.author
         items = await ItemDatabase(ctx).getItems(user)
 
         values = [(item[0], item[1]) for item in items.items()]
 
-        view = InventoryView(ctx, values, "name")
+        view = InventoryView(ctx, values, sortby)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
         message = await ctx.send(embed=embed, view=view)
@@ -45,14 +60,7 @@ class Items(commands.Cog):
         user: Optional[discord.User],
     ):
         user = user or ctx.author
-        item = item.lower()
-        # Helium
-        # Helium: He
-        # He: Helium
-        if (item := chem.name_to_sym.get(item, None)) is None:  # Check if not full name
-            if item := chem.sym_to_name.get(item, None) is None:  # Check if not symbol
-                raise ValueError("Invalid element")
-        print(item)
+        item: str = self.getVal(item.lower())
         v = await ItemDatabase(ctx).addItem(user, item, amount)
         await ctx.send(v)
 
@@ -60,73 +68,52 @@ class Items(commands.Cog):
 class ItemDatabase:
     def __init__(self, ctx: commands.Context):
         self.bot: commands.Bot = ctx.bot
-        self.database: Database = self.bot.database
-        self.collections: Mapping[str, Collection] = self.bot.collections
+        self.apg: Connection = self.bot.apg
 
-    async def checkForExist(self, user: discord.User) -> bool:
-        """
-        Checks for a user's existence in the database. If it is not there, it creates a new entry with the ID of the user.
-        Returns whether a new entry was created.
-        """
-        if self.collections["items"].find_one({"userid": user.id}) is None:
-            self.collections["items"].insert_one({"userid": user.id, "items": {}})
-            return True
-        return False
-
-    async def addItem(
-        self, user: discord.User, itemid: str, amount: int, autoremove: bool = True
+    async def getItems(
+        self, user: Union[discord.Member, discord.User]
     ) -> Mapping[str, int]:
-        """
-        Adds an item to the user's inventory
-        Returns the user's new items
-        """
-        result = self.collections["items"].find_one_and_update(
-            {"userid": user.id},
-            {"$inc": {f"items.{itemid}": amount}},
-            upsert=True,
-            return_document=True,
-        )
-        if result["items"][itemid] < 1 and autoremove:
-            result = await self.removeItem(user, itemid)
 
-        return result["items"] if not autoremove else result
+        # Need to use * here
+        command = """
+            SELECT items
+            FROM users
+            WHERE userid == $1
+        """
+        result = await self.apg.fetchrow(command, user.id)
 
-    async def removeItem(self, user: discord.User, itemid: str):
-        """
-        Removes all of a user's items of a certain ID.
-        Returns the user's new items
-        """
-        self.collections["items"].update_one(
-            {"userid": user.id}, {"$unset": {f"items.{itemid}": ""}}
-        )
-        return await self.getItems(user)
+        if result is not None:
+            return dict(result)
 
-    async def setItems(self, user: discord.User, items: Mapping[str, int]) -> None:
-        """
-        Sets a user's items.
-        """
-        self.collections["items"].replace_one(
-            filter={"userid": user.id},
-            replacement={"$set": {"items": items}},
-            upsert=True,
-        )
+        else:
+            command: str = """
+                INSERT INTO users
+                VALUES ($1, $2, $3)
+            """
+            # Because the user entry didn't exist, it's okay to give them zero balance
+            await self.apg.execute(command, user.id, 0, "{}")
+            return {}
 
-    async def getItems(self, user: discord.User) -> Mapping[str, int]:
+    async def addItems(
+        self, user: Union[discord.Member, discord.User], itemname: str, amount: int
+    ) -> Mapping[str, int]:
+        command = """
+            UPDATE users
+            SET 
         """
-        Get a list of all items for some user
-        """
-        result = self.collections["items"].find_one({"userid": user.id})
-        if result is None:
-            self.collections["items"].insert_one(
-                document={"userid": user.id, "items": {}}
-            )
-        return result["items"] if result is not None else {}
+        result = await self.apg.fetchrow(command, user.id)
 
-    async def delete(self, user: discord.User) -> None:
-        """
-        Deletes a user's entry
-        """
-        self.collections["balances"].delete_one({"userid": user.id})
+        if result is not None:
+            return dict(result)
+
+        else:
+            command: str = """
+                INSERT INTO users
+                VALUES ($1, $2, $3)
+            """
+            # Because the user entry didn't exist, it's okay to give them zero balance
+            await self.apg.execute(command, user.id, 0, "{}")
+            return {}
 
 
 class InventoryView(Paginator):

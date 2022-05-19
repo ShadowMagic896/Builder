@@ -1,15 +1,54 @@
 import discord
 from discord.ext import commands
+from discord.app_commands import errors as app_errors
 
 import math
-from typing import Iterable, Mapping, Optional
+from typing import Any, Iterable, Optional
 from src.cogs.development.Watchers import Watchers
 
 from src.auxiliary.user.Embeds import fmte_i
 from src.auxiliary.bot.Constants import CONSTANTS
 
 
-class Paginator(discord.ui.View):
+class BaseView(discord.ui.View):
+    """
+    This is the base view that automatically implements `interaction_check`, `on_error`, & `on_timeout` with
+    basic solutions. Designed to help not repeat code. All views should inherit from this.
+    """
+
+    def __init__(
+        self,
+        timeout: Optional[float] = 45,
+    ):
+        super().__init__(timeout=timeout)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        return all(
+            [
+                self.ctx.author == interaction.user,
+                self.ctx.channel == interaction.channel,
+                not interaction.user.bot,
+            ]
+        )
+
+    async def on_error(
+        self, interaction: discord.Interaction, error: Exception, item: Any
+    ) -> None:
+        if isinstance(error, app_errors.CheckFailure):
+            await interaction.response.send_message("This isn't your message! Sorry.")
+        return await super().on_error(interaction, error, item)
+
+    async def on_timeout(self) -> None:
+        for c in self.children:
+            c.disabled = True
+        if self.message is None:
+            raise commands.errors.MissingRequiredArgument(
+                "bozo you forgor to add the message to the view, imagine"
+            )
+        await self.message.edit(view=self)
+
+
+class Paginator(BaseView):
     def __init__(
         self,
         ctx: commands.Context,
@@ -94,9 +133,6 @@ class Paginator(discord.ui.View):
     def embed(self, inter: discord.Interaction):
         """
         Should be overwritten to provide custom labeling
-        ```py
-        def embed(self, inter: discord.Interaction):
-        ```
         """
         return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos}`")
 
@@ -175,17 +211,8 @@ class Paginator(discord.ui.View):
             else:
                 b.style = discord.ButtonStyle.secondary
 
-    async def on_timeout(self) -> None:
-        for c in self.children:
-            c.disabled = True
-        if self.message is None:
-            raise commands.errors.MissingRequiredArgument(
-                "bozo you forgor to add the message to the view, imagine"
-            )
-        await self.message.edit(view=self)
 
-
-class AutoModal(discord.ui.Modal):
+class BaseModal(discord.ui.Modal):
     def __init__(
         self, *, title: str, timeout: Optional[float] = None, custom_id: str = None
     ) -> None:

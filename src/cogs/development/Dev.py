@@ -7,7 +7,7 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import List
-from src.auxiliary.user.Subclass import AutoModal
+from src.auxiliary.user.Subclass import BaseModal
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.user.UserIO import explode

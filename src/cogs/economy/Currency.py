@@ -14,7 +14,7 @@ from data.config import Config
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.bot.Constants import CONSTANTS
-from src.auxiliary.user.Subclass import AutoModal
+from src.auxiliary.user.Subclass import BaseModal
 
 
 class Currency(commands.Cog):
@@ -349,7 +349,7 @@ class Currency(commands.Cog):
         ).strip(",")
 
 
-class GiveContextModal(AutoModal):
+class GiveContextModal(BaseModal):
     def __init__(self, ctx: commands.Context, member: discord.Member):
         self.ctx = ctx
         self.member = member
@@ -368,7 +368,7 @@ class GiveContextModal(AutoModal):
         )
 
 
-class RequestContextModal(AutoModal):
+class RequestContextModal(BaseModal):
     def __init__(self, ctx: commands.Context, member: discord.Member):
         self.ctx = ctx
         self.member = member

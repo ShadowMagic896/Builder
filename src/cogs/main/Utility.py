@@ -4,7 +4,7 @@ from datetime import datetime
 import io
 import pytz
 from src.auxiliary.user.Converters import TimeConvert
-from src.auxiliary.user.Subclass import AutoModal
+from src.auxiliary.user.Subclass import BaseModal
 from src.auxiliary.user.Embeds import fmte
 import time
 import discord
@@ -358,7 +358,7 @@ class Utility(commands.Cog):
         await ctx.interaction.response.send_modal(CodeModal(self, ctx))
 
 
-class CodeModal(AutoModal):
+class CodeModal(BaseModal):
     def __init__(self, util: Utility, ctx: commands.Context) -> None:
         self.util = util
         self.ctx: commands.Context = ctx
