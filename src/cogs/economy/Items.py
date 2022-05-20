@@ -25,7 +25,9 @@ class Items(commands.Cog):
         Either returns the symbol of the element or raises an error
         """
         if (item := chem.name_to_sym.get(item, None)) is None:  # Check if not full name
-            if item := chem.sym_to_name.get(item, None) is None:  # Check if not symbol
+            if (
+                item := chem.sym_to_name.get(item, None)
+            ) is None:  # Check if not symbol
                 raise ValueError("Invalid element")
         return item
 
@@ -74,7 +76,6 @@ class ItemDatabase:
         self, user: Union[discord.Member, discord.User]
     ) -> Mapping[str, int]:
 
-        # Need to use * here
         command = """
             SELECT items
             FROM users
@@ -88,31 +89,45 @@ class ItemDatabase:
         else:
             command: str = """
                 INSERT INTO users
-                VALUES ($1, $2, $3)
+                VALUES ($1)
             """
-            # Because the user entry didn't exist, it's okay to give them zero balance
-            await self.apg.execute(command, user.id, 0, "{}")
+            await self.apg.execute(command, user.id)
             return {}
 
     async def addItems(
         self, user: Union[discord.Member, discord.User], itemname: str, amount: int
     ) -> Mapping[str, int]:
+
+        # Assume that the user doesn't exist, to do this all in one statement
+        command: str = """
+            INSERT INTO users
+            VALUES ($1)
+            ON DUPLICATE KEY UPDATE
+            
+        """
         command = """
-            UPDATE users
-            SET 
+            SELECT items
+            FROM users
+            WHERE userid = $1
         """
         result = await self.apg.fetchrow(command, user.id)
 
         if result is not None:
-            return dict(result)
-
+            current: dict = dict(result["items"])
+            current.update({itemname: amount})
+            command = """
+                UPDATE users
+                SET items = $1
+                WHERE userid = $2
+            """
+            await self.apg.execute(command, current, user.id)
+            return current
         else:
             command: str = """
                 INSERT INTO users
-                VALUES ($1, $2, $3)
+                VALUES ($1)
             """
-            # Because the user entry didn't exist, it's okay to give them zero balance
-            await self.apg.execute(command, user.id, 0, "{}")
+            await self.apg.execute(command, user.id)
             return {}
 
 

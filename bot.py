@@ -108,8 +108,9 @@ async def main():
     password = quote_plus(Config().DB_PASSWORD)
 
     command: str = """
+        DROP TABLE IF EXISTS users;
         CREATE TABLE IF NOT EXISTS users
-        (userid INT PRIMARY KEY, balance INT, items JSON)
+        (userid INT PRIMARY KEY NOT NULL, balance INT NOT NULL DEFAULT 0, items JSON NOT NULL DEFAULT '{}')
     """
 
     # Connect to PostgreSQL database
