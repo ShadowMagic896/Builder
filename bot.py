@@ -13,7 +13,7 @@ import asyncio
 import logging
 
 from src.auxiliary.bot.Extensions import load_extensions
-from src.auxiliary.bot.Functions import fmtDict
+from src.auxiliary.bot.Functions import fmtDict, ensureDB, formatCode
 from src.auxiliary.bot.Stats import Stats
 from data.config import Config
 
@@ -86,11 +86,6 @@ class Builder(commands.Bot):
             f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
         )
 
-        proc: Process = await asyncio.create_subprocess_shell(
-            f"py -m black .", stdout=PIPE
-        )
-        await proc.communicate()
-
 
 async def main():
     bot: commands.Bot = Builder()
@@ -107,19 +102,15 @@ async def main():
     user = quote_plus(Config().DB_USERNAME)
     password = quote_plus(Config().DB_PASSWORD)
 
-    command: str = """
-        DROP TABLE IF EXISTS users;
-        CREATE TABLE IF NOT EXISTS users
-        (userid INT PRIMARY KEY NOT NULL, balance INT NOT NULL DEFAULT 0, items JSON NOT NULL DEFAULT '{}')
-    """
-
     # Connect to PostgreSQL database
     connection: asyncpg.connection.Connection = await asyncpg.connect(
         user=user, password=password
     )
-    await connection.execute(command)
-
     bot.apg = connection
+
+    await ensureDB(connection, recreate=True)
+    await formatCode()
+
     await bot.start(Config().BOT_KEY)
 
 

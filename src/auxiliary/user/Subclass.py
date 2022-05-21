@@ -45,7 +45,10 @@ class BaseView(discord.ui.View):
             raise commands.errors.MissingRequiredArgument(
                 "bozo you forgor to add the message to the view, imagine"
             )
-        await self.message.edit(view=self)
+        try:
+            await self.message.edit(view=self)
+        except discord.NotFound:
+            pass
 
 
 class Paginator(BaseView):
@@ -79,7 +82,7 @@ class Paginator(BaseView):
             return
         self.checkButtons(button)
 
-        embed = self.add_fields(self.embed(inter))
+        embed = self.adjust(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(emoji=CONSTANTS.Emojis().BARROW_ID, custom_id="b")
@@ -92,10 +95,12 @@ class Paginator(BaseView):
             return
         self.checkButtons(button)
 
-        embed = self.add_fields(self.embed(inter))
+        embed = self.adjust(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=":x:", style=discord.ButtonStyle.red, custom_id="x")
+    @discord.ui.button(
+        emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
+    )
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user != self.ctx.author:
             await inter.response.send_message(
@@ -114,7 +119,7 @@ class Paginator(BaseView):
             return
         self.checkButtons(button)
 
-        embed = self.add_fields(self.embed(inter))
+        embed = self.adjust(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(emoji=CONSTANTS.Emojis().FFARROW_ID, custom_id="ff")
@@ -127,7 +132,7 @@ class Paginator(BaseView):
             return
         self.checkButtons(button)
 
-        embed = self.add_fields(self.embed(inter))
+        embed = self.adjust(self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
     def embed(self, inter: discord.Interaction):
@@ -136,7 +141,7 @@ class Paginator(BaseView):
         """
         return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos}`")
 
-    def add_fields(self, embed: discord.Embed):
+    def adjust(self, embed: discord.Embed):
         """
         This must be overwritten by inheriting classes.
         Should return an embed with self.pagesize fields. Example:
@@ -167,7 +172,7 @@ class Paginator(BaseView):
 
     def page_zero(self, interaction: discord.Interaction):
         self.position = 1
-        return self.add_fields(self.embed(interaction))
+        return self.adjust(self.embed(interaction))
 
     def checkButtons(self, button: discord.Button = None):
         """

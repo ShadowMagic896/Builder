@@ -1,10 +1,10 @@
-from asyncpg import Connection
+from asyncpg import Connection, Record
+import asyncpg
 import discord
+from discord.app_commands import Range
 from discord.ext import commands
 
-from pymongo.database import Database
-from pymongo.collection import Collection
-from typing import Literal, Mapping, List, Optional, Tuple, Union
+from typing import Literal, List, Optional, Tuple, Union
 
 from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.user.Subclass import Paginator
@@ -31,40 +31,51 @@ class Items(commands.Cog):
                 raise ValueError("Invalid element")
         return item
 
+    async def tryRegister(self, ctx: commands.Context, user: discord.User):
+        await ItemDatabase(ctx).registerUser(user)
+
     @commands.hybrid_group()
-    async def inv(self, ctx: commands.Context):
+    async def items(self, ctx: commands.Context):
         pass
 
-    @inv.command()
-    async def show(
+    @items.command()
+    async def raw(self, ctx: commands.Context, user: Optional[discord.User] = None):
+        user = user or ctx.author
+        await self.tryRegister(ctx, user)
+        result = await ItemDatabase(ctx).getItems(user)
+        await ctx.send(result if result is not None else "***No Record.***")
+
+    @items.command()
+    async def give(
         self,
         ctx: commands.Context,
-        user: Optional[discord.User],
-        sortby: Optional[Literal["amount", "name"]] = "amount",
+        itemid: int,
+        amount: Range[int, 0, 1000],
+        user: Optional[discord.User] = None,
     ):
         user = user or ctx.author
-        items = await ItemDatabase(ctx).getItems(user)
+        await self.tryRegister(ctx, user)
+        await ItemDatabase(ctx).giveItem(user, itemid, amount)
+        await ctx.send(f"Added {amount} items of {itemid} to {user}.")
 
-        values = [(item[0], item[1]) for item in items.items()]
+    @items.command()
+    async def create(self, ctx: commands.Context, itemname: str, description: str):
+        await ItemDatabase(ctx).createItem(itemname, description)
+        itemid = (await ItemDatabase(ctx).getItem(itemname=itemname))["itemid"]
+        await ctx.send(
+            f"Item Created\nName: {itemname}\nDescription: {description}\nID: {itemid}"
+        )
 
-        view = InventoryView(ctx, values, sortby)
+    @items.command()
+    async def all(self, ctx: commands.Context):
+        allvals: List[Record] = await ItemDatabase(ctx).allItems()
+
+        view = ItemsView(ctx, allvals)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
+
         message = await ctx.send(embed=embed, view=view)
         view.message = message
-
-    @inv.command()
-    async def add(
-        self,
-        ctx: commands.Context,
-        item: str,
-        amount: int,
-        user: Optional[discord.User],
-    ):
-        user = user or ctx.author
-        item: str = self.getVal(item.lower())
-        v = await ItemDatabase(ctx).addItem(user, item, amount)
-        await ctx.send(v)
 
 
 class ItemDatabase:
@@ -74,96 +85,119 @@ class ItemDatabase:
 
     async def getItems(
         self, user: Union[discord.Member, discord.User]
-    ) -> Mapping[str, int]:
-
+    ) -> asyncpg.Record:
         command = """
-            SELECT items
-            FROM users
-            WHERE userid == $1
-        """
-        result = await self.apg.fetchrow(command, user.id)
-
-        if result is not None:
-            return dict(result)
-
-        else:
-            command: str = """
-                INSERT INTO users
-                VALUES ($1)
-            """
-            await self.apg.execute(command, user.id)
-            return {}
-
-    async def addItems(
-        self, user: Union[discord.Member, discord.User], itemname: str, amount: int
-    ) -> Mapping[str, int]:
-
-        # Assume that the user doesn't exist, to do this all in one statement
-        command: str = """
-            INSERT INTO users
-            VALUES ($1)
-            ON DUPLICATE KEY UPDATE
-            
-        """
-        command = """
-            SELECT items
-            FROM users
+            SELECT *
+            FROM inventories
+                INNER JOIN items
+                    USING(itemid)
             WHERE userid = $1
         """
-        result = await self.apg.fetchrow(command, user.id)
+        return await self.apg.fetchrow(command, user.id)
 
-        if result is not None:
-            current: dict = dict(result["items"])
-            current.update({itemname: amount})
-            command = """
-                UPDATE users
-                SET items = $1
-                WHERE userid = $2
-            """
-            await self.apg.execute(command, current, user.id)
-            return current
-        else:
-            command: str = """
-                INSERT INTO users
-                VALUES ($1)
-            """
-            await self.apg.execute(command, user.id)
-            return {}
+    async def giveItem(
+        self, user: Union[discord.Member, discord.User], itemid: int, amount: int
+    ) -> asyncpg.Record:
+        command = """
+            INSERT INTO inventories
+            VALUES (
+                $1::BIGINT,
+                $2::INTEGER,
+                $3::INTEGER
+            )
+            ON CONFLICT(itemid) DO UPDATE
+            SET count = inventories.count + $3
+        """
+        return await self.apg.execute(command, user.id, itemid, amount)
+
+    async def createItem(
+        self, name: str, description: Optional[str] = "No Description"
+    ) -> str:
+        """
+        Adds an item to the database. Returns the status of the command.
+        """
+        command = """
+            INSERT INTO items(name, description)
+            VALUES (
+                $1::TEXT,
+                $2::TEXT
+            )
+        """
+        return await self.apg.execute(command, name, description)
+
+    async def deleteItem(self, itemid: int) -> str:
+        """
+        Deletes an item from the database. Returns the status of the command.
+        """
+        command = """
+            DELETE FROM items
+            WHERE itemid = $1
+        """
+        return await self.apg.execute(command, itemid)
+
+    async def getItem(
+        self,
+        *,
+        itemname: Optional[str] = None,
+    ) -> Optional[asyncpg.Record]:
+        """
+        Returns an `asyncpg.Record` of an item, by either its name or id.
+        """
+        command = f"""
+            SELECT *
+            FROM items
+            WHERE name = $1
+        """
+        result = await self.apg.fetchrow(command, itemname)
+        print(result)
+        return result
+
+    async def registerUser(self, user: discord.User):
+        command = """
+            INSERT INTO users(userid)
+            VALUES (
+                $1
+            )
+            ON CONFLICT DO NOTHING
+        """
+        await self.apg.execute(command, user.id)
+
+    async def allItems(self):
+        return await self.apg.fetch("SELECT * FROM items")
 
 
-class InventoryView(Paginator):
+class ItemsView(Paginator):
     def __init__(
         self,
         ctx: commands.Context,
-        values: List[Tuple[str, int]],
-        sort: Literal["amount", "name"] = "name",
+        values: List[Record],
+        sort: Literal["name", "count", "id"] = "id",
     ):
         # [(sword, 2), (idk, 13)]
         addrs = {
-            "name": lambda x: x[0],
-            "amount": lambda x: x[1],
+            "name": lambda x: x["name"],
+            "count": lambda x: x["count"],
+            "id": lambda x: x["itemid"],
         }
         values = sorted(values, key=addrs[sort])
         super().__init__(ctx, values, 5)
 
-    # @overload
-    def add_fields(self, embed: discord.Embed):
+    def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
 
         values = self.vals[start:stop]
         for value in values:
             embed.add_field(
-                name=f"{value[0].replace('_', ' ').capitalize()}: `{value[1]}`",
-                value="ㅤ",
+                name=value["name"],
+                value=f"{value['description']}",
                 inline=False,
             )
         return embed
 
-    # @overload
     def embed(self, inter: discord.Interaction):
         embed = fmte(
-            self.ctx, t=f"Inventory: Page `{self.position}` / `{self.maxpos or 1}`"
+            self.ctx, t=f"Items: Page `{self.position}` / `{self.maxpos or 1}`"
         )
         return embed
 
