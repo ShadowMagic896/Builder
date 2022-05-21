@@ -13,7 +13,7 @@ import asyncio
 import logging
 
 from src.auxiliary.bot.Extensions import load_extensions
-from src.auxiliary.bot.Functions import fmtDict, ensureDB, formatCode
+from src.auxiliary.bot.Functions import ensureDB, formatCode
 from src.auxiliary.bot.Stats import Stats
 from data.config import Config
 
@@ -108,7 +108,7 @@ async def main():
     )
     bot.apg = connection
 
-    await ensureDB(connection, recreate=False)
+    await ensureDB(connection, ensure_defaults=True)
     await formatCode()
 
     await bot.start(Config().BOT_KEY)

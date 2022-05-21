@@ -1,13 +1,16 @@
 from asyncpg import Connection, Record
 import asyncpg
+import chempy
 import discord
 from discord.app_commands import Range
 from discord.ext import commands
 
-from typing import Literal, List, Optional, Tuple, Union
+from typing import List, Optional, Union
+from chempy.util import periodic
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.user.Subclass import Paginator
+from data.ItemMaps import getAtomicName
 from data.ItemMaps import Chemistry
 
 chem = Chemistry()
@@ -20,17 +23,6 @@ class Items(commands.Cog):
     def ge(self):
         return "\N{SCHOOL SATCHEL}"
 
-    def getVal(self, item: str):
-        """
-        Either returns the symbol of the element or raises an error
-        """
-        if (item := chem.name_to_sym.get(item, None)) is None:  # Check if not full name
-            if (
-                item := chem.sym_to_name.get(item, None)
-            ) is None:  # Check if not symbol
-                raise ValueError("Invalid element")
-        return item
-
     async def tryRegister(self, ctx: commands.Context, user: discord.User):
         await ItemDatabase(ctx).registerUser(user)
 
@@ -39,32 +31,35 @@ class Items(commands.Cog):
         pass
 
     @items.command()
+    @commands.is_owner()
+    async def run(self, ctx: commands.Context, command: str, mode: str = "fetch"):
+        return await ctx.send(
+            str(await getattr(self.bot.apg, mode, "fetch")(command))[:2000]
+        )
+
+    @items.command()
     async def raw(self, ctx: commands.Context, user: Optional[discord.User] = None):
         user = user or ctx.author
         await self.tryRegister(ctx, user)
         result = await ItemDatabase(ctx).getItems(user)
-        await ctx.send(result if result is not None else "***No Record.***")
+        await ctx.send(result if result else "***No Record.***")
 
     @items.command()
     async def give(
         self,
         ctx: commands.Context,
-        itemid: int,
+        item: str,
         amount: Range[int, 0, 1000],
         user: Optional[discord.User] = None,
     ):
         user = user or ctx.author
+        _item = item
+        item = getAtomicName(item)
+        itemid = periodic.names.index(item) + 1
+        print(f"Got {itemid} from {_item}")
         await self.tryRegister(ctx, user)
         await ItemDatabase(ctx).giveItem(user, itemid, amount)
-        await ctx.send(f"Added {amount} items of {itemid} to {user}.")
-
-    @items.command()
-    async def create(self, ctx: commands.Context, itemname: str, description: str):
-        await ItemDatabase(ctx).createItem(itemname, description)
-        itemid = (await ItemDatabase(ctx).getItem(itemname=itemname))["itemid"]
-        await ctx.send(
-            f"Item Created\nName: {itemname}\nDescription: {description}\nID: {itemid}"
-        )
+        await ctx.send("fuck")
 
     @items.command()
     async def all(self, ctx: commands.Context):
@@ -102,7 +97,7 @@ class Items(commands.Cog):
         """
         user = user or ctx.author
         values: Union[List[Record], List] = await ItemDatabase(ctx).getItems(user)
-        view = ItemsView(ctx, values=values, title=f"`{ctx.author}`'s Items", sort=sort)
+        view = ItemsView(ctx, values=values, title=f"`{user}`'s Items", sort=sort)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
 
@@ -121,7 +116,7 @@ class ItemDatabase:
         command = """
             SELECT *
             FROM inventories
-                INNER JOIN items
+                LEFT JOIN items
                     USING(itemid)
             WHERE userid = $1
         """
@@ -140,6 +135,7 @@ class ItemDatabase:
             ON CONFLICT(itemid) DO UPDATE
             SET count = inventories.count + $3
         """
+        print(f"Giving {user} {amount} items of element num {itemid}")
         return await self.apg.execute(command, user.id, itemid, amount)
 
     async def createItem(
@@ -157,30 +153,17 @@ class ItemDatabase:
         """
         return await self.apg.execute(command, name, description)
 
-    async def deleteItem(self, itemid: int) -> str:
-        """
-        Deletes an item from the database. Returns the status of the command.
-        """
-        command = """
-            DELETE FROM items
-            WHERE itemid = $1
-        """
-        return await self.apg.execute(command, itemid)
-
     async def getItem(
         self,
         *,
-        itemname: Optional[str] = None,
+        item: Optional[str] = None,
     ) -> Optional[asyncpg.Record]:
-        """
-        Returns an `asyncpg.Record` of an item, by either its name or id.
-        """
         command = f"""
             SELECT *
             FROM items
             WHERE name = $1
         """
-        result = await self.apg.fetchrow(command, itemname)
+        result = await self.apg.fetchrow(command, getAtomicName(item))
         return result
 
     async def registerUser(self, user: discord.User):
@@ -216,8 +199,12 @@ class ItemsView(Paginator):
 
         values = self.vals[start:stop]
         for value in values:
+            try:
+                name = f"{value['name']}: `{value['count']}`"
+            except KeyError:
+                name = value["name"]
             embed.add_field(
-                name=f"{value['name']}: `{value['count']}`",
+                name=name,
                 value=value["description"],
                 inline=False,
             )

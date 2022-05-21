@@ -5,6 +5,8 @@ import asyncpg
 import chempy
 from chempy.util import periodic
 
+from data.ItemMaps import Chemistry
+
 
 def fmtDict(d: dict):
     """
@@ -14,16 +16,20 @@ def fmtDict(d: dict):
 
 
 async def ensureDB(
-    connection: asyncpg.Connection, *, use_default_values=True, recreate: bool = False
+    connection: asyncpg.Connection, *, ensure_defaults=True, drop_all=False
 ):
-    if recreate:
-        print("RESTARTING DATABASES...")
+    if drop_all:
         await connection.execute(
-            "DROP TABLE IF EXISTS items CASCADE; DROP TABLE IF EXISTS users CASCADE; DROP TABLE IF EXISTS inventories"
+            """
+            DROP TABLE IF EXISTS items CASCADE;
+            DROP TABLE IF EXISTS users CASCADE;
+            DROP TABLE IF EXISTS inventories CASCADE;
+            
+            """
         )
     command: str = """
         CREATE TABLE IF NOT EXISTS items (
-            itemid SERIAL PRIMARY KEY,
+            itemid INTEGER PRIMARY KEY,
             name TEXT,
             description TEXT
         );
@@ -35,7 +41,7 @@ async def ensureDB(
         
         CREATE TABLE IF NOT EXISTS inventories (
             userid BIGINT NOT NULL,
-            itemid INTEGER NOT NULL UNIQUE,
+            itemid INTEGER NOT NULL,
             count INTEGER NOT NULL DEFAULT 0 CHECK(count>=0),
             FOREIGN KEY(itemid) REFERENCES items(itemid) ON DELETE CASCADE,
             FOREIGN KEY(userid) REFERENCES users(userid) ON DELETE CASCADE
@@ -44,9 +50,17 @@ async def ensureDB(
     print("CREATING DATABASES...")
     await connection.execute(command)
 
-    if use_default_values:
-        items: Mapping[str, str] = {
-            name: f"With the symbol `{symbol}` and mass of `{mass}`, this element is number `{count+1}`"
+    if ensure_defaults:
+        print("ENSURING DEFAULT ITEMS...")
+        command = """
+            DELETE FROM items;
+        """
+        await connection.execute(command)
+        items: Mapping[str, (int, str)] = {
+            name: (
+                count + 1,
+                f"With the symbol `{symbol}` and mass of `{mass}`, this element is number `{count+1}`",
+            )
             for name, symbol, mass, count in [
                 (
                     periodic.names[c],
@@ -58,17 +72,17 @@ async def ensureDB(
             ]
         }
         arguments: List[Tuple[str, str]] = []
-        for name, desc in list(items.items()):
-            arguments.append((name, desc))
+        for name, val in list(items.items()):
+            arguments.append((val[0], name, val[1]))
 
         basecommand = """
-            INSERT INTO items(name, description)
+            INSERT INTO items
             VALUES (
                 $1,
-                $2
+                $2,
+                $3
             )
         """
-        print("POPULATING DATABASES...")
         await connection.executemany(basecommand, arguments)
 
 
