@@ -37,22 +37,6 @@ class Utility(commands.Cog):
 
     @commands.hybrid_command()
     @describe()
-    async def invite(self, ctx: commands.Context):
-        """
-        Gets a link to invite me to a server!
-        """
-        link = discord.utils.oauth_url(
-            self.bot.application_id,
-            permissions=discord.Permissions(0),
-            scopes=["bot", "applications.commands"],
-        )
-        embed = fmte(
-            ctx, t="Invite Me to a Server!", d="[Invite Link]({})".format(link)
-        )
-        await ctx.send(embed=embed)
-
-    @commands.hybrid_command()
-    @describe()
     async def ping(self, ctx: commands.Context):
         """
         Returns the bot's latency, in milliseconds.

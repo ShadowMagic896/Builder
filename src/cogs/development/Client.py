@@ -11,6 +11,7 @@ from discord.ext import commands
 import inspect
 from typing import List, Optional
 
+from src.auxiliary.user.Subclass import BaseView
 from src.auxiliary.user.UserIO import explode
 from src.auxiliary.user.Embeds import Desc, fmte
 from src.auxiliary.bot.Constants import CONSTANTS
@@ -26,6 +27,27 @@ class Client(commands.Cog):
 
     def ge(self):
         return "\N{ROBOT FACE}"
+
+    @commands.hybrid_command()
+    @describe()
+    async def invite(self, ctx: commands.Context):
+        """
+        Gets a link to invite me to a server!
+        """
+        link = discord.utils.oauth_url(
+            self.bot.application_id,
+            permissions=discord.Permissions(0),
+            scopes=["bot", "applications.commands"],
+        )
+        embed = fmte(ctx, t="Click the Button Below to Invite Me!")
+        view = BaseView().add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.link, label="Invite Me!", url=link
+            )
+        )
+
+        message = await ctx.send(embed=embed, view=view)
+        view.message = message
 
     @commands.hybrid_command()
     @commands.cooldown(2, 3600, commands.BucketType.user)

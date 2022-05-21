@@ -20,6 +20,7 @@ class BaseView(discord.ui.View):
         self,
         timeout: Optional[float] = 45,
     ):
+        self.message: discord.Message = None
         super().__init__(timeout=timeout)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:

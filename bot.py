@@ -108,7 +108,7 @@ async def main():
     )
     bot.apg = connection
 
-    await ensureDB(connection, recreate=True)
+    await ensureDB(connection, recreate=False)
     await formatCode()
 
     await bot.start(Config().BOT_KEY)

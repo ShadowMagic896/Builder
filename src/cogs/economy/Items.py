@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from typing import Literal, List, Optional, Tuple, Union
 
-from src.auxiliary.user.Embeds import fmte
+from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.user.Subclass import Paginator
 from data.ItemMaps import Chemistry
 
@@ -68,9 +68,41 @@ class Items(commands.Cog):
 
     @items.command()
     async def all(self, ctx: commands.Context):
-        allvals: List[Record] = await ItemDatabase(ctx).allItems()
+        """
+        Shows a list of all items you can get.
+        """
+        values: List[Record] = await ItemDatabase(ctx).allItems()
 
-        view = ItemsView(ctx, allvals)
+        view = ItemsView(ctx, values=values, title="All Items", sort="itemid")
+        embed = view.page_zero(ctx.interaction)
+        view.checkButtons()
+
+        message = await ctx.send(embed=embed, view=view)
+        view.message = message
+
+    @items.command()
+    @discord.app_commands.choices(
+        sort=[
+            discord.app_commands.Choice(name=x, value=y)
+            for x, y in [
+                ("By ID", "itemid"),
+                ("By name", "name"),
+                ("By amount", "count"),
+            ]
+        ]
+    )
+    async def view(
+        self,
+        ctx: commands.Context,
+        user: Optional[discord.User],
+        sort: Optional[str] = "itemid",
+    ):
+        """
+        Shows all items that a user has.
+        """
+        user = user or ctx.author
+        values: Union[List[Record], List] = await ItemDatabase(ctx).getItems(user)
+        view = ItemsView(ctx, values=values, title=f"`{ctx.author}`'s Items", sort=sort)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
 
@@ -93,7 +125,7 @@ class ItemDatabase:
                     USING(itemid)
             WHERE userid = $1
         """
-        return await self.apg.fetchrow(command, user.id)
+        return await self.apg.fetch(command, user.id)
 
     async def giveItem(
         self, user: Union[discord.Member, discord.User], itemid: int, amount: int
@@ -149,7 +181,6 @@ class ItemDatabase:
             WHERE name = $1
         """
         result = await self.apg.fetchrow(command, itemname)
-        print(result)
         return result
 
     async def registerUser(self, user: discord.User):
@@ -170,16 +201,13 @@ class ItemsView(Paginator):
     def __init__(
         self,
         ctx: commands.Context,
+        *,
         values: List[Record],
-        sort: Literal["name", "count", "id"] = "id",
+        title: str,
+        sort: str = "id",
     ):
-        # [(sword, 2), (idk, 13)]
-        addrs = {
-            "name": lambda x: x["name"],
-            "count": lambda x: x["count"],
-            "id": lambda x: x["itemid"],
-        }
-        values = sorted(values, key=addrs[sort])
+        values = sorted(values, key=lambda x: x[sort])
+        self.title = title
         super().__init__(ctx, values, 5)
 
     def adjust(self, embed: discord.Embed):
@@ -189,15 +217,15 @@ class ItemsView(Paginator):
         values = self.vals[start:stop]
         for value in values:
             embed.add_field(
-                name=value["name"],
-                value=f"{value['description']}",
+                name=f"{value['name']}: `{value['count']}`",
+                value=value["description"],
                 inline=False,
             )
         return embed
 
     def embed(self, inter: discord.Interaction):
         embed = fmte(
-            self.ctx, t=f"Items: Page `{self.position}` / `{self.maxpos or 1}`"
+            self.ctx, t=f"{self.title}: Page `{self.position}` / `{self.maxpos or 1}`"
         )
         return embed
 
