@@ -49,17 +49,26 @@ class Items(commands.Cog):
         self,
         ctx: commands.Context,
         item: str,
-        amount: Range[int, 0, 1000],
+        amount: int,
         user: Optional[discord.User] = None,
     ):
         user = user or ctx.author
-        _item = item
         item = getAtomicName(item)
         itemid = periodic.names.index(item) + 1
-        print(f"Got {itemid} from {_item}")
         await self.tryRegister(ctx, user)
+        old = await ItemDatabase(ctx).getItems(user)
+        old_amount = (
+            [v for v in old if v["itemid"] == itemid][0]["count"]
+            if len(old) != 0
+            else 0
+        )
         await ItemDatabase(ctx).giveItem(user, itemid, amount)
-        await ctx.send("fuck")
+        embed = fmte(
+            ctx,
+            t=f"Resources Given to `{user}`",
+            d=f"**Resource Name:** `{item}`\n**Resource ID:** `{itemid}`\n**Old Amount:** `{old_amount}`\n**New Amount:** `{old_amount+amount}`",
+        )
+        await ctx.send(embed=embed)
 
     @items.command()
     async def all(self, ctx: commands.Context):
@@ -132,10 +141,9 @@ class ItemDatabase:
                 $2::INTEGER,
                 $3::INTEGER
             )
-            ON CONFLICT(itemid) DO UPDATE
+            ON CONFLICT(userid, itemid) DO UPDATE
             SET count = inventories.count + $3
         """
-        print(f"Giving {user} {amount} items of element num {itemid}")
         return await self.apg.execute(command, user.id, itemid, amount)
 
     async def createItem(

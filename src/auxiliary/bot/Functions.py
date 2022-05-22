@@ -24,7 +24,6 @@ async def ensureDB(
             DROP TABLE IF EXISTS items CASCADE;
             DROP TABLE IF EXISTS users CASCADE;
             DROP TABLE IF EXISTS inventories CASCADE;
-            
             """
         )
     command: str = """
@@ -42,9 +41,10 @@ async def ensureDB(
         CREATE TABLE IF NOT EXISTS inventories (
             userid BIGINT NOT NULL,
             itemid INTEGER NOT NULL,
-            count INTEGER NOT NULL DEFAULT 0 CHECK(count>=0),
-            FOREIGN KEY(itemid) REFERENCES items(itemid) ON DELETE CASCADE,
-            FOREIGN KEY(userid) REFERENCES users(userid) ON DELETE CASCADE
+            count INTEGER NOT NULL DEFAULT 0 CHECK(count >= 0),
+            FOREIGN KEY (itemid) REFERENCES items (itemid) ON DELETE CASCADE,
+            FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
+            UNIQUE (userid, itemid)
         );
     """
     print("CREATING DATABASES...")
