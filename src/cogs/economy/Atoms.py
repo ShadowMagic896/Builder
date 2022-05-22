@@ -1,8 +1,7 @@
 from asyncpg import Connection, Record
 import asyncpg
-import chempy
 import discord
-from discord.app_commands import Range
+from discord.app_commands import Range, describe
 from discord.ext import commands
 
 from typing import List, Optional, Union
@@ -10,103 +9,104 @@ from chempy.util import periodic
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.user.Subclass import Paginator
-from data.ItemMaps import getAtomicName
-from data.ItemMaps import Chemistry
+from data.ItemMaps import getAtomicName, Chemistry
 
 chem = Chemistry()
 
 
-class Items(commands.Cog):
+class Atoms(commands.Cog):
+    """
+    Gather random atoms!
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
 
     def ge(self):
-        return "\N{SCHOOL SATCHEL}"
+        return "\N{ATOM SYMBOL}"
 
     async def tryRegister(self, ctx: commands.Context, user: discord.User):
-        await ItemDatabase(ctx).registerUser(user)
+        await AtomsDatabase(ctx).registerUser(user)
 
     @commands.hybrid_group()
-    async def items(self, ctx: commands.Context):
+    async def atoms(self, ctx: commands.Context):
         pass
 
-    @items.command()
-    @commands.is_owner()
-    async def run(self, ctx: commands.Context, command: str, mode: str = "fetch"):
-        return await ctx.send(
-            str(await getattr(self.bot.apg, mode, "fetch")(command))[:2000]
-        )
+    # @atoms.command()
+    # @commands.is_owner()
+    # async def run(self, ctx: commands.Context, command: str, mode: str = "fetch"):
+    #     return await ctx.send(
+    #         str(await getattr(self.bot.apg, mode, "fetch")(command))[:2000]
+    #     )
 
-    @items.command()
-    async def raw(self, ctx: commands.Context, user: Optional[discord.User] = None):
-        user = user or ctx.author
-        await self.tryRegister(ctx, user)
-        result = await ItemDatabase(ctx).getItems(user)
-        await ctx.send(result if result else "***No Record.***")
-
-    @items.command()
+    # @atoms.command()
+    # @describe(atom="The atoms to give. Can be a full name, symbol, or atomic number.")
     async def give(
         self,
         ctx: commands.Context,
-        item: str,
+        atom: str,
         amount: int,
         user: Optional[discord.User] = None,
     ):
+        """
+        Magically creates atoms and gives them to a user.
+        """
         user = user or ctx.author
-        item = getAtomicName(item)
-        itemid = periodic.names.index(item) + 1
+        atom = getAtomicName(atom)
+        atomid = periodic.names.index(atom) + 1
         await self.tryRegister(ctx, user)
-        old = await ItemDatabase(ctx).getItems(user)
+        old = await AtomsDatabase(ctx).getatoms(user)
         old_amount = (
-            [v for v in old if v["itemid"] == itemid][0]["count"]
+            [v for v in old if v["atomid"] == atomid][0]["count"]
             if len(old) != 0
             else 0
         )
-        await ItemDatabase(ctx).giveItem(user, itemid, amount)
+        await AtomsDatabase(ctx).giveatom(user, atomid, amount)
         embed = fmte(
             ctx,
             t=f"Resources Given to `{user}`",
-            d=f"**Resource Name:** `{item}`\n**Resource ID:** `{itemid}`\n**Old Amount:** `{old_amount}`\n**New Amount:** `{old_amount+amount}`",
+            d=f"**Resource Name:** `{atom}`\n**Resource ID:** `{atomid}`\n**Old Amount:** `{old_amount}`\n**New Amount:** `{max(old_amount+amount, 0)}`",
         )
         await ctx.send(embed=embed)
 
-    @items.command()
+    @atoms.command()
     async def all(self, ctx: commands.Context):
         """
-        Shows a list of all items you can get.
+        Shows a list of all atoms you can get.
         """
-        values: List[Record] = await ItemDatabase(ctx).allItems()
+        values: List[Record] = await AtomsDatabase(ctx).allatoms()
 
-        view = ItemsView(ctx, values=values, title="All Items", sort="itemid")
+        view = atomsView(ctx, values=values, title="All Atoms", sort="atomid")
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
 
         message = await ctx.send(embed=embed, view=view)
         view.message = message
 
-    @items.command()
+    @atoms.command()
     @discord.app_commands.choices(
         sort=[
             discord.app_commands.Choice(name=x, value=y)
             for x, y in [
-                ("By ID", "itemid"),
+                ("By ID", "atomid"),
                 ("By name", "name"),
                 ("By amount", "count"),
             ]
         ]
     )
+    @describe(user="Whose atoms to view", sort="How to sort the data")
     async def view(
         self,
         ctx: commands.Context,
         user: Optional[discord.User],
-        sort: Optional[str] = "itemid",
+        sort: Optional[str] = "atomid",
     ):
         """
-        Shows all items that a user has.
+        Shows all atoms that a user has.
         """
         user = user or ctx.author
-        values: Union[List[Record], List] = await ItemDatabase(ctx).getItems(user)
-        view = ItemsView(ctx, values=values, title=f"`{user}`'s Items", sort=sort)
+        values: Union[List[Record], List] = await AtomsDatabase(ctx).getatoms(user)
+        view = atomsView(ctx, values=values, title=f"`{user}`'s atoms", sort=sort)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
 
@@ -114,25 +114,25 @@ class Items(commands.Cog):
         view.message = message
 
 
-class ItemDatabase:
+class AtomsDatabase:
     def __init__(self, ctx: commands.Context):
         self.bot: commands.Bot = ctx.bot
         self.apg: Connection = self.bot.apg
 
-    async def getItems(
+    async def getatoms(
         self, user: Union[discord.Member, discord.User]
     ) -> asyncpg.Record:
         command = """
             SELECT *
             FROM inventories
-                LEFT JOIN items
-                    USING(itemid)
+                LEFT JOIN atoms
+                    USING(atomid)
             WHERE userid = $1
         """
         return await self.apg.fetch(command, user.id)
 
-    async def giveItem(
-        self, user: Union[discord.Member, discord.User], itemid: int, amount: int
+    async def giveatom(
+        self, user: Union[discord.Member, discord.User], atomid: int, amount: int
     ) -> asyncpg.Record:
         command = """
             INSERT INTO inventories
@@ -141,19 +141,27 @@ class ItemDatabase:
                 $2::INTEGER,
                 $3::INTEGER
             )
-            ON CONFLICT(userid, itemid) DO UPDATE
+            ON CONFLICT(userid, atomid) DO UPDATE
             SET count = inventories.count + $3
         """
-        return await self.apg.execute(command, user.id, itemid, amount)
+        try:
+            return await self.apg.execute(command, user.id, atomid, amount)
+        except asyncpg.CheckViolationError:
+            command = """
+            DELETE FROM inventories 
+            WHERE userid = $1 
+                AND atomid = $2
+            """
+            await self.apg.execute(command, user.id, atomid)
 
-    async def createItem(
+    async def createatom(
         self, name: str, description: Optional[str] = "No Description"
     ) -> str:
         """
-        Adds an item to the database. Returns the status of the command.
+        Adds an atom to the database. Returns the status of the command.
         """
         command = """
-            INSERT INTO items(name, description)
+            INSERT INTO atoms(name, description)
             VALUES (
                 $1::TEXT,
                 $2::TEXT
@@ -161,17 +169,17 @@ class ItemDatabase:
         """
         return await self.apg.execute(command, name, description)
 
-    async def getItem(
+    async def getatom(
         self,
         *,
-        item: Optional[str] = None,
+        atom: Optional[str] = None,
     ) -> Optional[asyncpg.Record]:
         command = f"""
             SELECT *
-            FROM items
+            FROM atoms
             WHERE name = $1
         """
-        result = await self.apg.fetchrow(command, getAtomicName(item))
+        result = await self.apg.fetchrow(command, getAtomicName(atom))
         return result
 
     async def registerUser(self, user: discord.User):
@@ -184,11 +192,11 @@ class ItemDatabase:
         """
         await self.apg.execute(command, user.id)
 
-    async def allItems(self):
-        return await self.apg.fetch("SELECT * FROM items")
+    async def allatoms(self):
+        return await self.apg.fetch("SELECT * FROM atoms")
 
 
-class ItemsView(Paginator):
+class atomsView(Paginator):
     def __init__(
         self,
         ctx: commands.Context,
@@ -226,4 +234,4 @@ class ItemsView(Paginator):
 
 
 async def setup(bot):
-    await bot.add_cog(Items(bot))
+    await bot.add_cog(Atoms(bot))

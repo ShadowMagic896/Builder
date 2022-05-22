@@ -19,7 +19,7 @@ class Watchers(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         print(error)
         hint = None
@@ -77,16 +77,17 @@ class Watchers(commands.Cog):
             d="**Hint:**\n{}\n**Error:**\n`{}`".format(hint, error),
             c=discord.Color.red(),
         )
-        helpEmbed = (
-            InterHelp(self.bot)._command_embed(
-                ctx.interaction, ctx.command, color=discord.Color.red()
-            )
-            if ctx.interaction
-            else InterHelp(self.bot)._command_embed_ctx(
-                ctx, ctx.command, color=discord.Color.red()
-            )
-        )
-        await ctx.send(embeds=[hintEmbed, helpEmbed], ephemeral=True)
+        # helpEmbed = (
+        #     InterHelp(self.bot)._command_embed(
+        #         ctx.interaction, ctx.command, color=discord.Color.red()
+        #     )
+        #     if ctx.interaction
+        #     else InterHelp(self.bot)._command_embed_ctx(
+        #         ctx, ctx.command, color=discord.Color.red()
+        #     )
+        # )
+        # await ctx.send(embeds=[hintEmbed, helpEmbed], ephemeral=True)
+        await ctx.send(embed=hintEmbed, ephemeral=True)
         ctx.command_failed = True
 
     async def _interaction_error_handler(inter: discord.Interaction, error: Exception):

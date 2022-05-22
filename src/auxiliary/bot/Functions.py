@@ -16,36 +16,53 @@ def fmtDict(d: dict):
 
 
 async def ensureDB(
-    connection: asyncpg.Connection, *, ensure_defaults=True, drop_all=False
+    connection: asyncpg.Connection, *, ensure_defaults=False, to_drop: List[str] = []
 ):
-    if drop_all:
+    for tab in to_drop:
         await connection.execute(
-            """
-            DROP TABLE IF EXISTS items CASCADE;
-            DROP TABLE IF EXISTS users CASCADE;
-            DROP TABLE IF EXISTS inventories CASCADE;
+            f"""
+            DROP TABLE IF EXISTS {tab} CASCADE;
             """
         )
     command: str = """
-        CREATE TABLE IF NOT EXISTS items (
-            itemid INTEGER PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS atoms (
+            atomid INTEGER PRIMARY KEY,
             name TEXT,
             description TEXT
         );
 
         CREATE TABLE IF NOT EXISTS users (
             userid BIGINT NOT NULL PRIMARY KEY,
-            balance BIGINT DEFAULT 0 CHECK(balance >= 0)
+            balance BIGINT DEFAULT 0 CHECK (balance >= 0)
         );
         
         CREATE TABLE IF NOT EXISTS inventories (
             userid BIGINT NOT NULL,
-            itemid INTEGER NOT NULL,
-            count INTEGER NOT NULL DEFAULT 0 CHECK(count >= 0),
-            FOREIGN KEY (itemid) REFERENCES items (itemid) ON DELETE CASCADE,
+            atomid INTEGER NOT NULL CHECK (atomid > 1),
+            count INTEGER NOT NULL DEFAULT 0 CHECK (count > 0),
+            FOREIGN KEY (atomid) REFERENCES atoms (atomid) ON DELETE CASCADE,
             FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
-            UNIQUE (userid, itemid)
+            UNIQUE (userid, atomid)
         );
+
+        CREATE TABLE IF NOT EXISTS shops (
+            identity SERIAL NOT NULL PRIMARY KEY,
+            userid BIGINT NOT NULL,
+            atomid INTEGER NOT NULL,
+            amount INTEGER NOT NULL,
+            price BIGINT NOT NULL,
+            startnix BIGINT NOT NULL,
+            endunix BIGINT NOT NULL,
+            FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
+            FOREIGN KEY (atomid) REFERENCES atoms (atomid) ON DELETE CASCADE,
+            UNIQUE (userid, atomid),
+            CHECK (
+                amount > 0 AND 
+                price > 0 AND 
+                atomid > 0 AND 
+                startunix < endunix
+            )
+        )
     """
     print("CREATING DATABASES...")
     await connection.execute(command)
@@ -53,7 +70,7 @@ async def ensureDB(
     if ensure_defaults:
         print("ENSURING DEFAULT ITEMS...")
         command = """
-            DELETE FROM items;
+            DELETE FROM atoms;
         """
         await connection.execute(command)
         items: Mapping[str, (int, str)] = {
@@ -76,7 +93,7 @@ async def ensureDB(
             arguments.append((val[0], name, val[1]))
 
         basecommand = """
-            INSERT INTO items
+            INSERT INTO atoms
             VALUES (
                 $1,
                 $2,

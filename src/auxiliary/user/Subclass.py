@@ -36,7 +36,9 @@ class BaseView(discord.ui.View):
         self, interaction: discord.Interaction, error: Exception, item: Any
     ) -> None:
         if isinstance(error, app_errors.CheckFailure):
-            await interaction.response.send_message("This isn't your message! Sorry.")
+            await interaction.response.send_message(
+                f"This isn't your message!\nYou can create your own with `{interaction.command}`"
+            )
         return await super().on_error(interaction, error, item)
 
     async def on_timeout(self) -> None:
