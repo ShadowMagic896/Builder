@@ -1,17 +1,12 @@
-import os
 from subprocess import Popen
-import time
-import discord
 from discord import app_commands
 from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import List
-from src.auxiliary.user.Subclass import BaseModal
 
-from src.auxiliary.user.Embeds import fmte, fmte_i
+from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.user.UserIO import explode
-from src.auxiliary.user.Converters import TimeConvert
 
 
 class Dev(commands.Cog):

@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.app_commands import errors as app_errors
 
 import math
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Optional
 from src.cogs.development.Watchers import Watchers
 
 from src.auxiliary.user.Embeds import fmte_i

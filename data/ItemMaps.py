@@ -1,4 +1,3 @@
-from pprint import pprint
 from typing import Mapping
 from chempy.util import periodic
 

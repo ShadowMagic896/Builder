@@ -1,12 +1,10 @@
 from typing import List
 import discord
-from discord import app_commands
 from discord.ext import commands
 import re
 
 
 def iototime(userinput: str):
-    seconds = 0
     t = userinput
 
     def e(l: list):

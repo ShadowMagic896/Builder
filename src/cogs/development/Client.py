@@ -1,11 +1,8 @@
-import builtins
 import datetime
 import io
-import os
-from types import CodeType
 import discord
 from discord import TextInput, ui, Interaction
-from discord.app_commands import describe, guilds
+from discord.app_commands import describe
 from discord.ext import commands
 
 import inspect

@@ -12,8 +12,6 @@ from data.errors import InternalError
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
 
-from src.__archives__.cogs.InterHelp import InterHelp
-
 
 class Watchers(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:

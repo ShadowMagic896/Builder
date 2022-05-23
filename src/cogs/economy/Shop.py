@@ -3,7 +3,6 @@ import asyncpg
 import discord
 from discord.app_commands import Range, describe
 from discord.ext import commands
-from pyrsistent import v
 from data.errors import MissingShopEntry
 from src.auxiliary.user.Subclass import BaseView, Paginator
 from src.auxiliary.bot.Constants import CONSTANTS
@@ -60,13 +59,14 @@ class Shop(commands.Cog):
 
     @shop.command()
     @describe(
-        listingid="The ID of the listing to remove. Can be gotten by using viewing all of your shops"
+        listing="The ID of the listing to remove. Can be gotten by using viewing all of your shops"
     )
-    async def unpost(self, ctx: commands.Context, listingid: Range[int, 1]):
+    async def remove(self, ctx: commands.Context, listing: Range[int, 1]):
         """
         Removes a posting from the market and refunds your atoms.
         """
-        res = await ShopDatabase(ctx).getShop(listingid)
+
+        res = await ShopDatabase(ctx).getShop(listing)
         if res is None:
             raise ValueError("Cannot find a shop listing with that ID.")
         if res["userid"] != ctx.author.id:
@@ -79,11 +79,27 @@ class Shop(commands.Cog):
         embed = fmte(
             ctx,
             t="Listing Successfully Removed",
-            d=f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount}`\n**Price:** `{price}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{listingid}`",
+            d=f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount}`\n**Price:** `{price}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{listing}`",
         )
         await ctx.send(embed=embed)
 
         await AtomsDatabase(ctx).giveAtom(ctx.author, atom, amount)
+
+    @remove.autocomplete("listing")
+    async def removelisting_autocomplete(
+        self, inter: discord.Interaction, current: int
+    ):
+        return [
+            discord.app_commands.Choice(
+                name=f"{shop['identity']}: {shop['amount']} {getAtomicName(shop['atomid'])} for {shop['price']}",
+                value=shop["identity"],
+            )
+            for shop in await ShopDatabase(
+                await commands.Context.from_interaction(inter)
+            ).getBy(inter.user)
+            if str(shop["identity"]) in str(current)
+            or str(current) in str(shop["identity"])
+        ]
 
     @shop.command()
     @describe(

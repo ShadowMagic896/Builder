@@ -1,4 +1,3 @@
-from tkinter import N
 import discord
 from discord import Interaction
 from discord.app_commands import describe
@@ -10,7 +9,6 @@ from typing import Any, List, Optional
 
 from src.auxiliary.user.Embeds import Desc, fmte, fmte_i
 from src.auxiliary.user.UserIO import explode
-from src.__archives__.cogs.InterHelp import InterHelp
 
 from src.auxiliary.bot.Constants import CONSTANTS
 

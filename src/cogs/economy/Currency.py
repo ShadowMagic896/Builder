@@ -1,4 +1,3 @@
-import math
 import asyncpg
 import discord
 from discord import Interaction, app_commands
