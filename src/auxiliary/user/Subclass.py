@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.app_commands import errors as app_errors
 
 import math
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Union
 from src.cogs.development.Watchers import Watchers
 
 from src.auxiliary.user.Embeds import fmte_i
@@ -18,9 +18,11 @@ class BaseView(discord.ui.View):
 
     def __init__(
         self,
+        ctx: commands.Context,
         timeout: Optional[float] = 45,
     ):
         self.message: discord.Message = None
+        self.ctx = ctx
         super().__init__(timeout=timeout)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -73,7 +75,7 @@ class Paginator(BaseView):
 
         self.maxpos = math.ceil((len(self.vals) / pagesize))
 
-        super().__init__(timeout=timeout)
+        super().__init__(ctx, timeout=timeout)
 
     @discord.ui.button(emoji=CONSTANTS.Emojis().BBARROW_ID, custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
@@ -142,7 +144,7 @@ class Paginator(BaseView):
         """
         Should be overwritten to provide custom labeling
         """
-        return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos}`")
+        return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos or 1}`")
 
     def adjust(self, embed: discord.Embed):
         """

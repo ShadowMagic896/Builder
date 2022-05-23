@@ -1,8 +1,8 @@
-from typing import List, Type
+from typing import List, Optional, Type
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
-
+from data.ItemMaps import Chemistry, getAtomicName
 import re
 
 
@@ -120,3 +120,50 @@ class ListConverter(commands.Converter):
             .replace(" ", "")
             .split(",")
         ]
+
+
+class Atom(commands.Converter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def convert(self, ctx: Context, argument: str) -> int:
+        return Chemistry().names.index(getAtomicName(argument)) + 1
+
+
+class Bound(commands.Converter, int):
+    def __init__(
+        self, lower_bound: Optional[int] = None, upper_bound: Optional[int] = None
+    ) -> None:
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+        super().__init__()
+
+    async def convert(self, ctx: Context, argument: int):
+        if (
+            self.lower_bound is not None and self.upper_bound is not None
+        ):  # Both upper and lower bounds
+            if argument < self.lower_bound or argument > self.upper_bound:
+                raise ValueError(
+                    f"Value not in bounds: {self.lower_bound} to {self.upper_bound}"
+                )
+            else:
+                return argument
+        elif (
+            self.lower_bound is not None and self.upper_bound is None
+        ):  # Just lower bound
+            if argument < self.lower_bound:
+                raise ValueError(f"Value not in bounds: at least {self.lower_bound}")
+            else:
+                return argument
+        elif (
+            self.lower_bound is None and self.upper_bound is not None
+        ):  # Just upper bound
+            if argument > self.upper_bound:
+                raise ValueError(f"Value not in bounds: at most {self.upper_bound}")
+            else:
+                return argument
+        else:  # No bounds on argument
+            return argument
+
+
+# L

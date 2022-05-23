@@ -48,20 +48,12 @@ async def ensureDB(
         CREATE TABLE IF NOT EXISTS shops (
             identity SERIAL NOT NULL PRIMARY KEY,
             userid BIGINT NOT NULL,
-            atomid INTEGER NOT NULL,
-            amount INTEGER NOT NULL,
-            price BIGINT NOT NULL,
-            startnix BIGINT NOT NULL,
-            endunix BIGINT NOT NULL,
+            atomid INTEGER NOT NULL CHECK (atomid > 0),
+            amount INTEGER NOT NULL CHECK (amount > 0),
+            price BIGINT NOT NULL CHECK (price > 0),
             FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
             FOREIGN KEY (atomid) REFERENCES atoms (atomid) ON DELETE CASCADE,
-            UNIQUE (userid, atomid),
-            CHECK (
-                amount > 0 AND 
-                price > 0 AND 
-                atomid > 0 AND 
-                startunix < endunix
-            )
+            UNIQUE (userid, atomid)
         )
     """
     print("CREATING DATABASES...")

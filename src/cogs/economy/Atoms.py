@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from typing import List, Optional, Union
 from chempy.util import periodic
+from src.auxiliary.user.Converters import Atom
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.user.Subclass import Paginator
@@ -25,9 +26,6 @@ class Atoms(commands.Cog):
     def ge(self):
         return "\N{ATOM SYMBOL}"
 
-    async def tryRegister(self, ctx: commands.Context, user: discord.User):
-        await AtomsDatabase(ctx).registerUser(user)
-
     @commands.hybrid_group()
     async def atoms(self, ctx: commands.Context):
         pass
@@ -39,12 +37,12 @@ class Atoms(commands.Cog):
     #         str(await getattr(self.bot.apg, mode, "fetch")(command))[:2000]
     #     )
 
-    # @atoms.command()
-    # @describe(atom="The atoms to give. Can be a full name, symbol, or atomic number.")
+    @atoms.command()
+    @describe(atom="The atoms to give. Can be a full name, symbol, or atomic number.")
     async def give(
         self,
         ctx: commands.Context,
-        atom: str,
+        atom: Atom,
         amount: int,
         user: Optional[discord.User] = None,
     ):
@@ -52,20 +50,16 @@ class Atoms(commands.Cog):
         Magically creates atoms and gives them to a user.
         """
         user = user or ctx.author
-        atom = getAtomicName(atom)
-        atomid = periodic.names.index(atom) + 1
-        await self.tryRegister(ctx, user)
-        old = await AtomsDatabase(ctx).getatoms(user)
+        atomname = periodic.names[atom - 1]
+        old = await AtomsDatabase(ctx).getAtoms(user)
         old_amount = (
-            [v for v in old if v["atomid"] == atomid][0]["count"]
-            if len(old) != 0
-            else 0
+            [v for v in old if v["atomid"] == atom][0]["count"] if len(old) != 0 else 0
         )
-        await AtomsDatabase(ctx).giveatom(user, atomid, amount)
+        await AtomsDatabase(ctx).giveAtom(user, atom, amount)
         embed = fmte(
             ctx,
             t=f"Resources Given to `{user}`",
-            d=f"**Resource Name:** `{atom}`\n**Resource ID:** `{atomid}`\n**Old Amount:** `{old_amount}`\n**New Amount:** `{max(old_amount+amount, 0)}`",
+            d=f"**Resource Name:** `{atomname}`\n**Resource ID:** `{atom}`\n**Old Amount:** `{old_amount}`\n**New Amount:** `{max(old_amount+amount, 0)}`",
         )
         await ctx.send(embed=embed)
 
@@ -76,7 +70,7 @@ class Atoms(commands.Cog):
         """
         values: List[Record] = await AtomsDatabase(ctx).allatoms()
 
-        view = atomsView(ctx, values=values, title="All Atoms", sort="atomid")
+        view = AtomsView(ctx, values=values, title="All Atoms", sort="atomid")
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
 
@@ -105,8 +99,8 @@ class Atoms(commands.Cog):
         Shows all atoms that a user has.
         """
         user = user or ctx.author
-        values: Union[List[Record], List] = await AtomsDatabase(ctx).getatoms(user)
-        view = atomsView(ctx, values=values, title=f"`{user}`'s atoms", sort=sort)
+        values: Union[List[Record], List] = await AtomsDatabase(ctx).getAtoms(user)
+        view = AtomsView(ctx, values=values, title=f"`{user}`'s atoms", sort=sort)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
 
@@ -119,9 +113,10 @@ class AtomsDatabase:
         self.bot: commands.Bot = ctx.bot
         self.apg: Connection = self.bot.apg
 
-    async def getatoms(
+    async def getAtoms(
         self, user: Union[discord.Member, discord.User]
-    ) -> asyncpg.Record:
+    ) -> List[asyncpg.Record]:
+        await self.registerUser(user)
         command = """
             SELECT *
             FROM inventories
@@ -131,9 +126,10 @@ class AtomsDatabase:
         """
         return await self.apg.fetch(command, user.id)
 
-    async def giveatom(
+    async def giveAtom(
         self, user: Union[discord.Member, discord.User], atomid: int, amount: int
     ) -> asyncpg.Record:
+        await self.registerUser(user)
         command = """
             INSERT INTO inventories
             VALUES (
@@ -143,16 +139,37 @@ class AtomsDatabase:
             )
             ON CONFLICT(userid, atomid) DO UPDATE
             SET count = inventories.count + $3
+            RETURNING *
         """
         try:
             return await self.apg.execute(command, user.id, atomid, amount)
-        except asyncpg.CheckViolationError:
+        except asyncpg.CheckViolationError as checkError:
+            # The amount is negative
             command = """
-            DELETE FROM inventories 
-            WHERE userid = $1 
-                AND atomid = $2
+                SELECT *
+                FROM inventories
+                WHERE userid = $1
             """
-            await self.apg.execute(command, user.id, atomid)
+            current_amt = (await self.apg.fetchrow(command, user.id))["count"]
+            requested_amt = int(str(checkError).split()[-1][:-2]) * -1
+
+            if current_amt > requested_amt:
+                command = """
+                    UPDATE inventories
+                    SET count = $1
+                    WHERE userid = $2
+                        AND atomid = $3
+                """
+                await self.apg.execute(
+                    command, current_amt - requested_amt, user.id, atomid
+                )
+            else:
+                command = """
+                    DELETE FROM inventories 
+                    WHERE userid = $1 
+                        AND atomid = $2
+                """
+                await self.apg.execute(command, user.id, atomid)
 
     async def createatom(
         self, name: str, description: Optional[str] = "No Description"
@@ -196,7 +213,7 @@ class AtomsDatabase:
         return await self.apg.fetch("SELECT * FROM atoms")
 
 
-class atomsView(Paginator):
+class AtomsView(Paginator):
     def __init__(
         self,
         ctx: commands.Context,

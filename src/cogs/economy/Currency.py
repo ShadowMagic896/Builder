@@ -1,4 +1,5 @@
 import math
+import asyncpg
 import discord
 from discord import Interaction, app_commands
 from discord.app_commands import describe, Range
@@ -6,15 +7,11 @@ from discord.ext import commands
 
 import random
 from typing import Any, List, Mapping, Optional, Union
-
-import pymongo
-from pymongo.database import Database
-from pymongo.collection import Collection
 from data.config import Config
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.bot.Constants import CONSTANTS
-from src.auxiliary.user.Subclass import BaseModal
+from src.auxiliary.user.Subclass import BaseModal, BaseView, Paginator
 
 
 class Currency(commands.Cog):
@@ -62,14 +59,14 @@ class Currency(commands.Cog):
     @cur.command()
     @commands.cooldown(2, 30, commands.BucketType.user)
     @describe(user="The user to give money to", amount="How much money to give")
-    async def give(self, ctx: commands.Context, user: discord.User, amount: int):
+    async def give(
+        self, ctx: commands.Context, user: discord.User, amount: Range[int, 1]
+    ):
         """
         Sends money to a user.
         """
         if user.bot:
             raise TypeError("User cannot be a bot.")
-        if amount < 1:
-            raise ValueError("You can't give a negative amount, silly!")
         db = BalanceDatabase(ctx)
         if (cv := (await db.getBalance(ctx.author))) < amount:
             raise ValueError("You don't have that much money!")
@@ -84,7 +81,9 @@ class Currency(commands.Cog):
     @cur.command()
     @commands.cooldown(2, 120, commands.BucketType.user)
     @describe(user="The user to request money from", amount="How much money to request")
-    async def request(self, ctx: commands.Context, user: discord.User, amount: int):
+    async def request(
+        self, ctx: commands.Context, user: discord.User, amount: Range[int, 1]
+    ):
         """
         Requests money from a user.
         """
@@ -93,22 +92,22 @@ class Currency(commands.Cog):
         perms = ctx.channel.permissions_for(user)
         if not (perms.read_message_history or perms.read_messages):
             raise TypeError("That user cannot see this channel.")
-        if amount < 1:
-            raise ValueError("You can't ask for a negative amount, silly!")
 
         db = BalanceDatabase(ctx)
         if (cv := await db.getBalance(user)) < amount:
             raise ValueError("They don't have that much money!")
+
         embed = fmte(
             ctx,
-            t="`{}`, Do You Want to Give `{}` `{}`{}?".format(
-                user, ctx.author, amount, self.coin
-            ),
+            t=f"`{user}`, Do You Want to Give `{ctx.author}` `{amount}`{self.coin}?",
             d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.",
         )
-        await ctx.send(
+
+        view = RequestView(ctx, amount, ctx.author, user)
+        message = await ctx.send(
             user.mention, embed=embed, view=RequestView(ctx, amount, ctx.author, user)
         )
+        view.message = message
 
     @cur.command()
     @commands.cooldown(1, 30, commands.BucketType.user)
@@ -437,13 +436,13 @@ class GiveView(discord.ui.View):
             c.disabled = True
 
 
-class RequestView(discord.ui.View):
+class RequestView(BaseView):
     def __init__(self, ctx, amount, auth, user):
         self.ctx: commands.Context = ctx
         self.amount: int = amount
         self.auth: discord.User = auth
         self.user: discord.User = user
-        super().__init__()
+        super().__init__(ctx)
 
     @discord.ui.button(
         label="Accept",
@@ -451,9 +450,6 @@ class RequestView(discord.ui.View):
         style=discord.ButtonStyle.primary,
     )
     async def ack(self, inter: discord.Interaction, button: discord.Button):
-        if inter.user != self.user:
-            await inter.response.send_message("This is not your interaction.")
-            return
 
         db = BalanceDatabase(self.ctx)
         authnew = await db.addToBalance(self.auth, self.amount)
@@ -486,7 +482,7 @@ class RequestView(discord.ui.View):
             c.disabled = True
 
 
-class LeaderboardView(discord.ui.View):
+class LeaderboardView(Paginator):
     def __init__(
         self,
         ctx: commands.Context,
@@ -495,88 +491,19 @@ class LeaderboardView(discord.ui.View):
         *,
         timeout: Optional[float] = 180,
     ):
-        self.ctx = ctx
-        self.pagesize = pagesize
-
-        self.pos = 1
-
-        self.vals = values
-
-        self.maxpos = math.ceil((len(self.vals) / pagesize))
-
-        super().__init__(timeout=timeout)
-
-    @discord.ui.button(emoji=CONSTANTS.Emojis().BBARROW_ID, custom_id="bb")
-    async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
-        self.pos = 1
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
-
-        embed = self.add_fields(self.embed(inter))
-        await inter.response.edit_message(embed=embed, view=self)
-
-    @discord.ui.button(emoji=CONSTANTS.Emojis().BARROW_ID, custom_id="b")
-    async def back(self, inter: discord.Interaction, button: discord.ui.Button):
-        self.pos -= 1
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
-
-        embed = self.add_fields(self.embed(inter))
-        await inter.response.edit_message(embed=embed, view=self)
-
-    @discord.ui.button(
-        emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
-    )
-    async def close(self, inter: discord.Interaction, button: discord.ui.Button):
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        await inter.message.delete()
-
-    @discord.ui.button(emoji=CONSTANTS.Emojis().FARROW_ID, custom_id="f")
-    async def next(self, inter: discord.Interaction, button: discord.ui.Button):
-        self.pos += 1
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
-
-        embed = self.add_fields(self.embed(inter))
-        await inter.response.edit_message(embed=embed, view=self)
-
-    @discord.ui.button(emoji=CONSTANTS.Emojis().FFARROW_ID, custom_id="ff")
-    async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
-        self.pos = self.maxpos
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
-
-        embed = self.add_fields(self.embed(inter))
-        await inter.response.edit_message(embed=embed, view=self)
+        super().__init__(ctx, values, pagesize, timeout)
 
     def embed(self, inter: discord.Interaction):
         return fmte_i(
             inter, t="Leaderboard: Page `{}` of `{}`".format(self.pos, self.maxpos)
         )
 
-    def add_fields(self, embed: discord.Embed):
-        _slice = self.vals[self.pagesize * (self.pos - 1) : self.pagesize * (self.pos)]
-        for place, entry in enumerate(_slice):
+    def adjust(self, embed: discord.Embed):
+        start = self.pagesize * (self.position - 1)
+        stop = self.pagesize * self.position
+        # TODO fix this mess
+        # It should be a list of records, not a dict.
+        for place, entry in enumerate(self.vals[start:stop]):
             user, bal = list(entry.keys())[0], list(entry.values())[0]
             f_bal = Currency(self.ctx.bot).formatBalance(bal)
             embed.add_field(
@@ -586,61 +513,14 @@ class LeaderboardView(discord.ui.View):
             )
         return embed
 
-    def page_zero(self, interaction: discord.Interaction):
-        self.pos = 1
-        return self.add_fields(self.embed(interaction))
 
-    def checkButtons(self, button: discord.Button = None):
-        if self.maxpos <= 1:
-            for b in self.children:
-                if isinstance(b, discord.ui.Button) and b.custom_id != "x":
-                    b.disabled = True
-                    b.style = discord.ButtonStyle.grey
-        else:
-            if self.pos == 1:
-                for b in self.children:
-                    if isinstance(b, discord.ui.Button):
-                        if b.custom_id in ("b", "bb"):
-                            b.disabled = True
-            else:
-                for b in self.children:
-                    if isinstance(b, discord.ui.Button):
-                        if b.custom_id in ("b", "bb"):
-                            b.disabled = False
-            if self.pos == self.maxpos:
-                for b in self.children:
-                    if isinstance(b, discord.ui.Button):
-                        if b.custom_id in ("f", "ff"):
-                            b.disabled = True
-            else:
-                for b in self.children:
-                    if isinstance(b, discord.ui.Button):
-                        if b.custom_id in ("f", "ff"):
-                            b.disabled = False
-        if button is None:
-            return
-        for b in [
-            c
-            for c in self.children
-            if isinstance(c, discord.ui.Button) and c.custom_id != "x"
-        ]:
-            if b == button:
-                b.style = discord.ButtonStyle.success
-            else:
-                b.style = discord.ButtonStyle.secondary
-
-    async def on_timeout(self) -> None:
-        for c in self.children:
-            c.disabled = True
-
-
-class StartQuizView(discord.ui.View):
+class StartQuizView(BaseView):
     def __init__(self, ctx: commands.Context):
         self.ctx = ctx
         self.dif = None
         self.cat = None
         self.questions = None
-        super().__init__()
+        super().__init__(ctx)
 
     @discord.ui.select(
         placeholder="Please choose a difficulty...",
@@ -714,7 +594,7 @@ class StartQuizView(discord.ui.View):
             pass
 
 
-class MainQuizView(discord.ui.View):
+class MainQuizView(BaseView):
     def __init__(
         self,
         questions: List[dict],
@@ -774,11 +654,6 @@ class QuizAnsSelect(discord.ui.Select):
         return [c.label for c in self.ops if c.value == val][0]
 
     async def callback(self, interaction: discord.Interaction) -> Any:
-        if interaction.user != self.ctx.author:
-            await interaction.response.send_message(
-                "You are not taking this quiz!", ephemeral=True
-            )
-            return
         try:
             await interaction.response.send_message()
         except BaseException:
@@ -884,76 +759,56 @@ class QuizClose(discord.ui.Button):
 class BalanceDatabase:
     def __init__(self, ctx: commands.Context):
         self.bot: commands.Bot = ctx.bot
-        self.database: Database = self.bot.database
-        self.collections: Mapping[str, Collection] = self.bot.collections
+        self.apg: asyncpg.Connection = ctx.bot.apg
 
-    async def checkForExist(self, user: discord.User, default_value: int = 0) -> bool:
-        """
-        Checks for a user's existence in the database. If it is not there, it creates a new entry with the ID of the user and the value of defualt_value.
-        Returns whether a new entry was created.
-        """
-        if self.collections["balances"].find_one({"userid": user.id}) is None:
-            self.collections["balances"].insert_one(
-                {"userid": user.id, "balance": default_value}
+    async def registerUser(self, user: discord.User):
+        command = """
+            INSERT INTO users(userid)
+            VALUES (
+                $1
             )
-            return True
-        return False
+            ON CONFLICT DO NOTHING
+        """
+        await self.apg.execute(command, user.id)
 
-    async def addToBalance(self, user: discord.User, value: int) -> int:
+    async def addToBalance(self, user: discord.User, value: int) -> asyncpg.Record:
+        await self.registerUser(user)
+        command = """
+            UPDATE users
+            SET balance = balance + $1
+            WHERE userid = $2
+            RETURNING *
         """
-        Updates a user's balance.
-        Returns the user's new balance.
-        """
-        result = self.collections["balances"].find_one_and_update(
-            {"userid": user.id},
-            {"$inc": {"balance": value}},
-            upsert=True,
-            return_document=True,
-        )
-        return result["balance"]
-
-    async def setBalance(self, user: discord.User, value: int) -> None:
-        """
-        Sets a user's balance.
-        """
-        self.collections["balances"].replace_one(
-            filter={"userid": user.id},
-            replacement={"$set": {"balance": value}},
-            upsert=True,
-        )
+        return await self.apg.fetchrow(command, value, user.id)
 
     async def getBalance(self, user: discord.User) -> int:
+        await self.registerUser(user)
+        command = """
+            SELECT balance
+            FROM users
+            WHERE userid = $1
         """
-        Gets a user's balance.
-        """
-        result = self.collections["balances"].find_one({"userid": user.id})
-        if result is None:
-            result = self.collections["balances"].insert_one(
-                {"userid": user.id, "balance": 0}
-            )
-            value = 0
-        else:
-            value = result["balance"]
-        return value
+        return await self.apg.fetchrow(command, user.id)
 
     async def delete(self, user: discord.User) -> None:
+        command = """
+            DELETE FROM users
+            WHERE userid = $1
         """
-        Deletes a user's entry
-        """
-        self.collections["balances"].delete_one({"userid": user.id})
+        await self.apg.execute(command, user.id)
 
     async def leaderboard(
         self, members: List[Union[discord.Member, discord.User]]
     ) -> Mapping[int, int]:
         """
-        Returns a sorted list of {UserID: Balance}
+        Returns a sorted list of records, sorted by balance
         """
-        ids = [member.id for member in members]
-        _values = self.collections["balances"].find({"userid": {"$in": ids}})
-        # print([x for x in _values.clone()])
-        values = _values.sort("balance", pymongo.DESCENDING)
-        # print([x for x in values.clone()])
-        return values.clone()
+        command = """
+            SELECT * FROM users
+            WHERE userid IN $1
+            ORDER BY balance
+        """
+        return await self.apg.fetch(command, str((x.id for x in members)))
 
 
 async def setup(bot):
