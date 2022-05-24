@@ -48,9 +48,9 @@ class Currency(commands.Cog):
             raise TypeError("User cannot be a bot.")
 
         db = BalanceDatabase(ctx)
-        balance = await db.getBalance(user)
+        rec = await db.getBalance(user)
 
-        f_balance = self.formatBalance(balance)
+        f_balance = self.formatBalance(rec)
 
         embed = fmte(ctx, t=f"`{user}`'s Balance: `{f_balance}`{self.coin}")
         await ctx.send(embed=embed)
@@ -93,7 +93,7 @@ class Currency(commands.Cog):
             raise TypeError("That user cannot see this channel.")
 
         db = BalanceDatabase(ctx)
-        if (cv := await db.getBalance(user)) < amount:
+        if (cv := (await db.getBalance(user))) < amount:
             raise ValueError("They don't have that much money!")
 
         embed = fmte(
@@ -147,18 +147,18 @@ class Currency(commands.Cog):
     # @commands.cooldown(1, 60, commands.BucketType.user)
     async def leaderboard(self, ctx: commands.Context):
         """
-        See who's the wealthiest in this server
+        See who's the wealthiest in this server.
         """
         db = BalanceDatabase(ctx)
         data = await db.leaderboard(ctx.guild.members)
         values = [
             {ctx.guild.get_member(entry["userid"]): entry["balance"]} for entry in data
         ]
-        # print(f"Sending Values: {values}")
         view = LeaderboardView(ctx, values, 5)
         embed = view.page_zero(ctx.interaction)
         view.checkButtons()
-        await ctx.send(embed=embed, view=view)
+        message = await ctx.send(embed=embed, view=view)
+        view.message = message
 
     @cur.command()
     @commands.cooldown(3, 120, commands.BucketType.user)
@@ -399,9 +399,6 @@ class GiveView(discord.ui.View):
         style=discord.ButtonStyle.primary,
     )
     async def ack(self, inter: discord.Interaction, button: discord.Button):
-        if inter.user != self.auth:
-            await inter.response.send_message("This is not your interaction.")
-            return
 
         db = BalanceDatabase(self.ctx)
         authnew = await db.addToBalance(self.auth, -self.amount)
@@ -420,9 +417,6 @@ class GiveView(discord.ui.View):
         label="Decline", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
     )
     async def dec(self, inter: discord.Interaction, button: discord.Button):
-        if inter.user != self.auth:
-            await inter.response.send_message("This is not your interaction.")
-            return
         embed = fmte(
             self.ctx, t="Transaction Declined", d="No currency has been transfered."
         )
@@ -466,9 +460,6 @@ class RequestView(BaseView):
         label="Decline", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
     )
     async def dec(self, inter: discord.Interaction, button: discord.Button):
-        if inter.user != self.user:
-            await inter.response.send_message("This is not your interaction.")
-            return
         embed = fmte(
             self.ctx, t="Transaction Declined", d="No currency has been transfered."
         )
@@ -476,16 +467,12 @@ class RequestView(BaseView):
             c.disabled = True
         await inter.response.edit_message(embed=embed, view=None)
 
-    async def on_timeout(self) -> None:
-        for c in self.children:
-            c.disabled = True
-
 
 class LeaderboardView(Paginator):
     def __init__(
         self,
         ctx: commands.Context,
-        values: Mapping[discord.User, int],
+        values: List[asyncpg.Record],
         pagesize: int,
         *,
         timeout: Optional[float] = 180,
@@ -528,11 +515,6 @@ class StartQuizView(BaseView):
         ],
     )
     async def dif(self, inter: discord.Interaction, _: Any):
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
         self.dif = inter.data["values"][0]
         await self.sil(inter)
 
@@ -544,11 +526,6 @@ class StartQuizView(BaseView):
         ],
     )
     async def cat(self, inter: discord.Interaction, _: Any):
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
         self.cat = inter.data["values"][0]
         await self.sil(inter)
 
@@ -558,11 +535,6 @@ class StartQuizView(BaseView):
         style=discord.ButtonStyle.green,
     )
     async def start(self, inter: discord.Interaction, _: Any):
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
         if self.dif is not None and self.cat is not None:
             key = Config().QUIZAPI_KEY
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
@@ -579,11 +551,6 @@ class StartQuizView(BaseView):
         style=discord.ButtonStyle.danger, label="Close", emoji="\N{CROSS MARK}"
     )
     async def close(self, inter: discord.Interaction, _: Any) -> Any:
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
         await inter.message.delete()
 
     async def sil(self, inter: discord.Interaction):
@@ -673,11 +640,6 @@ class QuizQuestionSubmit(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction) -> Any:
         if not self.select.values:
             return
-        if interaction.user != self.ctx.author:
-            await interaction.response.send_message(
-                "You are not taking this quiz!", ephemeral=True
-            )
-            return
         self._view.selected.append(
             [
                 self.select.qname,
@@ -749,9 +711,6 @@ class QuizClose(discord.ui.Button):
         )
 
     async def callback(self, interaction: discord.Interaction) -> Any:
-        if interaction.user != self.ctx.author:
-            await interaction.response.send_message("You are not taking this quiz!")
-            return
         await interaction.message.delete()
 
 
@@ -760,25 +719,35 @@ class BalanceDatabase:
         self.bot: commands.Bot = ctx.bot
         self.apg: asyncpg.Connection = ctx.bot.apg
 
-    async def registerUser(self, user: discord.User):
+    async def registerUser(self, user: discord.User) -> asyncpg.Record:
         command = """
             INSERT INTO users(userid)
             VALUES (
                 $1
             )
             ON CONFLICT DO NOTHING
-        """
-        await self.apg.execute(command, user.id)
-
-    async def addToBalance(self, user: discord.User, value: int) -> asyncpg.Record:
-        await self.registerUser(user)
-        command = """
-            UPDATE users
-            SET balance = balance + $1
-            WHERE userid = $2
             RETURNING *
         """
-        return await self.apg.fetchrow(command, value, user.id)
+        return await self.apg.fetchrow(command, user.id)
+
+    async def addToBalance(self, user: discord.User, value: int) -> asyncpg.Record:
+        try:
+            await self.registerUser(user)
+            command = """
+                UPDATE users
+                SET balance = balance + $1
+                WHERE userid = $2
+                RETURNING *
+            """
+            return await self.apg.fetchrow(command, value, user.id)
+        except asyncpg.CheckViolationError:
+            command = """
+                UPDATE users
+                SET balance = 0
+                WHERE userid = $1
+                RETURNING *
+            """
+            return await self.apg.fetchrow(command, value, user.id)
 
     async def getBalance(self, user: discord.User) -> int:
         await self.registerUser(user)
@@ -787,7 +756,7 @@ class BalanceDatabase:
             FROM users
             WHERE userid = $1
         """
-        return await self.apg.fetchrow(command, user.id)
+        return (await self.apg.fetchrow(command, user.id))["balance"]
 
     async def delete(self, user: discord.User) -> None:
         command = """
@@ -797,17 +766,14 @@ class BalanceDatabase:
         await self.apg.execute(command, user.id)
 
     async def leaderboard(
-        self, members: List[Union[discord.Member, discord.User]]
+        self, members: List[discord.Member]
     ) -> Mapping[int, int]:
-        """
-        Returns a sorted list of records, sorted by balance
-        """
         command = """
             SELECT * FROM users
-            WHERE userid IN $1
+            WHERE userid = ANY($1::BIGINT[])
             ORDER BY balance
         """
-        return await self.apg.fetch(command, str((x.id for x in members)))
+        return await self.apg.fetch(command, (x.id for x in members))
 
 
 async def setup(bot):
