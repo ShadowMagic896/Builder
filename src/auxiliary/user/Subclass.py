@@ -80,73 +80,48 @@ class Paginator(BaseView):
     @discord.ui.button(emoji=CONSTANTS.Emojis().BBARROW_ID, custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = 1
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
+        await self.checkButtons(button)
 
-        embed = self.adjust(self.embed(inter))
+        embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(emoji=CONSTANTS.Emojis().BARROW_ID, custom_id="b")
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position -= 1
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
+        await self.checkButtons(button)
 
-        embed = self.adjust(self.embed(inter))
+        embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(
         emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
     )
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
         await inter.message.delete()
 
     @discord.ui.button(emoji=CONSTANTS.Emojis().FARROW_ID, custom_id="f")
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position += 1
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
+        await self.checkButtons(button)
 
-        embed = self.adjust(self.embed(inter))
+        embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(emoji=CONSTANTS.Emojis().FFARROW_ID, custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = self.maxpos
-        if inter.user != self.ctx.author:
-            await inter.response.send_message(
-                "You are not the owner of this interaction", ephemeral=True
-            )
-            return
-        self.checkButtons(button)
+        await self.checkButtons(button)
 
-        embed = self.adjust(self.embed(inter))
+        embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    def embed(self, inter: discord.Interaction):
+    async def embed(self, inter: discord.Interaction):
         """
         Should be overwritten to provide custom labeling
         """
         return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos or 1}`")
 
-    def adjust(self, embed: discord.Embed):
+    async def adjust(self, embed: discord.Embed):
         """
         This must be overwritten by inheriting classes.
         Should return an embed with self.pagesize fields. Example:
@@ -175,11 +150,11 @@ class Paginator(BaseView):
         """
         return embed
 
-    def page_zero(self, interaction: discord.Interaction):
+    async def page_zero(self, interaction: discord.Interaction):
         self.position = 1
-        return self.adjust(self.embed(interaction))
+        return await self.adjust(await self.embed(interaction))
 
-    def checkButtons(self, button: discord.Button = None):
+    async def checkButtons(self, button: discord.Button = None):
         """
         Can be overwritten if necessary.
         """

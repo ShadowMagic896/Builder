@@ -17,6 +17,9 @@ class Shop(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
 
+    def ge(self):
+        return "\N{Convenience Store}"
+
     @commands.hybrid_group()
     async def shop(self, ctx: commands.Context):
         pass
@@ -129,8 +132,8 @@ class Shop(commands.Cog):
                 )
             vals = sorted(vals, key=lambda r: r["price"] / r["amount"])
             view = PersonalShopView(ctx, user, vals, 10)
-        embed = view.page_zero(ctx.interaction)
-        view.checkButtons()
+        embed = await view.page_zero(ctx.interaction)
+        await view.checkButtons()
         msg = await ctx.send(embed=embed, view=view)
         view.message = msg
 
@@ -250,7 +253,7 @@ class ShopView(Paginator):
     ):
         super().__init__(ctx, values, pagesize, timeout=timeout)
 
-    def adjust(self, embed: discord.Embed):
+    async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
 
@@ -269,7 +272,7 @@ class ShopView(Paginator):
             )
         return embed
 
-    def embed(self, inter: discord.Interaction):
+    async def embed(self, inter: discord.Interaction):
         embed = fmte(
             self.ctx, t=f"Shops: Page `{self.position}` / `{self.maxpos or 1}`"
         )
@@ -289,7 +292,7 @@ class PersonalShopView(Paginator):
         self.user = user
         super().__init__(ctx, values, pagesize, timeout=timeout)
 
-    def adjust(self, embed: discord.Embed):
+    async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
 
@@ -306,7 +309,7 @@ class PersonalShopView(Paginator):
             )
         return embed
 
-    def embed(self, inter: discord.Interaction):
+    async def embed(self, inter: discord.Interaction):
         embed = fmte(
             self.ctx,
             t=f"`{self.user}`'s Shops: Page `{self.position}` / `{self.maxpos or 1}`",

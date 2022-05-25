@@ -155,8 +155,8 @@ class Currency(commands.Cog):
             {ctx.guild.get_member(entry["userid"]): entry["balance"]} for entry in data
         ]
         view = LeaderboardView(ctx, values, 5)
-        embed = view.page_zero(ctx.interaction)
-        view.checkButtons()
+        embed = await view.page_zero(ctx.interaction)
+        await view.checkButtons()
         message = await ctx.send(embed=embed, view=view)
         view.message = message
 
@@ -479,12 +479,12 @@ class LeaderboardView(Paginator):
     ):
         super().__init__(ctx, values, pagesize, timeout)
 
-    def embed(self, inter: discord.Interaction):
+    async def embed(self, inter: discord.Interaction):
         return fmte_i(
             inter, t="Leaderboard: Page `{}` of `{}`".format(self.pos, self.maxpos)
         )
 
-    def adjust(self, embed: discord.Embed):
+    async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
         # TODO fix this mess
@@ -765,9 +765,7 @@ class BalanceDatabase:
         """
         await self.apg.execute(command, user.id)
 
-    async def leaderboard(
-        self, members: List[discord.Member]
-    ) -> Mapping[int, int]:
+    async def leaderboard(self, members: List[discord.Member]) -> Mapping[int, int]:
         command = """
             SELECT * FROM users
             WHERE userid = ANY($1::BIGINT[])

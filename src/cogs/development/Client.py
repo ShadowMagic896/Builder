@@ -37,7 +37,7 @@ class Client(commands.Cog):
             scopes=["bot", "applications.commands"],
         )
         embed = fmte(ctx, t="Click the Button Below to Invite Me!")
-        view = BaseView().add_item(
+        view = BaseView(ctx).add_item(
             discord.ui.Button(
                 style=discord.ButtonStyle.link, label="Invite Me!", url=link
             )

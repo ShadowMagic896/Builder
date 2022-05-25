@@ -1,7 +1,5 @@
 import asyncio
-import io
-import time
-from typing import List, Optional
+from typing import Optional, Tuple
 import aiohttp
 import bs4
 import discord
@@ -9,12 +7,9 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 
 import os
-import math
 import random
-import shutil
 from bs4 import BeautifulSoup
-import requests
-import wget
+from src.auxiliary.user.Subclass import Paginator
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 
@@ -31,12 +26,11 @@ class NSFW(commands.Cog):
         return "\N{NO ONE UNDER EIGHTEEN SYMBOL}"
 
     @commands.hybrid_command()
-    @commands.is_nsfw()
+    # @commands.is_nsfw()
     @describe(
         querey="The keywords to search for.",
-        ephemeral="Whether to publicly send the response or not. All images are sent in DMs.",
     )
-    async def rule34(self, ctx: commands.Context, querey: str, ephemeral: bool = False):
+    async def rule34(self, ctx: commands.Context, querey: str):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
         """
@@ -45,7 +39,7 @@ class NSFW(commands.Cog):
             await self.bot.session.get(
                 f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % querey
             )
-        ).text
+        ).text()
         soup = BeautifulSoup(res, "html.parser")
 
         tags = soup.select(
@@ -55,7 +49,7 @@ class NSFW(commands.Cog):
         urls = []
 
         embed = fmte(ctx, t="Results found...", d="Sending to author.")
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
         for tag in tags:
             soup = BeautifulSoup(str(tag), "html.parser")
@@ -72,16 +66,14 @@ class NSFW(commands.Cog):
             await ctx.author.send(embed=embed)
 
     @commands.hybrid_command()
-    @commands.is_nsfw()
+    # @commands.is_nsfw()
     @describe(
         amount="The amount of images to send.",
-        ephemeral="Whether to publicly show the response to the command. All images are sent in DMs.",
     )
     async def neko(
         self,
         ctx: commands.Context,
         amount: Range[int, 1, 20] = 1,
-        ephemeral: bool = False,
     ):
         """
         Gets an image response from [nekos.life](https://nekos.life) and sends it to you.
@@ -100,7 +92,7 @@ class NSFW(commands.Cog):
             t="Fetched Images",
             d="Sending...",
         )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
         for l in data:
             embed = fmte(
@@ -110,16 +102,14 @@ class NSFW(commands.Cog):
             await ctx.author.send(embed=embed)
 
     @commands.hybrid_command()
-    @commands.is_nsfw()
+    # @commands.is_nsfw()
     @describe(
         amount="The amount of images to send.",
-        ephemeral="Whether to public send the response or not. All images are sent in DMs.",
     )
     async def nekolewd(
         self,
         ctx: commands.Context,
         amount: Range[int, 1, 20] = 1,
-        ephemeral: bool = False,
     ):
         """
         Gets an image response from [nekos.life/lewd](https://nekos.life/lewd) and sends it to you.
@@ -138,7 +128,7 @@ class NSFW(commands.Cog):
             d="Sending...",
         )
 
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
         for l in data:
             embed = fmte(
@@ -148,31 +138,26 @@ class NSFW(commands.Cog):
             await asyncio.sleep(1)
 
     @commands.hybrid_command()
-    # @commands.cooldown(1, 60 * 60 * 24, commands.BucketType.user)
-    @commands.is_nsfw()
+    # @commands.is_nsfw()
     @describe(
         code="The code to search for.",
-        ephemeral="Whether to public send the response or not. All images are sent in DMs.",
     )
-    async def nhentai(self, ctx: commands.Context, code: int, ephemeral: bool = False):
+    async def nhentai(self, ctx: commands.Context, code: int):
         """
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
         """
-        inst = NHentaiView(ctx, self.bot, False, code)
-        embed = inst.page_zero(ctx.interaction)
-        view = inst
+        meta: NHMeta = await NHMeta.create(ctx, code)
+        view = NHentaiView(meta=meta)
+        embed = await view.page_zero(ctx.interaction)
         await view.checkButtons()
         await ctx.send(embed=embed, view=view)
 
     @commands.hybrid_command()
-    @commands.is_nsfw()
+    # @commands.is_nsfw()
     @describe(
         querey="The keywords to search for.",
-        ephemeral="Whether to public send the response or not. All images are sent in DMs.",
     )
-    async def nhsearch(
-        self, ctx: commands.Context, querey: str, ephemeral: bool = False
-    ):
+    async def nhsearch(self, ctx: commands.Context, querey: str):
         """
         Searches for manga on [nhentai.xxx](https://nhentai.xxx) and returns the top results.
         """
@@ -185,7 +170,7 @@ class NSFW(commands.Cog):
         names = []
 
         embed = fmte(ctx, t="Fetched Images", d="Sending...")
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
 
         for i in parse.find_all("div")[3:-1]:
             try:
@@ -207,7 +192,7 @@ class NSFW(commands.Cog):
             embed = fmte(
                 ctx, t="{} results found, sending to author...".format(len(codes))
             )
-        await ctx.send(embed=embed, ephemeral=ephemeral)
+        await ctx.send(embed=embed)
         for n in range(min(codes.__len__(), images.__len__(), names.__len__())):
             c = n + 1
             tot = min(codes.__len__(), images.__len__(), names.__len__())
@@ -220,125 +205,70 @@ class NSFW(commands.Cog):
             await ctx.author.send(embed=embed)
 
 
-class NHentaiView(discord.ui.View):
-    def __init__(
-        self,
-        ctx: commands.Context,
-        bot: commands.Bot,
-        ephemeral: bool,
-        code: int,
-        *,
-        timeout: Optional[float] = 180,
-    ):
-        self.ctx = ctx
-        self.bot = bot
-        self.ephemeral = ephemeral
-        # text = await (await self.bot.session.get("https://nhentai.xxx/%s/1" %
-        # code)).text()
-        text = requests.get("https://nhentai.xxx/g/%s/1" % code).text
+class NHMeta:
+    @classmethod
+    async def create(cls, ctx: commands.Context, code: int):
+        """
+        Get the base metadata for a page
+        """
+        result: aiohttp.ClientResponse = await ctx.bot.session.get(
+            f"https://nhentai.xxx/g/{code}/1"
+        )
+        if result.status != 200:
+            raise ValueError(
+                "I could not find that code. Please double-check your spelling,"
+            )
+
+        text = await result.text()
         soup = bs4.BeautifulSoup(text, "html.parser")
+
         dataurl = soup.select(
             "body > div#page-container > section#image-container > a > img"
         )[0]["src"]
         datacode = dataurl[26:-6]
-        self.code = datacode
-        self.baseurl = "https://cdn.nhentai.xxx/g/%s/" % datacode
-        self.pos = 1
 
-        super().__init__(timeout=timeout)
+        __pages = soup.select(
+            "body > div#page-container > section#pagination-page-bottom > a.last"
+        )[0]["href"]
 
-    @discord.ui.button(emoji="<:BArrow:971590903837913129>", custom_id="b")
-    async def back(self, inter: discord.Interaction, button: discord.ui.Button):
-        self.pos -= 1
-        await self.checkButtons(button)
+        substring = f"/g/{code}/"
+        codestart = str(__pages)[:-1].index(substring) + len(substring)
+        pages = int(__pages[codestart:-1])
 
-        embed = self.embed(inter)
-        await inter.response.edit_message(embed=embed, view=self)
+        baseurl = f"https://cdn.nhentai.xxx/g/{datacode}/"
 
-    @discord.ui.button(
-        emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
-    )
-    async def close(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.message.delete()
+        cls.ctx: commands.Context = ctx
 
-    @discord.ui.button(emoji="\N{SCROLL}", custom_id="c")
-    async def cust(self, inter: discord.Interaction, button: discord.ui.button):
-        q = await self.ctx.send("Please send a new page number...", ephemeral=False)
-        r = await self.bot.wait_for(
-            "message",
-            check=lambda m: m.channel == self.ctx.channel
-            and m.author == self.ctx.author
-            and m.content.isdigit(),
+        cls.code: int = code
+        cls.datacode: int = datacode
+
+        cls.pages: int = pages
+
+        cls.baseurl = baseurl
+        return cls
+
+
+class NHentaiView(Paginator):
+    def __init__(
+        self,
+        meta: NHMeta,
+        *,
+        timeout: Optional[float] = 180,
+    ):
+        self.meta = meta
+        super().__init__(
+            self.meta.ctx, list(range(self.meta.pages)), 1, timeout=timeout
         )
-        self.pos = int(r.content)
-        try:
-            await q.delete()
-        except BaseException:
-            pass
 
-        try:
-            await q.delete()
-        except BaseException:
-            pass
-        await self.checkButtons(button)
-        embed = self.embed(inter)
-        await inter.response.edit_message(embed=embed, view=self)
-
-    @discord.ui.button(emoji="<:FArrow:971591003893006377>", custom_id="f")
-    async def next(self, inter: discord.Interaction, button: discord.ui.Button):
-        self.pos += 1
-        await self.checkButtons(button)
-
-        embed = self.embed(inter)
-        await inter.response.edit_message(embed=embed, view=self)
-
-    def embed(self, inter: discord.Interaction):
-        embed = fmte_i(inter, t="`{}`: Page `{}`".format(self.code, self.pos))
-        embed.set_image(url=self.baseurl + "%s.jpg" % self.pos)
+    async def adjust(self, embed: discord.Embed):
+        image_url: str = f"{self.meta.baseurl}{self.position}.jpg"
+        embed.set_image(url=image_url)
         return embed
 
-    def page_zero(self, interaction: discord.Interaction):
-        self.pos = 1
-        return self.embed(interaction)
-
-    async def checkButtons(self, button: discord.Button = None):
-        l = await self.bot.session.get(self.baseurl + "%s.jpg" % (self.pos - 1))
-        n = await self.bot.session.get(self.baseurl + "%s.jpg" % (self.pos + 1))
-        if l.status != 200:
-            for b in self.children:
-                if isinstance(b, discord.ui.Button):
-                    if b.custom_id in ("b", "bb"):
-                        b.disabled = True
-        else:
-            for b in self.children:
-                if isinstance(b, discord.ui.Button):
-                    if b.custom_id in ("b", "bb"):
-                        b.disabled = False
-        if n.status != 200:
-            for b in self.children:
-                if isinstance(b, discord.ui.Button):
-                    if b.custom_id in ("f", "ff"):
-                        b.disabled = True
-        else:
-            for b in self.children:
-                if isinstance(b, discord.ui.Button):
-                    if b.custom_id in ("f", "ff"):
-                        b.disabled = False
-        if button is None:
-            return
-        for b in [
-            c
-            for c in self.children
-            if isinstance(c, discord.ui.Button) and c.custom_id != "x"
-        ]:
-            if b == button:
-                b.style = discord.ButtonStyle.success
-            else:
-                b.style = discord.ButtonStyle.secondary
-
-    async def on_timeout(self) -> None:
-        for c in self.children:
-            c.disabled = True
+    async def embed(self, inter: discord.Interaction):
+        return fmte_i(
+            inter, t=f"`{self.meta.code}`: `{self.position}` / `{self.maxpos or 1}`"
+        )
 
 
 async def setup(bot):

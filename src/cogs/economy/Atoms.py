@@ -71,8 +71,8 @@ class Atoms(commands.Cog):
         values: List[Record] = await AtomsDatabase(ctx).allatoms()
 
         view = AtomsView(ctx, values=values, title="All Atoms", sort="atomid")
-        embed = view.page_zero(ctx.interaction)
-        view.checkButtons()
+        embed = await view.page_zero(ctx.interaction)
+        await view.checkButtons()
 
         message = await ctx.send(embed=embed, view=view)
         view.message = message
@@ -101,8 +101,8 @@ class Atoms(commands.Cog):
         user = user or ctx.author
         values: Union[List[Record], List] = await AtomsDatabase(ctx).getAtoms(user)
         view = AtomsView(ctx, values=values, title=f"`{user}`'s atoms", sort=sort)
-        embed = view.page_zero(ctx.interaction)
-        view.checkButtons()
+        embed = await view.page_zero(ctx.interaction)
+        await view.checkButtons()
 
         message = await ctx.send(embed=embed, view=view)
         view.message = message
@@ -226,7 +226,7 @@ class AtomsView(Paginator):
         self.title = title
         super().__init__(ctx, values, 5)
 
-    def adjust(self, embed: discord.Embed):
+    async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
 
@@ -243,7 +243,7 @@ class AtomsView(Paginator):
             )
         return embed
 
-    def embed(self, inter: discord.Interaction):
+    async def embed(self, inter: discord.Interaction):
         embed = fmte(
             self.ctx, t=f"{self.title}: Page `{self.position}` / `{self.maxpos or 1}`"
         )
