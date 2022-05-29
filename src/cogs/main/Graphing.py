@@ -1,3 +1,5 @@
+from copy import copy
+import math
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
@@ -8,7 +10,7 @@ from src.auxiliary.user.Converters import ListConverter
 import io
 import simpleeval
 import numpy as np
-from typing import Literal, Optional
+from typing import Callable, Literal, Optional, Union
 from matplotlib import pyplot as plt
 
 
@@ -27,7 +29,6 @@ class Graphing(commands.Cog):
         colors = [
             "aqua",
             "aquamarine",
-            "axure",
             "beige",
             "black",
             "blue",
@@ -225,44 +226,53 @@ class Graphing(commands.Cog):
     @graph.command()
     @describe(
         function="The functiont to graph, in slope-intercept form.",
-        rangelower="Where to start graphing Y.",
-        rangeupper="Where to stop graphing Y.",
-        plots="how many plots of Y to make.",
+        start="Where to start graphing Y. Inclusive",
+        stop="Where to stop graphing Y. Exclusive",
+        step="how many plots of Y to make.",
         xlabel="The label of the graph's X axis.",
         ylabel="The label of the graph's Y axis.",
         title="The title of the graph",
         color="The color of the line.",
         linewidth="Width of the line. If left empty, it will be decided automatically.",
         font="The font of the text for the labels and title.",
-        xticks="How many ticks to place on the X axis.",
-        yticks="How many ticks to place on the Y axis.",
     )
     async def psi(
         self,
         ctx: commands.Context,
         function: str,
-        rangelower: float,
-        rangeupper: float,
-        plots: int = 50,
+        start: int,
+        stop: int,
+        step: int = 1,
         xlabel: str = "X Axis",
         ylabel: str = "Y Axis",
         title: Optional[str] = None,
-        color: str = "black",
-        linewidth: Range[float, 0.1, 100.0] = 5.0,
+        color: str = "blue",
+        linewidth: Range[float, 0.1, 100.0] = 2.5,
         font: Literal[
             "serif", "sans-serif", "cursive", "fantasy", "monospace"
         ] = "monospace",
-        xticks: Range[int, 0, 30] = 10,
-        yticks: Range[int, 0, 30] = 10,
-        # autoperspective: bool = False
     ):
         """
         Graphs Y using a function in slope-intercept form (y = mx + b)
         """
+        await ctx.interaction.response.defer(thinking=True)
+        clamp: Callable[[Union[float, int], Optional[int], Optional[int]]] = (
+            lambda n, l=None, m=None: min(max(n, l), m)
+            if m is not None and l is not None
+            else max(n, l)
+            if m is None
+            else min(n, m)
+            if l is None
+            else n
+        )
+        start, stop = clamp(start, l=stop - 200, m=stop - 1), clamp(
+            stop, l=start + 1, m=start + 200
+        )
+        ofunc = copy(function)
         buffer = io.BytesIO()
-        xvalues = np.linspace(rangelower, rangeupper, plots)
+        xvalues = list(range(round(start), round(stop), round(step)))
         yvalues = []
-        function = function.replace(" ", "").replace("^", "**").replace("y=", "")
+        function = function.replace(" ", "").replace("y=", "")
 
         def ins(string: str, char: str, pos: int):
             return string[:pos] + char + string[pos:]
@@ -271,30 +281,44 @@ class Graphing(commands.Cog):
             if co == 0:
                 continue
             if char == "x":
-                if function[co - 1].isdigit:
+                if function[co - 1].isdigit():
                     function = ins(function, "*", co)
 
+        evaluator = simpleeval.SimpleEval(
+            functions=self.functions(),
+            names=self.names(),
+        )
+
         for v in xvalues:
-            yvalues.append(simpleeval.SimpleEval().eval(function.replace("x", str(v))))
+            n_function = function.replace("x", str(v))
+            result = evaluator.eval(n_function)
+            yvalues.append(result)
+
+        fig, ax = plt.subplots()
         plt.plot(xvalues, yvalues, color=color, linewidth=linewidth)
         plt.grid(True)
 
-        plt.title(title if title else str(ctx.author))
+        plt.title(f"{title or ofunc}")
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-        xmax, ymax = (
-            max(xvalues),
-            max(yvalues),
-        )
-
-        plt.xticks(np.linspace(0, xmax, xticks))
-        plt.yticks(np.linspace(0, ymax, yticks))
+        plt.xticks(xvalues)
 
         plt.minorticks_on()
         plt.rcParams.update({"font.family": font})
+        [
+            ax.text(
+                xvalues[index],
+                yvalues[index],
+                round(yvalues[index], 4),
+                fontsize=10,
+                horizontalalignment="center",
+            )
+            for index in range(len(xvalues))
+        ]
 
-        plt.savefig(buffer)
+        with np.errstate(divide="ignore"):
+            plt.savefig(buffer)
 
         buffer.seek(0)
         embed = fmte(ctx, t="Data Loaded and Graphed")
@@ -305,6 +329,74 @@ class Graphing(commands.Cog):
     @psi.autocomplete("color")
     async def psicolor_autocomplete(self, inter: discord.Interaction, current: str):
         return self.color_autocomplete(inter, current)
+
+    def functions(self):
+        dft = simpleeval.DEFAULT_FUNCTIONS
+        dft.update(
+            {
+                "acos": math.acos,
+                "acosh": math.acosh,
+                "asin": math.asin,
+                "asinh": math.asinh,
+                "atan": math.atan,
+                "atan2": math.atan2,
+                "atanh": math.atanh,
+                "ceil": math.ceil,
+                "comb": math.comb,
+                "copysign": math.copysign,
+                "cos": math.cos,
+                "cosh": math.cosh,
+                "degrees": math.degrees,
+                "dist": math.dist,
+                "erf": math.erf,
+                "erfc": math.erfc,
+                "exp": math.exp,
+                "expm1": math.expm1,
+                "fabs": math.fabs,
+                "factorial": math.factorial,
+                "floor": math.floor,
+                "fmod": math.fmod,
+                "frexp": math.frexp,
+                "fsum": math.fsum,
+                "gamma": math.gamma,
+                "gcd": math.gcd,
+                "hypot": math.hypot,
+                "inf": math.inf,
+                "isclose": math.isclose,
+                "isfinite": math.isfinite,
+                "isinf": math.isinf,
+                "isnan": math.isnan,
+                "isqrt": math.isqrt,
+                "ldexp": math.ldexp,
+                "lgamma": math.lgamma,
+                "log": math.log,
+                "log10": math.log10,
+                "log1p": math.log1p,
+                "log2": math.log2,
+                "modf": math.modf,
+                "perm": math.perm,
+                "pow": math.pow,
+                "prod": math.prod,
+                "radians": math.radians,
+                "remainder": math.remainder,
+                "sin": math.sin,
+                "sinh": math.sinh,
+                "sqrt": math.sqrt,
+                "round": round,
+                "range": range,
+            }
+        )
+        return dft
+
+    def names(self):
+        dft = simpleeval.DEFAULT_NAMES
+        dft.update(
+            {
+                "pi": math.pi,
+                "e": math.e,
+            }
+        )
+        return dft
 
 
 async def setup(bot):

@@ -59,7 +59,7 @@ class Atoms(commands.Cog):
         embed = fmte(
             ctx,
             t=f"Resources Given to `{user}`",
-            d=f"**Resource Name:** `{atomname}`\n**Resource ID:** `{atom}`\n**Old Amount:** `{old_amount}`\n**New Amount:** `{max(old_amount+amount, 0)}`",
+            d=f"**Resource Name:** `{atomname}`\n**Resource ID:** `{atom}`\n**Old Amount:** `{old_amount:,}`\n**New Amount:** `{max(old_amount+amount, 0):,}`",
         )
         await ctx.send(embed=embed)
 
@@ -100,7 +100,7 @@ class Atoms(commands.Cog):
         """
         user = user or ctx.author
         values: Union[List[Record], List] = await AtomsDatabase(ctx).getAtoms(user)
-        view = AtomsView(ctx, values=values, title=f"`{user}`'s atoms", sort=sort)
+        view = AtomsView(ctx, values=values, title=f"`{user}`'s Atoms", sort=sort)
         embed = await view.page_zero(ctx.interaction)
         await view.checkButtons()
 
@@ -120,7 +120,7 @@ class AtomsDatabase:
         command = """
             SELECT *
             FROM inventories
-                LEFT JOIN atoms
+                JOIN atoms
                     USING(atomid)
             WHERE userid = $1
         """
@@ -173,7 +173,7 @@ class AtomsDatabase:
 
     async def createatom(
         self, name: str, description: Optional[str] = "No Description"
-    ) -> str:
+    ) -> asyncpg.Record:
         """
         Adds an atom to the database. Returns the status of the command.
         """
@@ -183,8 +183,9 @@ class AtomsDatabase:
                 $1::TEXT,
                 $2::TEXT
             )
+            RETURNING
         """
-        return await self.apg.execute(command, name, description)
+        return await self.apg.fetchrow(command, name, description)
 
     async def getatom(
         self,
@@ -233,7 +234,7 @@ class AtomsView(Paginator):
         values = self.vals[start:stop]
         for value in values:
             try:
-                name = f"{value['name']}: `{value['count']}`"
+                name = f"{value['name']}: `{value['count']:,}`"
             except KeyError:
                 name = value["name"]
             embed.add_field(

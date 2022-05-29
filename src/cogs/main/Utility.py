@@ -330,7 +330,7 @@ class Utility(commands.Cog):
         await ctx.send(str(time) + time.time())
 
     @commands.hybrid_command()
-    @commands.cooldown(2, 60 * 60 * 4, commands.BucketType.user)
+    # @commands.cooldown(2, 60 * 60 * 4, commands.BucketType.user)
     async def container(self, ctx: commands.Context):
         """
         Creates a docker container and runs Python code inside of it.
@@ -396,6 +396,7 @@ class CodeModal(BaseModal):
                 stderr=asyncio.subprocess.PIPE,
             )
         ).communicate()
+        print("Communicated")
         embed = fmte(
             ctx,
             t=f"Container Created `[ID: {_dir}]`",

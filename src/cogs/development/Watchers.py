@@ -5,8 +5,6 @@ from discord.ext.commands.errors import *
 from discord.errors import *
 
 import asyncio
-import time
-from datetime import datetime
 from data.errors import InternalError
 
 from src.auxiliary.user.Embeds import fmte, fmte_i

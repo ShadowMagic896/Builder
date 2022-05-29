@@ -50,9 +50,7 @@ class Currency(commands.Cog):
         db = BalanceDatabase(ctx)
         rec = await db.getBalance(user)
 
-        f_balance = self.formatBalance(rec)
-
-        embed = fmte(ctx, t=f"`{user}`'s Balance: `{f_balance}`{self.coin}")
+        embed = fmte(ctx, t=f"`{user}`'s Balance: `{rec:,}`{self.coin}")
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -72,7 +70,7 @@ class Currency(commands.Cog):
 
         embed = fmte(
             ctx,
-            t=f"Are You Sure You Want to Give `{self.formatBalance(amount)}`{self.coin} to `{user}`?",
+            t=f"Are You Sure You Want to Give `{amount:,}`{self.coin} to `{user}`?",
             d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.",
         )
         await ctx.send(embed=embed, view=GiveView(ctx, amount, ctx.author, user))
@@ -139,8 +137,7 @@ class Currency(commands.Cog):
         await db.addToBalance(ctx.author, amount)
 
         sign = "+" if amount >= 0 else ""
-        f_amt = self.formatBalance(amount)
-        embed = fmte(ctx, t=f"`{sign}{f_amt}`{self.coin}", d=k)
+        embed = fmte(ctx, t=f"`{sign}{amount:,}`{self.coin}", d=k)
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -190,23 +187,15 @@ class Currency(commands.Cog):
             na = await db.addToBalance(ctx.author, amount)
             nu = await db.addToBalance(user, -amount)
 
-            f_amt = self.formatBalance(amount)
-
-            fmt_ao = self.formatBalance(auth_bal)
-            fmt_uo = self.formatBalance(user_bal)
-
-            fmt_an = self.formatBalance(na)
-            fmt_un = self.formatBalance(nu)
-
             embed = fmte(
                 ctx,
-                t=f"Successful! You Stole `{f_amt}`{self.coin}.",
-                d=f"**You Now Have:** `{fmt_an}`{self.coin} [Before: `{fmt_ao}`{self.coin}]\n**{user.name} Now Has:** `{fmt_un}`{self.coin} [Before: `{fmt_uo}`{self.coin}]",
+                t=f"Successful! You Stole `{amount:,}`{self.coin}.",
+                d=f"**You Now Have:** `{na:,}`{self.coin} [Before: `{auth_bal:,}`{self.coin}]\n**{user.name} Now Has:** `{nu:,}`{self.coin} [Before: `{user_bal:,}`{self.coin}]",
             )
             await ctx.send(embed=embed)
             embed = fmte(
                 ctx,
-                t=f"`{f_amt}`{self.coin} Were Stolen From You!",
+                t=f"`{amount:,}`{self.coin} Were Stolen From You!",
                 d=f"**Guild:** `{ctx.guild}`\n**User:** `{ctx.author}`",
             )
             await user.send(embed=embed)
@@ -214,18 +203,10 @@ class Currency(commands.Cog):
             na = await db.addToBalance(ctx.author, -amount)
             nu = await db.addToBalance(user, amount)
 
-            f_amt = self.formatBalance(amount)
-
-            fmt_ao = self.formatBalance(auth_bal)
-            fmt_uo = self.formatBalance(user_bal)
-
-            fmt_an = self.formatBalance(na)
-            fmt_un = self.formatBalance(nu)
-
             embed = fmte(
                 ctx,
-                t=f"Failure! You Lost `{f_amt}`{self.coin}.",
-                d=f"**You Now Have:** `{fmt_an}`{self.coin} [Before: `{fmt_ao}`{self.coin}]\n**{user.name} Now Has:** `{fmt_un}`{self.coin} [Before: `{fmt_uo}`{self.coin}]",
+                t=f"Failure! You Lost `{amount:,}`{self.coin}.",
+                d=f"**You Now Have:** `{na:,}`{self.coin} [Before: `{auth_bal:,}`{self.coin}]\n**{user.name} Now Has:** `{nu:,}`{self.coin} [Before: `{user_bal:,}`{self.coin}]",
             )
             await ctx.send(embed=embed)
 
@@ -236,17 +217,14 @@ class Currency(commands.Cog):
         Claim your hourly Coins!
         """
         rate = CONSTANTS.Rates().HOURLY
-        _rate = self.formatBalance(rate)
 
         db = BalanceDatabase(ctx)
         balance = await db.addToBalance(ctx.author, rate)
 
-        _balance = self.formatBalance(balance)
-
         embed = fmte(
             ctx,
-            t=f"`{_rate}`{self.coin} Gained!",
-            d=f"You now have: `{_balance}`{self.coin}",
+            t=f"`{rate:,}`{self.coin} Gained!",
+            d=f"You now have: `{balance:,}`{self.coin}",
         )
         await ctx.send(embed=embed)
 
@@ -257,17 +235,14 @@ class Currency(commands.Cog):
         Claim your daily Coins!
         """
         rate = CONSTANTS.Rates().DAILY
-        _rate = self.formatBalance(rate)
 
         db = BalanceDatabase(ctx)
         balance = await db.addToBalance(ctx.author, rate)
 
-        _balance = self.formatBalance(balance)
-
         embed = fmte(
             ctx,
-            t=f"`{_rate}`{self.coin} Gained!",
-            d=f"You now have: `{_balance}`{self.coin}",
+            t=f"`{rate:,}`{self.coin} Gained!",
+            d=f"You now have: `{balance:,}`{self.coin}",
         )
         await ctx.send(embed=embed)
 
@@ -278,17 +253,14 @@ class Currency(commands.Cog):
         Claim your daily Coins!
         """
         rate = CONSTANTS.Rates().WEEKLY
-        _rate = self.formatBalance(rate)
 
         db = BalanceDatabase(ctx)
         balance = await db.addToBalance(ctx.author, rate)
 
-        _balance = self.formatBalance(balance)
-
         embed = fmte(
             ctx,
-            t=f"`{_rate}`{self.coin} Gained!",
-            d=f"You now have: `{_balance}`{self.coin}",
+            t=f"`{rate:,}`{self.coin} Gained!",
+            d=f"You now have: `{balance:,}`{self.coin}",
         )
         await ctx.send(embed=embed)
 
@@ -338,20 +310,12 @@ class Currency(commands.Cog):
         upper_bound = upper_bound or value
         return max([min([value, upper_bound]), lower_bound])
 
-    def formatBalance(self, bal: int):
-        return "".join(
-            [
-                "%s," % char if c % 3 == 0 else char
-                for c, char in enumerate(str(bal)[::-1])
-            ][::-1]
-        ).strip(",")
-
 
 class GiveContextModal(BaseModal):
     def __init__(self, ctx: commands.Context, member: discord.Member):
         self.ctx = ctx
         self.member = member
-        super().__init__(title=f"Give Coins to {member}")
+        super().__init__(ctx, title=f"Give Coins to {member}")
 
     amount = discord.ui.TextInput(label="How Much Would You Like to Give?")
 
@@ -385,13 +349,13 @@ class RequestContextModal(BaseModal):
         )
 
 
-class GiveView(discord.ui.View):
+class GiveView(BaseView):
     def __init__(self, ctx, amount, auth, user):
         self.amount: int = amount
         self.auth: discord.User = auth
         self.ctx: commands.Context = ctx
         self.user: discord.User = user
-        super().__init__()
+        super().__init__(ctx)
 
     @discord.ui.button(
         label="Accept",
@@ -401,15 +365,14 @@ class GiveView(discord.ui.View):
     async def ack(self, inter: discord.Interaction, button: discord.Button):
 
         db = BalanceDatabase(self.ctx)
-        authnew = await db.addToBalance(self.auth, -self.amount)
-        usernew = await db.addToBalance(self.user, self.amount)
+        authnew = (await db.addToBalance(self.auth, -self.amount))["balance"]
+        usernew = (await db.addToBalance(self.user, self.amount))["balance"]
         coin = CONSTANTS.Emojis().COIN_ID
-        f = Currency(self.ctx).formatBalance
 
         embed = fmte(
             self.ctx,
-            t=f"Transaction Completed\nTransferred `{f(self.amount)}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
-            d=f"**`{self.auth}` balance:** `{f(authnew)}`{coin}\n**`{self.user}` balance:** `{f(usernew)}`{coin}",
+            t=f"Transaction Completed\nTransferred `{self.amount:,}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
+            d=f"**`{self.auth}` balance:** `{authnew:,}`{coin}\n**`{self.user}` balance:** `{usernew:,}`{coin}",
         )
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
@@ -420,8 +383,6 @@ class GiveView(discord.ui.View):
         embed = fmte(
             self.ctx, t="Transaction Declined", d="No currency has been transfered."
         )
-        for c in self.children:
-            c.disabled = True
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
     async def on_timeout(self) -> None:
@@ -448,11 +409,10 @@ class RequestView(BaseView):
         authnew = await db.addToBalance(self.auth, self.amount)
         usernew = await db.addToBalance(self.user, -self.amount)
         coin = CONSTANTS.Emojis().COIN_ID
-        f = Currency(self.ctx).formatBalance
         embed = fmte(
             self.ctx,
-            t=f"Transaction Completed\nTransferred `{f(self.amount)}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
-            d=f"**`{self.auth}` balance:** `{f(authnew)}`{coin}\n**`{self.user}` balance:** `{f(usernew)}`{coin}",
+            t=f"Transaction Completed\nTransferred `{self.amount:,}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
+            d=f"**`{self.auth}` balance:** `{authnew:,}`{coin}\n**`{self.user}` balance:** `{usernew:,}`{coin}",
         )
         await inter.response.edit_message(embed=embed, view=None)
 
@@ -463,9 +423,10 @@ class RequestView(BaseView):
         embed = fmte(
             self.ctx, t="Transaction Declined", d="No currency has been transfered."
         )
-        for c in self.children:
-            c.disabled = True
         await inter.response.edit_message(embed=embed, view=None)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        return interaction.user == self.user
 
 
 class LeaderboardView(Paginator):
@@ -477,24 +438,22 @@ class LeaderboardView(Paginator):
         *,
         timeout: Optional[float] = 180,
     ):
-        super().__init__(ctx, values, pagesize, timeout)
+        super().__init__(ctx, values, pagesize, timeout=timeout)
 
     async def embed(self, inter: discord.Interaction):
         return fmte_i(
-            inter, t="Leaderboard: Page `{}` of `{}`".format(self.pos, self.maxpos)
+            inter, t=f"Leaderboard: Page `{self.position}` of `{self.maxpos}`"
         )
 
     async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
-        # TODO fix this mess
-        # It should be a list of records, not a dict.
+
         for place, entry in enumerate(self.vals[start:stop]):
             user, bal = list(entry.keys())[0], list(entry.values())[0]
-            f_bal = Currency(self.ctx.bot).formatBalance(bal)
             embed.add_field(
-                name=f"{place + 1 + (self.pos - 1) * self.pagesize}: {user}",
-                value=f"`{f_bal}`",
+                name=f"{place + 1 + (self.position - 1) * self.pagesize}: {user}",
+                value=f"`{bal:,}`",
                 inline=False,
             )
         return embed
@@ -580,21 +539,21 @@ class MainQuizView(BaseView):
         # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
         self.selected: List[List[str, str, List[str], bool, str, List[str]]] = []
 
-        super().__init__(timeout=timeout)
+        super().__init__(ctx, timeout=timeout)
 
     def embed(self, ctx_or_inter):
         q = self.questions[self.pos - 1]
         if isinstance(ctx_or_inter, commands.Context):
             return fmte(
                 ctx_or_inter,
-                t="Question `{}`:\n{}".format(self.pos, q["question"]),
-                d="Category: `{}`\nDifficulty: `{}`".format(self.cat, self.dif),
+                t=f"Question `{self.pos}`:\n{q['question']}",
+                d=f"Category: `{self.cat}`\nDifficulty: `{self.dif}`",
             )
         else:
             return fmte_i(
                 ctx_or_inter,
-                t="Question `{}`:\n{}".format(self.pos, q["question"]),
-                d="Category: `{}`\nDifficulty: `{}`".format(self.cat, self.dif),
+                t=f"Question `{self.pos}`:\n{q['question']}",
+                d=f"Category: `{self.cat}`\nDifficulty: `{self.dif}`",
             )
 
 
@@ -672,12 +631,11 @@ class QuizQuestionSubmit(discord.ui.Button):
                 * mults[self._view.dif]
                 * ([x[3] for x in cc].count(True) / self._view.maxpos)
             )
-            formatted = Currency(self.ctx.bot).formatBalance(perc)
 
             coin = CONSTANTS.Emojis().COIN_ID
             embed = fmte_i(
                 interaction,
-                t=f"Quiz Finished! You Earned `{formatted}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
+                t=f"Quiz Finished! You Earned `{perc:,}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
                 d=f"**Results:**\n{desc}{score}",
             )
 
@@ -765,13 +723,19 @@ class BalanceDatabase:
         """
         await self.apg.execute(command, user.id)
 
-    async def leaderboard(self, members: List[discord.Member]) -> Mapping[int, int]:
+    async def leaderboard(self, members: List[discord.Member]) -> List[asyncpg.Record]:
         command = """
             SELECT * FROM users
-            WHERE userid = ANY($1::BIGINT[])
-            ORDER BY balance
+            WHERE userid = $1
         """
-        return await self.apg.fetch(command, (x.id for x in members))
+        users: List[asyncpg.Record] = list()
+        for member in members:
+            value: asyncpg.Record = await self.apg.fetchrow(command, member.id)
+            if value is None or value["balance"] <= 0:
+                continue
+            users.append(value)
+        users.sort(key=lambda r: r["balance"], reverse=True)
+        return users
 
 
 async def setup(bot):

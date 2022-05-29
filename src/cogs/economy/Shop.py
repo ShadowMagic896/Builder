@@ -34,7 +34,7 @@ class Shop(commands.Cog):
         self,
         ctx: commands.Context,
         atom: Atom,
-        amount: Range[int, 1, len(Chemistry().names)],
+        amount: Range[int, 1],
         price: Range[int, 1],
     ):
         """
@@ -56,7 +56,7 @@ class Shop(commands.Cog):
         embed = fmte(
             ctx,
             t="Shop Listing Created!",
-            d=f"**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount}`\n**Price:** `{price}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{identity}`",
+            d=f"**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{identity}`",
         )
         await ctx.send(embed=embed)
 
@@ -82,7 +82,7 @@ class Shop(commands.Cog):
         embed = fmte(
             ctx,
             t="Listing Successfully Removed",
-            d=f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount}`\n**Price:** `{price}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{listing}`",
+            d=f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{listing}`",
         )
         await ctx.send(embed=embed)
 
@@ -152,7 +152,7 @@ class Shop(commands.Cog):
         embed = fmte(
             ctx,
             t=f"Information for Shop ID: `{transactionid}`",
-            d=f"**Author:** `{author}`\n**Atom:** `{atomname}`\n**Atom ID:** `{atomid}`\n**Amount:** `{amount}`\n**Price:** `{price}`",
+            d=f"**Author:** `{author}`\n**Atom:** `{atomname}`\n**Atom ID:** `{atomid}`\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`",
         )
         await ctx.send(embed=embed, view=PurchaseView(ctx, shop))
 
