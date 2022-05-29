@@ -14,6 +14,10 @@ from src.cogs.economy.Atoms import AtomsDatabase
 
 
 class Shop(commands.Cog):
+    """
+    Manipulate the stock market
+    """
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
 
@@ -138,8 +142,11 @@ class Shop(commands.Cog):
         view.message = msg
 
     @shop.command()
-    async def info(self, ctx: commands.Context, transactionid: Range[int, 1]):
-        shop: asyncpg.Record = await ShopDatabase(ctx).getShop(transactionid)
+    async def info(self, ctx: commands.Context, listing: Range[int, 1]):
+        """
+        Gets all available information about a shop posting.
+        """
+        shop: asyncpg.Record = await ShopDatabase(ctx).getShop(listing)
         if shop is None:
             raise ValueError(
                 "A shop with this ID does not exist. Maybe it was deleted, or you misspelled something."
@@ -151,7 +158,7 @@ class Shop(commands.Cog):
         price = shop["price"]
         embed = fmte(
             ctx,
-            t=f"Information for Shop ID: `{transactionid}`",
+            t=f"Information for Shop ID: `{listing}`",
             d=f"**Author:** `{author}`\n**Atom:** `{atomname}`\n**Atom ID:** `{atomid}`\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`",
         )
         await ctx.send(embed=embed, view=PurchaseView(ctx, shop))

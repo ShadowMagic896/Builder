@@ -18,10 +18,8 @@ class MixedHelp(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command()
-    @describe(cog="The cog to view.", ephemeral=Desc.ephemeral)
-    async def help(
-        self, ctx: commands.Context, cog: Optional[str], ephemeral: bool = False
-    ):
+    @describe(cog="The cog to view")
+    async def help(self, ctx: commands.Context, cog: Optional[str]):
         """
         Creates a menu to navigate all of the bot's commands
         """
@@ -31,17 +29,17 @@ class MixedHelp(commands.Cog):
                 t="Help",
                 d="*%s*" % (await self.bot.application_info()).description,
             )
-            view = BaseView().add_item(CogSelect(self.bot, ctx, ephemeral))
-            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
+            view = BaseView().add_item(CogSelect(self.bot, ctx))
+            await ctx.send(embed=embed, view=view)
         else:
             cog: commands.Cog = self.bot.get_cog(cog)
 
-            embed = CommandView(self.bot, ephemeral, cog, 5).page_zero(ctx.interaction)
+            embed = CommandView(self.bot_check, cog, 5).page_zero(ctx.interaction)
 
-            sel = CogSelect(self.bot, ctx, ephemeral)
+            sel = CogSelect(self.bot, ctx)
             sel.placeholder = "%s Cog Selection..." % cog.ge()
             sel.options.remove(discord.utils.get(sel.options, label=cog.qualified_name))
-            view = CommandView(self.bot, ephemeral, cog, 5).add_item(sel)
+            view = CommandView(self.bot, cog, 5).add_item(sel)
             view.checkButtons()
 
             await ctx.send(embed=embed, view=view)
@@ -109,15 +107,12 @@ class CommandView(discord.ui.View):
     def __init__(
         self,
         bot: commands.Bot,
-        ephemeral: bool,
         cog: commands.Cog,
         pagesize: int,
         *,
         timeout: Optional[float] = 180,
     ):
         self.bot = bot
-        self.ephemeral = ephemeral
-
         self.vals = sorted(explode(cog.get_commands()), key=lambda c: c.qualified_name)
         self.pos = 1
         self.maxpos = ceil((len(self.vals) / pagesize))
@@ -232,13 +227,12 @@ class CommandView(discord.ui.View):
 
 
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
-    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
+    def __init__(self, bot: commands.Bot, context: commands.Context):
         placeholder = "\N{MEDIUM WHITE CIRCLE} Cog Selection..."
         options = []
 
         self.bot = bot
         self.context = context
-        self.ephemeral = ephemeral
         self.lastrem = None
 
         for name, cog in bot.cogs.items():
@@ -264,7 +258,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         self.options.remove(self.lastrem)
         self.options = sorted(self.options, key=lambda o: o.label)
 
-        view = CommandView(self.bot, self.ephemeral, obj, 5)
+        view = CommandView(self.bot, obj, 5)
         embed = view.page_zero(interaction)
         view.checkButtons()
         view.add_item(self)

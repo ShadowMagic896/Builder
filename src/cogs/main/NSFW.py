@@ -16,7 +16,7 @@ from src.auxiliary.user.Embeds import fmte, fmte_i
 
 class NSFW(commands.Cog):
     """
-    For the horny ones. Do not use if you are not 18 years or older.
+    For the horny ones
     """
 
     def __init__(self, bot) -> None:

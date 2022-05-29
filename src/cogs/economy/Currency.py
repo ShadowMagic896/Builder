@@ -14,6 +14,10 @@ from src.auxiliary.user.Subclass import BaseModal, BaseView, Paginator
 
 
 class Currency(commands.Cog):
+    """
+    Get bank
+    """
+
     def __init__(self, bot: commands.Bot, add_commands: bool = False):
         self.bot = bot
         self.coin = CONSTANTS.Emojis().COIN_ID
@@ -184,8 +188,8 @@ class Currency(commands.Cog):
         success = random.random() < chnc
         db = BalanceDatabase(ctx)
         if success:
-            na = await db.addToBalance(ctx.author, amount)
-            nu = await db.addToBalance(user, -amount)
+            na = (await db.addToBalance(ctx.author, amount))["balance"]
+            nu = (await db.addToBalance(user, -amount))["balance"]
 
             embed = fmte(
                 ctx,
@@ -200,13 +204,14 @@ class Currency(commands.Cog):
             )
             await user.send(embed=embed)
         else:
-            na = await db.addToBalance(ctx.author, -amount)
-            nu = await db.addToBalance(user, amount)
+            na = (await db.addToBalance(ctx.author, -amount))["balance"]
+            nu = (await db.addToBalance(user, amount))["balance"]
 
             embed = fmte(
                 ctx,
                 t=f"Failure! You Lost `{amount:,}`{self.coin}.",
                 d=f"**You Now Have:** `{na:,}`{self.coin} [Before: `{auth_bal:,}`{self.coin}]\n**{user.name} Now Has:** `{nu:,}`{self.coin} [Before: `{user_bal:,}`{self.coin}]",
+                c=discord.Color.red(),
             )
             await ctx.send(embed=embed)
 
@@ -219,7 +224,7 @@ class Currency(commands.Cog):
         rate = CONSTANTS.Rates().HOURLY
 
         db = BalanceDatabase(ctx)
-        balance = await db.addToBalance(ctx.author, rate)
+        balance = (await db.addToBalance(ctx.author, rate))["balance"]
 
         embed = fmte(
             ctx,
@@ -237,7 +242,7 @@ class Currency(commands.Cog):
         rate = CONSTANTS.Rates().DAILY
 
         db = BalanceDatabase(ctx)
-        balance = await db.addToBalance(ctx.author, rate)
+        balance = (await db.addToBalance(ctx.author, rate))["balance"]
 
         embed = fmte(
             ctx,
@@ -255,7 +260,7 @@ class Currency(commands.Cog):
         rate = CONSTANTS.Rates().WEEKLY
 
         db = BalanceDatabase(ctx)
-        balance = await db.addToBalance(ctx.author, rate)
+        balance = (await db.addToBalance(ctx.author, rate))["balance"]
 
         embed = fmte(
             ctx,
@@ -268,7 +273,8 @@ class Currency(commands.Cog):
     async def quiz(self, ctx: commands.Context):
         embed = fmte(ctx, t="Select Options", d="Once you are finished, press `Start`")
         view = StartQuizView(ctx)
-        await ctx.send(embed=embed, view=view)
+        message = await ctx.send(embed=embed, view=view)
+        view.message = message
 
     # @cur.command()
     # @commands.is_owner()

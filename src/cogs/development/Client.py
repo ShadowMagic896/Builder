@@ -16,7 +16,7 @@ from src.auxiliary.bot.Constants import CONSTANTS
 
 class Client(commands.Cog):
     """
-    Commands that manage the bot / how it works.
+    Commands that manage the bot / how it works
     """
 
     def __init__(self, bot: commands.Bot) -> None:
@@ -64,16 +64,13 @@ class Client(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        cog="The cog to get the source of.",
-        command="The command to get the source of.",
-        ephemeral=Desc.ephemeral,
+        cog="The cog to get the source of.", command="The command to get the source of."
     )
     async def source(
         self,
         ctx: commands.Context,
         cog: Optional[str],
         command: Optional[str],
-        ephemeral: bool = False,
     ):
         """
         Gets the source code for any of the bot's commands.
@@ -84,7 +81,7 @@ class Client(commands.Cog):
                 t="Source Code!",
                 d="[View on GitHub](%s)" % "https://github.com/ShadowMagic896/Builder",
             )
-            await ctx.send(embed=embed, ephemeral=ephemeral)
+            await ctx.send(embed=embed)
         elif command and not cog:
             if not (command := self.bot.get_command(command)):
                 raise commands.errors.CommandNotFound(command)
@@ -97,7 +94,7 @@ class Client(commands.Cog):
             buffer.seek(0)
             embed = fmte(ctx, t="Source for Command: %s" % command)
             file = discord.File(buffer, "source.%s.py" % command)
-            await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+            await ctx.send(embed=embed, file=file)
         elif cog and not command:
             if not (cog := self.bot.get_cog(cog)):
                 raise commands.errors.ExtensionNotFound(cog)
@@ -108,7 +105,7 @@ class Client(commands.Cog):
 
             embed = fmte(ctx, t="Source for Cog: %s" % cog.qualified_name)
             file = discord.File(buffer, "source.%s.py" % cog.qualified_name)
-            await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+            await ctx.send(embed=embed, file=file)
         else:
             if not (command := self.bot.get_command(command)):
                 raise commands.errors.CommandNotFound(ctx.args[1])
@@ -142,7 +139,7 @@ class Client(commands.Cog):
                 "source.%s.py"
                 % (cog.qualified_name if note else command.qualified_name),
             )
-            await ctx.send(embed=embed, file=file, ephemeral=ephemeral)
+            await ctx.send(embed=embed, file=file)
 
     @source.autocomplete("cog")
     async def cog_autocomplete(
