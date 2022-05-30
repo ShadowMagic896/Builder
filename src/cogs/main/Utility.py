@@ -2,7 +2,9 @@ import asyncio
 from asyncio.subprocess import Process
 from datetime import datetime
 import io
+from timeit import timeit
 import pytz
+from bot import Builder
 from src.auxiliary.user.Converters import TimeConvert
 from src.auxiliary.user.Subclass import BaseModal
 from src.auxiliary.user.Embeds import fmte
@@ -12,7 +14,7 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 import os
-from typing import Any, List
+from typing import Any, List, Mapping, Tuple
 from data.config import Config
 from data.errors import *
 import bs4
@@ -39,23 +41,55 @@ class Utility(commands.Cog):
     @describe()
     async def ping(self, ctx: commands.Context):
         """
-        Returns the bot's latency, in milliseconds.
+        Returns the bot's latency, in several regards.
         """
-        ping = self.bot.latency
-        emt = (
-            "`\N{OCTAGONAL SIGN} [HIGH]`"
-            if ping > 0.4
-            else "`\N{WARNING SIGN} [MEDIUM]`"
-        )
-        emt = emt if ping > 0.2 else "`\N{WHITE HEAVY CHECK MARK} [LOW]`"
 
-        await ctx.send(
-            embed=fmte(
-                ctx,
-                "\N{TABLE TENNIS PADDLE AND BALL} Pong!",
-                f"{round(ping*1000, 3)} miliseconds!\n{emt}",
+        def getSym(sec: float, target: float, leniency: float = 0.25):
+            lnt: float = target * leniency
+            if sec < target:
+                return "\N{WHITE HEAVY CHECK MARK} LOW"
+            # print(
+            #     f"Ping: {sec}\nTarg: {target}\nDiff: {abs(target - sec)}\nLeni: {lnt}\n"
+            # )
+            return (
+                "\N{OCTAGONAL SIGN} HIGH"
+                if abs(target - sec) > lnt
+                else "\N{WARNING SIGN} MEDIUM"
+                if abs(target - sec) > lnt / 1.5
+                else "\N{WHITE HEAVY CHECK MARK} LOW"
+            )
+
+        results: List[Tuple[str, Tuple[float, str]]] = []
+
+        botlat = self.bot.latency
+        results.append(
+            ("\N{Shinto Shrine} Gateway Latency", (botlat, getSym(botlat, 0.045)))
+        )
+
+        st = time.time()
+        await self.bot.apg.execute("SELECT 1")
+        end = time.time() - st
+        results.append(("\N{Floppy Disk} Database Latency", (end, getSym(end, 0.001))))
+
+        st = time.time()
+        await self.bot.session.get("https://www.google.com")
+        end = time.time() - st
+        results.append(
+            (
+                "\N{Globe with Meridians} AioHTTP Latency [Google]",
+                (end, getSym(end, 0.175)),
             )
         )
+
+        # print(results)
+        embed = fmte(ctx, t="\N{Table Tennis Paddle and Ball} Pong!")
+        for res in results:
+            embed.add_field(
+                name=f"**{res[0]}**",
+                value=f"```ansi\n\u001b[0;34m{round(res[1][0] * 1000, 5)}ms\n{res[1][1]}```",
+                inline=False,
+            )
+        await ctx.send(embed=embed)
 
     @commands.hybrid_command()
     @describe(

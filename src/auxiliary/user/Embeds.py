@@ -1,3 +1,4 @@
+import os
 from random import randint
 from typing import Union
 import discord
@@ -25,10 +26,12 @@ def fmte(
     if not (ctx or u):
         raise Exception("my guy")
     user = ctx.author if not u else u
-    if ctx:
+
+    if ctx is not None:
         ti = ctx.bot.latency
     else:
         ti = (randint(50, 60) + randint(0, 99) / 100) / 1000  # This is ethical
+
     embed = discord.Embed(title=t, description=d, color=c)
     embed.set_author(
         name="Requested By: %s" % str(user),
