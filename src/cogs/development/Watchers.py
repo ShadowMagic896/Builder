@@ -5,7 +5,14 @@ from discord.ext.commands.errors import *
 from discord.errors import *
 
 import asyncio
-from data.errors import InternalError
+from data.errors import (
+    InternalError,
+    MissingArguments,
+    MissingFunds,
+    MissingShopEntry,
+    SelfAction,
+    Unowned,
+)
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
@@ -15,9 +22,9 @@ class Watchers(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    # @commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
-        print(error)
+        print(f"ERROR OCCURRED: {error}")
         hint = None
 
         if (
@@ -98,6 +105,7 @@ class Watchers(commands.Cog):
             ],
         ):
             error = error.original
+
         errorDir = {
             CommandNotFound: "I couldn't find that command. Try `/help`",
             ExtensionNotFound: "I couldn't find that cog. Try `/help`",
@@ -115,10 +123,18 @@ class Watchers(commands.Cog):
             IOError: "You gave an incorrect parameter for a file.",
             NumberTooHigh: "Your number is too big for me to compute.",
             InternalError: "An internal error occurred.",
+            Unowned: "You do not own this, so you can't interact with it.",
+            MissingFunds: "You don't have enough money for this",
+            MissingShopEntry: "I cannot find this shop.",
+            SelfAction: "You cannot do this to something you own.",
+            MissingArguments: "You didn't input enough arguments.",
+            TooManyArguments: "You gave too many arguments.",
         }
-        hint: str = errorDir.get(
-            error, "An unknown erorr has occurred. Please use `/bug` to report this."
+
+        default: str = (
+            "An unknown error has occurred. Please use `/bug` to report this."
         )
+        hint: str = errorDir.get(error, default)
 
         embed = fmte_i(
             inter,
@@ -139,21 +155,6 @@ class Watchers(commands.Cog):
             return await Watchers(ctx.bot).on_command_error(ctx, error)
         except ValueError:
             return await Watchers._interaction_error_handler(interaction, error)
-
-    @commands.Cog.listener()
-    async def on_command_completion(self, ctx: commands.Context):
-        if "jishaku" in ctx.invoked_parents or "jsk" in ctx.invoked_parents:
-            return
-        try:
-            if ctx.command_failed:
-                await ctx.message.add_reaction("\N{DOUBLE EXCLAMATION MARK}")
-            else:
-                await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        except HTTPException:
-            pass
-
-        except Exception as e:
-            raise e
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

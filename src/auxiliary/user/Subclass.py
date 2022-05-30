@@ -37,11 +37,12 @@ class BaseView(discord.ui.View):
     async def on_error(
         self, interaction: discord.Interaction, error: Exception, item: Any
     ) -> None:
+        print("Catch error")
         if isinstance(error, app_errors.CheckFailure):
-            await interaction.response.send_message(
+            return await interaction.response.send_message(
                 f"This isn't your message!\nYou can create your own with `{interaction.command}`"
             )
-        return await super().on_error(interaction, error, item)
+        return await Watchers(self.ctx.bot).on_command_error(self.ctx, error)
 
     async def on_timeout(self) -> None:
         for c in self.children:
