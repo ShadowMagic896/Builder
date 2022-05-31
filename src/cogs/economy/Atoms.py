@@ -102,7 +102,6 @@ class Atoms(commands.Cog):
         """
         Shows all atoms that a user has.
         """
-        user = user
         values: Union[List[Record], List] = await AtomsDatabase(ctx).getAtoms(user)
         view = AtomsView(ctx, values=values, title=f"`{user}`'s Atoms", sort=sort)
         embed = await view.page_zero(ctx.interaction)
