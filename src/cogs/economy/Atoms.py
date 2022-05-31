@@ -1,8 +1,9 @@
 from asyncpg import Connection, Record
 import asyncpg
 import discord
-from discord.app_commands import Range, describe
+from discord.app_commands import describe
 from discord.ext import commands
+from discord.ext.commands import parameter
 
 from typing import List, Optional, Union
 from chempy.util import periodic
@@ -44,12 +45,13 @@ class Atoms(commands.Cog):
         ctx: commands.Context,
         atom: Atom,
         amount: int,
-        user: Optional[discord.User] = None,
+        user: Optional[discord.User] = parameter(
+            default=lambda c: c.author, displayed_default=lambda c: str(c.author)
+        ),
     ):
         """
         Magically creates atoms and gives them to a user.
         """
-        user = user or ctx.author
         atomname = periodic.names[atom - 1]
         old = await AtomsDatabase(ctx).getAtoms(user)
         old_amount = (
@@ -92,13 +94,15 @@ class Atoms(commands.Cog):
     async def view(
         self,
         ctx: commands.Context,
-        user: Optional[discord.User],
+        user: Optional[discord.User] = parameter(
+            default=lambda c: c.author, displayed_default=lambda c: str(c.author)
+        ),
         sort: Optional[str] = "atomid",
     ):
         """
         Shows all atoms that a user has.
         """
-        user = user or ctx.author
+        user = user
         values: Union[List[Record], List] = await AtomsDatabase(ctx).getAtoms(user)
         view = AtomsView(ctx, values=values, title=f"`{user}`'s Atoms", sort=sort)
         embed = await view.page_zero(ctx.interaction)

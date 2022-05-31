@@ -13,6 +13,7 @@ from data.errors import (
     SelfAction,
     Unowned,
 )
+from data.settings import CATCH_ERRORS, MODERATE_JISHAKU_COMMANDS
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
@@ -21,80 +22,28 @@ from simpleeval import NumberTooHigh
 class Watchers(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.bot.tree.on_error = self.on_tree_error
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
-        print(f"ERROR OCCURRED: {error}")
-        hint = None
-
+        print("COMMAND ERROR")
         if (
-            "jishaku" in ctx.invoked_parents
-        ):  # Do not automate command errors for this cog
-            return
+            self.bot.on_command_error != self.on_command_error
+        ):  # In case this gets called externally while the watcher is not active
+            raise error
 
-        while isinstance(
-            error,
-            Union[
-                commands.errors.CommandInvokeError,
-                discord.app_commands.errors.CommandInvokeError,
-                commands.errors.HybridCommandError,
-            ],
-        ):
-            error = error.original
+        return await self._interaction_error_handler(ctx.interaction, error)
 
-        if isinstance(error, CommandNotFound):
-            hint = "I couldn't find that command. Try `/help`"
-        if isinstance(error, ExtensionNotFound):
-            hint = "I couldn't find that cog. Try `/help`"
-        elif isinstance(error, NotFound):
-            hint = (
-                "I couldn't find that. Try `/help`, or check the error for more info."
-            )
-        elif isinstance(error, Forbidden):
-            hint = "I'm not allowed to do that."
-        elif isinstance(error, MissingRequiredArgument):
-            hint = "You need to supply more information to use that command. Try `/help [command]`"
-        elif isinstance(error, NSFWChannelRequired):
-            hint = "You must be in an NSFW channel to use that."
-        elif isinstance(error, UserNotFound):
-            hint = "That user was not found in discord."
-        elif isinstance(error, MemberNotFound):
-            hint = "That member was not found in this server."
-        elif isinstance(error, BadArgument):
-            hint = "You passed an invalid option."
-        elif isinstance(error, asyncio.TimeoutError):
-            hint = "This has timed out. Next time, try to be quicker."
-        elif isinstance(error, CommandOnCooldown):
-            hint = "Slow down! You can't use that right now."
-        elif isinstance(error, ValueError) or isinstance(error, TypeError):
-            hint = "You gave something of the wrong value or type. Check the error for more information."
-        elif isinstance(error, IOError):
-            hint = "You gave an incorrect parameter for a file."
-        elif isinstance(error, NumberTooHigh):
-            hint = "Your number is too big for me to compute."
-        else:
-            hint = "I'm not sure what went wrong, probably an internal error. Please contact `Cookie?#9461` with information on how to replicate the error you just recieved."
-        hintEmbed = fmte(
-            ctx,
-            t="An Error Occurred.",
-            d="**Hint:**\n{}\n**Error:**\n`{}`".format(hint, error),
-            c=discord.Color.red(),
-        )
-        # helpEmbed = (
-        #     InterHelp(self.bot)._command_embed(
-        #         ctx.interaction, ctx.command, color=discord.Color.red()
-        #     )
-        #     if ctx.interaction
-        #     else InterHelp(self.bot)._command_embed_ctx(
-        #         ctx, ctx.command, color=discord.Color.red()
-        #     )
-        # )
-        # await ctx.send(embeds=[hintEmbed, helpEmbed], ephemeral=True)
-        await ctx.send(embed=hintEmbed, ephemeral=True)
-        ctx.command_failed = True
+    async def on_tree_error(self, interaction: discord.Interaction, error: Exception):
+        return await self._interaction_error_handler(interaction, error)
 
-    async def _interaction_error_handler(inter: discord.Interaction, error: Exception):
-        print(error)
+    async def _interaction_error_handler(
+        self, inter: discord.Interaction, error: Exception
+    ):
+        if not CATCH_ERRORS:
+            raise error
+        if not MODERATE_JISHAKU_COMMANDS and "jishaku" in str(error):
+            raise error
 
         while isinstance(
             error,

@@ -62,3 +62,30 @@ class Unowned(BaseException):
 
     def __init__(self, error: Any, *args: object) -> None:
         super().__init__(error, *args)
+
+
+class MissingCog(BaseException):
+    """
+    Raised when a user inputs an invalid cog.
+    """
+
+    def __init__(self, error: Any, *args: object) -> None:
+        super().__init__(error, *args)
+
+
+class MissingCommand(BaseException):
+    """
+    Raised when a user inputs an invlid command.
+    """
+
+    def __init__(self, error: Any, *args: object) -> None:
+        super().__init__(error, *args)
+
+
+class ForbiddenData(BaseException):
+    """
+    Raised when a user tries to access forbidden commands or cogs
+    """
+
+    def __init__(self, error: Any, *args: object) -> None:
+        super().__init__(error, *args)

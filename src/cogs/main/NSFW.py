@@ -9,6 +9,7 @@ from discord.ext import commands
 import os
 import random
 from bs4 import BeautifulSoup
+from data.config import NSFW_PATH
 from src.auxiliary.user.Subclass import Paginator
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
@@ -114,7 +115,7 @@ class NSFW(commands.Cog):
         """
         Gets an image response from [nekos.life/lewd](https://nekos.life/lewd) and sends it to you.
         """
-        mdir = os.getenv("NSFW_PATH") + "Nekos/"
+        mdir = NSFW_PATH + "Nekos/"
         data = []
 
         for co in range(amount):

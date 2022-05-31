@@ -14,8 +14,8 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 import os
-from typing import Any, List, Mapping, Tuple
-from data.config import Config
+from typing import Any, List, Tuple
+from data import config
 from data.errors import *
 import bs4
 import requests
@@ -250,7 +250,7 @@ class Utility(commands.Cog):
 
         headers = {
             "X-RapidAPI-Host": "mashape-community-urban-dictionary.p.rapidapi.com",
-            "X-RapidAPI-Key": Config().X_RAPID_API_KEY,
+            "X-RapidAPI-Key": config.X_RAPID_API_KEY,
         }
 
         response = requests.request("GET", url, headers=headers, params=params)
@@ -282,7 +282,7 @@ class Utility(commands.Cog):
         """
         response = requests.get(
             "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
-                term.lower(), Config().DICT_API_KEY
+                term.lower(), config.DICT_API_KEY
             )
         ).json()
         defs = []

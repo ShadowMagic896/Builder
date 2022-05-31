@@ -3,10 +3,11 @@ import discord
 from discord import Interaction, app_commands
 from discord.app_commands import describe, Range
 from discord.ext import commands
+from discord.ext.commands import parameter
 
 import random
 from typing import Any, List, Mapping, Optional, Union
-from data.config import Config
+from data import config
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.bot.Constants import CONSTANTS
@@ -43,11 +44,16 @@ class Currency(commands.Cog):
     @cur.command()
     @commands.cooldown(2, 15, commands.BucketType.user)
     @describe(user="The user to get the balance of")
-    async def balance(self, ctx: commands.Context, user: Optional[discord.User]):
+    async def balance(
+        self,
+        ctx: commands.Context,
+        user: Optional[discord.User] = parameter(
+            default=lambda c: c.author, displayed_default=lambda c: str(c.author)
+        ),
+    ):
         """
         Returns your current balance.
         """
-        user = user or ctx.author
         if user.bot:
             raise TypeError("User cannot be a bot.")
 
@@ -91,7 +97,7 @@ class Currency(commands.Cog):
         if user.bot:
             raise TypeError("User cannot be a bot.")
         perms = ctx.channel.permissions_for(user)
-        if not (perms.read_message_history or perms.read_messages):
+        if not (perms.read_message_history and perms.read_messages):
             raise TypeError("That user cannot see this channel.")
 
         db = BalanceDatabase(ctx)
@@ -281,25 +287,38 @@ class Currency(commands.Cog):
     async def manualadd(
         self,
         ctx: commands.Context,
-        user: Optional[discord.User],
+        user: Optional[discord.User] = parameter(
+            default=lambda c: c.author, displayed_default=lambda c: str(c.author)
+        ),
         amount: Optional[int] = 1000,
     ):
         db = BalanceDatabase(ctx)
-        await db.addToBalance(user or ctx.author, amount)
+        await db.addToBalance(user, amount)
 
     # @cur.command()
     # @commands.is_owner()
     async def manualset(
-        self, ctx: commands.Context, user: Optional[discord.User], amount: Optional[int]
+        self,
+        ctx: commands.Context,
+        user: Optional[discord.User] = parameter(
+            default=lambda c: c.author, displayed_default=lambda c: str(c.author)
+        ),
+        amount: Optional[int] = 0,
     ):
         db = BalanceDatabase(ctx)
-        await db.setBalance(user or ctx.author, amount)
+        await db.setBalance(user, amount)
 
     # @cur.command()
     # @commands.is_owner()
-    async def manualdel(self, ctx: commands.Context, user: Optional[discord.User]):
+    async def manualdel(
+        self,
+        ctx: commands.Context,
+        user: Optional[discord.User] = parameter(
+            default=lambda c: c.author, displayed_default=lambda c: str(c.author)
+        ),
+    ):
         db = BalanceDatabase(ctx)
-        await db.delete(user or ctx.author)
+        await db.delete(user)
 
     async def giveMenu(self, inter: discord.Interaction, member: discord.Member):
         ctx: commands.Context = await commands.Context.from_interaction(inter)
@@ -501,7 +520,7 @@ class StartQuizView(BaseView):
     )
     async def start(self, inter: discord.Interaction, _: Any):
         if self.dif is not None and self.cat is not None:
-            key = Config().QUIZAPI_KEY
+            key = config.QUIZAPI_KEY
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
             self.questions = await (await self.ctx.bot.session.get(url)).json()
             view = MainQuizView(self.questions, self.cat, self.dif, self.ctx)

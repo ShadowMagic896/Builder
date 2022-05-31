@@ -158,7 +158,8 @@ class Shop(commands.Cog):
             d=listingInformation(shop),
         )
         view = PurchaseView(ctx, shop)
-        await ctx.send(embed=embed, view=PurchaseView(ctx, shop))
+        message = await ctx.send(embed=embed, view=view)
+        view.message = message
 
 
 class ShopDatabase:

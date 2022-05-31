@@ -1,9 +1,11 @@
 import asyncio
 from asyncio.subprocess import PIPE, Process
-from typing import List, Mapping, Tuple
+from typing import Callable, List, Literal, Mapping, Optional, Tuple
 import asyncpg
 import chempy
 from chempy.util import periodic
+import discord
+from discord.ext import commands
 
 from data.ItemMaps import Chemistry
 
@@ -98,3 +100,28 @@ async def ensureDB(
 async def formatCode():
     proc: Process = await asyncio.create_subprocess_shell(f"py -m black .", stdout=PIPE)
     await proc.communicate()
+
+
+async def startupPrint(bot: commands.Bot):
+    _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = (
+        lambda value, size=25, style="before": str(value)
+        + " " * (size - len(str(value)))
+        if style == "after"
+        else " " * (size - len(str(value))) + str(value)
+    )
+    fmt: Callable[
+        [str, str, Optional[int], Optional[int]]
+    ] = lambda name, value, buf1=10, buf2=22: "%s: %s|" % (
+        _fmt(name, buf1, "after"),
+        _fmt(value, buf2, "after"),
+    )
+
+    client: str = fmt("Client", bot.user)
+    userid: str = fmt("User ID", bot.user.id)
+    dpyver: str = fmt("Version", discord.__version__)
+
+    bdr = "\n+-----------------------------------+\n"
+
+    print(
+        f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
+    )

@@ -1,11 +1,10 @@
-from codecs import ignore_errors
-from importlib.resources import path
 import os
-from typing import Callable, Iterable, Literal, Optional, Tuple, List, Mapping, Any
-import typing
+from typing import Iterable, Optional, Tuple, List, Mapping, Any
 import discord
 
 from discord.ext import commands
+
+from data.settings import NOLOAD_COGS
 
 
 def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):
@@ -28,6 +27,8 @@ async def load_extensions(
 
     for source, cogs in files:
         for cog in cogs:
+            if cog in NOLOAD_COGS:
+                continue
             exp = " " * max(0, spaces - len(cog))
             if cog.startswith("_") or not cog.endswith(".py"):
                 continue
@@ -35,7 +36,7 @@ async def load_extensions(
                 await bot.load_extension(f"{source}.{cog[:-3]}")
 
             except discord.ext.commands.errors.ExtensionAlreadyLoaded:
-                await bot.load_extension(f"{source}.{cog[:-3]}")
+                await bot.reload_extension(f"{source}.{cog[:-3]}")
 
             except BaseException as e:
                 if not ignore:

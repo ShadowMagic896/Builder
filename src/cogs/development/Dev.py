@@ -4,8 +4,10 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import List
+from data.settings import COG_DIRECTORIES
 
 from src.auxiliary.user.Embeds import fmte
+from src.auxiliary.bot.Extensions import load_extensions
 from src.auxiliary.user.UserIO import explode
 
 
@@ -34,6 +36,12 @@ class Dev(commands.Cog):
             l: List[app_commands.AppCommand] = await self.bot.tree.sync()
         embed = fmte(ctx, t="%s Commands Synced" % len(explode(l)))
         await ctx.send(embed=embed)
+
+    @commands.hybrid_command()
+    @commands.is_owner()
+    async def reload(self, ctx: commands.Context):
+        await load_extensions(self.bot, COG_DIRECTORIES)
+        await ctx.send("All Cogs Reloaded.")
 
 
 async def setup(bot):

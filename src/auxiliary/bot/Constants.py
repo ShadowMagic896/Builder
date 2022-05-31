@@ -19,6 +19,7 @@ class CONSTANTS:
                 "GUI",
                 "InterHelp",
                 "MixedHelp",
+                "Help",
                 "GitHub",
             }
 
