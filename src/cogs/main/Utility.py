@@ -357,11 +357,12 @@ class Utility(commands.Cog):
         ][:25]
 
     @commands.hybrid_command()
-    async def timestamp(self, ctx: commands.Context, time: TimeConvert):
+    @discord.app_commands.rename(_time="time")
+    async def timestamp(self, ctx: commands.Context, _time: TimeConvert):
         """
         Converts a string such as "1 hour 13 minutes" to a UNIX timestamp.
         """
-        await ctx.send(str(time) + time.time())
+        await ctx.send(_time + time.time())
 
     @commands.hybrid_command()
     # @commands.cooldown(2, 60 * 60 * 4, commands.BucketType.user)

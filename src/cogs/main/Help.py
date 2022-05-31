@@ -162,9 +162,10 @@ class Help(commands.Cog):
         self, ctx: commands.Context, command: commands.HybridCommand
     ):
         async def getDef(param: CommandParameter):
-            return str(
-                await param.get_default(ctx) if not isinstance(param, _empty) else None
-            )
+            try:
+                return str(await param.get_default(ctx))
+            except TypeError:
+                return "None"
 
         def simplifyAnnotation(param: commands.Parameter):
             anno: Any = param.annotation
@@ -208,10 +209,11 @@ class Help(commands.Cog):
             t=f"`{command.qualified_name}`\nCog: `{command.cog_name}`\nGroup[s]: `{parents}`",
             d=f"`/{command.qualified_name} {command.signature}`\n*{command.short_doc}*",
         )
-        embed.add_field(
-            name="***Paremeters:***", value="-----------------------------------"
-        )
-        embed = await formatParams(embed)
+        if command.params:
+            embed.add_field(
+                name="***Parameters:***", value="-----------------------------------"
+            )
+            embed = await formatParams(embed)
         return embed
 
 
