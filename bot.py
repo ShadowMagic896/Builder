@@ -13,7 +13,13 @@ import asyncio
 import logging
 
 from src.auxiliary.bot.Extensions import load_extensions
-from src.auxiliary.bot.Functions import ensureDB, formatCode, startupPrint
+from src.auxiliary.bot.Functions import (
+    ensureDB,
+    formatCode,
+    interactionChoke,
+    startupPrint,
+    explode,
+)
 from src.auxiliary.bot.Stats import Stats
 from data.config import BOT_KEY, DB_PASSWORD, DB_USERNAME
 from data.settings import (
@@ -98,6 +104,9 @@ async def main():
 
     await ensureDB(connection, ensure_defaults=False)
     await formatCode()
+
+    for command in bot.commands:
+        command.add_check(interactionChoke)
 
     await bot.start(BOT_KEY)
 

@@ -8,10 +8,11 @@ from discord.ext import commands
 import inspect
 from typing import List, Optional
 
+from src.auxiliary.user.Converters import Cog, Command
 from src.auxiliary.user.Subclass import BaseView
-from src.auxiliary.user.UserIO import explode
-from src.auxiliary.user.Embeds import Desc, fmte
-from src.auxiliary.bot.Constants import CONSTANTS
+from src.auxiliary.user.UserIO import cog_autocomplete, command_autocomplete
+from src.auxiliary.user.Embeds import fmte
+from src.auxiliary.bot.Functions import explode
 
 
 class Client(commands.Cog):
@@ -69,8 +70,8 @@ class Client(commands.Cog):
     async def source(
         self,
         ctx: commands.Context,
-        cog: Optional[str],
-        command: Optional[str],
+        cog: Optional[Cog],
+        command: Optional[Command],
     ):
         """
         Gets the source code for any of the bot's commands.
@@ -83,8 +84,6 @@ class Client(commands.Cog):
             )
             await ctx.send(embed=embed)
         elif command and not cog:
-            if not (command := self.bot.get_command(command)):
-                raise commands.errors.CommandNotFound(command)
             src = command.callback.__code__
 
             buffer = io.BytesIO()
@@ -96,8 +95,6 @@ class Client(commands.Cog):
             file = discord.File(buffer, "source.%s.py" % command)
             await ctx.send(embed=embed, file=file)
         elif cog and not command:
-            if not (cog := self.bot.get_cog(cog)):
-                raise commands.errors.ExtensionNotFound(cog)
             src = inspect.getsource(cog.__class__)
             buffer = io.BytesIO()
             buffer.write(src.encode("UTF-8"))
@@ -107,10 +104,6 @@ class Client(commands.Cog):
             file = discord.File(buffer, "source.%s.py" % cog.qualified_name)
             await ctx.send(embed=embed, file=file)
         else:
-            if not (command := self.bot.get_command(command)):
-                raise commands.errors.CommandNotFound(ctx.args[1])
-            elif not (cog := self.bot.get_cog(cog)):
-                raise commands.errors.ExtensionNotFound(ctx.args[0])
             if command in explode(cog.get_commands()):
                 src = command.callback.__code__
                 note = ""
@@ -145,41 +138,22 @@ class Client(commands.Cog):
     async def cog_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return sorted(
-            [
-                discord.app_commands.Choice(name=c, value=c)
-                for c in list(self.bot.cogs.keys())
-                if ((current.lower() in c.lower() or (c.lower()) in current.lower()))
-                and c not in CONSTANTS.Cogs().FORBIDDEN_COGS
-            ][:25],
-            key=lambda c: c.name,
-        )
+        return await cog_autocomplete(self.bot, inter, current)
 
     @source.autocomplete("command")
     async def command_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return sorted(
-            [
-                discord.app_commands.Choice(
-                    name="[{}] {}".format(c.cog_name, c.qualified_name),
-                    value=c.qualified_name,
-                )
-                for c in (
-                    explode([c for c in self.bot.commands])
-                    if not getattr(inter.namespace, "cog")
-                    else explode(self.bot.get_cog(inter.namespace.cog).get_commands())
-                    if inter.namespace.cog in [c for c, v in self.bot.cogs.items()]
-                    else []
-                )
-                if (
-                    (current.lower() in c.qualified_name.lower())
-                    or (c.qualified_name.lower() in current.lower())
-                )
-                and c.cog_name not in CONSTANTS.Cogs().FORBIDDEN_COGS
-            ][:25],
-            key=lambda c: c.name[c.name.index("]") + 1 :],
-        )
+        return await command_autocomplete(self.bot, inter, current)
+
+    @commands.hybrid_command()
+    async def disable(
+        self, ctx: commands.Context, command: Command, role: Optional[discord.Role]
+    ):
+        if role is None:
+            pass
+        else:
+            pass
 
 
 class FeedbackModal(ui.Modal, title="Anonymous Feedback Forum"):

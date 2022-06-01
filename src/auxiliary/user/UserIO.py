@@ -3,6 +3,9 @@ import discord
 from discord.ext import commands
 import re
 
+from src.auxiliary.bot.Functions import explode
+from src.auxiliary.bot.Constants import CONSTANTS
+
 
 def iototime(userinput: str):
     t = userinput
@@ -76,14 +79,46 @@ def convCodeBlock(code: str):
     return se.group()
 
 
-def explode(l: List[commands.HybridCommand]):
-    l = list(l)
-    nl = []
-    for c in l:
-        if hasattr(c, "commands"):
-            nl.extend(explode(c.commands))
-        else:
-            # if isinstance(c, commands.):
-            #     continue # ignore text commands, just dev stuff
-            nl.append(c)
-    return nl
+async def cog_autocomplete(
+    bot: commands.Bot, inter: discord.Interaction, current: str
+) -> List[discord.app_commands.Choice[str]]:
+    return sorted(
+        [
+            discord.app_commands.Choice(name=c, value=c)
+            for c in list(bot.cogs.keys())
+            if ((current.lower() in c.lower() or (c.lower()) in current.lower()))
+            and c not in CONSTANTS.Cogs().FORBIDDEN_COGS
+        ][:25],
+        key=lambda c: c.name,
+    )
+
+
+async def command_autocomplete(
+    bot: commands.Bot, inter: discord.Interaction, current: str
+) -> List[discord.app_commands.Choice[str]]:
+    return sorted(
+        [
+            discord.app_commands.Choice(
+                name="[{}] {}".format(c.cog_name, c.qualified_name),
+                value=c.qualified_name,
+            )
+            for c in (
+                explode([c for c in bot.commands])
+                if not getattr(inter.namespace, "cog")
+                else explode(
+                    bot.get_cog(inter.namespace.cog).get_commands()
+                    if (bot.get_cog(inter.namespace.cog)) is not None
+                    or inter.namespace.cog in CONSTANTS.Cogs().FORBIDDEN_COGS
+                    else []
+                )
+                if inter.namespace.cog in [c for c, _ in bot.cogs.items()]
+                else []
+            )
+            if (
+                (current.lower() in c.qualified_name.lower())
+                or (c.qualified_name.lower() in current.lower())
+            )
+            and c.cog_name not in CONSTANTS.Cogs().FORBIDDEN_COGS
+        ][:25],
+        key=lambda c: c.name[c.name.index("]") + 1 :],
+    )

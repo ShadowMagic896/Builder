@@ -10,6 +10,19 @@ from discord.ext import commands
 from data.ItemMaps import Chemistry
 
 
+def explode(l: List[commands.HybridCommand]):
+    l = list(l)
+    nl = []
+    for c in l:
+        if hasattr(c, "commands"):
+            nl.extend(explode(c.commands))
+        else:
+            # if isinstance(c, commands.):
+            #     continue # ignore text commands, just dev stuff
+            nl.append(c)
+    return nl
+
+
 def fmtDict(d: dict):
     """
     Formats a dictionary to be placeable into a PostgreSQL DB.
@@ -56,6 +69,11 @@ async def ensureDB(
             FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
             FOREIGN KEY (atomid) REFERENCES atoms (atomid) ON DELETE CASCADE,
             UNIQUE (userid, atomid)
+        );
+
+        CREATE TABLE IF NOT EXISTS disabled_commands (
+            guildid BIGINT NOT NULL PRIMARY KEY,
+            commands TEXT[]
         )
     """
     print("CREATING DATABASES...")
@@ -125,3 +143,19 @@ async def startupPrint(bot: commands.Bot):
     print(
         f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
     )
+
+
+def interactionChoke(ctx: commands.Context):
+    async def predicate():
+        command = """
+            SELECT commands
+            FROM disabled_commands
+            WHERE guildid = $1
+        """
+        result = await ctx.bot.apg.fetchrow(command, ctx.guild.id)
+        print(result)
+        if ctx.command.qualified_name in result:
+            return False
+        return True
+
+    return commands.check(predicate)

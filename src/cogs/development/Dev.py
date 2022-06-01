@@ -8,7 +8,7 @@ from data.settings import COG_DIRECTORIES
 
 from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.bot.Extensions import load_extensions
-from src.auxiliary.user.UserIO import explode
+from src.auxiliary.bot.Functions import explode
 
 
 class Dev(commands.Cog):

@@ -23,6 +23,8 @@ class CONSTANTS:
                 "GitHub",
             }
 
+            self.FORBIDDEN_COMMANDS = {}
+
     class Rates:
         def __init__(self) -> None:
             self.HOURLY = 1500

@@ -8,10 +8,11 @@ from discord.ext import commands
 
 from math import ceil
 from typing import Any, List, Optional, Union
+from src.auxiliary.user.UserIO import cog_autocomplete, command_autocomplete
 from data.errors import ForbiddenData, MissingCog, MissingCommand
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
-from src.auxiliary.user.UserIO import explode
+from src.auxiliary.bot.Functions import explode
 from src.auxiliary.user.Subclass import BaseView, Paginator
 
 from src.auxiliary.bot.Constants import CONSTANTS
@@ -106,46 +107,13 @@ class Help(commands.Cog):
     async def cog_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return sorted(
-            [
-                discord.app_commands.Choice(name=c, value=c)
-                for c in list(self.bot.cogs.keys())
-                if ((current.lower() in c.lower() or (c.lower()) in current.lower()))
-                and c not in CONSTANTS.Cogs().FORBIDDEN_COGS
-            ][:25],
-            key=lambda c: c.name,
-        )
+        return await cog_autocomplete(self.bot, inter, current)
 
     @help.autocomplete("command")
     async def command_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return sorted(
-            [
-                discord.app_commands.Choice(
-                    name="[{}] {}".format(c.cog_name, c.qualified_name),
-                    value=c.qualified_name,
-                )
-                for c in (
-                    explode([c for c in self.bot.commands])
-                    if not getattr(inter.namespace, "cog")
-                    else explode(
-                        self.bot.get_cog(inter.namespace.cog).get_commands()
-                        if (self.bot.get_cog(inter.namespace.cog)) is not None
-                        or inter.namespace.cog in CONSTANTS.Cogs().FORBIDDEN_COGS
-                        else []
-                    )
-                    if inter.namespace.cog in [c for c, _ in self.bot.cogs.items()]
-                    else []
-                )
-                if (
-                    (current.lower() in c.qualified_name.lower())
-                    or (c.qualified_name.lower() in current.lower())
-                )
-                and c.cog_name not in CONSTANTS.Cogs().FORBIDDEN_COGS
-            ][:25],
-            key=lambda c: c.name[c.name.index("]") + 1 :],
-        )
+        return await command_autocomplete(self.bot, inter, current)
 
     async def main_embed(self, ctx: commands.Context, bot: commands.Bot):
         return fmte(
