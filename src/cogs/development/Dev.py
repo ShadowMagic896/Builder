@@ -1,5 +1,6 @@
 from subprocess import Popen
 from discord import app_commands
+import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
@@ -42,6 +43,11 @@ class Dev(commands.Cog):
     async def reload(self, ctx: commands.Context):
         await load_extensions(self.bot, COG_DIRECTORIES)
         await ctx.send("All Cogs Reloaded.")
+
+    @app_commands.command()
+    async def testing(self, inter):
+        print("Running testing")
+        raise Exception
 
 
 async def setup(bot):

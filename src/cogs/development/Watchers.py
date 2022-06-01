@@ -1,3 +1,4 @@
+import sys
 from typing import Union
 import discord
 from discord.ext import commands
@@ -22,19 +23,16 @@ from simpleeval import NumberTooHigh
 class Watchers(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.bot.tree.on_error = self.on_tree_error
+        if CATCH_ERRORS:
+            self.bot.on_command_error = self.on_command_error
+            self.bot.tree.on_error = self.on_tree_error
 
-    @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception):
-        print("COMMAND ERROR")
-        if (
-            self.bot.on_command_error != self.on_command_error
-        ):  # In case this gets called externally while the watcher is not active
-            raise error
-
+        print(f"on_command_error: {error}")
         return await self._interaction_error_handler(ctx.interaction, error)
 
     async def on_tree_error(self, interaction: discord.Interaction, error: Exception):
+        print(f"on_tree_error: {error}")
         return await self._interaction_error_handler(interaction, error)
 
     async def _interaction_error_handler(
@@ -104,10 +102,6 @@ class Watchers(commands.Cog):
             return await Watchers(ctx.bot).on_command_error(ctx, error)
         except ValueError:
             return await Watchers._interaction_error_handler(interaction, error)
-
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        pass
 
 
 async def setup(bot):

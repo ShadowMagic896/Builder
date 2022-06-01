@@ -89,3 +89,12 @@ class ForbiddenData(BaseException):
 
     def __init__(self, error: Any, *args: object) -> None:
         super().__init__(error, *args)
+
+
+class ContainerAlreadyRunning(BaseException):
+    """
+    Raised when a user tries to create a new container, but one is already running
+    """
+
+    def __init__(self, error: Any, *args: object) -> None:
+        super().__init__(error, *args)

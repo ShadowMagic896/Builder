@@ -371,9 +371,7 @@ class Utility(commands.Cog):
         Creates a docker container and runs Python code inside of it.
         """
         if ctx.author.id in self.container_users:
-            raise commands.errors.MissingPermissions(
-                "You are already running a container."
-            )
+            raise ContainerAlreadyRunning("You are already running a container.")
         await ctx.interaction.response.send_modal(CodeModal(self, ctx))
 
 
@@ -396,14 +394,14 @@ class CodeModal(BaseModal):
         ]:
             self.util.container_users.append(ctx.author.id)
         value: str = self.code.value
-        basepath = f"{os.getcwd()}\docker"
+        basepath = f"{os.getcwd()}\\docker"
 
         # Prepare Files for Building
-        _dir = len(os.listdir(f"{basepath}\containers"))
-        dirpath = f"{basepath}\containers\{_dir}"
+        _dir = len(os.listdir(f"{basepath}\\containers"))
+        dirpath = f"{basepath}\\containers\\{_dir}"
         os.system(f"mkdir {dirpath}")
 
-        pypath = f"{dirpath}\main.py"
+        pypath = f"{dirpath}\\main.py"
         with open(pypath, "w") as pyfile:
             pyfile.write(value)
 

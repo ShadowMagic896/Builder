@@ -33,7 +33,7 @@ from data.settings import (
 
 # Logging ---------------------------------------------------
 logger = logging.getLogger("discord")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.ERROR)
 
 filename = "data\\logs\\_discord.log"
 encoding = "UTF-8"
@@ -48,7 +48,7 @@ logger.addHandler(handler)
 
 class Builder(commands.Bot):
     def __init__(self):
-        command_prefix: List[str] = when_mentioned_or(*PREFIXES)
+        command_prefix: List[str] = PREFIXES
         help_command: Union[commands.HelpCommand, None] = None
         tree_cls: type = discord.app_commands.CommandTree
         intents: discord.Intents = discord.Intents.default()
