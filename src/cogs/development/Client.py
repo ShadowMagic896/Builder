@@ -8,9 +8,13 @@ from discord.ext import commands
 import inspect
 from typing import List, Optional
 
-from src.auxiliary.user.Converters import Cog, Command
+from src.auxiliary.user.Converters import Cog, Command, Group
 from src.auxiliary.user.Subclass import BaseView
-from src.auxiliary.user.UserIO import cog_autocomplete, command_autocomplete
+from src.auxiliary.user.UserIO import (
+    cog_autocomplete,
+    command_autocomplete,
+    group_autocomplete,
+)
 from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.bot.Functions import explode
 
@@ -65,25 +69,28 @@ class Client(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        cog="The cog to get the source of.", command="The command to get the source of."
+        cog="The cog to get the source of.",
+        group="Get all commands of this group",
+        command="The command to get the source of.",
     )
     async def source(
         self,
         ctx: commands.Context,
         cog: Optional[Cog],
+        group: Optional[Group],
         command: Optional[Command],
     ):
         """
         Gets the source code for any of the bot's commands.
         """
-        if not command and not cog:
+        if not command and not group and not cog:
             embed = fmte(
                 ctx,
                 t="Source Code!",
                 d="[View on GitHub](%s)" % "https://github.com/ShadowMagic896/Builder",
             )
             await ctx.send(embed=embed)
-        elif command and not cog:
+        if command:
             src = command.callback.__code__
 
             buffer = io.BytesIO()
@@ -91,47 +98,27 @@ class Client(commands.Cog):
             src = inspect.getsource(src)
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
-            embed = fmte(ctx, t="Source for Command: %s" % command)
-            file = discord.File(buffer, "source.%s.py" % command)
+            embed = fmte(ctx, t=f"Source for Command: {command}")
+            file = discord.File(buffer, f"builder.{command}.py")
             await ctx.send(embed=embed, file=file)
-        elif cog and not command:
-            src = inspect.getsource(cog.__class__)
+        elif group:
+            src = "\n\n".join(
+                inspect.getsource(c.callback.__code__) for c in explode(group.commands)
+            )
             buffer = io.BytesIO()
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
 
-            embed = fmte(ctx, t="Source for Cog: %s" % cog.qualified_name)
-            file = discord.File(buffer, "source.%s.py" % cog.qualified_name)
+            embed = fmte(ctx, t=f"Source for Group: {group.qualified_name}")
+            file = discord.File(buffer, f"builder.{group.qualified_name}.py")
             await ctx.send(embed=embed, file=file)
-        else:
-            if command in explode(cog.get_commands()):
-                src = command.callback.__code__
-                note = ""
-            else:
-                src = cog.__class__
-                note = (
-                    "# Command not found in that cog, showing source for cog instead.\n"
-                )
+        elif cog:
             buffer = io.BytesIO()
-            buffer.write((note + inspect.getsource(src)).encode("UTF-8"))
+            buffer.write((inspect.getsource(cog.__class__)).encode("UTF-8"))
             buffer.seek(0)
 
-            embed = fmte(
-                ctx,
-                t="Source for %s"
-                % (
-                    ("`%s`" % cog.qualified_name)
-                    if note
-                    else "`{}` of Cog `{}`".format(
-                        command.qualified_name, cog.qualified_name
-                    )
-                ),
-            )
-            file = discord.File(
-                buffer,
-                "source.%s.py"
-                % (cog.qualified_name if note else command.qualified_name),
-            )
+            embed = fmte(ctx, t=f"Source for Cog: `{cog.name}`")
+            file = discord.File(buffer, f"builder.{cog.name}.py")
             await ctx.send(embed=embed, file=file)
 
     @source.autocomplete("cog")
@@ -139,6 +126,12 @@ class Client(commands.Cog):
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
         return await cog_autocomplete(self.bot, inter, current)
+
+    @source.autocomplete("group")
+    async def group_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ) -> List[discord.app_commands.Choice[str]]:
+        return await group_autocomplete(self.bot, inter, current)
 
     @source.autocomplete("command")
     async def command_autocomplete(

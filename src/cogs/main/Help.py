@@ -8,7 +8,12 @@ from discord.ext import commands
 
 from math import ceil
 from typing import Any, List, Optional, Union
-from src.auxiliary.user.UserIO import cog_autocomplete, command_autocomplete
+from src.auxiliary.user.Converters import Cog, Command, Group
+from src.auxiliary.user.UserIO import (
+    cog_autocomplete,
+    group_autocomplete,
+    command_autocomplete,
+)
 from data.Errors import ForbiddenData, MissingCog, MissingCommand
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
@@ -25,34 +30,44 @@ class Help(commands.Cog):
     @commands.hybrid_command()
     @describe(
         cog="The cog to view",
+        group="The command group to view",
         command="The command to view",
     )
     async def help(
-        self, ctx: commands.Context, cog: Optional[str], command: Optional[str]
+        self,
+        ctx: commands.Context,
+        cog: Optional[Cog],
+        group: Optional[Group],
+        command: Optional[Command],
     ):
         """
         Creates a menu to navigate all of the bot's commands
         """
-        if cog is None and command is None:  # Send main help
-            embed = fmte(
-                ctx,
-                t="Help",
-                d="*%s*" % (await self.bot.application_info()).description,
-            )
+        if command:
             view = BaseView(ctx)
             view.add_item(CogSelect(ctx))
+
+            embed = await self.command_embed(ctx, command)
             message = await ctx.send(embed=embed, view=view)
             view.message = message
 
-        elif command is None:  # Send cog help
-            cog = cog.capitalize()
+        elif group:
+            view = GroupView(ctx, group)
+            embed = await view.page_zero(ctx.interaction)
 
-            _cog: commands.Cog = self.bot.get_cog(cog)
-            if _cog is None:
-                raise MissingCog(f"Cannot find cog: {cog}")
-            if cog in CONSTANTS.Cogs().FORBIDDEN_COGS:
-                raise ForbiddenData("Sorry! No help command is available for that.")
-            cog: commands.Cog = _cog
+            sel = CogSelect(ctx)
+            if group.cog is not None:
+                sel.placeholder = "%s Cog Selection..." % group.cog.ge()
+                sel.options.remove(
+                    discord.utils.get(sel.options, label=group.cog.qualified_name)
+                )
+                view.add_item(sel)
+            await view.checkButtons()
+
+            message = await ctx.send(embed=embed, view=view)
+            view.message = message
+
+        elif cog:
 
             view = CommandView(ctx, cog)
             embed = await view.page_zero(ctx.interaction)
@@ -66,40 +81,14 @@ class Help(commands.Cog):
             message = await ctx.send(embed=embed, view=view)
             view.message = message
 
-        elif cog is None:  # Send command help
-            _command: Optional[
-                Union[commands.HybridCommand, commands.Command]
-            ] = self.bot.get_command(command)
-            if _command is None:
-                raise MissingCommand(f"Cannot find command: {command}")
-            command: commands.HybridCommand = _command
-
-            view = BaseView(ctx)
-            view.add_item(CogSelect(ctx))
-
-            embed = await self.command_embed(ctx, command)
-            message = await ctx.send(embed=embed, view=view)
-            view.message = message
         else:
-            _cog: commands.Cog = self.bot.get_cog(cog)
-            if _cog is None:
-                raise MissingCog(f"Cannot find cog: {cog}")
-            cog: commands.Cog = _cog
-
-            _command: Optional[
-                Union[commands.HybridCommand, commands.Command]
-            ] = utils.get(explode(cog.get_commands()), qualified_name=command.lower())
-            print([x.qualified_name for x in explode(cog.get_commands())])
-            if _command is None:
-                raise MissingCommand(
-                    f"Cannot find command: {command} in cog: {cog.qualified_name}"
-                )
-            command: commands.HybridCommand = _command
-
+            embed = fmte(
+                ctx,
+                t="Help",
+                d="*%s*" % (await self.bot.application_info()).description,
+            )
             view = BaseView(ctx)
             view.add_item(CogSelect(ctx))
-
-            embed = await self.command_embed(ctx, command)
             message = await ctx.send(embed=embed, view=view)
             view.message = message
 
@@ -108,6 +97,12 @@ class Help(commands.Cog):
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
         return await cog_autocomplete(self.bot, inter, current)
+
+    @help.autocomplete("group")
+    async def group_autocomplete(
+        self, inter: discord.Interaction, current: str
+    ) -> List[discord.app_commands.Choice[str]]:
+        return await group_autocomplete(self.bot, inter, current)
 
     @help.autocomplete("command")
     async def command_autocomplete(
@@ -161,7 +156,7 @@ class Help(commands.Cog):
                     ㅤㅤ**Description:** `{command.app_command._params.get(param.name, FakeParam()).description}`
                     ㅤㅤ**Type:** `{simplifyAnnotation(param)}`
                     ㅤㅤ**Default:** `{await getDef(param)}`
-                    ㅤㅤ**Reqiuired:** `{str(param.required)}`""",
+                    ㅤㅤ**Required:** `{str(param.required)}`""",
                 )
                 for name, param in params
             ]:
@@ -198,9 +193,7 @@ class CommandView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return fmte_i(
-            inter, t="Commands: Page `{}` of `{}`".format(self.position, self.maxpos)
-        )
+        return fmte_i(inter, t=f"Commands: Page `{self.position}` of `{self.maxpos}`")
 
     async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
@@ -211,6 +204,32 @@ class CommandView(Paginator):
             embed.add_field(
                 name=f"`/{command.qualified_name}`",
                 value=f"*{command.short_doc}*",
+                inline=False,
+            )
+        return embed
+
+
+class GroupView(Paginator):
+    def __init__(self, ctx: commands.Context, group: commands.HybridGroup):
+        self.group = group
+        values: List[commands.HybridCommand] = sorted(
+            explode(group.commands), key=lambda c: c.qualified_name
+        )
+        super().__init__(ctx, values, 5, timeout=45)
+
+    async def embed(self, inter: discord.Interaction):
+        return fmte_i(
+            inter, t=f"`{self.group.name}`: Page `{self.position}` of `{self.maxpos}`"
+        )
+
+    async def adjust(self, embed: discord.Embed):
+        start = self.pagesize * (self.position - 1)
+        stop = self.pagesize * self.position
+
+        for command in self.vals[start:stop]:
+            embed.add_field(
+                name=f"/{command.qualified_name}",
+                value=f"*{command.short_doc}*\n**Parameters:** {len(command.params)}",
                 inline=False,
             )
         return embed

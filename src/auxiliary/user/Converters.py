@@ -132,6 +132,20 @@ class Cog(commands.Converter):
         return _cog
 
 
+class Group(commands.Converter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def convert(self, ctx: Context, grp: str) -> commands.HybridGroup:
+        grp = grp.lower()
+        _grp: Optional[commands.HybridGroup] = ctx.bot.get_command(grp)
+        if _grp is None or not isinstance(_grp, commands.HybridGroup):
+            raise MissingCog(f"Cannot find group: {grp}")
+        if grp in CONSTANTS.Cogs().FORBIDDEN_GROUPS:
+            raise ForbiddenData("Sorry! No help command is available for that.")
+        return _grp
+
+
 class Command(commands.Converter):
     def __init__(self) -> None:
         super().__init__()

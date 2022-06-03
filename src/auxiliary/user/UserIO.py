@@ -93,6 +93,46 @@ async def cog_autocomplete(
     )
 
 
+async def group_autocomplete(
+    bot: commands.Bot, inter: discord.Interaction, current: str
+) -> List[discord.app_commands.Choice[str]]:
+    return (
+        sorted(
+            [
+                discord.app_commands.Choice(
+                    name=g.qualified_name, value=g.qualified_name
+                )
+                for g in bot.commands
+                if isinstance(g, commands.HybridGroup)
+                and (
+                    g.qualified_name.lower() in current.lower()
+                    or current.lower() in g.qualified_name.lower()
+                )
+            ][:25],
+            key=lambda c: c.name,
+        )
+        if (cog := getattr(inter.namespace, "cog", None)) is None
+        else sorted(
+            [
+                discord.app_commands.Choice(
+                    name=g.qualified_name, value=g.qualified_name
+                )
+                for g in bot.commands
+                if isinstance(g, commands.HybridGroup)
+                and (
+                    g.cog is not None
+                    and (
+                        g.qualified_name.lower() in current.lower()
+                        or current.lower() in g.qualified_name.lower()
+                    )
+                )
+                and g.cog_name.lower() == cog.lower()
+            ][:25],
+            key=lambda c: c.name,
+        )
+    )
+
+
 async def command_autocomplete(
     bot: commands.Bot, inter: discord.Interaction, current: str
 ) -> List[discord.app_commands.Choice[str]]:

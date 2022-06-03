@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.app_commands import errors as app_errors
 
 import math
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, List, Optional, Type
 from src.cogs.development.Watchers import Watchers
 
 from src.auxiliary.user.Embeds import fmte_i
@@ -61,7 +61,7 @@ class Paginator(BaseView):
     def __init__(
         self,
         ctx: commands.Context,
-        values: Iterable,
+        values: List,
         pagesize: int,
         *,
         timeout: Optional[float] = 45,
@@ -71,7 +71,7 @@ class Paginator(BaseView):
 
         self.position = 1
 
-        self.vals = values
+        self.vals: List[Type[values]] = values
         self.message: Optional[discord.Message] = None
 
         self.maxpos = math.ceil((len(self.vals) / pagesize))

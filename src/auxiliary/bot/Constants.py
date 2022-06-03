@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Set
 
 
 class CONSTANTS:
@@ -12,7 +13,7 @@ class CONSTANTS:
 
     class Cogs:
         def __init__(self) -> None:
-            self.FORBIDDEN_COGS = {
+            self.FORBIDDEN_COGS: Set[str] = {
                 "Dev",
                 "Watchers",
                 "Jishaku",
@@ -23,7 +24,9 @@ class CONSTANTS:
                 "GitHub",
             }
 
-            self.FORBIDDEN_COMMANDS = {}
+            self.FORBIDDEN_GROUPS: Set[str] = {}
+
+            self.FORBIDDEN_COMMANDS: Set[str] = {}
 
     class Rates:
         def __init__(self) -> None:
