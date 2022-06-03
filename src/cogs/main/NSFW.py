@@ -9,7 +9,7 @@ from discord.ext import commands
 import os
 import random
 from bs4 import BeautifulSoup
-from data.config import NSFW_PATH
+from data.Config import NSFW_PATH
 from src.auxiliary.user.Subclass import Paginator
 
 from src.auxiliary.user.Embeds import fmte, fmte_i

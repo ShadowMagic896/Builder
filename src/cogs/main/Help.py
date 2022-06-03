@@ -9,7 +9,7 @@ from discord.ext import commands
 from math import ceil
 from typing import Any, List, Optional, Union
 from src.auxiliary.user.UserIO import cog_autocomplete, command_autocomplete
-from data.errors import ForbiddenData, MissingCog, MissingCommand
+from data.Errors import ForbiddenData, MissingCog, MissingCommand
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.bot.Functions import explode

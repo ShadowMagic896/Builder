@@ -151,7 +151,10 @@ class Client(commands.Cog):
         self, ctx: commands.Context, command: Command, role: Optional[discord.Role]
     ):
         if role is None:
-            pass
+            command = """
+                SELECT disabled FROM disabled_commands
+                WHERE guildid = $1
+            """
         else:
             pass
 

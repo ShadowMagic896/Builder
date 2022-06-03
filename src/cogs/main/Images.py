@@ -11,7 +11,7 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
 from typing import Any, Callable, Literal, Optional
 
-from data import config
+from data import Config
 
 from src.auxiliary.user.Embeds import fmte, Desc
 
@@ -166,10 +166,10 @@ class Images(commands.Cog):
         Adds text to an image.
         """
         font = font.lower()
-        if font not in [p.lower() for p in os.listdir(config.FONT_PATH)]:
+        if font not in [p.lower() for p in os.listdir(Config.FONT_PATH)]:
             raise ValueError("Not a valid font. Please use the autocomplete.")
         try:
-            font = ImageFont.FreeTypeFont(config.FONT_PATH + font, strokeweight)
+            font = ImageFont.FreeTypeFont(Config.FONT_PATH + font, strokeweight)
         except BaseException as e:
             print(e)
         img = await self.toimg(image)
@@ -192,7 +192,7 @@ class Images(commands.Cog):
     async def textfont_autocomplete(self, inter: discord.Interaction, current: str):
         return [
             discord.app_commands.Choice(name=p[:-4], value=p)
-            for p in os.listdir(config.FONT_PATH)
+            for p in os.listdir(Config.FONT_PATH)
             if (p.lower() in current.lower() or current.lower() in p.lower())
             and p.lower().endswith(".ttf")
         ][:25]

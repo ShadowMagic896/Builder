@@ -6,7 +6,7 @@ from discord.ext.commands.errors import *
 from discord.errors import *
 
 import asyncio
-from data.errors import (
+from data.Errors import (
     InternalError,
     MissingArguments,
     MissingFunds,
@@ -29,6 +29,7 @@ class Watchers(commands.Cog):
 
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         print(f"on_command_error: {error}")
+        print(sys.exc_info()[2])
         return await self._interaction_error_handler(ctx.interaction, error)
 
     async def on_tree_error(self, interaction: discord.Interaction, error: Exception):

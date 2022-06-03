@@ -1,7 +1,7 @@
 from asyncio.subprocess import PIPE, Process
 from multiprocessing import freeze_support
 from os import PathLike
-from typing import Callable, List, Literal, Optional, Union
+from typing import Callable, Iterable, List, Literal, Optional, Union
 from urllib.parse import quote_plus
 import aiohttp
 import asyncpg
@@ -14,6 +14,7 @@ import logging
 
 from src.auxiliary.bot.Extensions import load_extensions
 from src.auxiliary.bot.Functions import (
+    addCogLoaders,
     ensureDB,
     formatCode,
     interactionChoke,
@@ -21,7 +22,7 @@ from src.auxiliary.bot.Functions import (
     explode,
 )
 from src.auxiliary.bot.Stats import Stats
-from data.config import BOT_KEY, DB_PASSWORD, DB_USERNAME
+from data.Config import BOT_KEY, DB_PASSWORD, DB_USERNAME
 from data.settings import (
     COG_DIRECTORIES,
     LOAD_COGS_ON_STARTUP,
@@ -48,7 +49,7 @@ logger.addHandler(handler)
 
 class Builder(commands.Bot):
     def __init__(self):
-        command_prefix: List[str] = PREFIXES
+        command_prefix: Iterable[str] = PREFIXES
         help_command: Union[commands.HelpCommand, None] = None
         tree_cls: type = discord.app_commands.CommandTree
         intents: discord.Intents = discord.Intents.default()
@@ -87,10 +88,9 @@ async def main():
     if LOAD_JISHAKU:
         await bot.load_extension("jishaku")
 
-    extension_directories: List[PathLike] = COG_DIRECTORIES
     if LOAD_COGS_ON_STARTUP:
         await load_extensions(
-            bot, extension_directories, spaces=20, ignore_errors=False, print_log=True
+            bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=True
         )
 
     user = quote_plus(DB_USERNAME)
@@ -102,7 +102,7 @@ async def main():
     )
     bot.apg = connection
 
-    await ensureDB(connection, ensure_defaults=False)
+    await ensureDB(bot, connection)
     await formatCode()
 
     for command in bot.commands:

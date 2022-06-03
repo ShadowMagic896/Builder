@@ -1,13 +1,20 @@
 import asyncio
 from asyncio.subprocess import PIPE, Process
-from typing import Callable, List, Literal, Mapping, Optional, Tuple
+import copy
+from importlib import import_module
+import importlib
+import inspect
+from os import PathLike, getcwd
+import os
+from typing import Callable, List, Literal, Mapping, Optional, Tuple, Type
+import typing
 import asyncpg
-import chempy
 from chempy.util import periodic
 import discord
 from discord.ext import commands
 
 from data.ItemMaps import Chemistry
+from data.settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
 
 
 def explode(l: List[commands.HybridCommand]):
@@ -30,8 +37,45 @@ def fmtDict(d: dict):
     return str(d).replace("'", '"')
 
 
+async def addCogLoaders(bot: commands.Bot, paths: List[PathLike]):
+    for dir_ in paths:
+        if dir_.startswith("_"):
+            continue
+        for file in os.listdir(dir_):
+            if file.startswith("_"):
+                continue
+            _formatted = file.replace("/", "\\")
+            fullname = f"{dir_.replace('.', '')}\\{_formatted}".replace(
+                "/", "."
+            ).replace("\\", ".")
+            await _addCogLoaders(bot, fullname)
+
+
+async def _addCogLoaders(bot: commands.Bot, filename: PathLike):
+    """
+    Automatically adds all cog classes to the bot from a given file.
+    """
+    module = import_module(filename[1:-3])  # Remove the "." and ".py"
+    cogs: List[commands.Cog] = []  # A list of all cog classes defined in the file
+
+    # Get all classes in the file
+    classes = inspect.getmembers(module, inspect.isclass)
+
+    for name, class_ in classes:
+        if discord.ext.commands.cog.Cog in class_.__mro__:
+            print(f"Add class: {name}")
+            cogs.append(class_)
+
+    for cog in cogs:
+        print(f"COG: {cog.qualified_name()}")
+        await bot.add_cog(cog(bot))
+
+
 async def ensureDB(
-    connection: asyncpg.Connection, *, ensure_defaults=False, to_drop: List[str] = []
+    bot: commands.Bot,
+    connection: asyncpg.Connection,
+    *,
+    to_drop: List[str] = [],
 ):
     for tab in to_drop:
         await connection.execute(
@@ -72,14 +116,20 @@ async def ensureDB(
         );
 
         CREATE TABLE IF NOT EXISTS disabled_commands (
-            guildid BIGINT NOT NULL PRIMARY KEY,
-            commands TEXT[]
+            guildid BIGINT NOT NULL,
+            commandname TEXT UNIQUE NOT NULL,
+            FOREIGN KEY (commandname) REFERENCES commands (commandname) ON DELETE CASCADE
+        );
+        
+        CREATE TABLE IF NOT EXISTS commands (
+            commandname TEXT PRIMARY KEY,
+            parents TEXT[]
         )
     """
     print("CREATING DATABASES...")
     await connection.execute(command)
 
-    if ensure_defaults:
+    if STARTUP_ENSURE_DEFAULT_ATOMS:
         print("ENSURING DEFAULT ITEMS...")
         command = """
             DELETE FROM atoms;
@@ -113,6 +163,27 @@ async def ensureDB(
             )
         """
         await connection.executemany(basecommand, arguments)
+    if STARTUP_UPDATE_COMMANDS:
+        bot_commands = explode(bot.commands)
+        arguments = [
+            (
+                command.qualified_name,
+                [parent.qualified_name for parent in command.parents],
+            )
+            for command in bot_commands
+        ]
+        command = """
+            DELETE FROM commands;
+        """
+        await connection.execute(command)
+        command = """
+            INSERT INTO commands
+            VALUES (
+                $1,
+                $2
+            )
+        """
+        await connection.executemany(command, arguments)
 
 
 async def formatCode():

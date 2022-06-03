@@ -6,7 +6,7 @@ from src.auxiliary.bot.Constants import CONSTANTS
 from data.ItemMaps import Chemistry, getAtomicName
 import re
 
-from data.errors import ForbiddenData, MissingCog, MissingCommand
+from data.Errors import ForbiddenData, MissingCog, MissingCommand
 
 
 class TimeConvert(commands.Converter):

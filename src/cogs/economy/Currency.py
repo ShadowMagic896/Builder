@@ -7,7 +7,7 @@ from discord.ext.commands import parameter
 
 import random
 from typing import Any, List, Mapping, Optional, Union
-from data import config
+from data import Config
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from src.auxiliary.bot.Constants import CONSTANTS
@@ -340,7 +340,7 @@ class GiveContextModal(BaseModal):
     def __init__(self, ctx: commands.Context, member: discord.Member):
         self.ctx = ctx
         self.member = member
-        super().__init__(ctx, title=f"Give Coins to {member}")
+        super().__init__(title=f"Give Coins to {member}")
 
     amount = discord.ui.TextInput(label="How Much Would You Like to Give?")
 
@@ -520,7 +520,7 @@ class StartQuizView(BaseView):
     )
     async def start(self, inter: discord.Interaction, _: Any):
         if self.dif is not None and self.cat is not None:
-            key = config.QUIZAPI_KEY
+            key = Config.QUIZAPI_KEY
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
             self.questions = await (await self.ctx.bot.session.get(url)).json()
             view = MainQuizView(self.questions, self.cat, self.dif, self.ctx)
