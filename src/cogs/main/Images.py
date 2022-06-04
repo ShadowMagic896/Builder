@@ -1,4 +1,5 @@
 import asyncio
+from copy import copy
 import io
 from io import BytesIO
 import functools
@@ -9,11 +10,16 @@ from discord.ext import commands
 
 
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
-from typing import Any, Callable, Literal, Optional
+from typing import Any, Callable, List, Literal, Optional, Tuple
+from src.auxiliary.user.Subclass import BaseModal, BaseView
+
+import wand
+from wand import image as wimage
 
 from data import Config
 
 from src.auxiliary.user.Embeds import fmte, Desc
+from src.auxiliary.bot import Constants
 
 
 class Images(commands.Cog):
@@ -36,42 +42,6 @@ class Images(commands.Cog):
         if image.size > 40000000:
             raise IOError("Attachment is too large. Please keep files under 40MB")
 
-    async def run(self, func: Callable, *args, **kwargs) -> Any:
-        """
-        Runs a synchronous method in the current async loop's executor
-        All *args and **kwargs get passed to the function
-        """
-        partial = functools.partial(func, *args, **kwargs)
-        return await asyncio.get_event_loop().run_in_executor(None, partial)
-
-    def callOnImage(self, buffer: BytesIO, function: str, *args, **kwargs) -> Any:
-        img = Image.open(buffer)
-        img: Image.Image = getattr(img, function)(*args, **kwargs)
-        buffer: io.BytesIO = io.BytesIO()
-        img.save(buffer, "png")
-        buffer.seek(0)
-        return buffer
-
-    def callForEnhance(self, buffer: BytesIO, function: str, *args, **kwargs) -> Any:
-        img = Image.open(buffer)
-        img: Image.Image = getattr(ImageEnhance, function)(img).enhance(*args, **kwargs)
-        buffer: io.BytesIO = io.BytesIO()
-        img.save(buffer, "png")
-        buffer.seek(0)
-        return buffer
-
-    async def tobuf(self, image: discord.Attachment, check: bool = True) -> io.BytesIO:
-        if check:
-            self.checkAttachment(image)
-
-        buffer: io.BytesIO = io.BytesIO()
-        await image.save(buffer)
-        buffer.seek(0)
-        return buffer
-
-    async def toimg(self, image: discord.Attachment, check: bool = True) -> Image.Image:
-        return Image.open(await self.tobuf(image, check))
-
     @commands.hybrid_group()
     async def image(self, ctx: commands.Context):
         pass
@@ -90,8 +60,8 @@ class Images(commands.Cog):
         """
         ogsize = (image.width, image.height)
 
-        buffer: io.BytesIO = await self.run(
-            self.callOnImage, await self.tobuf(image), "resize", (width, height)
+        buffer: io.BytesIO = await PILFN.run(
+            PILFN.callOnImage, await PILFN.tobuf(image), "resize", (width, height)
         )
 
         embed = fmte(
@@ -121,8 +91,8 @@ class Images(commands.Cog):
         Copies an image image and adds it to the guild as an emoji
         """
 
-        buffer: io.BytesIO = await self.run(
-            self.callOnImage, await self.tobuf(image), "resize", (128, 128)
+        buffer: io.BytesIO = await PILFN.run(
+            PILFN.callOnImage, await PILFN.tobuf(image), "resize", (128, 128)
         )
 
         e: discord.Emoji = await ctx.guild.create_custom_emoji(
@@ -172,9 +142,9 @@ class Images(commands.Cog):
             font = ImageFont.FreeTypeFont(Config.FONT_PATH + font, strokeweight)
         except BaseException as e:
             print(e)
-        img = await self.toimg(image)
+        img = await PILFN.toimg(image)
 
-        await self.run(
+        await PILFN.run(
             lambda i: i.text(xy=(xpos, ypos), text=text, fill=(r, g, b), font=font),
             ImageDraw.ImageDraw(img),
         )
@@ -217,9 +187,9 @@ class Images(commands.Cog):
         """
         Crops an image to the given dimensions
         """
-        buffer: BytesIO = await self.run(
-            self.callOnImage,
-            await self.tobuf(image),
+        buffer: BytesIO = await PILFN.run(
+            PILFN.callOnImage,
+            await PILFN.tobuf(image),
             "crop",
             (left, upper, right, lower),
         )
@@ -249,7 +219,7 @@ class Images(commands.Cog):
         embed.add_field(
             name="File Type", value="`%s`" % image.content_type, inline=False
         )
-        file = discord.File(await self.tobuf(image), filename=image.filename)
+        file = discord.File(await PILFN.tobuf(image), filename=image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -272,9 +242,9 @@ class Images(commands.Cog):
         """
         Rotates an image by a given amount of degrees
         """
-        buffer: BytesIO = await self.run(
-            self.callOnImage,
-            await self.tobuf(image),
+        buffer: BytesIO = await PILFN.run(
+            PILFN.callOnImage,
+            await PILFN.tobuf(image),
             "rotate",
             degrees,
             center=(
@@ -312,8 +282,8 @@ class Images(commands.Cog):
             raise commands.BadArgument(filter)
 
         filter: ImageFilter = getattr(ImageFilter, filter)
-        buffer: BytesIO = await self.run(
-            self.callOnImage, await self.tobuf(image), "filter", filter
+        buffer: BytesIO = await PILFN.run(
+            PILFN.callOnImage, await PILFN.tobuf(image), "filter", filter
         )
 
         embed = fmte(ctx, t="Image Filter Applied")
@@ -336,8 +306,8 @@ class Images(commands.Cog):
         """
         Convert an image to a grey-scale color scheme
         """
-        buffer: BytesIO = await self.run(
-            self.callOnImage, await self.tobuf(image), "convert", "L"
+        buffer: BytesIO = await PILFN.run(
+            PILFN.callOnImage, await PILFN.tobuf(image), "convert", "L"
         )
 
         embed = fmte(ctx, t="Conversion Complete")
@@ -368,60 +338,12 @@ class Images(commands.Cog):
         """
         Attempts to convert the image into the specified mode.
         """
-        buffer = await self.run(
-            self.callOnImage, await self.tobuf(image), "convert", mode
+        buffer = await PILFN.run(
+            PILFN.callOnImage, await PILFN.tobuf(image), "convert", mode
         )
 
         embed = fmte(ctx, t="Image Successfully Converted")
         file = discord.File(buffer, "conv.%s" % image.filename)
-        await ctx.send(embed=embed, file=file)
-
-    @image.command()
-    @describe(image="The image to transform", size="The output size of the image")
-    async def transform(
-        self,
-        ctx: commands.Context,
-        image: discord.Attachment,
-        method: Literal["EXTENT", "AFFINE", "PERSPECTIVE", "QUAD", "MESH"],
-        size: Optional[int],
-    ):
-        """
-        Transforms an image's colors, pixel by pixel using a method.
-        """
-        buffer: BytesIO = self.run(
-            self.callOnImage,
-            await self.tobuf(image),
-            "transform",
-            size=size or image.size,
-            method=getattr(Image, method),
-        )
-
-        embed = fmte(ctx, t="Image Successfully Transformed")
-        file = discord.File(buffer, "trfr.%s" % image.filename)
-        await ctx.send(embed=embed, file=file)
-
-    @image.command()
-    @describe(image="The image to flip", method="How to flip the image")
-    async def flip(
-        self,
-        ctx: commands.Context,
-        image: discord.Attachment,
-        method: Literal[
-            "FLIP_LEFT_RIGHT", "FLIP_TOP_BOTTOM", "TRANSPOSE", "TRANSVERSE"
-        ],
-    ):
-        """
-        Flips an image.
-        """
-        buffer: BytesIO = await self.run(
-            self.callOnImage,
-            await self.tobuf(image),
-            "transpose",
-            method=getattr(Image, method),
-        )
-
-        embed = fmte(ctx, t="Image Successfully Flipped")
-        file = discord.File(buffer, "trps.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -431,13 +353,28 @@ class Images(commands.Cog):
         Inverts an image's colors.
         """
 
-        buffer: BytesIO = await self.run(
-            self.callOnImage, await self.tobuf(image), "convert", "L"
+        buffer: BytesIO = await PILFN.run(
+            PILFN.callOnImage, await PILFN.tobuf(image), "convert", "L"
         )
 
         embed = fmte(ctx, t="Image Successfully Inverted")
         file = discord.File(buffer, "invr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
+
+    @image.command()
+    @describe(image="The image to manipulate")
+    async def manipulate(self, ctx: commands.Context, image: discord.Attachment):
+        buffer: BytesIO = await PILFN.tobuf(image)
+
+        view = ImageManipulateView(ctx, buffer)
+        embed = fmte(ctx, t="Currently Applied Filters")
+        url = image.url or image.proxy_url or None
+        if url is None:
+            raise commands.errors.MessageNotFound("Cannot find image for message.")
+        embed.set_image(url=url)
+        await view.initialCheck()
+        message = await ctx.send(embed=embed, view=view)
+        view.message = message
 
     @image.group()
     async def enhance(self, ctx: commands.Context):
@@ -457,8 +394,8 @@ class Images(commands.Cog):
         """
         Adjusts the contrast of an image.
         """
-        buffer: BytesIO = self.callForEnhance(
-            await self.tobuf(image), "Contrast", factor
+        buffer: BytesIO = PILFN.callForEnhance(
+            await PILFN.tobuf(image), "Contrast", factor
         )
 
         embed = fmte(ctx, t="Image Successfully Edited")
@@ -479,8 +416,8 @@ class Images(commands.Cog):
         """
         Adjusts the brightness of an image.
         """
-        buffer: BytesIO = self.callForEnhance(
-            await self.tobuf(image), "Brightness", factor
+        buffer: BytesIO = PILFN.callForEnhance(
+            await PILFN.tobuf(image), "Brightness", factor
         )
 
         embed = fmte(ctx, t="Image Successfully Edited")
@@ -501,7 +438,9 @@ class Images(commands.Cog):
         """
         Adjusts the color of an image.
         """
-        buffer: BytesIO = self.callForEnhance(await self.tobuf(image), "Color", factor)
+        buffer: BytesIO = PILFN.callForEnhance(
+            await PILFN.tobuf(image), "Color", factor
+        )
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
@@ -521,8 +460,8 @@ class Images(commands.Cog):
         """
         Adjusts the sharpess of an image.
         """
-        buffer: BytesIO = self.callForEnhance(
-            await self.tobuf(image), "Sharpness", factor
+        buffer: BytesIO = PILFN.callForEnhance(
+            await PILFN.tobuf(image), "Sharpness", factor
         )
 
         embed = fmte(ctx, t="Image Successfully Edited")
@@ -545,6 +484,283 @@ class Images(commands.Cog):
         )
         embed.set_image(url=user.avatar.url)
         await ctx.send(embed=embed)
+
+
+class PILFN:
+    async def run(func: Callable, *args, **kwargs) -> Any:
+        """
+        Runs a synchronous method in the current async loop's executor
+        All *args and **kwargs get passed to the function
+        """
+        partial = functools.partial(func, *args, **kwargs)
+        return await asyncio.get_event_loop().run_in_executor(None, partial)
+
+    def callOnImage(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
+        img = Image.open(buffer)
+        img: Image.Image = getattr(img, function)(*args, **kwargs)
+        buffer: io.BytesIO = io.BytesIO()
+        img.save(buffer, "png")
+        buffer.seek(0)
+        return buffer
+
+    def callForEnhance(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
+        img = Image.open(buffer)
+        img: Image.Image = getattr(ImageEnhance, function)(img).enhance(*args, **kwargs)
+        buffer: io.BytesIO = io.BytesIO()
+        img.save(buffer, "png")
+        buffer.seek(0)
+        return buffer
+
+    async def tobuf(image: discord.Attachment, check: bool = True) -> io.BytesIO:
+        if check:
+            pass
+            # self.checkAttachment(image)
+
+        buffer: io.BytesIO = io.BytesIO()
+        await image.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    async def toimg(image: discord.Attachment, check: bool = True) -> Image.Image:
+        return Image.open(await PILFN.tobuf(image, check))
+
+
+class WandImageFunctions:
+    async def fromAttachment(attachment: discord.Attachment):
+        buffer: BytesIO = BytesIO()
+        await attachment.save(buffer)
+        buffer.seek(0)
+
+        img: wimage.Image = wimage.Image(blobl=buffer)
+        return img
+
+    async def apply(func, *args, **kwargs):
+        part = functools.partial(func, *args, **kwargs)
+        await asyncio.get_event_loop().run_in_executor(None, part)
+
+
+class ImageManipulateView(BaseView):
+    def __init__(
+        self, ctx: commands.Context, buffer: BytesIO, timeout: Optional[float] = 45
+    ):
+        self.initial = buffer
+        self.img = wimage.Image(blob=self.initial)
+        self.last = None
+        self.filters = []
+        self.loop = asyncio.get_event_loop()
+
+        self._protected_buttons = ["back", "rev", "finish"]
+        super().__init__(ctx, timeout)
+
+    async def initialCheck(self):
+        self.back.disabled = True
+
+    async def apply(self, func, *args, **kwargs):
+        self.last = self.img.clone()
+        part = functools.partial(func, *args, **kwargs)
+        await self.loop.run_in_executor(None, part)
+
+    async def update(self, inter: discord.Interaction, button: discord.ui.Button):
+        if button.custom_id != "back":
+            self.filters.append(button.label)
+
+        buffer: BytesIO = BytesIO()
+        self.img.save(buffer)
+        buffer.seek(0)
+
+        embed = fmte(
+            self.ctx, t="Effect Applied", d=f"Total Effects: {', '.join(self.filters)}"
+        )
+        file = discord.File(fp=buffer, filename="image.png")
+        embed.set_image(url="attachment://image.png")
+
+        self = await self.checkButtons(button)
+        try:
+            await inter.response.edit_message(
+                embed=embed,
+                attachments=[
+                    file,
+                ],
+                view=self,
+            )
+        except discord.InteractionResponded:
+            await (await inter.original_message()).edit(
+                embed=embed,
+                attachments=[
+                    file,
+                ],
+                view=self,
+            )
+
+    async def checkButtons(self, button: discord.ui.Button):
+        for i in self.children:
+            if (
+                isinstance(i, discord.ui.Button)
+                and i.custom_id not in self._protected_buttons
+            ):
+                if i == button:
+                    i.style = discord.ButtonStyle.green
+                else:
+                    i.style = discord.ButtonStyle.blurple
+        if self.last is None:
+            self.back.disabled = True
+        else:
+            self.back.disabled = False
+
+        return self
+
+    @discord.ui.button(label="AutoLevel")
+    async def autolevel(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.auto_level)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="AutoOrient")
+    async def autoorient(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.auto_orient)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Blur")
+    async def blur(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.blur)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="+Contrast")
+    async def pcontrast(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.contrast, False)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="-Contrast")
+    async def mcontrast(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.contrast, True)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Emboss")
+    async def emboss(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.emboss)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Equalize")
+    async def equalize(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.equalize)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Flip")
+    async def flip(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.flip)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Flop")
+    async def flop(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.flop)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Sharpen")
+    async def sharpen(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.adaptive_sharpen)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Painting")
+    async def painting(self, inter: discord.Interaction, button: discord.ui.Button):
+        await self.apply(self.img.oil_paint)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Resize")
+    async def resize(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.defer()
+        prompt: str = "Please enter a new **WIDTH** value:"
+        w = await self.getUserInput(
+            self.ctx, "message", prompt, post_check=self.checkinp
+        )
+
+        prompt: str = "Please enter a new **HEIGHT** value:"
+        h = await self.getUserInput(
+            self.ctx, "message", prompt, post_check=self.checkinp
+        )
+
+        await self.apply(self.img.adaptive_resize, w, h)
+        await self.update(inter, button)
+
+    @discord.ui.button(
+        emoji=Constants.CONSTANTS.Emojis().BBARROW_ID,
+        label="Revert",
+        style=discord.ButtonStyle.red,
+        row=4,
+        custom_id="rev",
+    )
+    async def revert(self, inter: discord.Interaction, button: discord.Button):
+        self.initial.seek(0)
+        self.img = wimage.Image(blob=self.initial)
+        self.filters = []
+        self.back.disabled = True
+        await self.update(inter, button)
+
+    @discord.ui.button(
+        emoji=Constants.CONSTANTS.Emojis().BARROW_ID,
+        label="Back",
+        style=discord.ButtonStyle.gray,
+        row=4,
+        custom_id="back",
+    )
+    async def back(self, inter: discord.Interaction, button: discord.Button):
+        self.img = self.last
+        self.last = None
+        self.filters = self.filters[:-1]
+        await self.update(inter, button)
+
+    @discord.ui.button(
+        emoji="\N{WHITE HEAVY CHECK MARK}",
+        label="Finish",
+        style=discord.ButtonStyle.gray,
+        row=4,
+        custom_id="finish",
+    )
+    async def finish(self, inter: discord.Interaction, button: discord.Button):
+        await self.on_timeout()
+        embed = (await self.ctx.interaction.original_message()).embeds[0]
+        embed.title = "Manipulation Finished"
+        embed.description = f"Effects: {', '.join(self.filters)}"
+
+        buffer: BytesIO = BytesIO()
+        self.img.save(buffer)
+        buffer.seek(0)
+
+        file = discord.File(fp=buffer, filename="image.png")
+        embed.set_image(url="attachment://image.png")
+        button.style = discord.ButtonStyle.green
+        await inter.response.edit_message(
+            embed=embed,
+            attachments=[
+                file,
+            ],
+            view=self,
+        )
+        self.stop()
+
+    async def getUserInput(
+        self,
+        ctx: commands.Context,
+        event: str,
+        prompt: str,
+        *,
+        check: Callable[[commands.Context], bool] = None,
+        post_check: Callable[[Any], Any] = None,
+    ):
+        check = check or (lambda c: c.author == ctx.author and c.channel == ctx.channel)
+        await ctx.interaction.followup.send(prompt, ephemeral=True)
+        response = await ctx.bot.wait_for(event, check=check)
+        if post_check is None:
+            return response
+        return post_check(response)
+
+    def checkinp(self, inp: discord.Message):
+        try:
+            inp = int(inp.content.strip())
+            if inp <= 5:
+                raise Exception
+        except Exception:
+            raise ValueError("Invalid number")
+        else:
+            return inp
 
 
 async def setup(bot: commands.Bot):

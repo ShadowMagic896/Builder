@@ -48,9 +48,7 @@ class BaseView(discord.ui.View):
         for c in self.children:
             c.disabled = True
         if self.message is None:
-            raise commands.errors.MissingRequiredArgument(
-                "bozo you forgor to add the message to the view, imagine"
-            )
+            raise Exception("bozo you forgor to add the message to the view, imagine")
         try:
             await self.message.edit(view=self)
         except discord.NotFound:
@@ -75,6 +73,7 @@ class Paginator(BaseView):
         self.message: Optional[discord.Message] = None
 
         self.maxpos = math.ceil((len(self.vals) / pagesize))
+        self.start, self.stop = 0, pagesize
 
         super().__init__(ctx, timeout=timeout)
 
@@ -159,6 +158,8 @@ class Paginator(BaseView):
         """
         Can be overwritten if necessary.
         """
+        self.start = self.pagesize * (self.position - 1)
+        self.start = self.pagesize * self.position
         if self.maxpos <= 1:
             for b in self.children:
                 if isinstance(b, discord.ui.Button) and b.custom_id != "x":

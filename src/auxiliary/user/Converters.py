@@ -123,7 +123,7 @@ class Cog(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, cog: str) -> commands.Cog:
-        cog = cog.capitalize()
+        # cog = cog.capitalize()
         _cog: Optional[commands.Cog] = ctx.bot.get_cog(cog)
         if _cog is None:
             raise MissingCog(f"Cannot find cog: {cog}")
@@ -137,7 +137,7 @@ class Group(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, grp: str) -> commands.HybridGroup:
-        grp = grp.lower()
+        # grp = grp.lower()
         _grp: Optional[commands.HybridGroup] = ctx.bot.get_command(grp)
         if _grp is None or not isinstance(_grp, commands.HybridGroup):
             raise MissingCog(f"Cannot find group: {grp}")
@@ -151,7 +151,7 @@ class Command(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, command: str) -> commands.HybridCommand:
-        command = command.lower()
+        # command = command.lower()
         _command: Optional[
             Union[commands.HybridCommand, commands.Command]
         ] = ctx.bot.get_command(command)

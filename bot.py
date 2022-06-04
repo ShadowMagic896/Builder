@@ -54,6 +54,7 @@ class Builder(commands.Bot):
         tree_cls: type = discord.app_commands.CommandTree
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
+        intents.message_content = True
         if SHOW_SOURCE_LINES:
             activity: discord.Activity = discord.Activity(
                 type=discord.ActivityType.watching,
