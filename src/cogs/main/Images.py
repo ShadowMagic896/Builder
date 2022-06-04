@@ -1,17 +1,22 @@
 import asyncio
 from copy import copy
+from inspect import isawaitable
 import io
 from io import BytesIO
 import functools
 import os
+import re
+from types import coroutine
+import aiohttp
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
 
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
-from typing import Any, Callable, List, Literal, Optional, Tuple
-from src.auxiliary.user.Subclass import BaseModal, BaseView
+from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple
+
+from src.auxiliary.user.Subclass import BaseView
 
 import wand
 from wand import image as wimage
@@ -362,6 +367,42 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @image.command()
+    @describe(
+        image="The image to encipher",
+        phrase="The passphrase to encipher the image with.",
+    )
+    async def encipher(
+        self, ctx: commands.Context, image: discord.Attachment, phrase: str
+    ):
+        """Enciphers an image using a passphrase, which can be deciphered later."""
+        img = await WandImageFunctions.fromAttachment(image)
+        await WandImageFunctions.apply(img.encipher, phrase)
+        embed = fmte(
+            ctx, t="Image Enciphered", d=f"Passphrase to decipher: ||{phrase}||"
+        )
+        embed, file = await WandImageFunctions.spawnItems(embed, img)
+        await ctx.send(embed=embed, file=file)
+
+    @image.command()
+    @describe(
+        image="The image to decipher",
+        phrase="The passphrase to decipher the image with.",
+    )
+    async def decipher(
+        self, ctx: commands.Context, image: discord.Attachment, phrase: str
+    ):
+        """Deciphers an image from a passphrase."""
+        img = await WandImageFunctions.fromAttachment(image)
+        await WandImageFunctions.apply(img.decipher, phrase)
+        embed = fmte(
+            ctx,
+            t="Image Deciphered",
+            d=f"Passphrase used to decipher: ||{phrase}||\nIf it didn't come out correctly, remember to save, not copy, the image to decipher and that the passphase is case-sensitive.",
+        )
+        embed, file = await WandImageFunctions.spawnItems(embed, img)
+        await ctx.send(embed=embed, file=file)
+
+    @image.command()
     @describe(image="The image to manipulate")
     async def manipulate(self, ctx: commands.Context, image: discord.Attachment):
         buffer: BytesIO = await PILFN.tobuf(image)
@@ -526,13 +567,25 @@ class PILFN:
 
 
 class WandImageFunctions:
-    async def fromAttachment(attachment: discord.Attachment):
+    async def fromAttachment(attachment: discord.Attachment) -> wimage.Image:
         buffer: BytesIO = BytesIO()
         await attachment.save(buffer)
         buffer.seek(0)
 
-        img: wimage.Image = wimage.Image(blobl=buffer)
+        img: wimage.Image = wimage.Image(blob=buffer)
         return img
+
+    async def spawnItems(
+        embed: discord.Embed, image: wimage.Image
+    ) -> Tuple[discord.Embed, discord.File]:
+        buffer = BytesIO()
+        image.save(buffer)
+        buffer.seek(0)
+
+        file = discord.File(fp=buffer, filename="image.png")
+        embed.set_image(url="attachment://image.png")
+
+        return embed, file
 
     async def apply(func, *args, **kwargs):
         part = functools.partial(func, *args, **kwargs)
@@ -634,15 +687,44 @@ class ImageManipulateView(BaseView):
         await self.apply(self.img.contrast, True)
         await self.update(inter, button)
 
+    @discord.ui.button(label="Decipher")
+    async def decipher(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.defer()
+        prompt = "Please enter a **PASSPHRASE:**"
+        passphrase = (
+            await self.getUserInput(
+                self.ctx,
+                "message",
+                prompt,
+            )
+        ).content
+        await self.apply(self.img.decipher, passphrase)
+        await self.update(inter, button)
+
     @discord.ui.button(label="Emboss")
     async def emboss(self, inter: discord.Interaction, button: discord.ui.Button):
         await self.apply(self.img.emboss)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Encipher")
+    async def encipher(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.defer()
+        prompt = "Please enter a **PASSPHRASE:**"
+        passphrase = (
+            await self.getUserInput(
+                self.ctx,
+                "message",
+                prompt,
+            )
+        ).content
+        await self.apply(self.img.encipher, passphrase)
         await self.update(inter, button)
 
     @discord.ui.button(label="Equalize")
     async def equalize(self, inter: discord.Interaction, button: discord.ui.Button):
         await self.apply(self.img.equalize)
         await self.update(inter, button)
+        wimage.Image.com
 
     @discord.ui.button(label="Flip")
     async def flip(self, inter: discord.Interaction, button: discord.ui.Button):
@@ -664,20 +746,72 @@ class ImageManipulateView(BaseView):
         await self.apply(self.img.oil_paint)
         await self.update(inter, button)
 
+    @discord.ui.button(label="Paste")
+    async def paste(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.defer()
+        prompt: str = "Please send the image to paste..."
+        img: wimage.Image = await self.getUserInput(
+            self.ctx,
+            "message",
+            prompt,
+            post_process=ImageManipulateView.getImageFrom,
+            post_process_arguments=(
+                [
+                    self.ctx,
+                ],
+                {},
+            ),
+        )
+
+        prompt: str = f"What operator should I use?\nSend one of the following: {', '.join(wimage.COMPOSITE_OPERATORS)}"
+        op: str = await self.getUserInput(
+            self.ctx, "message", prompt, post_process=lambda m: m.content.lower()
+        )
+        if op not in wimage.COMPOSITE_OPERATORS:
+            raise ValueError("Invalid image past operator.")
+
+        prompt = "Please send the **X VALUE** for where to paste, from the top-left corner of the image."
+        x = await self.getUserInput(
+            self.ctx, "message", prompt, post_process=self.uint_check
+        )
+        if x > self.img.width:
+            raise ValueError("X Position is greater than image width.")
+
+        prompt = "Please send the **Y VALUE** for where to paste, from the top-left corner of the image."
+        y = await self.getUserInput(
+            self.ctx, "message", prompt, post_process=self.uint_check
+        )
+        if y > self.img.height:
+            raise ValueError("X Position is greater than image width.")
+
+        await self.apply(self.img.composite, img, x, y, operator=op)
+        await self.update(inter, button)
+
     @discord.ui.button(label="Resize")
     async def resize(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.response.defer()
         prompt: str = "Please enter a new **WIDTH** value:"
         w = await self.getUserInput(
-            self.ctx, "message", prompt, post_check=self.checkinp
+            self.ctx, "message", prompt, post_process=self.uint_check
         )
 
         prompt: str = "Please enter a new **HEIGHT** value:"
         h = await self.getUserInput(
-            self.ctx, "message", prompt, post_check=self.checkinp
+            self.ctx, "message", prompt, post_process=self.uint_check
         )
 
         await self.apply(self.img.adaptive_resize, w, h)
+        await self.update(inter, button)
+
+    @discord.ui.button(label="Rotate")
+    async def rotate(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.defer()
+        prompt: str = "Please enter a **DEGREES** value:"
+        degs = await self.getUserInput(
+            self.ctx, "message", prompt, post_process=self.degs_check
+        )
+
+        await self.apply(self.img.rotate, degs)
         await self.update(inter, button)
 
     @discord.ui.button(
@@ -743,24 +877,83 @@ class ImageManipulateView(BaseView):
         prompt: str,
         *,
         check: Callable[[commands.Context], bool] = None,
-        post_check: Callable[[Any], Any] = None,
+        post_process: Callable[[Any], coroutine] = None,
+        post_process_arguments: Tuple[List[Any], Mapping[str, Any]] = ([], {}),
     ):
         check = check or (lambda c: c.author == ctx.author and c.channel == ctx.channel)
         await ctx.interaction.followup.send(prompt, ephemeral=True)
         response = await ctx.bot.wait_for(event, check=check)
-        if post_check is None:
-            return response
-        return post_check(response)
 
-    def checkinp(self, inp: discord.Message):
-        try:
-            inp = int(inp.content.strip())
-            if inp <= 5:
-                raise Exception
-        except Exception:
-            raise ValueError("Invalid number")
+        if post_process is None:
+            return response
+
+        if asyncio.iscoroutinefunction(post_process):
+            return await post_process(
+                *post_process_arguments[0], response, **post_process_arguments[1]
+            )
         else:
-            return inp
+            return post_process(
+                *post_process_arguments[0], response, **post_process_arguments[1]
+            )
+
+    async def uint_check(self, inp: discord.Message):
+        num: int = int(inp.content.strip())
+        try:
+            await inp.delete()
+        except:
+            pass
+        if num < 0:
+            raise ValueError("This number must be positive")
+        return num
+
+    async def degs_check(self, inp: discord.Message):
+        num: float = float(inp.content.strip())
+        try:
+            await inp.delete()
+        except discord.Forbidden:
+            pass
+        return num % 360
+
+    async def getImageFrom(ctx: commands.Context, message: discord.Message):
+        """
+        Gets an Image object from a message. If it references a message, it uses that message instead
+        """
+        if not message.reference:
+            return await ImageManipulateView._getAttachmentFrom(ctx, message)
+        else:
+            ctx.bot: commands.Bot = ctx.bot
+            message = await ctx.channel.fetch_message(id=message.reference.message_id)
+            return await ImageManipulateView._getAttachmentFrom(ctx, message)
+
+    async def _getAttachmentFrom(ctx: commands.Context, message: discord.Message):
+        """
+        Gets an image object from a message, not taking into account message references.
+        """
+        regex = re.compile(
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+        )
+        if not message.attachments:
+            if not (match := regex.fullmatch(message.content)):
+                raise ValueError("Cannot locate valid image.")
+            else:
+                response: aiohttp.ClientResponse = await ctx.bot.session.get(
+                    match.string
+                )
+                img = await response.read()
+                try:
+                    return wimage.Image(blob=img)
+                except:
+                    raise ValueError("Could not load URL image.")
+        else:
+            file = message.attachments[0]
+            buffer = BytesIO()
+            await file.save(buffer)
+            buffer.seek(0)
+
+            try:
+                return wimage.Image(blob=buffer)
+            except:
+                raise ValueError("Could not load attachment into image.")
 
 
 async def setup(bot: commands.Bot):
