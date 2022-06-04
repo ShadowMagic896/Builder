@@ -1,11 +1,10 @@
 import sys
-from typing import Union
+from typing import Any, Union
 import discord
 from discord.ext import commands
 from discord.ext.commands.errors import *
 from discord.errors import *
 
-import asyncio
 from data.Errors import (
     InternalError,
     MissingArguments,
@@ -14,33 +13,44 @@ from data.Errors import (
     SelfAction,
     Unowned,
 )
-from data.settings import CATCH_ERRORS, MODERATE_JISHAKU_COMMANDS
+from data.Settings import (
+    CATCH_ERRORS,
+    MODERATE_JISHAKU_COMMANDS,
+    PRINT_COMMAND_ERROR_TRACKEBACK,
+    PRINT_EVENT_ERROR_TRACEACK,
+)
 
 from src.auxiliary.user.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
 
 
-class Watchers(commands.Cog):
+class ErrorHandling(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         if CATCH_ERRORS:
+            self.bot.on_error = self.on_error
             self.bot.on_command_error = self.on_command_error
             self.bot.tree.on_error = self.on_tree_error
 
+    async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
+        if PRINT_EVENT_ERROR_TRACEACK:
+            sys.stderr.write(
+                f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}\n{sys.exc_info()[2].__repr__()}"
+            )
+
     async def on_command_error(self, ctx: commands.Context, error: Exception):
-        print(f"on_command_error: {error}")
-        print(sys.exc_info()[2])
+        if PRINT_COMMAND_ERROR_TRACKEBACK:
+            sys.stderr.write(
+                f"[COMMAND ERROR]\n{ctx.command.qualified_name} with {ctx.args}\n{sys.exc_info()[2].__repr__()}"
+            )
         return await self._interaction_error_handler(ctx.interaction, error)
 
     async def on_tree_error(self, interaction: discord.Interaction, error: Exception):
-        print(f"on_tree_error: {error}")
         return await self._interaction_error_handler(interaction, error)
 
     async def _interaction_error_handler(
         self, inter: discord.Interaction, error: Exception
     ):
-        if not CATCH_ERRORS:
-            raise error
         if not MODERATE_JISHAKU_COMMANDS and "jishaku" in str(error):
             raise error
 
@@ -100,10 +110,10 @@ class Watchers(commands.Cog):
             ctx = await commands.Context.from_interaction(
                 interaction
             )  # Guarenteed to work with modals (maybe?)
-            return await Watchers(ctx.bot).on_command_error(ctx, error)
+            return await ErrorHandling(ctx.bot).on_command_error(ctx, error)
         except ValueError:
-            return await Watchers._interaction_error_handler(interaction, error)
+            return await ErrorHandling._interaction_error_handler(interaction, error)
 
 
 async def setup(bot):
-    await bot.add_cog(Watchers(bot))
+    await bot.add_cog(ErrorHandling(bot))

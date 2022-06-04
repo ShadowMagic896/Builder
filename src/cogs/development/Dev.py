@@ -5,7 +5,7 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import List
-from data.settings import COG_DIRECTORIES
+from data.Settings import COG_DIRECTORIES
 
 from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.bot.Extensions import load_extensions

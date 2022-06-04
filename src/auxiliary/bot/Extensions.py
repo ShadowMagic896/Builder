@@ -4,7 +4,7 @@ import discord
 
 from discord.ext import commands
 
-from data.settings import NOLOAD_COGS
+from data.Settings import NOLOAD_COGS
 
 
 def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):

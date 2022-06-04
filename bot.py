@@ -23,7 +23,7 @@ from src.auxiliary.bot.Functions import (
 )
 from src.auxiliary.bot.Stats import Stats
 from data.Config import BOT_KEY, DB_PASSWORD, DB_USERNAME
-from data.settings import (
+from data.Settings import (
     COG_DIRECTORIES,
     LOAD_COGS_ON_STARTUP,
     LOAD_JISHAKU,

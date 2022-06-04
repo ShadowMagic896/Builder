@@ -14,7 +14,7 @@ import discord
 from discord.ext import commands
 
 from data.ItemMaps import Chemistry
-from data.settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
+from data.Settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
 
 
 def explode(l: List[commands.HybridCommand]):

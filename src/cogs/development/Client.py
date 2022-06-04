@@ -12,8 +12,8 @@ from src.auxiliary.user.Converters import Cog, Command, Group
 from src.auxiliary.user.Subclass import BaseView
 from src.auxiliary.user.UserIO import (
     cog_autocomplete,
-    command_autocomplete,
     group_autocomplete,
+    command_autocomplete,
 )
 from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.bot.Functions import explode

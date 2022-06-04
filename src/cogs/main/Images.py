@@ -1,12 +1,9 @@
 import asyncio
-from copy import copy
-from inspect import isawaitable
 import io
 from io import BytesIO
 import functools
 import os
 import re
-from types import coroutine
 import aiohttp
 import discord
 from discord.app_commands import describe, Range
@@ -99,7 +96,6 @@ class Images(commands.Cog):
         buffer: io.BytesIO = await PILFN.run(
             PILFN.callOnImage, await PILFN.tobuf(image), "resize", (128, 128)
         )
-
         e: discord.Emoji = await ctx.guild.create_custom_emoji(
             name=name, image=buffer.read(), reason=reason
         )
@@ -405,6 +401,9 @@ class Images(commands.Cog):
     @image.command()
     @describe(image="The image to manipulate")
     async def manipulate(self, ctx: commands.Context, image: discord.Attachment):
+        """
+        Opens up a large menu to transform and edit an image in many ways.
+        """
         buffer: BytesIO = await PILFN.tobuf(image)
 
         view = ImageManipulateView(ctx, buffer)
@@ -674,7 +673,7 @@ class ImageManipulateView(BaseView):
 
     @discord.ui.button(label="Blur")
     async def blur(self, inter: discord.Interaction, button: discord.ui.Button):
-        await self.apply(self.img.blur)
+        await self.apply(self.img.adaptive_blur, sigma=1.5)
         await self.update(inter, button)
 
     @discord.ui.button(label="+Contrast")
@@ -694,8 +693,7 @@ class ImageManipulateView(BaseView):
         passphrase = (
             await self.getUserInput(
                 self.ctx,
-                "message",
-                prompt,
+                ((), {"embed": fmte(self.ctx, prompt)}),
             )
         ).content
         await self.apply(self.img.decipher, passphrase)
@@ -711,11 +709,7 @@ class ImageManipulateView(BaseView):
         await inter.response.defer()
         prompt = "Please enter a **PASSPHRASE:**"
         passphrase = (
-            await self.getUserInput(
-                self.ctx,
-                "message",
-                prompt,
-            )
+            await self.getUserInput(self.ctx, ((), {"embed": fmte(self.ctx, prompt)}))
         ).content
         await self.apply(self.img.encipher, passphrase)
         await self.update(inter, button)
@@ -724,7 +718,6 @@ class ImageManipulateView(BaseView):
     async def equalize(self, inter: discord.Interaction, button: discord.ui.Button):
         await self.apply(self.img.equalize)
         await self.update(inter, button)
-        wimage.Image.com
 
     @discord.ui.button(label="Flip")
     async def flip(self, inter: discord.Interaction, button: discord.ui.Button):
@@ -738,7 +731,7 @@ class ImageManipulateView(BaseView):
 
     @discord.ui.button(label="Sharpen")
     async def sharpen(self, inter: discord.Interaction, button: discord.ui.Button):
-        await self.apply(self.img.adaptive_sharpen)
+        await self.apply(self.img.adaptive_sharpen, sigma=1.5)
         await self.update(inter, button)
 
     @discord.ui.button(label="Painting")
@@ -752,34 +745,37 @@ class ImageManipulateView(BaseView):
         prompt: str = "Please send the image to paste..."
         img: wimage.Image = await self.getUserInput(
             self.ctx,
-            "message",
-            prompt,
+            ((), {"embed": fmte(self.ctx, prompt)}),
             post_process=ImageManipulateView.getImageFrom,
-            post_process_arguments=(
-                [
-                    self.ctx,
-                ],
-                {},
-            ),
+            post_process_arguments=([self.ctx], {}),
         )
 
-        prompt: str = f"What operator should I use?\nSend one of the following: {', '.join(wimage.COMPOSITE_OPERATORS)}"
+        prompt: str = f"What operator should I use?"
+        ext_data = (
+            f"Send one of the following: {', '.join(wimage.COMPOSITE_OPERATORS[1:])}"
+        )
         op: str = await self.getUserInput(
-            self.ctx, "message", prompt, post_process=lambda m: m.content.lower()
+            self.ctx,
+            ((), {"embed": fmte(self.ctx, prompt, ext_data)}),
+            post_process=lambda m: m.content.lower(),
         )
         if op not in wimage.COMPOSITE_OPERATORS:
-            raise ValueError("Invalid image past operator.")
+            raise ValueError("Invalid image paste operator.")
 
         prompt = "Please send the **X VALUE** for where to paste, from the top-left corner of the image."
         x = await self.getUserInput(
-            self.ctx, "message", prompt, post_process=self.uint_check
+            self.ctx,
+            ((), {"embed": fmte(self.ctx, prompt)}),
+            post_process=self.uint_check,
         )
         if x > self.img.width:
             raise ValueError("X Position is greater than image width.")
 
         prompt = "Please send the **Y VALUE** for where to paste, from the top-left corner of the image."
         y = await self.getUserInput(
-            self.ctx, "message", prompt, post_process=self.uint_check
+            self.ctx,
+            ((), {"embed": fmte(self.ctx, prompt)}),
+            post_process=self.uint_check,
         )
         if y > self.img.height:
             raise ValueError("X Position is greater than image width.")
@@ -792,12 +788,16 @@ class ImageManipulateView(BaseView):
         await inter.response.defer()
         prompt: str = "Please enter a new **WIDTH** value:"
         w = await self.getUserInput(
-            self.ctx, "message", prompt, post_process=self.uint_check
+            self.ctx,
+            ((), {"embed": fmte(self.ctx, prompt)}),
+            post_process=self.uint_check,
         )
 
         prompt: str = "Please enter a new **HEIGHT** value:"
         h = await self.getUserInput(
-            self.ctx, "message", prompt, post_process=self.uint_check
+            self.ctx,
+            ((), {"embed": fmte(self.ctx, prompt)}),
+            post_process=self.uint_check,
         )
 
         await self.apply(self.img.adaptive_resize, w, h)
@@ -808,7 +808,9 @@ class ImageManipulateView(BaseView):
         await inter.response.defer()
         prompt: str = "Please enter a **DEGREES** value:"
         degs = await self.getUserInput(
-            self.ctx, "message", prompt, post_process=self.degs_check
+            self.ctx,
+            ((), {"embed": fmte(self.ctx, prompt)}),
+            post_process=self.degs_check,
         )
 
         await self.apply(self.img.rotate, degs)
@@ -873,16 +875,23 @@ class ImageManipulateView(BaseView):
     async def getUserInput(
         self,
         ctx: commands.Context,
-        event: str,
-        prompt: str,
+        prompt_data: Tuple[Optional[List[Any]], Optional[Mapping[str, Any]]],
         *,
         check: Callable[[commands.Context], bool] = None,
-        post_process: Callable[[Any], coroutine] = None,
+        post_process: Callable[
+            [
+                Any,
+            ],
+            Any,
+        ] = None,
         post_process_arguments: Tuple[List[Any], Mapping[str, Any]] = ([], {}),
     ):
         check = check or (lambda c: c.author == ctx.author and c.channel == ctx.channel)
-        await ctx.interaction.followup.send(prompt, ephemeral=True)
-        response = await ctx.bot.wait_for(event, check=check)
+        args = prompt_data[0] if len(prompt_data) >= 1 else ()
+        kwargs = prompt_data[1] if len(prompt_data) >= 2 else {}
+        kwargs.update({"ephemeral": True})
+        await ctx.interaction.followup.send(*args, **kwargs)
+        response = await ctx.bot.wait_for("message", check=check)
 
         if post_process is None:
             return response
@@ -947,7 +956,13 @@ class ImageManipulateView(BaseView):
         else:
             file = message.attachments[0]
             buffer = BytesIO()
-            await file.save(buffer)
+            try:
+                await file.save(buffer)
+            except discord.HTTPException:
+                await ctx.reply(
+                    "Sorry, I had a spasm and couldn't read that image. Please try again :("
+                )
+                return
             buffer.seek(0)
 
             try:

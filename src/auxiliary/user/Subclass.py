@@ -3,8 +3,8 @@ from discord.ext import commands
 from discord.app_commands import errors as app_errors
 
 import math
-from typing import Any, Iterable, List, Optional, Type
-from src.cogs.development.Watchers import Watchers
+from typing import Any, List, Optional, Type
+from src.cogs.development.ErrorHandling import ErrorHandling
 
 from src.auxiliary.user.Embeds import fmte_i
 from src.auxiliary.bot.Constants import CONSTANTS
@@ -42,7 +42,7 @@ class BaseView(discord.ui.View):
             return await interaction.response.send_message(
                 f"This isn't your message!\nYou can create your own with `{interaction.command}`"
             )
-        return await Watchers(self.ctx.bot).on_command_error(self.ctx, error)
+        return await ErrorHandling(self.ctx.bot).on_command_error(self.ctx, error)
 
     async def on_timeout(self) -> None:
         for c in self.children:
@@ -212,4 +212,4 @@ class BaseModal(discord.ui.Modal):
         interaction: discord.Interaction,
         error: Exception,
     ) -> None:
-        return await Watchers.handle_modal_error(interaction, error)
+        return await ErrorHandling.handle_modal_error(interaction, error)
