@@ -1,23 +1,26 @@
 import asyncio
 from asyncio.subprocess import PIPE, Process
-import copy
-from importlib import import_module
-import importlib
-import inspect
-from os import PathLike, getcwd
-import os
-from typing import Callable, List, Literal, Mapping, Optional, Tuple, Type
-import typing
+import re
 import asyncpg
-from chempy.util import periodic
 import discord
 from discord.ext import commands
+from importlib import import_module
+import inspect
+from os import PathLike
+import os
+from typing import Callable, List, Literal, Optional
+from urllib.parse import quote_plus
 
-from data.ItemMaps import Chemistry
-from data.Settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
+from data.Config import DB_PASSWORD, DB_USERNAME
+from data.Settings import (
+    GLOBAL_CHECKS,
+    IGNORED_GLOBALLY_CHECKED_COMMANDS,
+    IGNORED_INHERITED_GROUP_CHECKS,
+    INHERIT_GROUP_CHECKS,
+)
 
 
-def explode(l: List[commands.HybridCommand]):
+def explode(l: List[commands.HybridCommand]) -> List[commands.HybridCommand]:
     l = list(l)
     nl = []
     for c in l:
@@ -71,121 +74,6 @@ async def _addCogLoaders(bot: commands.Bot, filename: PathLike):
         await bot.add_cog(cog(bot))
 
 
-async def ensureDB(
-    bot: commands.Bot,
-    connection: asyncpg.Connection,
-    *,
-    to_drop: List[str] = [],
-):
-    for tab in to_drop:
-        await connection.execute(
-            f"""
-            DROP TABLE IF EXISTS {tab} CASCADE;
-            """
-        )
-    command: str = """
-        CREATE TABLE IF NOT EXISTS atoms (
-            atomid INTEGER PRIMARY KEY,
-            name TEXT,
-            description TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS users (
-            userid BIGINT NOT NULL PRIMARY KEY,
-            balance BIGINT DEFAULT 0 CHECK (balance >= 0)
-        );
-        
-        CREATE TABLE IF NOT EXISTS inventories (
-            userid BIGINT NOT NULL,
-            atomid INTEGER NOT NULL CHECK (atomid > 1),
-            count INTEGER NOT NULL DEFAULT 0 CHECK (count > 0),
-            FOREIGN KEY (atomid) REFERENCES atoms (atomid) ON DELETE CASCADE,
-            FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
-            UNIQUE (userid, atomid)
-        );
-
-        CREATE TABLE IF NOT EXISTS shops (
-            identity SERIAL NOT NULL PRIMARY KEY,
-            userid BIGINT NOT NULL,
-            atomid INTEGER NOT NULL CHECK (atomid > 0),
-            amount INTEGER NOT NULL CHECK (amount > 0),
-            price BIGINT NOT NULL CHECK (price > 0),
-            FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
-            FOREIGN KEY (atomid) REFERENCES atoms (atomid) ON DELETE CASCADE,
-            UNIQUE (userid, atomid)
-        );
-
-        CREATE TABLE IF NOT EXISTS disabled_commands (
-            guildid BIGINT NOT NULL,
-            commandname TEXT UNIQUE NOT NULL,
-            FOREIGN KEY (commandname) REFERENCES commands (commandname) ON DELETE CASCADE
-        );
-        
-        CREATE TABLE IF NOT EXISTS commands (
-            commandname TEXT PRIMARY KEY,
-            parents TEXT[]
-        )
-    """
-    print("CREATING DATABASES...")
-    await connection.execute(command)
-
-    if STARTUP_ENSURE_DEFAULT_ATOMS:
-        print("ENSURING DEFAULT ITEMS...")
-        command = """
-            DELETE FROM atoms;
-        """
-        await connection.execute(command)
-        items: Mapping[str, (int, str)] = {
-            name: (
-                count + 1,
-                f"With the symbol `{symbol}` and mass of `{mass}`, this element is number `{count+1}`",
-            )
-            for name, symbol, mass, count in [
-                (
-                    periodic.names[c],
-                    periodic.symbols[c],
-                    periodic.mass_from_composition({c + 1: 1}),
-                    c,
-                )
-                for c in range(len(periodic.names))
-            ]
-        }
-        arguments: List[Tuple[str, str]] = []
-        for name, val in list(items.items()):
-            arguments.append((val[0], name, val[1]))
-
-        basecommand = """
-            INSERT INTO atoms
-            VALUES (
-                $1,
-                $2,
-                $3
-            )
-        """
-        await connection.executemany(basecommand, arguments)
-    if STARTUP_UPDATE_COMMANDS:
-        bot_commands = explode(bot.commands)
-        arguments = [
-            (
-                command.qualified_name,
-                [parent.qualified_name for parent in command.parents],
-            )
-            for command in bot_commands
-        ]
-        command = """
-            DELETE FROM commands;
-        """
-        await connection.execute(command)
-        command = """
-            INSERT INTO commands
-            VALUES (
-                $1,
-                $2
-            )
-        """
-        await connection.executemany(command, arguments)
-
-
 async def formatCode():
     proc: Process = await asyncio.create_subprocess_shell(f"py -m black .", stdout=PIPE)
     await proc.communicate()
@@ -216,17 +104,46 @@ async def startupPrint(bot: commands.Bot):
     )
 
 
-def interactionChoke(ctx: commands.Context):
-    async def predicate():
-        command = """
-            SELECT commands
-            FROM disabled_commands
-            WHERE guildid = $1
-        """
-        result = await ctx.bot.apg.fetchrow(command, ctx.guild.id)
-        print(result)
-        if ctx.command.qualified_name in result:
-            return False
-        return True
+async def enforceChecks(bot: commands.Bot):
+    if INHERIT_GROUP_CHECKS:
+        return
+    for group in [
+        c for c in explode(bot.commands) if isinstance(c, commands.HybridGroup)
+    ]:
+        checks = group.checks
+        for command in explode(group.commands):
+            if command in IGNORED_INHERITED_GROUP_CHECKS:
+                continue
+            command.checks.extend(checks)
 
-    return commands.check(predicate)
+
+async def applyGlobalCheck(
+    bot: commands.Bot, check: Callable[[commands.Context], bool]
+):
+    for command in explode(bot.commands):
+        if command.qualified_name in IGNORED_GLOBALLY_CHECKED_COMMANDS:
+            continue
+        command.add_check(check)
+
+
+async def applyAllGlobalChecks(bot: commands.Bot):
+    for check in GLOBAL_CHECKS:
+        await applyGlobalCheck(bot, check)
+
+
+async def aquireConnection():
+    user = quote_plus(DB_USERNAME)
+    password = quote_plus(DB_PASSWORD)
+    connection: asyncpg.connection.Connection = await asyncpg.connect(
+        user=user, password=password
+    )
+    return connection
+
+
+async def urlFind(url: str):
+    if not url.startswith("http"):
+        url = f"https://{url}"
+    regex = re.compile(
+        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+    )
+    return regex.findall(url)

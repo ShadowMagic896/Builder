@@ -11,9 +11,9 @@ from typing import List, Optional
 from src.auxiliary.user.Converters import Cog, Command, Group
 from src.auxiliary.user.Subclass import BaseView
 from src.auxiliary.user.UserIO import (
-    cog_autocomplete,
-    group_autocomplete,
-    command_autocomplete,
+    cogAutocomplete,
+    groupAutocomplete,
+    commandAutocomplete,
 )
 from src.auxiliary.user.Embeds import fmte
 from src.auxiliary.bot.Functions import explode
@@ -42,14 +42,13 @@ class Client(commands.Cog):
             scopes=["bot", "applications.commands"],
         )
         embed = fmte(ctx, t="Click the Button Below to Invite Me!")
-        view = BaseView(ctx).add_item(
+        view = discord.ui.View().add_item(
             discord.ui.Button(
                 style=discord.ButtonStyle.link, label="Invite Me!", url=link
             )
         )
 
-        message = await ctx.send(embed=embed, view=view)
-        view.message = message
+        await ctx.send(embed=embed, view=view)
 
     @commands.hybrid_command()
     @commands.cooldown(2, 3600, commands.BucketType.user)
@@ -125,19 +124,19 @@ class Client(commands.Cog):
     async def cog_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await cog_autocomplete(self.bot, inter, current)
+        return await cogAutocomplete(self.bot, inter, current)
 
     @source.autocomplete("group")
     async def group_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await group_autocomplete(self.bot, inter, current)
+        return await groupAutocomplete(self.bot, inter, current)
 
     @source.autocomplete("command")
     async def command_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await command_autocomplete(self.bot, inter, current)
+        return await commandAutocomplete(self.bot, inter, current)
 
     @commands.hybrid_command()
     async def disable(

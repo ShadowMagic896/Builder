@@ -1,28 +1,24 @@
-from asyncio.subprocess import PIPE, Process
 from multiprocessing import freeze_support
-from os import PathLike
-from typing import Callable, Iterable, List, Literal, Optional, Union
+from typing import Iterable, Union
 from urllib.parse import quote_plus
 import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
-from discord.ext.commands import when_mentioned_or
 
 import asyncio
 import logging
 
 from src.auxiliary.bot.Extensions import load_extensions
 from src.auxiliary.bot.Functions import (
-    addCogLoaders,
-    ensureDB,
+    applyAllGlobalChecks,
+    aquireConnection,
     formatCode,
-    interactionChoke,
     startupPrint,
-    explode,
 )
+from src.auxiliary.bot.Database import ensureDB
 from src.auxiliary.bot.Stats import Stats
-from data.Config import BOT_KEY, DB_PASSWORD, DB_USERNAME
+from data.Config import BOT_KEY
 from data.Settings import (
     COG_DIRECTORIES,
     LOAD_COGS_ON_STARTUP,
@@ -94,20 +90,12 @@ async def main():
             bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=True
         )
 
-    user = quote_plus(DB_USERNAME)
-    password = quote_plus(DB_PASSWORD)
+    bot.apg = await aquireConnection()
 
-    # Connect to PostgreSQL database
-    connection: asyncpg.connection.Connection = await asyncpg.connect(
-        user=user, password=password
-    )
-    bot.apg = connection
-
-    await ensureDB(bot, connection)
+    await ensureDB(bot)
     await formatCode()
 
-    for command in bot.commands:
-        command.add_check(interactionChoke)
+    await applyAllGlobalChecks(bot)
 
     await bot.start(BOT_KEY)
 

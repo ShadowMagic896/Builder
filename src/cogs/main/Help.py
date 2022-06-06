@@ -10,9 +10,9 @@ from math import ceil
 from typing import Any, List, Optional, Union
 from src.auxiliary.user.Converters import Cog, Command, Group
 from src.auxiliary.user.UserIO import (
-    cog_autocomplete,
-    group_autocomplete,
-    command_autocomplete,
+    cogAutocomplete,
+    groupAutocomplete,
+    commandAutocomplete,
 )
 from data.Errors import ForbiddenData, MissingCog, MissingCommand
 
@@ -96,19 +96,19 @@ class Help(commands.Cog):
     async def cog_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await cog_autocomplete(self.bot, inter, current)
+        return await cogAutocomplete(self.bot, inter, current)
 
     @help.autocomplete("group")
     async def group_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await group_autocomplete(self.bot, inter, current)
+        return await groupAutocomplete(self.bot, inter, current)
 
     @help.autocomplete("command")
     async def command_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await command_autocomplete(self.bot, inter, current)
+        return await commandAutocomplete(self.bot, inter, current)
 
     async def main_embed(self, ctx: commands.Context, bot: commands.Bot):
         return fmte(

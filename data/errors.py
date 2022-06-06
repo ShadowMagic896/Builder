@@ -98,3 +98,9 @@ class ContainerAlreadyRunning(BaseException):
 
     def __init__(self, error: Any, *args: object) -> None:
         super().__init__(error, *args)
+
+
+class ScopeError(BaseException):
+    """
+    Raised when a user tries to run a command in the incorrect place
+    """

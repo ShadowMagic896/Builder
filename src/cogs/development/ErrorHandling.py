@@ -1,4 +1,5 @@
 import sys
+import traceback
 from typing import Any, Union
 import discord
 from discord.ext import commands
@@ -34,15 +35,15 @@ class ErrorHandling(commands.Cog):
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
         if PRINT_EVENT_ERROR_TRACEACK:
-            sys.stderr.write(
-                f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}\n{sys.exc_info()[2].__repr__()}"
-            )
+            sys.stderr.write(f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}")
+            traceback.print_exc(file=sys.stderr)
 
     async def on_command_error(self, ctx: commands.Context, error: Exception):
         if PRINT_COMMAND_ERROR_TRACKEBACK:
             sys.stderr.write(
-                f"[COMMAND ERROR]\n{ctx.command.qualified_name} with {ctx.args}\n{sys.exc_info()[2].__repr__()}"
+                f"[COMMAND ERROR]\n{ctx.command.qualified_name} with {ctx.args}"
             )
+            traceback.print_tb(error.__traceback__, file=sys.stderr)
         return await self._interaction_error_handler(ctx.interaction, error)
 
     async def on_tree_error(self, interaction: discord.Interaction, error: Exception):
@@ -92,7 +93,7 @@ class ErrorHandling(commands.Cog):
         default: str = (
             "An unknown error has occurred. Please use `/bug` to report this."
         )
-        hint: str = errorDir.get(error, default)
+        hint: str = errorDir.get(type(error), default)
 
         embed = fmte_i(
             inter,

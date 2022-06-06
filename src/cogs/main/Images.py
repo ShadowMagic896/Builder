@@ -4,14 +4,29 @@ from io import BytesIO
 import functools
 import os
 import re
+from time import time
+from tkinter import W
 import aiohttp
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
 
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
-from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont, ImageColor
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
+
+from graphviz import render
+import numpy as np
 
 from src.auxiliary.user.Subclass import BaseView
 
@@ -22,6 +37,8 @@ from data import Config
 
 from src.auxiliary.user.Embeds import fmte, Desc
 from src.auxiliary.bot import Constants
+
+OrderedCollection = Union[List, Tuple]
 
 
 class Images(commands.Cog):
@@ -359,7 +376,7 @@ class Images(commands.Cog):
         )
 
         embed = fmte(ctx, t="Image Successfully Inverted")
-        file = discord.File(buffer, "invr.%s" % image.filename)
+        embed, file = WandImageFunctions.spawnItems(embed)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -415,6 +432,66 @@ class Images(commands.Cog):
         await view.initialCheck()
         message = await ctx.send(embed=embed, view=view)
         view.message = message
+
+    @image.command()
+    @describe(image="The image to get the colors of")
+    async def colors(self, ctx: commands.Context, image: discord.Attachment):
+        """
+        Gets the 5 most common colors in an image
+        """
+        await ctx.interaction.response.defer()
+        buffer: BytesIO = BytesIO()
+        await image.save(buffer)
+        buffer.seek(0)
+        asImage = Image.open(buffer)
+        asImage = await PILFN.run(asImage.convert, "RGBA")
+
+        target_colors = 8
+        rbg_change_leaniency: int = 255
+        in_line: int = 4
+
+        values: List[Tuple[int, Tuple[int, int, int, int]]] = sorted(
+            asImage.getcolors(2**24), reverse=True
+        )[:target_colors]
+
+        # I can't figure out how to remove similar colors efficiently with NumPy right now.
+
+        fp = os.getcwd() + "\\data\\assets\\basePaintTemplate.png"
+        template = Image.open(fp)
+        template = template.convert("RGBA")
+
+        rendered_templates: List[Image.Image] = []
+
+        discord.TextChannel
+        for color in values:
+            rendered_templates.append(
+                await (
+                    await PILFN.run(
+                        PILFN.replaceColor, template, (0, 0, 0, 255), color[1]
+                    )
+                )
+            )
+        w: int = template.width
+        h: int = template.height
+        base = Image.new(
+            "RGBA", (w * in_line, h * (len(rendered_templates) // in_line) or h)
+        )
+        for no, im in enumerate(rendered_templates):
+            # box = (0, no * h, w, (no + 1) * h) # All vertical
+
+            # We do a bit of math :troll:
+            box = [no % in_line * w, no // in_line * h]
+
+            # Add BL vals because PIL can't use self.size ig
+            box.extend([box[0] + w, box[1] + h])
+
+            await PILFN.run(base.paste, im=im, box=box)
+
+        embed = fmte(ctx, t="Colors Retrieved")
+        embed, file = await PILFN.spawnItems(embed, base)
+        embed.set_thumbnail(url=image.url)
+
+        await ctx.send(embed=embed, file=file)
 
     @image.group()
     async def enhance(self, ctx: commands.Context):
@@ -563,6 +640,41 @@ class PILFN:
 
     async def toimg(image: discord.Attachment, check: bool = True) -> Image.Image:
         return Image.open(await PILFN.tobuf(image, check))
+
+    async def replaceColor(
+        img: Image.Image,
+        fromcolor: Tuple[int, int, int],
+        tocolor: Tuple[int, int, int],
+    ) -> Image.Image:
+        img = img.copy()
+        # for xpix in range(img.width):
+        #     for ypix in range(img.height):
+        #         # If the all of the pixel values (R, G, B, A) are within leaniency range of fromcolor
+        #         if img.getpixel((xpix, ypix)) == fromcolor:
+        #             img.putpixel((xpix, ypix), tocolor)
+        fromcolor = list(fromcolor)
+        fromcolor[3] == 255
+        tocolor = list(tocolor)
+        tocolor[3] = 255
+
+        data = np.array(img)
+        data[(data == fromcolor).all(axis=-1)] = tocolor
+        return Image.fromarray(data, mode="RGBA")
+
+    def conformToArray(ar1: List[int], ar2: List[int], leaniency: float = 2):
+        return all([abs(ar1[x] - ar2[x]) <= leaniency for x in range(len(ar2))])
+
+    async def spawnItems(
+        embed: discord.Embed, image: Image.Image
+    ) -> Tuple[discord.Embed, discord.File]:
+        buffer = BytesIO()
+        image.save(buffer, "PNG")
+        buffer.seek(0)
+
+        file = discord.File(fp=buffer, filename="image.png")
+        embed.set_image(url="attachment://image.png")
+
+        return embed, file
 
 
 class WandImageFunctions:
@@ -743,9 +855,12 @@ class ImageManipulateView(BaseView):
     async def paste(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.response.defer()
         prompt: str = "Please send the image to paste..."
+        ext_data: str = (
+            "You can also send a link, or reply to a message with an image or link."
+        )
         img: wimage.Image = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt)}),
+            ((), {"embed": fmte(self.ctx, prompt, ext_data)}),
             post_process=ImageManipulateView.getImageFrom,
             post_process_arguments=([self.ctx], {}),
         )
@@ -931,7 +1046,7 @@ class ImageManipulateView(BaseView):
             return await ImageManipulateView._getAttachmentFrom(ctx, message)
         else:
             ctx.bot: commands.Bot = ctx.bot
-            message = await ctx.channel.fetch_message(id=message.reference.message_id)
+            message = await ctx.channel.fetch_message(message.reference.message_id)
             return await ImageManipulateView._getAttachmentFrom(ctx, message)
 
     async def _getAttachmentFrom(ctx: commands.Context, message: discord.Message):

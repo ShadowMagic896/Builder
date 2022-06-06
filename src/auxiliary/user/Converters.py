@@ -1,12 +1,15 @@
+import asyncio
 from typing import Any, List, Optional, Type, Union
+import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
+from src.auxiliary.bot.Functions import urlFind
 from src.auxiliary.bot.Constants import CONSTANTS
 from data.ItemMaps import Chemistry, getAtomicName
 import re
 
-from data.Errors import ForbiddenData, MissingCog, MissingCommand
+from data.Errors import ForbiddenData, MissingCog, MissingCommand, ScopeError
 
 
 class TimeConvert(commands.Converter):
@@ -118,6 +121,54 @@ class Bound(commands.Converter, int):
             return argument
 
 
+class GuildChannel(commands.Converter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def convert(self, ctx: Context, argument: str) -> discord.abc.GuildChannel:
+        if ctx.guild is None:
+            raise ScopeError("Cannot access a guild here")
+        channels = ctx.guild.channels
+        for chan in channels:
+            if chan.name == argument:
+                return chan
+        else:
+            raise ValueError("Cannot find channel with that name")
+
+
+class UrlGet(commands.Converter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def convert(self, ctx: Context, url: str) -> commands.HybridCommand:
+        if not (result := await urlFind(url)):
+            raise commands.errors.BadArgument("Invalid URL")
+        try:
+            res: aiohttp.ClientResponse = await ctx.bot.session.get(result[0])
+        except aiohttp.InvalidURL:
+            await asyncio.sleep(0)
+            raise commands.errors.BadArgument("Invalid URL")
+        except (
+            aiohttp.client_exceptions.ClientConnectorCertificateError,
+            aiohttp.client_exceptions.ClientConnectorError,
+        ) as e:
+            await asyncio.sleep(0)
+            raise commands.errors.BadArgument(f"Invalid URL Endpoint: {e}")
+
+        await asyncio.sleep(0)
+        return res
+
+
+class UrlFind(commands.Converter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def convert(self, ctx: Context, url: str) -> commands.HybridCommand:
+        if not (result := await urlFind(url)):
+            raise commands.errors.BadArgument("Invalid URL")
+        return result
+
+
 class Cog(commands.Converter):
     def __init__(self) -> None:
         super().__init__()
@@ -151,7 +202,6 @@ class Command(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, command: str) -> commands.HybridCommand:
-        # command = command.lower()
         _command: Optional[
             Union[commands.HybridCommand, commands.Command]
         ] = ctx.bot.get_command(command)

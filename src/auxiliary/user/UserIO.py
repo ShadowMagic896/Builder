@@ -79,7 +79,7 @@ def convCodeBlock(code: str):
     return se.group()
 
 
-async def cog_autocomplete(
+async def cogAutocomplete(
     bot: commands.Bot, inter: discord.Interaction, current: str
 ) -> List[discord.app_commands.Choice[str]]:
     return sorted(
@@ -93,7 +93,7 @@ async def cog_autocomplete(
     )
 
 
-async def group_autocomplete(
+async def groupAutocomplete(
     bot: commands.Bot, inter: discord.Interaction, current: str
 ) -> List[discord.app_commands.Choice[str]]:
     return (
@@ -133,7 +133,7 @@ async def group_autocomplete(
     )
 
 
-async def command_autocomplete(
+async def commandAutocomplete(
     bot: commands.Bot, inter: discord.Interaction, current: str
 ) -> List[discord.app_commands.Choice[str]]:
     return sorted(
@@ -162,3 +162,13 @@ async def command_autocomplete(
         ][:25],
         key=lambda c: c.name[c.name.index("]") + 1 :],
     )
+
+
+async def guildChannelAutoComplete(inter: discord.Interaction, current: str):
+    return [
+        discord.app_commands.Choice(
+            name=f"{type(chan).__name__}: {chan.name}", value=chan.name
+        )
+        for chan in inter.guild.channels
+        if chan.name.lower() in current.lower() or current.lower() in chan.name.lower()
+    ]

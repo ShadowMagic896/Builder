@@ -83,7 +83,8 @@ class Currency(commands.Cog):
             t=f"Are You Sure You Want to Give `{amount:,}`{self.coin} to `{user}`?",
             d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.",
         )
-        await ctx.send(embed=embed, view=GiveView(ctx, amount, ctx.author, user))
+        view = GiveView(ctx, amount, ctx.author, user)
+        view.message = await ctx.send(embed=embed, view=view)
 
     @cur.command()
     @commands.cooldown(2, 120, commands.BucketType.user)
@@ -111,10 +112,7 @@ class Currency(commands.Cog):
         )
 
         view = RequestView(ctx, amount, ctx.author, user)
-        message = await ctx.send(
-            user.mention, embed=embed, view=RequestView(ctx, amount, ctx.author, user)
-        )
-        view.message = message
+        view.message = await ctx.send(user.mention, embed=embed, view=view)
 
     @cur.command()
     @commands.cooldown(1, 30, commands.BucketType.user)
@@ -151,7 +149,6 @@ class Currency(commands.Cog):
         await ctx.send(embed=embed)
 
     @cur.command()
-    # @commands.cooldown(1, 60, commands.BucketType.user)
     async def leaderboard(self, ctx: commands.Context):
         """
         See who's the wealthiest in this server.
@@ -164,8 +161,7 @@ class Currency(commands.Cog):
         view = LeaderboardView(ctx, values, 5)
         embed = await view.page_zero(ctx.interaction)
         await view.checkButtons()
-        message = await ctx.send(embed=embed, view=view)
-        view.message = message
+        view.message = await ctx.send(embed=embed, view=view)
 
     @cur.command()
     @commands.cooldown(3, 120, commands.BucketType.user)
@@ -279,8 +275,7 @@ class Currency(commands.Cog):
     async def quiz(self, ctx: commands.Context):
         embed = fmte(ctx, t="Select Options", d="Once you are finished, press `Start`")
         view = StartQuizView(ctx)
-        message = await ctx.send(embed=embed, view=view)
-        view.message = message
+        view.message = await ctx.send(embed=embed, view=view)
 
     # @cur.command()
     # @commands.is_owner()
