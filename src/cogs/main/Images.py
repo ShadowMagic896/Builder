@@ -4,19 +4,17 @@ from io import BytesIO
 import functools
 import os
 import re
-from time import time
-from tkinter import W
+import time
 import aiohttp
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
 
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont, ImageColor
+from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
 from typing import (
     Any,
     Callable,
-    Iterable,
     List,
     Literal,
     Mapping,
@@ -24,19 +22,19 @@ from typing import (
     Tuple,
     Union,
 )
-
-from graphviz import render
 import numpy as np
+from src.ext.Functions import filterSimilarValues
+from src.ext.ColorFuncs import filterChannels, getChannels, toHex
+from src.ext.Converters import RGB
 
-from src.auxiliary.user.Subclass import BaseView
+from Subclass import BaseView
 
-import wand
 from wand import image as wimage
 
 from data import Config
 
-from src.auxiliary.user.Embeds import fmte, Desc
-from src.auxiliary.bot import Constants
+from src.ext.Embeds import fmte, Desc
+from src.ext import Constants
 
 OrderedCollection = Union[List, Tuple]
 
@@ -366,17 +364,24 @@ class Images(commands.Cog):
 
     @image.command()
     @describe(image="The image to invert")
-    async def invert(self, ctx: commands.Context, image: discord.Attachment):
+    async def invert(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        channel: Literal["R", "G", "B", "RG", "RB", "GB", "GA", "RGB"] = "RGB",
+    ):
         """
         Inverts an image's colors.
         """
 
-        buffer: BytesIO = await PILFN.run(
-            PILFN.callOnImage, await PILFN.tobuf(image), "convert", "L"
+        img: Image.Image = await PILFN.toimg(image)
+        array = np.asarray(img)
+        array: np.ndarray = await PILFN.run(
+            filterChannels, array, 255 - array, channel, False
         )
-
+        img = Image.fromarray(array)
         embed = fmte(ctx, t="Image Successfully Inverted")
-        embed, file = WandImageFunctions.spawnItems(embed)
+        embed, file = await PILFN.spawnItems(embed, img)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -434,29 +439,37 @@ class Images(commands.Cog):
         view.message = message
 
     @image.command()
-    @describe(image="The image to get the colors of")
-    async def colors(self, ctx: commands.Context, image: discord.Attachment):
+    @describe(
+        image="The image to get the colors of",
+        tolerance="Filters similar colors. The smaller the number, the more strict the filtering",
+    )
+    async def colors(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        tolerance: Range[int, 1, 100] = 3,
+    ):
         """
-        Gets the 5 most common colors in an image
+        Gets the most common colors in an image.
         """
         await ctx.interaction.response.defer()
         buffer: BytesIO = BytesIO()
         await image.save(buffer)
         buffer.seek(0)
         asImage = Image.open(buffer)
-        asImage = await PILFN.run(asImage.convert, "RGBA")
+        asImage: Image.Image = await PILFN.run(asImage.convert, "RGBA")
 
         target_colors = 8
-        rbg_change_leaniency: int = 255
         in_line: int = 4
 
         values: List[Tuple[int, Tuple[int, int, int, int]]] = sorted(
             asImage.getcolors(2**24), reverse=True
-        )[:target_colors]
+        )[: target_colors * 3]
+        values = [values[x] async for x in filterSimilarValues(values, tolerance)][
+            :target_colors
+        ]
 
-        # I can't figure out how to remove similar colors efficiently with NumPy right now.
-
-        fp = os.getcwd() + "\\data\\assets\\basePaintTemplate.png"
+        fp = os.getcwd() + "\\data\\assets\\PIL\\basePaintTemplate.png"
         template = Image.open(fp)
         template = template.convert("RGBA")
 
@@ -464,13 +477,21 @@ class Images(commands.Cog):
 
         discord.TextChannel
         for color in values:
-            rendered_templates.append(
-                await (
-                    await PILFN.run(
-                        PILFN.replaceColor, template, (0, 0, 0, 255), color[1]
-                    )
-                )
+            result = await PILFN.run(
+                PILFN.replaceColor, template, (0, 0, 0, 255), color[1]
             )
+
+            draw = ImageDraw.ImageDraw(result, mode="RGBA")
+            as_hex = toHex(color[1][:-1])
+            font = ImageFont.FreeTypeFont(Config.FONT_PATH + "BOOKOSBI.TTF", size=20)
+            inverse = 255 - np.array(color[1])
+            draw.text(
+                (round(result.width / 4), round(result.height / 2)),
+                f"RGBA{tuple(color[1])}\n          {as_hex}",
+                tuple(inverse)[:-1],
+                font,
+            )
+            rendered_templates.append(result)
         w: int = template.width
         h: int = template.height
         base = Image.new(
@@ -492,6 +513,44 @@ class Images(commands.Cog):
         embed.set_thumbnail(url=image.url)
 
         await ctx.send(embed=embed, file=file)
+
+    @image.command()
+    @describe(
+        fromcolor="The color to replace, as RBG[A] values separated by a comma.",
+        tocolor="The color to replace as, as RBG[A] values separated by a comma.",
+    )
+    async def replace(
+        self,
+        ctx: commands.Context,
+        image: discord.Attachment,
+        fromcolor: RGB(True, 255),
+        tocolor: RGB(True, 255),
+        leniency: Optional[int] = 3,
+    ):
+        """
+        Replaces any color with another, with some leniency. Colors an also contain an Alpha value.
+        """
+        img: Image.Image = await PILFN.toimg(image)
+        img = await PILFN.run(PILFN.replaceColor, img, fromcolor, tocolor, leniency)
+
+        embed = fmte(ctx, t="Colors Swapped")
+        embed.add_field(name="From:", value=fromcolor)
+        embed.add_field(name="To:", value=tocolor)
+        embed, file = await PILFN.spawnItems(embed, img)
+        await ctx.send(embed=embed, file=file)
+
+    @image.group()
+    async def meme(self, ctx: commands.Context):
+        pass
+
+    @meme.command()
+    async def slap(self, ctx: commands.Context, user: discord.Member):
+        auth_buf: BytesIO = await ctx.author.display_avatar.read()
+        auth_buf.seek(0)
+        user_buf: BytesIO = await user.display_avatar.read()
+        user_buf.seek(0)
+
+        pass
 
     @image.group()
     async def enhance(self, ctx: commands.Context):
@@ -613,8 +672,11 @@ class PILFN:
         return await asyncio.get_event_loop().run_in_executor(None, partial)
 
     def callOnImage(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
+        ri = kwargs.pop("ri")
         img = Image.open(buffer)
         img: Image.Image = getattr(img, function)(*args, **kwargs)
+        if ri:
+            return img
         buffer: io.BytesIO = io.BytesIO()
         img.save(buffer, "png")
         buffer.seek(0)
@@ -641,24 +703,23 @@ class PILFN:
     async def toimg(image: discord.Attachment, check: bool = True) -> Image.Image:
         return Image.open(await PILFN.tobuf(image, check))
 
-    async def replaceColor(
+    def replaceColor(
         img: Image.Image,
-        fromcolor: Tuple[int, int, int],
-        tocolor: Tuple[int, int, int],
+        fromcolor: Tuple[int, int, int, Optional[int]],
+        tocolor: Tuple[int, int, int, Optional[int]],
+        leniency: int = 0,
     ) -> Image.Image:
         img = img.copy()
-        # for xpix in range(img.width):
-        #     for ypix in range(img.height):
-        #         # If the all of the pixel values (R, G, B, A) are within leaniency range of fromcolor
-        #         if img.getpixel((xpix, ypix)) == fromcolor:
-        #             img.putpixel((xpix, ypix), tocolor)
+
         fromcolor = list(fromcolor)
-        fromcolor[3] == 255
+        if len(fromcolor) == 3:
+            fromcolor.append(0)
         tocolor = list(tocolor)
-        tocolor[3] = 255
+        if len(tocolor) == 3:
+            tocolor.append(0)
 
         data = np.array(img)
-        data[(data == fromcolor).all(axis=-1)] = tocolor
+        data[(abs(data - fromcolor) <= leniency).all(axis=-1)] = tocolor
         return Image.fromarray(data, mode="RGBA")
 
     def conformToArray(ar1: List[int], ar2: List[int], leaniency: float = 2):

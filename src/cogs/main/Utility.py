@@ -5,9 +5,9 @@ import io
 from timeit import timeit
 import pytz
 from bot import Builder
-from src.auxiliary.user.Converters import TimeConvert
-from src.auxiliary.user.Subclass import BaseModal
-from src.auxiliary.user.Embeds import fmte
+from src.ext.Converters import TimeConvert
+from Subclass import BaseModal
+from src.ext.Embeds import fmte
 import time
 import discord
 from discord.app_commands import describe
@@ -60,16 +60,18 @@ class Utility(commands.Cog):
             )
 
         results: List[Tuple[str, Tuple[float, str]]] = []
-
+        expected = [0.05, 0.0015, 0.175]
         botlat = self.bot.latency
         results.append(
-            ("\N{Shinto Shrine} Gateway Latency", (botlat, getSym(botlat, 0.045)))
+            ("\N{Shinto Shrine} Gateway Latency", (botlat, getSym(botlat, expected[0])))
         )
 
         st = time.time()
         await self.bot.apg.execute("SELECT 1")
         end = time.time() - st
-        results.append(("\N{Floppy Disk} Database Latency", (end, getSym(end, 0.001))))
+        results.append(
+            ("\N{Floppy Disk} Database Latency", (end, getSym(end, expected[1])))
+        )
 
         st = time.time()
         await self.bot.session.get("https://www.google.com")
@@ -77,16 +79,16 @@ class Utility(commands.Cog):
         results.append(
             (
                 "\N{Globe with Meridians} AioHTTP Latency [Google]",
-                (end, getSym(end, 0.175)),
+                (end, getSym(end, expected[2])),
             )
         )
 
         # print(results)
         embed = fmte(ctx, t="\N{Table Tennis Paddle and Ball} Pong!")
-        for res in results:
+        for c, res in enumerate(results):
             embed.add_field(
                 name=f"**{res[0]}**",
-                value=f"```ansi\n\u001b[0;34m{round(res[1][0] * 1000, 5)}ms\n{res[1][1]}```",
+                value=f"```ansi\n\u001b[0;34m{round(res[1][0] * 1000, 5)}ms\n{res[1][1]}\n\u001b[1;37mExpected: {expected[c]*1000}ms\n```",
                 inline=False,
             )
         await ctx.send(embed=embed)
@@ -159,13 +161,13 @@ class Utility(commands.Cog):
     @commands.hybrid_command()
     @commands.is_nsfw()
     @describe(
-        querey="What to search for.",
+        query="What to search for.",
     )
-    async def search(self, ctx: commands.Context, querey: str):
+    async def search(self, ctx: commands.Context, query: str):
         """
         Searches the web for a website and returns the first result.
         """
-        url = "https://www.google.com/search?q={}".format(querey)
+        url = "https://www.google.com/search?q={}".format(query)
 
         res = requests.get(url)
 

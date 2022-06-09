@@ -9,9 +9,9 @@ import random
 from typing import Any, List, Mapping, Optional, Union
 from data import Config
 
-from src.auxiliary.user.Embeds import fmte, fmte_i
-from src.auxiliary.bot.Constants import CONSTANTS
-from src.auxiliary.user.Subclass import BaseModal, BaseView, Paginator
+from src.ext.Embeds import fmte, fmte_i
+from src.ext.Constants import CONSTANTS
+from Subclass import BaseModal, BaseView, Paginator
 
 
 class Currency(commands.Cog):

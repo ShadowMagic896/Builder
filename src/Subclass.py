@@ -6,8 +6,8 @@ import math
 from typing import Any, List, Optional, Type
 from src.cogs.development.ErrorHandling import ErrorHandling
 
-from src.auxiliary.user.Embeds import fmte_i
-from src.auxiliary.bot.Constants import CONSTANTS
+from src.ext.Embeds import fmte_i
+from src.ext.Constants import CONSTANTS
 
 
 class BaseView(discord.ui.View):
@@ -19,7 +19,7 @@ class BaseView(discord.ui.View):
     def __init__(
         self,
         ctx: commands.Context,
-        timeout: Optional[float] = 45,
+        timeout: Optional[float] = 300,
     ):
         self.message: discord.Message = None
         self.ctx = ctx

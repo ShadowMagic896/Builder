@@ -3,7 +3,7 @@ from discord.ext import commands
 from typing import List, Mapping, Tuple
 
 from data.Settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
-from src.auxiliary.bot.Functions import explode
+from src.ext.Functions import explode
 
 
 async def ensureDB(

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 import aiohttp
 import bs4
 import discord
@@ -9,10 +9,12 @@ from discord.ext import commands
 import os
 import random
 from bs4 import BeautifulSoup
+from src.ext.Types import NHSearchData
 from data.Config import NSFW_PATH
-from src.auxiliary.user.Subclass import Paginator
+from Subclass import Paginator
+from src.ext.Parsers import Parser
 
-from src.auxiliary.user.Embeds import fmte, fmte_i
+from src.ext.Embeds import fmte, fmte_i
 
 
 class NSFW(commands.Cog):
@@ -29,16 +31,16 @@ class NSFW(commands.Cog):
     @commands.hybrid_command()
     # @commands.is_nsfw()
     @describe(
-        querey="The keywords to search for.",
+        query="The keywords to search for.",
     )
-    async def rule34(self, ctx: commands.Context, querey: str):
+    async def rule34(self, ctx: commands.Context, query: str):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
         """
-        querey = querey.replace(" ", "+")
+        query = query.replace(" ", "+")
         res = await (
             await self.bot.session.get(
-                f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % querey
+                f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % query
             )
         ).text()
         soup = BeautifulSoup(res, "html.parser")
@@ -60,7 +62,7 @@ class NSFW(commands.Cog):
         for url in urls[:10]:
             embed = fmte(
                 ctx,
-                t="R34 Request For: `{}`".format(" ".join(querey)),
+                t="R34 Request For: `{}`".format(" ".join(query)),
                 d="[Source]({})".format(url),
             )
             embed.set_image(url=url)
@@ -138,75 +140,104 @@ class NSFW(commands.Cog):
             await ctx.author.send(embed=embed, file=l)
             await asyncio.sleep(1)
 
-    @commands.hybrid_command()
-    # @commands.is_nsfw()
+    @commands.hybrid_group()
+    async def nhentai(self, ctx: commands.Context):
+        pass
+
+    @nhentai.command()
     @describe(
         code="The code to search for.",
     )
-    async def nhentai(self, ctx: commands.Context, code: int):
+    async def get(self, ctx: commands.Context, code: int):
         """
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
         """
-        meta: NHMeta = await NHMeta.create(ctx, code)
-        view = NHentaiView(meta=meta)
+        meta: NHGetMeta = await NHGetMeta.create(ctx, code)
+        view = NHentaiGetView(meta=meta)
         embed = await view.page_zero(ctx.interaction)
         await view.checkButtons()
         await ctx.send(embed=embed, view=view)
 
-    @commands.hybrid_command()
-    # @commands.is_nsfw()
+    @nhentai.command()
     @describe(
-        querey="The keywords to search for.",
+        query="The keyword to search for.",
     )
-    async def nhsearch(self, ctx: commands.Context, querey: str):
+    async def search(
+        self,
+        ctx: commands.Context,
+        query: str,
+        sort: Optional[Literal["recent", "today", "week", "all-time"]] = "all-time",
+    ):
         """
         Searches for manga on [nhentai.xxx](https://nhentai.xxx) and returns the top results.
         """
-        querey = querey.replace(" ", "+")
-        url = "https://nhentai.xxx/search/?q=%s" % querey
-        res = await (await self.bot.session.get(url)).text()
-        parse = BeautifulSoup(res, "html.parser")
-        codes = []
-        images = []
-        names = []
-
-        embed = fmte(ctx, t="Fetched Images", d="Sending...")
-        await ctx.send(embed=embed)
-
-        for i in parse.find_all("div")[3:-1]:
-            try:
-                if not parse.select_one("div > a"):
-                    continue
-                nparse = BeautifulSoup(str(i), "html.parser")
-                codes.append(nparse.select_one("div > a")["href"][3:-1])
-                images.append(nparse.select_one("div > a > img")["src"])
-                names.append(nparse.select_one("div > a > div"))
-            except BaseException:
-                continue
-
-        if not len(codes) == len(images) == len(names):
-            embed = fmte(
-                ctx,
-                t="Something odd happened, results may be incorrect. If so, please try another search.",
-            )
-        else:
-            embed = fmte(
-                ctx, t="{} results found, sending to author...".format(len(codes))
-            )
-        await ctx.send(embed=embed)
-        for n in range(min(codes.__len__(), images.__len__(), names.__len__())):
-            c = n + 1
-            tot = min(codes.__len__(), images.__len__(), names.__len__())
-
-            name = str(names[n])[21:-6][:235]
-            code = str(codes[n])
-            url = str(images[n])
-            embed = fmte(ctx, t="{} / {}\n{} [{}]".format(c, tot, name, code))
-            embed.set_image(url=url)
-            await ctx.author.send(embed=embed)
+        meta = await NHSearchMeta.create(ctx, query, sort)
+        view = NHSearchView(meta)
+        await view.checkButtons()
+        embed = await view.page_zero(ctx.interaction)
+        view.message = await ctx.send(embed=embed, view=view)
 
 
-class NHMeta:
+class NHSearchMeta:
+    @classmethod
+    async def create(cls, ctx: commands.Context, query: str, sort: str):
+        base_sort: str = "&sort=popular"
+        fmt_dict = {
+            "today": base_sort + "-today",
+            "week": base_sort + "-week",
+            "week": base_sort + "-week",
+            "all-time": "",
+        }
+        sort = fmt_dict.get(query, "")
+        url = f"https://nhentai.xxx/search/?q={query}{sort}"
+        data = [x async for x in Parser(ctx.bot.session, url).nhentaiSearch()]
+
+        cls.ctx = ctx
+        cls.query = query
+        cls.data = data
+
+        return cls
+
+
+class NHSearchView(Paginator):
+    def __init__(
+        self,
+        meta: NHSearchMeta,
+        *,
+        timeout: Optional[float] = 45,
+    ):
+        self.meta = meta
+        super().__init__(self.meta.ctx, range(len(self.meta.data)), 1, timeout=timeout)
+
+    async def adjust(self, embed: discord.Embed):
+        value: NHSearchData = self.meta.data[self.position - 1]
+        url = f"[Visit URL](https://nhentai.xxx/g/{value.code})"
+        embed.add_field(name="Name:", value=value.name, inline=False)
+        embed.add_field(name="URL:", value=url, inline=False)
+        embed.add_field(name="HNentai Code:", value=value.code, inline=False)
+        embed.set_image(url=value.thumbnail)
+
+        return embed
+
+    async def embed(self, inter: discord.Interaction):
+        return fmte(
+            self.ctx,
+            f"NHentai Search Results for `{self.meta.query}`: `{self.position}` / `{self.maxpos or 1}`",
+        )
+
+    @discord.ui.button(label="Select This", emoji="\N{BLACK RIGHTWARDS ARROW}")
+    async def viewthis(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.defer()
+        meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position - 1].code)
+        view = NHentaiGetView(meta)
+        embed = await view.page_zero(inter)
+        await view.checkButtons()
+        view.message = await self.meta.ctx.interaction.followup.send(
+            embed=embed, view=view, wait=True
+        )
+
+
+class NHGetMeta:
     @classmethod
     async def create(cls, ctx: commands.Context, code: int):
         """
@@ -249,10 +280,10 @@ class NHMeta:
         return cls
 
 
-class NHentaiView(Paginator):
+class NHentaiGetView(Paginator):
     def __init__(
         self,
-        meta: NHMeta,
+        meta: NHGetMeta,
         *,
         timeout: Optional[float] = 180,
     ):
@@ -268,7 +299,8 @@ class NHentaiView(Paginator):
 
     async def embed(self, inter: discord.Interaction):
         return fmte_i(
-            inter, t=f"`{self.meta.code}`: `{self.position}` / `{self.maxpos or 1}`"
+            inter,
+            t=f"NHentai `{self.meta.code}`: `{self.position}` / `{self.maxpos or 1}`",
         )
 
 

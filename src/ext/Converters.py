@@ -1,11 +1,12 @@
 import asyncio
-from typing import Any, List, Optional, Type, Union
+from typing import Any, List, Optional, Tuple, Type, Union
 import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
-from src.auxiliary.bot.Functions import urlFind
-from src.auxiliary.bot.Constants import CONSTANTS
+import numpy as np
+from src.ext.Functions import urlFind
+from src.ext.Constants import CONSTANTS
 from data.ItemMaps import Chemistry, getAtomicName
 import re
 
@@ -75,6 +76,18 @@ class ListConverter(commands.Converter):
             .replace(" ", "")
             .split(",")
         ]
+
+
+class XY(commands.Converter):
+    def __init__(self, dtype: type) -> None:
+        self.dtype = dtype
+        super().__init__()
+
+    async def convert(self, ctx: Context, argument: str) -> np.ndarray:
+        arr = np.array(argument.strip(r"[],{}").split(","), dtype=self.dtype)
+        if len(arr) != 2:
+            raise ValueError
+        return arr
 
 
 class Atom(commands.Converter):
@@ -210,3 +223,40 @@ class Command(commands.Converter):
         if command in CONSTANTS.Cogs().FORBIDDEN_COMMANDS:
             raise ForbiddenData("Sorry! No help command is available for that.")
         return _command
+
+
+class RGB(commands.Converter):
+    def __init__(self, alpha: bool = True, alpha_default: int = 255) -> None:
+        self.alpha: bool = alpha
+        self.alpha_default: int = alpha_default
+        super().__init__()
+
+    async def convert(self, ctx: Context, value: str) -> np.ndarray:
+        value = value.strip(" ,.").replace(" ", "")
+        values = value.split(",")
+        values = np.array(values, dtype=int)
+        if self.alpha:
+            if len(values) == 3:
+                av = list(values)
+                av.append(self.alpha_default)
+                values = np.array(av)
+            elif len(values) != 4:
+                raise ValueError(
+                    f"Invalid amount of colors given, expected 3 or 4. Got: {len(values)}"
+                )
+        else:
+            if len(values) != 3:
+                raise ValueError(
+                    f"Invalid amount of colors given, expected 3. Got: {len(values)}"
+                )
+        print(values)
+        if np.any(values[(values > 255) | (values < 0)]):
+            raise ValueError("Value given is either greater an 255 or less than 0")
+        return values
+
+
+def getCastable(item: object, target: type):
+    try:
+        return target(item)
+    except TypeError:
+        return None

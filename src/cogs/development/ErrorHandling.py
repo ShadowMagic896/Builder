@@ -21,7 +21,7 @@ from data.Settings import (
     PRINT_EVENT_ERROR_TRACEACK,
 )
 
-from src.auxiliary.user.Embeds import fmte, fmte_i
+from src.ext.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
 
 
@@ -52,6 +52,8 @@ class ErrorHandling(commands.Cog):
     async def _interaction_error_handler(
         self, inter: discord.Interaction, error: Exception
     ):
+        if not CATCH_ERRORS:
+            raise error
         if not MODERATE_JISHAKU_COMMANDS and "jishaku" in str(error):
             raise error
 

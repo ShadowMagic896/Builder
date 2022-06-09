@@ -2,7 +2,7 @@ from discord.ext import commands
 
 import os
 
-from src.auxiliary.user.Embeds import fmte
+from src.ext.Embeds import fmte
 
 
 class GitHub(commands.Cog):

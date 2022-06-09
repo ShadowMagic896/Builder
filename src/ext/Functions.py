@@ -1,6 +1,8 @@
 import asyncio
 from asyncio.subprocess import PIPE, Process
+from math import prod
 import re
+import time
 import asyncpg
 import discord
 from discord.ext import commands
@@ -131,7 +133,7 @@ async def applyAllGlobalChecks(bot: commands.Bot):
         await applyGlobalCheck(bot, check)
 
 
-async def aquireConnection():
+async def aquire_connection():
     user = quote_plus(DB_USERNAME)
     password = quote_plus(DB_PASSWORD)
     connection: asyncpg.connection.Connection = await asyncpg.connect(
@@ -147,3 +149,20 @@ async def urlFind(url: str):
         r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
     )
     return regex.findall(url)
+
+
+async def filterSimilarValues(values, req_prod_def):
+    # this is kinda a cheap way of doing it. For example, (255, 0, 0) will get discarded if (0, 0, 255) exists
+    # It just saves a signifgant amount of time, and I honestly don't want to write all of the required NumPy stuff to do this properly
+    # Besides, having two start constasts like that is probably uncommon, and a small change like (1, 0, 255) can change it totally.
+    prods = [prod(v[1][:-1]) for v in values]
+    for c, p in enumerate(prods):
+        is_valid = True
+        for xc, xp in enumerate(prods[c + 1 :]):
+            if c == xc:
+                continue
+            if abs(p - xp) < req_prod_def:
+                is_valid = False
+                break
+        if is_valid:
+            yield c

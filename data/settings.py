@@ -3,7 +3,7 @@ from typing import Callable, List, Set
 
 from discord.ext import commands
 
-from src.auxiliary.bot.Checks import interactionChoke
+from src.ext.Checks import interactionChoke
 
 # Directories to look for cogs in
 COG_DIRECTORIES: List[PathLike] = [

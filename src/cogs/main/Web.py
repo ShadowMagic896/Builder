@@ -1,19 +1,24 @@
 import asyncio
-from base64 import decode
 import functools
 from io import BytesIO
 from typing import Any, Callable
+import aiohttp
 import discord
 from discord import app_commands
-from discord.app_commands import describe
+from discord.app_commands import describe, Range
 from discord.ext import commands
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from urllib import parse
+from pyppeteer import __pyppeteer_home__
+import pyppeteer
+from data.Config import CUSTOM_GOOGLE_SEARCH_KEY
 
-from src.auxiliary.user.Converters import UrlGet, UrlFind
-from src.auxiliary.user.Embeds import fmte
+from src.ext.Types import GoogleSearchData
+from src.ext.Converters import UrlGet, UrlFind
+from src.ext.Embeds import fmte
+from src.ext.Parsers import Parser
 
 
 class Web(commands.Cog):
@@ -77,19 +82,34 @@ class Web(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @web.command()
-    @describe(url="The URL to get a screenshot of")
-    async def screenshot(self, ctx: commands.Context, url: UrlFind):
+    @describe(
+        url="The URL to get a screenshot of",
+        wait="How long to wait for the page to load",
+    )
+    async def screenshot(
+        self, ctx: commands.Context, url: UrlFind, wait: Range[int, 0, 25] = 0
+    ):
         """
         Get a screenshot of a webpage
         """
         await ctx.interaction.response.defer()
         self.driver.get(url[0])
-        await asyncio.sleep(1)
+        await asyncio.sleep(wait)
         buffer: BytesIO = BytesIO(await self.run(self.driver.get_screenshot_as_png))
         file = discord.File(buffer, filename="image.png")
         embed = fmte(ctx, t="Screenshot Captured")
         embed.set_image(url="attachment://image.png")
         await ctx.send(embed=embed, file=file)
+
+    @web.command()
+    async def search(self, ctx: commands.Context, query: str):
+        await ctx.interaction.response.defer()
+        query = parse.quote_plus(query.replace(" ", "+"))
+        key = CUSTOM_GOOGLE_SEARCH_KEY
+        url = f"https://customsearch.googleapis.com/customsearch/v1?q={query}"
+        response: aiohttp.ClientResponse = await self.bot.session.get(url)
+        text = await response.text()
+        print(text)
 
     async def run(bot: commands.Bot, func: Callable, *args, **kwargs) -> Any:
         part = functools.partial(func, *args, **kwargs)
@@ -98,6 +118,7 @@ class Web(commands.Cog):
 
 async def setup(bot: commands.Bot):
     options = Options()
+    options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.headless = True
     driver: webdriver.Chrome = await Web.run(bot, webdriver.Chrome, options=options)
     driver.set_window_size(1920, 1080)

@@ -6,12 +6,12 @@ from discord.ext import commands
 from data.Errors import MissingShopEntry, MissingFunds, SelfAction, Unowned
 from data.ItemMaps import Chemistry, getAtomicName
 
-from src.auxiliary.user.Converters import Atom
-from src.auxiliary.user.Embeds import fmte
+from src.ext.Converters import Atom
+from src.ext.Embeds import fmte
 from src.cogs.economy.Atoms import AtomsDatabase
 from src.cogs.economy.Currency import BalanceDatabase
-from src.auxiliary.user.Subclass import BaseView, Paginator
-from src.auxiliary.bot.Constants import CONSTANTS
+from Subclass import BaseView, Paginator
+from src.ext.Constants import CONSTANTS
 
 
 class Shop(commands.Cog):

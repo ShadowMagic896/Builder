@@ -1,4 +1,5 @@
 from multiprocessing import freeze_support
+import time
 from typing import Iterable, Union
 from urllib.parse import quote_plus
 import aiohttp
@@ -9,15 +10,15 @@ from discord.ext import commands
 import asyncio
 import logging
 
-from src.auxiliary.bot.Extensions import load_extensions
-from src.auxiliary.bot.Functions import (
+from src.ext.Extensions import load_extensions
+from src.ext.Functions import (
     applyAllGlobalChecks,
-    aquireConnection,
+    aquire_connection,
     formatCode,
     startupPrint,
 )
-from src.auxiliary.bot.Database import ensureDB
-from src.auxiliary.bot.Stats import Stats
+from src.ext.Database import ensureDB
+from src.ext.Stats import Stats
 from data.Config import BOT_KEY
 from data.Settings import (
     COG_DIRECTORIES,
@@ -75,6 +76,7 @@ class Builder(commands.Bot):
         self.tree.fallback_to_global = False
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self.start_unix = time.time()
 
     async def setup_hook(self) -> None:
         await startupPrint(self)
@@ -90,7 +92,7 @@ async def main():
             bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=True
         )
 
-    bot.apg = await aquireConnection()
+    bot.apg = await aquire_connection()
 
     await ensureDB(bot)
     await formatCode()

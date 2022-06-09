@@ -7,10 +7,10 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 from sqlalchemy import over
 
-from src.auxiliary.user.Embeds import fmte
-from src.auxiliary.user.UserIO import guildChannelAutoComplete
+from src.ext.Embeds import fmte
+from src.ext.UserIO import guildChannelAutoComplete
 
-from src.auxiliary.user.Converters import GuildChannel
+from src.ext.Converters import GuildChannel
 
 
 class Guild(commands.Cog):
