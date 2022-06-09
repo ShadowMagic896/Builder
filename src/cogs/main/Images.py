@@ -23,7 +23,7 @@ from typing import (
 )
 import numpy as np
 from src.utils.Functions import filterSimilarValues
-from src.utils.ColorFuncs import filter_channels, get_channels, toHex
+from src.utils.ColorFuncs import enforce_alpha, filter_channels, get_channels, toHex
 from src.utils.Converters import RGB
 from src.utils.Subclass import BaseView
 
@@ -371,14 +371,13 @@ class Images(commands.Cog):
         """
         Inverts an image's colors.
         """
-
+        # await ctx.interaction.response.defer()
         img: Image.Image = await PILFN.toimg(image)
-        array = np.asarray(img)
-        chan_ind = get_channels(channel)
-        array: np.ndarray = await PILFN.run(
-            filter_channels, array, 255 - array, chan_ind
-        )
-        img = Image.fromarray(array)
+        cr = get_channels(channel)
+        array = np.array(img)
+        for chan in cr:
+            array[..., chan] = 255 - array[..., chan]
+        img = Image.fromarray(array, mode="RGBA")
         embed = fmte(ctx, t="Image Successfully Inverted")
         embed, file = await PILFN.spawnItems(embed, img)
         await ctx.send(embed=embed, file=file)

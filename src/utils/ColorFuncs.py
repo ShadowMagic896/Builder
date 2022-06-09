@@ -3,6 +3,7 @@ Contains functions used in .Images and .Colors for manipulating array-like RBG c
 """
 # fmt: off
 from typing import Set
+import discord
 import numpy as np
 from src.utils.PythonUtil import concat
 
@@ -22,14 +23,19 @@ def enforce_alpha(a1: np.ndarray, default_alpha: int = 255):
 
 def filter_channels(a1: np.ndarray, a2: np.ndarray, channels: Set[int]):
     """
-    Copies values from `a2 to `a1` for each channel in `channels`
+    Copies values from `a2 to `a1` for each `channel` in `channels` 
     """
     if a1.shape != a2.shape:
         raise ValueError("Arrays do not have same shape")
     return np.array([
-        [(a2[val_co][chan_co] if chan_co in channels else a1[val_co][chan_co]) for chan_co in range(4)] 
+        [(a2[val_co][chan_co] if chan_co in channels else a1[val_co][chan_co]) for chan_co in range(len(a1[val_co]))] 
         for val_co in range(len(a1))
     ]).reshape(*a1.shape)
+
+def yield_array(image: discord.Attachment):
+    for col in range(image.width):
+        for row in range(image.height):
+            yield col, row
 
 
 def get_channels(channel: str, alpha: bool = True):
