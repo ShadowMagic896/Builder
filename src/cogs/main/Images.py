@@ -27,7 +27,7 @@ from src.utils.Functions import filterSimilarValues
 from src.utils.ColorFuncs import get_channels, toHex
 from src.utils.Converters import RGB
 from src.utils.Subclass import BaseView
-from src.utils.static.Parameters import TypeHints, Parameters
+from src.utils.static import TypeHints, Parameters
 
 from wand import image as wimage
 
