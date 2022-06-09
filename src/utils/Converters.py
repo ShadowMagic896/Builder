@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, List, Optional, Type, Union
+from typing import Any, List, Literal, Optional, Set, Type, Union
 import aiohttp
 import discord
 from discord.ext import commands
@@ -249,7 +249,6 @@ class RGB(commands.Converter):
                 raise ValueError(
                     f"Invalid amount of colors given, expected 3. Got: {len(values)}"
                 )
-        print(values)
         if np.any(values[(values > 255) | (values < 0)]):
             raise ValueError("Value given is either greater an 255 or less than 0")
         return values
@@ -260,3 +259,29 @@ def getCastable(item: object, target: type):
         return target(item)
     except TypeError:
         return None
+
+
+class ColorChannelConverterNoAlpha(commands.Converter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def convert(self, ctx: Context, argument: str) -> Set[int]:
+        conversion_dict = {
+            "R": 0,
+            "G": 1,
+            "B": 2,
+        }
+        if (chan for chan in argument if chan not in "RGB"):
+            raise ValueError("Invalid channel(s) given")
+        return {conversion_dict.get(chan) for chan in argument.upper()}
+
+
+class ColorChannelConverterAlpha(commands.Converter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    async def convert(self, ctx: Context, argument: str) -> Set[int]:
+        conversion_dict = {"R": 0, "G": 1, "B": 2, "A": 3}
+        if (chan for chan in argument if chan not in "RGBA"):
+            raise ValueError("Invalid channel(s) given")
+        return {conversion_dict.get(chan) for chan in argument.upper()}

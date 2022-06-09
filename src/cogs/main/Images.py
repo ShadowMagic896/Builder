@@ -1,3 +1,4 @@
+from ast import Param
 import asyncio
 import io
 from io import BytesIO
@@ -23,9 +24,10 @@ from typing import (
 )
 import numpy as np
 from src.utils.Functions import filterSimilarValues
-from src.utils.ColorFuncs import enforce_alpha, filter_channels, get_channels, toHex
+from src.utils.ColorFuncs import get_channels, toHex
 from src.utils.Converters import RGB
 from src.utils.Subclass import BaseView
+from src.utils.static.Parameters import TypeHints, Parameters
 
 from wand import image as wimage
 
@@ -33,8 +35,6 @@ from data import Config
 
 from src.utils.Embeds import fmte, Desc
 from src.utils import Constants
-
-OrderedCollection = Union[List, Tuple]
 
 
 class Images(commands.Cog):
@@ -366,12 +366,11 @@ class Images(commands.Cog):
         self,
         ctx: commands.Context,
         image: discord.Attachment,
-        channel: Literal["R", "G", "B", "RG", "RB", "GB", "GA", "RGB"] = "RGB",
+        channel: TypeHints.COLOR_CHANNEL_ALPHA = Parameters.COLOR_CHANNEL_ALPHA,
     ):
         """
-        Inverts an image's colors.
+        Inverts an image's colors for certain channels
         """
-        # await ctx.interaction.response.defer()
         img: Image.Image = await PILFN.toimg(image)
         cr = get_channels(channel)
         array = np.array(img)

@@ -2,7 +2,7 @@ from typing import Literal, Optional
 from discord.ext import commands
 from discord.app_commands import Range, describe
 
-from src.utils.Converters import RGB
+from src.utils.Converters import RGB, ColorChannelConverterAlpha
 from src.utils.ColorFuncs import filter_channels, merge
 from src.utils.Embeds import fmte
 from src.cogs.main.Images import PILFN
@@ -79,7 +79,7 @@ class Colors(commands.Cog):
         self,
         ctx: commands.Context,
         color: RGB(alpha=False),
-        channel: Literal["R", "G", "B", "RG", "RB", "GB", "RGB"] = "RGB",
+        channel: ColorChannelConverterAlpha,
         sizex: Optional[Range[int, 2**4, 2**11]] = 512,
         sizey: Optional[Range[int, 2**4, 2**11]] = 512,
     ):
