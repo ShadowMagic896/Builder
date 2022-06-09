@@ -1,15 +1,13 @@
 from typing import Literal, Optional
-import discord
 from discord.ext import commands
 from discord.app_commands import Range, describe
-import numpy as np
 
-from src.ext.Converters import RGB, XY
-from src.ext.ColorFuncs import filterChannels, merge
-from src.ext.Embeds import fmte
+from src.utils.Converters import RGB
+from src.utils.ColorFuncs import filter_channels, merge
+from src.utils.Embeds import fmte
 from src.cogs.main.Images import PILFN
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 
 class Colors(commands.Cog):
@@ -88,7 +86,7 @@ class Colors(commands.Cog):
         """
         Merges two colors together, then shows it
         """
-        result = filterChannels(color, 255 - color, channel)
+        result = filter_channels(color, 255 - color, channel)
         image = Image.new("P", color=tuple(result), size=(sizex, sizey))
         embed = fmte(ctx, t=f"Showing Inverted Color: {color}")
         embed.add_field(name="Channels:", value=channel)

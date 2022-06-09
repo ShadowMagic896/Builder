@@ -1,26 +1,23 @@
-from inspect import _empty
 import typing
 import discord
 from discord import Interaction, utils
-from discord.app_commands import describe, Range
+from discord.app_commands import describe
 from discord.app_commands.transformers import CommandParameter
 from discord.ext import commands
 
-from math import ceil
-from typing import Any, List, Optional, Union
-from src.ext.Converters import Cog, Command, Group
-from src.ext.UserIO import (
+from typing import Any, List, Optional
+from src.utils.Converters import Cog, Command, Group
+from src.utils.UserIO import (
     cogAutocomplete,
     groupAutocomplete,
     commandAutocomplete,
 )
-from data.Errors import ForbiddenData, MissingCog, MissingCommand
 
-from src.ext.Embeds import fmte, fmte_i
-from src.ext.Functions import explode
-from Subclass import BaseView, Paginator
+from src.utils.Embeds import fmte, fmte_i
+from src.utils.Functions import explode
+from src.utils.Subclass import BaseView, Paginator
 
-from src.ext.Constants import CONSTANTS
+from src.utils.Constants import CONSTANTS
 
 
 class Help(commands.Cog):

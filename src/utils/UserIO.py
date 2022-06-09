@@ -3,8 +3,8 @@ import discord
 from discord.ext import commands
 import re
 
-from src.ext.Functions import explode
-from src.ext.Constants import CONSTANTS
+from src.utils.Functions import explode
+from src.utils.Constants import CONSTANTS
 
 
 def iototime(userinput: str):

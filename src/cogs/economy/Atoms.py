@@ -7,10 +7,10 @@ from discord.ext.commands import parameter
 
 from typing import List, Optional, Union
 from chempy.util import periodic
-from src.ext.Converters import Atom
+from src.utils.Converters import Atom
 
-from src.ext.Embeds import fmte, fmte_i
-from Subclass import Paginator
+from src.utils.Embeds import fmte, fmte_i
+from src.utils.Subclass import Paginator
 from data.ItemMaps import getAtomicName, Chemistry
 
 chem = Chemistry()

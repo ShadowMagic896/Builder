@@ -6,8 +6,8 @@ import math
 from typing import Any, List, Optional, Type
 from src.cogs.development.ErrorHandling import ErrorHandling
 
-from src.ext.Embeds import fmte_i
-from src.ext.Constants import CONSTANTS
+from src.utils.Embeds import fmte_i
+from src.utils.Constants import CONSTANTS
 
 
 class BaseView(discord.ui.View):

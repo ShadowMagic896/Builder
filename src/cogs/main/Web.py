@@ -12,13 +12,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from urllib import parse
 from pyppeteer import __pyppeteer_home__
-import pyppeteer
 from data.Config import CUSTOM_GOOGLE_SEARCH_KEY
 
-from src.ext.Types import GoogleSearchData
-from src.ext.Converters import UrlGet, UrlFind
-from src.ext.Embeds import fmte
-from src.ext.Parsers import Parser
+from src.utils.Types import GoogleSearchData
+from src.utils.Converters import UrlGet, UrlFind
+from src.utils.Embeds import fmte
+from src.utils.Parsers import Parser
 
 
 class Web(commands.Cog):

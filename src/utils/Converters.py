@@ -1,12 +1,12 @@
 import asyncio
-from typing import Any, List, Optional, Tuple, Type, Union
+from typing import Any, List, Optional, Type, Union
 import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 import numpy as np
-from src.ext.Functions import urlFind
-from src.ext.Constants import CONSTANTS
+from src.utils.Functions import urlFind
+from src.utils.Constants import CONSTANTS
 from data.ItemMaps import Chemistry, getAtomicName
 import re
 

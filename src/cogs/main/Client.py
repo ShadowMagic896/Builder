@@ -1,7 +1,6 @@
 import datetime
-import io
-from xmlrpc.client import Server
 import aiofiles
+import io
 import discord
 from discord import TextInput, ui, Interaction
 from discord.app_commands import describe
@@ -11,15 +10,15 @@ import inspect
 import psutil
 from typing import List, Optional
 
-from src.ext.Converters import Cog, Command, Group
-from Subclass import BaseModal, BaseView
-from src.ext.UserIO import (
+from src.utils.Converters import Cog, Command, Group
+from src.utils.Subclass import BaseModal, BaseView
+from src.utils.UserIO import (
     cogAutocomplete,
     groupAutocomplete,
     commandAutocomplete,
 )
-from src.ext.Embeds import fmte, fmte_i
-from src.ext.Functions import explode
+from src.utils.Embeds import fmte, fmte_i
+from src.utils.Functions import explode
 
 
 class Client(commands.Cog):

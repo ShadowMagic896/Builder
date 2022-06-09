@@ -9,12 +9,12 @@ from discord.ext import commands
 import os
 import random
 from bs4 import BeautifulSoup
-from src.ext.Types import NHSearchData
+from src.utils.Types import NHSearchData
 from data.Config import NSFW_PATH
-from Subclass import Paginator
-from src.ext.Parsers import Parser
 
-from src.ext.Embeds import fmte, fmte_i
+from src.utils.Subclass import Paginator
+from src.utils.Parsers import Parser
+from src.utils.Embeds import fmte, fmte_i
 
 
 class NSFW(commands.Cog):

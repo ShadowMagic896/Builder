@@ -9,7 +9,7 @@ import functools
 
 import morse_code
 
-from src.ext.Embeds import fmte
+from src.utils.Embeds import fmte
 
 
 class Secrets(commands.Cog):

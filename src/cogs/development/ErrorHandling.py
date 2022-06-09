@@ -21,7 +21,7 @@ from data.Settings import (
     PRINT_EVENT_ERROR_TRACEACK,
 )
 
-from src.ext.Embeds import fmte, fmte_i
+from src.utils.Embeds import fmte, fmte_i
 from simpleeval import NumberTooHigh
 
 

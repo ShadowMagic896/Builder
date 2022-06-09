@@ -2,12 +2,8 @@ import asyncio
 from asyncio.subprocess import Process
 from datetime import datetime
 import io
-from timeit import timeit
 import pytz
-from bot import Builder
-from src.ext.Converters import TimeConvert
-from Subclass import BaseModal
-from src.ext.Embeds import fmte
+from src.utils.Converters import TimeConvert
 import time
 import discord
 from discord.app_commands import describe
@@ -20,6 +16,8 @@ from data.Errors import *
 import bs4
 import requests
 import warnings
+from src.utils.Embeds import fmte
+from src.utils.Subclass import BaseModal
 
 warnings.filterwarnings("error")
 

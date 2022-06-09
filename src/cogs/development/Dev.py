@@ -7,9 +7,9 @@ from discord.ext import commands
 from typing import List
 from data.Settings import COG_DIRECTORIES
 
-from src.ext.Embeds import fmte
-from src.ext.Extensions import load_extensions
-from src.ext.Functions import explode
+from src.utils.Embeds import fmte
+from src.utils.Extensions import load_extensions
+from src.utils.Functions import explode
 
 
 class Dev(commands.Cog):

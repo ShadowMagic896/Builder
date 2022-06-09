@@ -1,3 +1,7 @@
+"""
+Contains all command checks that the bot uses
+"""
+
 from discord.ext import commands
 
 

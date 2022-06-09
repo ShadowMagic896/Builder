@@ -4,7 +4,6 @@ from io import BytesIO
 import functools
 import os
 import re
-import time
 import aiohttp
 import discord
 from discord.app_commands import describe, Range
@@ -23,18 +22,17 @@ from typing import (
     Union,
 )
 import numpy as np
-from src.ext.Functions import filterSimilarValues
-from src.ext.ColorFuncs import filterChannels, getChannels, toHex
-from src.ext.Converters import RGB
-
-from Subclass import BaseView
+from src.utils.Functions import filterSimilarValues
+from src.utils.ColorFuncs import filter_channels, get_channels, toHex
+from src.utils.Converters import RGB
+from src.utils.Subclass import BaseView
 
 from wand import image as wimage
 
 from data import Config
 
-from src.ext.Embeds import fmte, Desc
-from src.ext import Constants
+from src.utils.Embeds import fmte, Desc
+from src.utils import Constants
 
 OrderedCollection = Union[List, Tuple]
 
@@ -376,8 +374,9 @@ class Images(commands.Cog):
 
         img: Image.Image = await PILFN.toimg(image)
         array = np.asarray(img)
+        chan_ind = get_channels(channel)
         array: np.ndarray = await PILFN.run(
-            filterChannels, array, 255 - array, channel, False
+            filter_channels, array, 255 - array, chan_ind
         )
         img = Image.fromarray(array)
         embed = fmte(ctx, t="Image Successfully Inverted")

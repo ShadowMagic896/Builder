@@ -10,15 +10,15 @@ from discord.ext import commands
 import asyncio
 import logging
 
-from src.ext.Extensions import load_extensions
-from src.ext.Functions import (
+from src.utils.Extensions import load_extensions
+from src.utils.Functions import (
     applyAllGlobalChecks,
     aquire_connection,
     formatCode,
     startupPrint,
 )
-from src.ext.Database import ensureDB
-from src.ext.Stats import Stats
+from src.utils.Database import ensureDB
+from src.utils.Stats import Stats
 from data.Config import BOT_KEY
 from data.Settings import (
     COG_DIRECTORIES,
