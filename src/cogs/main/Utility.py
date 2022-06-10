@@ -1,23 +1,23 @@
-import asyncio
-from asyncio.subprocess import Process
+from codecs import encode
 from datetime import datetime
 import io
+import aiohttp
 import pytz
-from src.utils.Converters import TimeConvert
+from data.Settings import EVALUATION_FILE_THRESHOLD, EVALUATION_TRUNCATION_THRESHOLD
 import time
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-import os
 from typing import Any, List, Tuple
 from data import Config
-from data.Errors import *
 import bs4
 import requests
 import warnings
 from src.utils.Embeds import fmte
 from src.utils.Subclass import BaseModal
+from src.utils.Converters import CodeBlock, TimeConvert
+from src.utils.Errors import *
 
 warnings.filterwarnings("error")
 
@@ -30,6 +30,7 @@ class Utility(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot: commands.Bot = bot
         self.container_users: List[int] = []
+        self.jobs: List[int] = []
         pass
 
     def ge(self):
@@ -365,128 +366,67 @@ class Utility(commands.Cog):
         await ctx.send(_time + time.time())
 
     @commands.hybrid_command()
-    # @commands.cooldown(2, 60 * 60 * 4, commands.BucketType.user)
-    async def container(self, ctx: commands.Context):
+    @commands.cooldown(2, 60 * 5, commands.BucketType.user)
+    async def eval(self, ctx: commands.Context):
         """
-        Creates a docker container and runs Python code inside of it.
+        Creates a sand-box Python environment using SnekBox
         """
-        if ctx.author.id in self.container_users:
-            raise ContainerAlreadyRunning("You are already running a container.")
-        await ctx.interaction.response.send_modal(CodeModal(self, ctx))
+        await ctx.interaction.response.send_modal(CodeModal(ctx))
 
 
 class CodeModal(BaseModal):
-    def __init__(self, util: Utility, ctx: commands.Context) -> None:
-        self.util = util
-        self.ctx: commands.Context = ctx
-        super().__init__(title="Python Evaluation")
+    def __init__(self, ctx: commands.Context) -> None:
+        self.ctx = ctx
+        self.bot = ctx.bot
+        super().__init__(title=f"{ctx.author}: Python Evaluation")
 
     code = discord.ui.TextInput(
-        label="Please paste / type code here", style=discord.TextStyle.long
+        label=f"Paste / Type Code Here",
+        style=discord.TextStyle.long,
+        placeholder="Please input text here...",
     )
 
-    async def makeContainer(self, ctx: commands.Context, inter: discord.Interaction):
-        """
-        Runs a contianer. Returns the result STDOUT, STDERR, and return code.
-        """
-        if ctx.author.id not in [
-            mem.id for mem in (await ctx.bot.application_info()).team.members
-        ]:
-            self.util.container_users.append(ctx.author.id)
-        value: str = self.code.value
-        basepath = f"{os.getcwd()}\\docker"
-
-        # Prepare Files for Building
-        _dir = len(os.listdir(f"{basepath}\\containers"))
-        dirpath = f"{basepath}\\containers\\{_dir}"
-        os.system(f"mkdir {dirpath}")
-
-        pypath = f"{dirpath}\\main.py"
-        with open(pypath, "w") as pyfile:
-            pyfile.write(value)
-
-        for f in os.listdir(f"{basepath}\\template"):
-            with open(f"{basepath}\\template\\{f}", "r") as template:
-                with open(f"{dirpath}\\{f}", "w") as file:
-                    file.write(template.read())
-
-        options = {
-            "--rm": "",
-            "--memory": "6MB",
-            "--ulimit": "cpu=3",
-            "--read-only": "",
-            "-t": _dir,
-        }
-        opts = " ".join(
-            f"{x}{' ' if y != '' else y}{y}" for x, y in list(options.items())
-        )
-
-        # Build the Container
-        await (
-            await asyncio.create_subprocess_shell(
-                f"cd {dirpath} && docker build -t {_dir} . ",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-        ).communicate()
-        print("Communicated")
-        embed = fmte(
-            ctx,
-            t=f"Container Created `[ID: {_dir}]`",
-            d="Compiling and running code...",
-        )
-        await inter.followup.send(embed=embed)
-        proc: Process = await asyncio.create_subprocess_shell(
-            f"cd {dirpath} && docker run {opts}",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await proc.communicate()
-        if stderr:
-            raise InternalError("This server's Docker daemon is not running right now.")
-
-        # Cleanup
-        await (
-            await asyncio.create_subprocess_shell(
-                f"docker image prune -a --force",
-            )
-        ).communicate()
-        try:
-            self.util.container_users.remove(self.ctx.author.id)
-        except ValueError:
-            pass
-
-        return (_dir, stdout, (proc.returncode or 0))
-
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        estart = time.time()
-        await interaction.response.defer(thinking=True)
-        _dir, stdout, return_code = await self.makeContainer(self.ctx, interaction)
+        start = time.time()
+        url: str = "http://localhost:8060/eval"
+        sess: aiohttp.ClientSession = self.bot.session
+        data = {
+            "input": self.code.value,
+        }
+        response = await sess.post(url, data=data)
+        data = await response.json()
 
-        file: discord.File = ...
-        color: discord.Color = ...
-
-        color = discord.Color.teal() if return_code == 0 else discord.Color.red()
-
-        buffer = io.BytesIO()
-        buffer.write(stdout)
-        buffer.seek(0)
-
-        file = discord.File(buffer)
-        file.filename = f"result.{self.ctx.author.id}.py"
-        file.description = f"This is the result of a Python script written by Discord user {self.ctx.author.id}, and run in a Docker container."
-
-        embed = fmte(
-            self.ctx,
-            d=f"```py\n{self.code.value}\n\n# Finished in: {time.time() - estart} seconds\n# Written by: {self.ctx.author.id}```",
-            c=color,
-        )
-
-        await (await interaction.original_message()).edit(
-            content=None, embed=embed, attachments=(file,)
-        )
-        ddir = os.getcwd() + f"\\docker\\containers\\{_dir}"
-        os.system(f"rd /Q /S {ddir}")
+        color = discord.Color.teal() if data["returncode"] == 0 else discord.Color.red()
+        if len(data["stdout"]) > EVALUATION_FILE_THRESHOLD:
+            buffer: io.BytesIO = io.BytesIO()
+            buffer.write(
+                bytes(data["stdout"][:EVALUATION_TRUNCATION_THRESHOLD], "UTF-8")
+            )
+            buffer.seek(0)
+            file: discord.File = discord.File(buffer, filename="result.py")
+            embed = fmte(
+                self.ctx,
+                t="Successful!" if data["returncode"] == 0 else "Error!",
+                c=color,
+            )
+            if data["returncode"] == 143:
+                embed.title = "Signal Terminated"
+            embed.add_field(
+                name="Evaluation Time", value=f"{(time.time() - start) * 1000}ms"
+            )
+            await interaction.response.send_message(embed=embed, file=file)
+        else:
+            embed = fmte(
+                self.ctx,
+                t="Successful!" if data["returncode"] == 0 else "Error!",
+                d=f"```py\n{data['stdout']}\n```",
+                c=color,
+            )
+            embed.add_field(
+                name="Evaluation Time",
+                value=f"{round((time.time() - start) * 1000, 4)}ms",
+            )
+            await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot):

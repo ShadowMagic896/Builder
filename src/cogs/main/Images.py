@@ -33,7 +33,7 @@ from wand import image as wimage
 
 from data import Config
 
-from src.utils.Embeds import fmte, Desc
+from src.utils.Embeds import fmte, Desc, fmte_i
 from src.utils import Constants
 
 
@@ -361,21 +361,30 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @image.command()
-    @describe(image="The image to invert")
+    @describe(
+        image="The image to invert",
+        channels="The channels to invert the image on",
+        pivot="What to pivot the colors upon",
+    )
     async def invert(
         self,
         ctx: commands.Context,
         image: discord.Attachment,
-        channel: TypeHints.COLOR_CHANNEL_ALPHA = Parameters.COLOR_CHANNEL_ALPHA,
+        channels: TypeHints.COLOR_CHANNEL_ALPHA = Parameters.COLOR_CHANNEL_ALPHA,
+        pivot: Range[int, 1, 510] = 255,
     ):
         """
         Inverts an image's colors for certain channels
         """
+        await ctx.interaction.response.defer()
         img: Image.Image = await PILFN.toimg(image)
-        cr = get_channels(channel)
         array = np.array(img)
-        for chan in cr:
-            array[..., chan] = 255 - array[..., chan]
+        for chan in channels:
+            array[..., chan] = pivot - array[..., chan]
+        if pivot != 255:
+            array[array < 0] = 0
+            array[array > 255] = 255
+
         img = Image.fromarray(array, mode="RGBA")
         embed = fmte(ctx, t="Image Successfully Inverted")
         embed, file = await PILFN.spawnItems(embed, img)
@@ -523,12 +532,15 @@ class Images(commands.Cog):
         fromcolor: RGB(True, 255),
         tocolor: RGB(True, 255),
         leniency: Optional[int] = 3,
+        mode: Literal["By Channel", "By Pixel"] = "By Channel",
     ):
         """
         Replaces any color with another, with some leniency. Colors an also contain an Alpha value.
         """
         img: Image.Image = await PILFN.toimg(image)
-        img = await PILFN.run(PILFN.replaceColor, img, fromcolor, tocolor, leniency)
+        array = np.array(img)
+        array[...] = array
+        img = Image.fromarray(array, mode="RGBA")
 
         embed = fmte(ctx, t="Colors Swapped")
         embed.add_field(name="From:", value=fromcolor)
@@ -645,7 +657,9 @@ class Images(commands.Cog):
     @describe(
         user=Desc.user,
     )
-    async def avatar(self, ctx: commands.Context, user: Optional[discord.Member]):
+    async def avatar(
+        self, ctx: commands.Context, user: TypeHints.USER = Parameters.USER
+    ):
         """
         Gets the avatar / profile picture of a member.
         """
@@ -653,10 +667,57 @@ class Images(commands.Cog):
         embed = fmte(
             ctx,
             t="%s's Avatar" % user.display_name,
-            d="[View Link](%s)" % user.avatar.url,
+            d="[View Link](%s)" % user.display_avatar.url,
         )
-        embed.set_image(url=user.avatar.url)
-        await ctx.send(embed=embed)
+        embed.set_image(url=user.display_avatar.url)
+
+        class _GView(BaseView):
+            def __init__(self, ctx: commands.Context, timeout: Optional[float] = 300):
+                super().__init__(ctx, timeout)
+
+            @discord.ui.button(label="View Profile Avatar")
+            async def get(self, inter: discord.Interaction, button: discord.ui.Button):
+                await inter.response.defer()
+                if inter.user.avatar is None:
+                    inter.user.avatar = inter.user.default_avatar
+                embed = fmte(
+                    ctx,
+                    t="%s's Avatar" % user,
+                    d=f"[View Link]({(user.avatar or inter.user.default_avatar).url})",
+                )
+                embed.set_image(url=(user.avatar or inter.user.default_avatar).url)
+                await inter.message.edit(embed=embed, view=_NView(ctx))
+
+            @discord.ui.button(
+                label="Close", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
+            )
+            async def close(self, inter: discord.Interaction, _: Any):
+                await inter.message.delete()
+
+        class _NView(BaseView):
+            def __init__(self, ctx: commands.Context, timeout: Optional[float] = 300):
+                super().__init__(ctx, timeout)
+
+            @discord.ui.button(label="View Guild Avatar")
+            async def get(self, inter: discord.Interaction, button: discord.ui.Button):
+                await inter.response.defer()
+                if inter.user.avatar is None:
+                    inter.user.avatar = inter.user.default_avatar
+                embed = fmte(
+                    ctx,
+                    t="%s's Avatar" % user,
+                    d=f"[View Link]({user.display_avatar.url})",
+                )
+                embed.set_image(url=user.display_avatar.url)
+                await inter.message.edit(embed=embed, view=_GView(ctx))
+
+            @discord.ui.button(
+                label="Close", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
+            )
+            async def close(self, inter: discord.Interaction, _: Any):
+                await inter.message.delete()
+
+        await ctx.send(embed=embed, view=_GView(ctx))
 
 
 class PILFN:

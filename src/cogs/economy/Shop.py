@@ -3,7 +3,7 @@ import asyncpg
 import discord
 from discord.app_commands import Range, describe
 from discord.ext import commands
-from data.Errors import MissingShopEntry, MissingFunds, SelfAction, Unowned
+from src.utils.Errors import MissingShopEntry, MissingFunds, SelfAction, Unowned
 from data.ItemMaps import Chemistry, getAtomicName
 
 from src.utils.Converters import Atom

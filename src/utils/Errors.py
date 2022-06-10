@@ -104,3 +104,15 @@ class ScopeError(BaseException):
     """
     Raised when a user tries to run a command in the incorrect place
     """
+
+    def __init__(self, error: Any, *args: object) -> None:
+        super().__init__(error, *args)
+
+
+class SessionInProgress(BaseException):
+    """
+    Raised when a user tries to run eval when they already have a session in progress
+    """
+
+    def __init__(self, error: Any, *args: object) -> None:
+        super().__init__(error, *args)

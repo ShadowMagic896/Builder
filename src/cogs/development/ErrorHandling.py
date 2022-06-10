@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ext.commands.errors import *
 from discord.errors import *
 
-from data.Errors import (
+from src.utils.Errors import (
     InternalError,
     MissingArguments,
     MissingFunds,
@@ -50,8 +50,10 @@ class ErrorHandling(commands.Cog):
         return await self._interaction_error_handler(interaction, error)
 
     async def _interaction_error_handler(
-        self, inter: discord.Interaction, error: Exception
+        self, inter: discord.Interaction, error: Exception = None
     ):
+        if error is None:
+            inter, error = self, inter
         if not CATCH_ERRORS:
             raise error
         if not MODERATE_JISHAKU_COMMANDS and "jishaku" in str(error):
@@ -109,13 +111,7 @@ class ErrorHandling(commands.Cog):
             await inter.followup.send(embed=embed, ephemeral=True)
 
     async def handle_modal_error(interaction: discord.Interaction, error: Exception):
-        try:
-            ctx = await commands.Context.from_interaction(
-                interaction
-            )  # Guarenteed to work with modals (maybe?)
-            return await ErrorHandling(ctx.bot).on_command_error(ctx, error)
-        except ValueError:
-            return await ErrorHandling._interaction_error_handler(interaction, error)
+        return await ErrorHandling._interaction_error_handler(interaction, error)
 
 
 async def setup(bot):

@@ -10,7 +10,7 @@ from src.utils.Constants import CONSTANTS
 from data.ItemMaps import Chemistry, getAtomicName
 import re
 
-from data.Errors import ForbiddenData, MissingCog, MissingCommand, ScopeError
+from src.utils.Errors import ForbiddenData, MissingCog, MissingCommand, ScopeError
 
 
 class TimeConvert(commands.Converter):
@@ -266,14 +266,12 @@ class ColorChannelConverterNoAlpha(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, argument: str) -> Set[int]:
-        conversion_dict = {
-            "R": 0,
-            "G": 1,
-            "B": 2,
-        }
-        if (chan for chan in argument if chan not in "RGB"):
-            raise ValueError("Invalid channel(s) given")
-        return {conversion_dict.get(chan) for chan in argument.upper()}
+        conversion_dict = {"R": 0, "G": 1, "B": 2}
+        argument = argument.upper()
+        for x in argument:
+            if x not in conversion_dict.keys():
+                raise ValueError("Invalid channel(s) given")
+        return {conversion_dict.get(chan) for chan in argument}
 
 
 class ColorChannelConverterAlpha(commands.Converter):
@@ -282,6 +280,18 @@ class ColorChannelConverterAlpha(commands.Converter):
 
     async def convert(self, ctx: Context, argument: str) -> Set[int]:
         conversion_dict = {"R": 0, "G": 1, "B": 2, "A": 3}
-        if (chan for chan in argument if chan not in "RGBA"):
-            raise ValueError("Invalid channel(s) given")
-        return {conversion_dict.get(chan) for chan in argument.upper()}
+        argument = argument.upper()
+        for x in argument:
+            if x not in conversion_dict.keys():
+                raise ValueError("Invalid channel(s) given")
+        return {conversion_dict.get(chan) for chan in argument}
+
+
+class CodeBlock(commands.Converter):
+    async def convert(self, ctx, block: str):
+        lines = block.split("\n")
+        if "```" in lines[0]:
+            lines.pop(0)
+        if "```" in lines[len(lines) - 1]:
+            lines.pop(len(lines) - 1)
+        return "\n".join(lines)

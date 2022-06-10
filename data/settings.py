@@ -72,3 +72,6 @@ INHERIT_GROUP_CHECKS: bool = True
 
 # A list of checks to NOT inherit, if `INHERIT_GROUP_CHECKS` is true.
 IGNORED_INHERITED_GROUP_CHECKS: List[Callable[[commands.Context], bool]] = []
+
+EVALUATION_FILE_THRESHOLD = 4000
+EVALUATION_TRUNCATION_THRESHOLD = 20000

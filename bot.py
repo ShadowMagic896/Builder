@@ -28,6 +28,7 @@ from data.Settings import (
     SHOW_SOURCE_LINES,
     SOURCE_CODE_PATHS,
 )
+from src.utils.Docker import beginDocker
 
 # Logging ---------------------------------------------------
 logger = logging.getLogger("discord")
@@ -96,6 +97,7 @@ async def main():
 
     await ensureDB(bot)
     await formatCode()
+    await beginDocker()
 
     await applyAllGlobalChecks(bot)
 

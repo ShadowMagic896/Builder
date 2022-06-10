@@ -48,11 +48,9 @@ class BaseView(discord.ui.View):
     async def on_timeout(self) -> None:
         for c in self.children:
             c.disabled = True
-        if self.message is None:
-            raise Exception("bozo you forgor to add the message to the view, imagine")
         try:
             await self.message.edit(view=self)
-        except discord.NotFound:
+        except (discord.NotFound, AttributeError):
             pass
 
 
