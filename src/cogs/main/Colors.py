@@ -7,8 +7,10 @@ from src.utils.ColorFuncs import channels_to_names, merge
 from src.utils.Embeds import fmte
 from src.cogs.main.Images import PILFN
 from src.utils.static.Parameters import COLOR_CHANNEL_ALPHA
+from src.utils.Converters import RGB
 
 from PIL import Image
+
 
 
 class Colors(commands.Cog):
