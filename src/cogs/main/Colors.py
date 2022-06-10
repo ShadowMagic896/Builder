@@ -70,7 +70,6 @@ class Colors(commands.Cog):
         Merges two colors together, then shows it
         """
         result = merge(color1, color2, channel)
-        print(result)
         image = Image.new("RGBA", color=tuple(result), size=(sizex, sizey))
         embed = fmte(ctx, t=f"Showing Merged Colors: {color1} & {color2}")
         embed.add_field(name="Channels:", value=channels_to_names(channel))

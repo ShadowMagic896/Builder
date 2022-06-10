@@ -6,10 +6,10 @@ USER = parameter(default=lambda c: c.author, displayed_default=lambda c: str(c.a
 COLOR_CHANNEL_ALPHA = parameter(
     converter=Converters.ColorChannelConverterAlpha,
     default=lambda c: {0, 1, 2},
-    displayed_default=lambda c: "RGB",
+    displayed_default="R G B",
 )
 COLOR_CHANNEL_NO_ALPHA = parameter(
     converter=Converters.ColorChannelConverterNoAlpha,
     default=lambda c: {0, 1, 2},
-    displayed_default=lambda c: "RGB",
+    displayed_default="R G B",
 )

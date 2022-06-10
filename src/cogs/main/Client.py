@@ -1,4 +1,7 @@
+import asyncio
+from asyncio.subprocess import Process
 import datetime
+import os
 import time
 import aiofiles
 import io
@@ -9,7 +12,7 @@ from discord.ext import commands
 
 import inspect
 import psutil
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from src.utils.Converters import Cog, Command, Group
 from src.utils.Subclass import BaseModal, BaseView
@@ -159,6 +162,18 @@ class Client(commands.Cog):
         """
         start = datetime.datetime.fromtimestamp(self.bot.start_unix)
         embed = fmte(ctx, t=f"Last Restart: <t:{round(self.bot.start_unix)}:R>")
+        await ctx.send(embed=embed)
+
+    @commands.hybrid_command()
+    async def github(self, ctx: commands.Context):
+        """
+        Gets the bot's GitHub push log
+        """
+        shell: Process = await asyncio.create_subprocess_shell(
+            f"cd /d {os.getcwd()} && git config --global --add safe.directory R:/VSCode-Projects/Discord-Bots/Builder && git log"
+        )
+        result: Tuple[bytes, bytes] = await shell.communicate()
+        embed = fmte(ctx, t="Showing Git Log", d=f"```diff\n{result}\n```")
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()

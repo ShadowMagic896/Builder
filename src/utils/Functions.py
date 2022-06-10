@@ -76,7 +76,7 @@ async def _addCogLoaders(bot: commands.Bot, filename: PathLike):
         await bot.add_cog(cog(bot))
 
 
-async def formatCode():
+async def format_code():
     proc: Process = await asyncio.create_subprocess_shell(f"py -m black .", stdout=PIPE)
     await proc.communicate()
 
@@ -128,7 +128,7 @@ async def applyGlobalCheck(
         command.add_check(check)
 
 
-async def applyAllGlobalChecks(bot: commands.Bot):
+async def apply_global_checks(bot: commands.Bot):
     for check in GLOBAL_CHECKS:
         await applyGlobalCheck(bot, check)
 

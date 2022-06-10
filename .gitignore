@@ -5,3 +5,5 @@ data/logs/*
 data/config.py
 programTests.py
 pipdeptree.py
+
+desktop.ini

@@ -391,8 +391,7 @@ class CodeModal(BaseModal):
         url: str = "http://localhost:8060/eval"
         sess: aiohttp.ClientSession = self.bot.session
         code = f"""
-from typing import *
-async def main() -> Any:
+async def main():
 {indent(self.code.value, '    ')}
 import asyncio, typing
 try:

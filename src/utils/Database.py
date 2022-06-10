@@ -6,7 +6,7 @@ from data.Settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
 from src.utils.Functions import explode
 
 
-async def ensureDB(
+async def ensure_database(
     bot: commands.Bot,
     *,
     to_drop: List[str] = [],

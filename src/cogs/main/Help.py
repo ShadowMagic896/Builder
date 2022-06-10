@@ -2,10 +2,9 @@ import typing
 import discord
 from discord import Interaction, utils
 from discord.app_commands import describe
-from discord.app_commands.transformers import CommandParameter
 from discord.ext import commands
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 from data.Settings import INVISIBLE_COGS
 from src.utils.Converters import Cog, Command, Group
 from src.utils.UserIO import (
@@ -122,7 +121,9 @@ class Help(commands.Cog):
     async def command_embed(
         self, ctx: commands.Context, command: commands.HybridCommand
     ):
-        async def getDef(param: CommandParameter):
+        async def getDef(param: commands.Parameter):
+            if isinstance(param.displayed_default, Union[int, float, str]):
+                return param.displayed_default
             try:
                 return str(await param.get_default(ctx))
             except TypeError:
@@ -134,12 +135,14 @@ class Help(commands.Cog):
             # Unwrap Optionals
             if isinstance(anno, typing._UnionGenericAlias):
                 anno = anno.__args__[0]
-
-            if hasattr(
-                anno, "max_value"
-            ):  # Because python be fucky and discord be shady
-                return f"{str(anno.type().name).capitalize()} Range [Minimum: {anno.min_value()}, Maximum: {anno.max_value()}]"
-            return anno.__name__
+            if hasattr(anno, "__name__"):
+                return anno.__name__
+            else:
+                if isinstance(
+                    anno, discord.app_commands.transformers._TransformMetadata
+                ):
+                    return f"{str(anno.metadata.type().name).capitalize()} Range [Minimum: {anno.metadata.min_value()}, Maximum: {anno.metadata.max_value()}]"
+                return anno.__class__.__name__
 
         class FakeParam:
             def __init__(self) -> None:

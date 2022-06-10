@@ -1,9 +1,7 @@
 from multiprocessing import freeze_support
 import time
 from typing import Iterable, Union
-from urllib.parse import quote_plus
 import aiohttp
-import asyncpg
 import discord
 from discord.ext import commands
 
@@ -12,12 +10,12 @@ import logging
 
 from src.utils.Extensions import load_extensions
 from src.utils.Functions import (
-    applyAllGlobalChecks,
+    apply_global_checks,
     aquire_connection,
-    formatCode,
+    format_code,
     startupPrint,
 )
-from src.utils.Database import ensureDB
+from src.utils.Database import ensure_database
 from src.utils.Stats import Stats
 from data.Config import BOT_KEY
 from data.Settings import (
@@ -28,7 +26,7 @@ from data.Settings import (
     SHOW_SOURCE_LINES,
     SOURCE_CODE_PATHS,
 )
-from src.utils.Docker import snekboxExec
+from src.utils.External import snekbox_exec
 
 # Logging ---------------------------------------------------
 logger = logging.getLogger("discord")
@@ -90,16 +88,15 @@ async def main():
 
     if LOAD_COGS_ON_STARTUP:
         await load_extensions(
-            bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=True
+            bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=False
         )
 
     bot.apg = await aquire_connection()
 
-    await ensureDB(bot)
-    await formatCode()
-    await snekboxExec()
-
-    await applyAllGlobalChecks(bot)
+    await ensure_database(bot)
+    await format_code()
+    await snekbox_exec()
+    await apply_global_checks(bot)
 
     await bot.start(BOT_KEY)
 

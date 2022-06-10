@@ -226,6 +226,8 @@ class Command(commands.Converter):
 
 
 class RGB(commands.Converter):
+    __name__ = "RBGA"
+
     def __init__(self, alpha: bool = True, alpha_default: int = 255) -> None:
         self.alpha: bool = alpha
         self.alpha_default: int = alpha_default
