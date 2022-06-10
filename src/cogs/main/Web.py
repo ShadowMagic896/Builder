@@ -21,11 +21,15 @@ from src.utils.Parsers import Parser
 
 
 class Web(commands.Cog):
+    """
+    The wonders of the interwebs!
+    """
+
     def __init__(self, bot: commands, driver: webdriver.Chrome) -> None:
         self.bot = bot
         self.driver: webdriver.Chrome = driver
 
-    async def ge(self):
+    def ge(self):
         return "\N{GLOBE WITH MERIDIANS}"
 
     @commands.hybrid_group()

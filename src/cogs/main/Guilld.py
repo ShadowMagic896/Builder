@@ -1,23 +1,23 @@
 import asyncio
 from copy import copy
-from typing import Any, Optional
+from typing import Optional
 import discord
 from discord import app_commands
-from discord.app_commands import describe, Range
+from discord.app_commands import describe
 from discord.ext import commands
-from sqlalchemy import over
 
 from src.utils.Embeds import fmte
-from src.utils.UserIO import guildChannelAutoComplete
-
-from src.utils.Converters import GuildChannel
 
 
 class Guild(commands.Cog):
+    """
+    Get them in line
+    """
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    async def ge(self):
+    def ge(self):
         return "\N{HUT}"
 
     @commands.hybrid_group()

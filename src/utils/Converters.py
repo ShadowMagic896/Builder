@@ -280,7 +280,7 @@ class ColorChannelConverterAlpha(commands.Converter):
 
     async def convert(self, ctx: Context, argument: str) -> Set[int]:
         conversion_dict = {"R": 0, "G": 1, "B": 2, "A": 3}
-        argument = argument.upper()
+        argument = argument.upper().replace(" ", "")
         for x in argument:
             if x not in conversion_dict.keys():
                 raise ValueError("Invalid channel(s) given")

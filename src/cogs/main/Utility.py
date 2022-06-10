@@ -1,10 +1,11 @@
-from codecs import encode
+import aiohttp
 from datetime import datetime
 import io
-import aiohttp
+from textwrap import indent
 import pytz
-from data.Settings import EVALUATION_FILE_THRESHOLD, EVALUATION_TRUNCATION_THRESHOLD
+from data.Settings import EVALUATION_TRUNCATION_THRESHOLD
 import time
+
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
@@ -16,7 +17,7 @@ import requests
 import warnings
 from src.utils.Embeds import fmte
 from src.utils.Subclass import BaseModal
-from src.utils.Converters import CodeBlock, TimeConvert
+from src.utils.Converters import TimeConvert
 from src.utils.Errors import *
 
 warnings.filterwarnings("error")
@@ -366,10 +367,9 @@ class Utility(commands.Cog):
         await ctx.send(_time + time.time())
 
     @commands.hybrid_command()
-    @commands.cooldown(2, 60 * 5, commands.BucketType.user)
     async def eval(self, ctx: commands.Context):
         """
-        Creates a sand-box Python environment using SnekBox
+        Creates an asynchronous sandbox Python environment using SnekBox
         """
         await ctx.interaction.response.send_modal(CodeModal(ctx))
 
@@ -390,43 +390,41 @@ class CodeModal(BaseModal):
         start = time.time()
         url: str = "http://localhost:8060/eval"
         sess: aiohttp.ClientSession = self.bot.session
-        data = {
-            "input": self.code.value,
-        }
+        code = f"""
+from typing import *
+async def main() -> Any:
+{indent(self.code.value, '    ')}
+import asyncio, typing
+try:
+    result: typing.Any = asyncio.run(main())
+    if result is not None:
+        print(result)
+except ValueError:
+    async def iterate() -> None:
+        print([value async for value in main()])
+    asyncio.run(iterate())
+"""
+        data = {"input": code}
         response = await sess.post(url, data=data)
         data = await response.json()
 
         color = discord.Color.teal() if data["returncode"] == 0 else discord.Color.red()
-        if len(data["stdout"]) > EVALUATION_FILE_THRESHOLD:
-            buffer: io.BytesIO = io.BytesIO()
-            buffer.write(
-                bytes(data["stdout"][:EVALUATION_TRUNCATION_THRESHOLD], "UTF-8")
-            )
-            buffer.seek(0)
-            file: discord.File = discord.File(buffer, filename="result.py")
-            embed = fmte(
-                self.ctx,
-                t="Successful!" if data["returncode"] == 0 else "Error!",
-                c=color,
-            )
-            if data["returncode"] == 143:
-                embed.title = "Signal Terminated"
-            embed.add_field(
-                name="Evaluation Time", value=f"{(time.time() - start) * 1000}ms"
-            )
-            await interaction.response.send_message(embed=embed, file=file)
-        else:
-            embed = fmte(
-                self.ctx,
-                t="Successful!" if data["returncode"] == 0 else "Error!",
-                d=f"```py\n{data['stdout']}\n```",
-                c=color,
-            )
-            embed.add_field(
-                name="Evaluation Time",
-                value=f"{round((time.time() - start) * 1000, 4)}ms",
-            )
-            await interaction.response.send_message(embed=embed)
+        buffer: io.BytesIO = io.BytesIO()
+        buffer.write(bytes(data["stdout"][:EVALUATION_TRUNCATION_THRESHOLD], "UTF-8"))
+        buffer.seek(0)
+        file: discord.File = discord.File(buffer, filename="result.py")
+        embed = fmte(
+            self.ctx,
+            t="Successful!" if data["returncode"] == 0 else "Error!",
+            d=f"```py\n{self.code.value}\n```",
+            c=color,
+        )
+        if data["returncode"] == 143:
+            embed.title = "Signal Terminated"
+        embed.add_field(
+            name="Evaluation Time", value=f"{(time.time() - start) * 1000}ms"
+        )
+        await interaction.response.send_message(embed=embed, file=file)
 
 
 async def setup(bot):

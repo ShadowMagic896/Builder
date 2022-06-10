@@ -1,4 +1,5 @@
 import datetime
+import time
 import aiofiles
 import io
 import discord
@@ -152,7 +153,19 @@ class Client(commands.Cog):
         return await commandAutocomplete(self.bot, inter, current)
 
     @commands.hybrid_command()
+    async def uptime(self, ctx: commands.Context):
+        """
+        Find out how long the bot has been online for
+        """
+        start = datetime.datetime.fromtimestamp(self.bot.start_unix)
+        embed = fmte(ctx, t=f"Last Restart: {start}")
+        await ctx.send(embed=embed)
+
+    @commands.hybrid_command()
     async def about(self, ctx: commands.Context):
+        """
+        Who is this guy, anyways?
+        """
         view = ServerInformation(ctx)
         view.message = await ctx.send(embed=await Client.getAboutEmbed(ctx), view=view)
 
@@ -292,7 +305,7 @@ class ServerInformation(BaseView):
             )
         embed.add_field(
             name="CPU",
-            value=f"ㅤㅤ**Amount:**: `{psutil.cpu_count()}`\n"
+            value=f"ㅤㅤ**CPUs:** `{psutil.cpu_count(True)}`\n"
             f"ㅤㅤ**Percents:** `{psutil.cpu_percent(percpu=False)}`\n"
             f"ㅤㅤ**Frequency:** `{round(freq.current)}Mhz`\n",
         )

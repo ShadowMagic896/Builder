@@ -6,6 +6,7 @@ from discord.app_commands.transformers import CommandParameter
 from discord.ext import commands
 
 from typing import Any, List, Optional
+from data.Settings import INVISIBLE_COGS
 from src.utils.Converters import Cog, Command, Group
 from src.utils.UserIO import (
     cogAutocomplete,
@@ -241,7 +242,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
         self.lastrem = None
 
         for name, cog in ctx.bot.cogs.items():
-            if name in CONSTANTS.Cogs().FORBIDDEN_COGS:
+            if name in INVISIBLE_COGS:
                 continue
             options.append(
                 discord.SelectOption(

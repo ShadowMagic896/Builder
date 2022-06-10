@@ -28,7 +28,7 @@ from data.Settings import (
     SHOW_SOURCE_LINES,
     SOURCE_CODE_PATHS,
 )
-from src.utils.Docker import beginDocker
+from src.utils.Docker import snekboxExec
 
 # Logging ---------------------------------------------------
 logger = logging.getLogger("discord")
@@ -97,7 +97,7 @@ async def main():
 
     await ensureDB(bot)
     await formatCode()
-    await beginDocker()
+    await snekboxExec()
 
     await applyAllGlobalChecks(bot)
 

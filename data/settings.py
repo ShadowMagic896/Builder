@@ -24,6 +24,9 @@ PREFIXES: Set[str] = {">>"}
 # Whether to execute load_extensions on startup
 LOAD_COGS_ON_STARTUP: bool = True
 
+# Cogs that do not show up on help command
+INVISIBLE_COGS: List[str] = ["ErrorHandling", "Help", "Dev", "GitHub"]
+
 # Whether to set the bot's status to the amount of source lines
 SHOW_SOURCE_LINES: bool = True
 

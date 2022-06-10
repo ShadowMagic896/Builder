@@ -24,7 +24,7 @@ from typing import (
 )
 import numpy as np
 from src.utils.Functions import filterSimilarValues
-from src.utils.ColorFuncs import get_channels, toHex
+from src.utils.ColorFuncs import to_hex
 from src.utils.Converters import RGB
 from src.utils.Subclass import BaseView
 from src.utils.static import TypeHints, Parameters
@@ -488,7 +488,7 @@ class Images(commands.Cog):
             )
 
             draw = ImageDraw.ImageDraw(result, mode="RGBA")
-            as_hex = toHex(color[1][:-1])
+            as_hex = to_hex(color[1][:-1])
             font = ImageFont.FreeTypeFont(Config.FONT_PATH + "BOOKOSBI.TTF", size=20)
             inverse = 255 - np.array(color[1])
             draw.text(
