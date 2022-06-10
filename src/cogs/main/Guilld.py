@@ -2,7 +2,6 @@ import asyncio
 from copy import copy
 from typing import Optional
 import discord
-from discord import app_commands
 from discord.app_commands import describe
 from discord.ext import commands
 

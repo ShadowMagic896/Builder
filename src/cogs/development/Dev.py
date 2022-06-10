@@ -1,6 +1,5 @@
 from subprocess import Popen
 from discord import app_commands
-import discord
 from discord.app_commands import describe
 from discord.ext import commands
 

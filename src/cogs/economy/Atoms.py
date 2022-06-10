@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 from chempy.util import periodic
 from src.utils.Converters import Atom
 
-from src.utils.Embeds import fmte, fmte_i
+from src.utils.Embeds import fmte
 from src.utils.Subclass import Paginator
 from data.ItemMaps import getAtomicName, Chemistry
 

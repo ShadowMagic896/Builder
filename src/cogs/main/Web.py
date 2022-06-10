@@ -14,10 +14,8 @@ from urllib import parse
 from pyppeteer import __pyppeteer_home__
 from data.Config import CUSTOM_GOOGLE_SEARCH_KEY
 
-from src.utils.Types import GoogleSearchData
 from src.utils.Converters import UrlGet, UrlFind
 from src.utils.Embeds import fmte
-from src.utils.Parsers import Parser
 
 
 class Web(commands.Cog):

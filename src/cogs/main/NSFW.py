@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Literal, Optional, Tuple
+from typing import List, Literal, Optional
 import aiohttp
 import bs4
 import discord

@@ -1,9 +1,8 @@
 from copy import copy
-from typing import Literal, Optional
+from typing import Optional
 from discord.ext import commands
 from discord.app_commands import Range, describe
 
-from src.utils.Converters import RGB, ColorChannelConverterAlpha
 from src.utils.ColorFuncs import channels_to_names, merge
 from src.utils.Embeds import fmte
 from src.cogs.main.Images import PILFN

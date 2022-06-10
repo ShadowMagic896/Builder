@@ -12,7 +12,7 @@ from discord.ext import commands
 
 import inspect
 import psutil
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from src.utils.Converters import Cog, Command, Group
 from src.utils.Subclass import BaseModal, BaseView
@@ -32,6 +32,7 @@ class Client(commands.Cog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.last_updated_log = 0
 
     def ge(self):
         return "\N{ROBOT FACE}"
@@ -169,12 +170,23 @@ class Client(commands.Cog):
         """
         Gets the bot's GitHub push log
         """
-        shell: Process = await asyncio.create_subprocess_shell(
-            f"cd /d {os.getcwd()} && git config --global --add safe.directory R:/VSCode-Projects/Discord-Bots/Builder && git log"
+        if time.time() - self.last_updated_log > 300:
+            shell: Process = await asyncio.create_subprocess_shell(
+                f"cd /d {os.getcwd()} && git config --global --add safe.directory R:/VSCode-Projects/Discord-Bots/Builder && git log -t --diff-merges=on --max-count 3 > data/logs/git.log"
+            )
+            await shell.communicate()
+            self.last_updated_log = time.time()
+        file: discord.File = discord.File(
+            "data/logs/git.log",
+            filename="repo.diff",
+            description="Builder's GitHub repository log",
         )
-        result: Tuple[bytes, bytes] = await shell.communicate()
-        embed = fmte(ctx, t="Showing Git Log", d=f"```diff\n{result}\n```")
-        await ctx.send(embed=embed)
+        embed = fmte(
+            ctx,
+            t="Showing Git Log",
+        )
+        await ctx.send(embed=embed, file=file)
+        file.close()
 
     @commands.hybrid_command()
     async def about(self, ctx: commands.Context):

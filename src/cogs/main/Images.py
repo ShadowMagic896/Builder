@@ -1,4 +1,3 @@
-from ast import Param
 import asyncio
 import io
 from io import BytesIO
@@ -20,7 +19,6 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
-    Union,
 )
 import numpy as np
 from src.utils.Functions import filterSimilarValues
@@ -33,7 +31,7 @@ from wand import image as wimage
 
 from data import Config
 
-from src.utils.Embeds import fmte, Desc, fmte_i
+from src.utils.Embeds import fmte, Desc
 from src.utils import Constants
 
 
