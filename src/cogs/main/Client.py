@@ -158,7 +158,7 @@ class Client(commands.Cog):
         Find out how long the bot has been online for
         """
         start = datetime.datetime.fromtimestamp(self.bot.start_unix)
-        embed = fmte(ctx, t=f"Last Restart: {start}")
+        embed = fmte(ctx, t=f"Last Restart: <t:{round(self.bot.start_unix)}:R>")
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
