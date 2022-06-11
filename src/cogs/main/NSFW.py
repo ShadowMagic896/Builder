@@ -15,6 +15,7 @@ from data.Config import NSFW_PATH
 from src.utils.Subclass import Paginator
 from src.utils.Parsers import Parser
 from src.utils.Embeds import fmte, fmte_i
+from bot import BuilderContext
 
 
 class NSFW(commands.Cog):
@@ -33,7 +34,7 @@ class NSFW(commands.Cog):
     @describe(
         query="The keywords to search for.",
     )
-    async def rule34(self, ctx: commands.Context, query: str):
+    async def rule34(self, ctx: BuilderContext, query: str):
         """
         Gets images from [rule34.xxx](https://rule34.xxx]) and sends the first 10 images to you.
         """
@@ -75,7 +76,7 @@ class NSFW(commands.Cog):
     )
     async def neko(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         amount: Range[int, 1, 20] = 1,
     ):
         """
@@ -111,7 +112,7 @@ class NSFW(commands.Cog):
     )
     async def nekolewd(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         amount: Range[int, 1, 20] = 1,
     ):
         """
@@ -141,14 +142,14 @@ class NSFW(commands.Cog):
             await asyncio.sleep(1)
 
     @commands.hybrid_group()
-    async def nhentai(self, ctx: commands.Context):
+    async def nhentai(self, ctx: BuilderContext):
         pass
 
     @nhentai.command()
     @describe(
         code="The code to search for.",
     )
-    async def get(self, ctx: commands.Context, code: int):
+    async def get(self, ctx: BuilderContext, code: int):
         """
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
         """
@@ -164,7 +165,7 @@ class NSFW(commands.Cog):
     )
     async def search(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         query: str,
         sort: Optional[Literal["recent", "today", "week", "all-time"]] = "all-time",
     ):
@@ -180,7 +181,7 @@ class NSFW(commands.Cog):
 
 class NHSearchMeta:
     @classmethod
-    async def create(cls, ctx: commands.Context, query: str, sort: str):
+    async def create(cls, ctx: BuilderContext, query: str, sort: str):
         base_sort: str = "&sort=popular"
         fmt_dict = {
             "today": base_sort + "-today",
@@ -239,7 +240,7 @@ class NHSearchView(Paginator):
 
 class NHGetMeta:
     @classmethod
-    async def create(cls, ctx: commands.Context, code: int):
+    async def create(cls, ctx: BuilderContext, code: int):
         """
         Get the base metadata for a page
         """
@@ -269,7 +270,7 @@ class NHGetMeta:
 
         baseurl = f"https://cdn.nhentai.xxx/g/{datacode}/"
 
-        cls.ctx: commands.Context = ctx
+        cls.ctx: BuilderContext = ctx
 
         cls.code: int = code
         cls.datacode: int = datacode

@@ -20,11 +20,11 @@
 
 #     @gui.command()
 #     @commands.is_owner()
-#     async def goto(self, ctx: commands.Context, x: int, y: int):
+#     async def goto(self, ctx: BuilderContext, x: int, y: int):
 #         pyautogui.moveTo(x, y)
 
 #     @gui.command()
-#     async def ss(self, ctx: commands.Context, regionx: int = 0, regiony: int = 0, regionwidth: int = pyautogui.size()[0], regionheight: int = pyautogui.size()[1]):
+#     async def ss(self, ctx: BuilderContext, regionx: int = 0, regiony: int = 0, regionwidth: int = pyautogui.size()[0], regionheight: int = pyautogui.size()[1]):
 #         pyautogui.screenshot(
 #             region=(
 #                 regionx,
@@ -38,7 +38,7 @@
 
 #     @gui.command()
 #     @commands.is_owner()
-#     async def open(self, ctx: discord.ext.commands.Context, location: str = "C:\\Users\\ryano\\Downloads\\VisualBoyAdvance.exe"):
+#     async def open(self, ctx: discord.ext.BuilderContext, location: str = "C:\\Users\\ryano\\Downloads\\VisualBoyAdvance.exe"):
 #         os.startfile(location)
 
 #     @gui.command()

@@ -18,6 +18,7 @@ from src.utils.Functions import explode
 from src.utils.Subclass import BaseView, Paginator
 
 from src.utils.Constants import CONSTANTS
+from bot import BuilderContext
 
 
 class Help(commands.Cog):
@@ -32,7 +33,7 @@ class Help(commands.Cog):
     )
     async def help(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         cog: Optional[Cog],
         group: Optional[Group],
         command: Optional[Command],
@@ -107,7 +108,7 @@ class Help(commands.Cog):
     ) -> List[discord.app_commands.Choice[str]]:
         return await commandAutocomplete(self.bot, inter, current)
 
-    async def main_embed(self, ctx: commands.Context, bot: commands.Bot):
+    async def main_embed(self, ctx: BuilderContext, bot: commands.Bot):
         return fmte(
             ctx,
             t="Help",
@@ -118,9 +119,7 @@ class Help(commands.Cog):
             ),
         )
 
-    async def command_embed(
-        self, ctx: commands.Context, command: commands.HybridCommand
-    ):
+    async def command_embed(self, ctx: BuilderContext, command: commands.HybridCommand):
         async def getDef(param: commands.Parameter):
             if isinstance(param.displayed_default, Union[int, float, str]):
                 return param.displayed_default
@@ -184,7 +183,7 @@ class Help(commands.Cog):
 class CommandView(Paginator):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         cog: commands.Cog,
     ):
         values: List[commands.HybridCommand] = sorted(
@@ -211,7 +210,7 @@ class CommandView(Paginator):
 
 
 class GroupView(Paginator):
-    def __init__(self, ctx: commands.Context, group: commands.HybridGroup):
+    def __init__(self, ctx: BuilderContext, group: commands.HybridGroup):
         self.group = group
         values: List[commands.HybridCommand] = sorted(
             explode(group.commands), key=lambda c: c.qualified_name
@@ -237,7 +236,7 @@ class GroupView(Paginator):
 
 
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
-    def __init__(self, ctx: commands.Context):
+    def __init__(self, ctx: BuilderContext):
         placeholder = "\N{MEDIUM WHITE CIRCLE} Cog Selection..."
         options = []
 

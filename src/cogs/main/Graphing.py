@@ -13,6 +13,8 @@ import numpy as np
 from typing import Callable, Literal, Optional, Union
 from matplotlib import pyplot as plt
 
+from bot import BuilderContext
+
 
 class Graphing(commands.Cog):
     """
@@ -83,7 +85,7 @@ class Graphing(commands.Cog):
         ][:25]
 
     @commands.hybrid_group()
-    async def graph(self, ctx: commands.Context):
+    async def graph(self, ctx: BuilderContext):
         pass
 
     @graph.command()
@@ -101,7 +103,7 @@ class Graphing(commands.Cog):
     )
     async def plot(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         xvalues: ListConverter(float),
         yvalues: ListConverter(float),
         xlabel: str = "X Axis",
@@ -171,7 +173,7 @@ class Graphing(commands.Cog):
     )
     async def bar(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         xvalues: ListConverter(str),
         yvalues: ListConverter(float),
         xlabel: str = "X Axis",
@@ -238,7 +240,7 @@ class Graphing(commands.Cog):
     )
     async def psi(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         function: str,
         start: int,
         stop: int,

@@ -19,6 +19,7 @@ from src.utils.Embeds import fmte
 from src.utils.Subclass import BaseModal
 from src.utils.Converters import TimeConvert
 from src.utils.Errors import *
+from bot import BuilderContext
 
 warnings.filterwarnings("error")
 
@@ -39,7 +40,7 @@ class Utility(commands.Cog):
 
     @commands.hybrid_command()
     @describe()
-    async def ping(self, ctx: commands.Context):
+    async def ping(self, ctx: BuilderContext):
         """
         Returns the bot's latency, in several regards.
         """
@@ -97,7 +98,7 @@ class Utility(commands.Cog):
     @describe(
         user="The user to get information on.",
     )
-    async def info(self, ctx: commands.Context, user: discord.Member = None):
+    async def info(self, ctx: BuilderContext, user: discord.Member = None):
         """
         Gets information about the user requested.
         """
@@ -136,7 +137,7 @@ class Utility(commands.Cog):
 
     @commands.hybrid_command()
     @describe()
-    async def bot(self, ctx: commands.Context):
+    async def bot(self, ctx: BuilderContext):
         """
         Returns information about the bot.
         """
@@ -163,7 +164,7 @@ class Utility(commands.Cog):
     @describe(
         query="What to search for.",
     )
-    async def search(self, ctx: commands.Context, query: str):
+    async def search(self, ctx: BuilderContext, query: str):
         """
         Searches the web for a website and returns the first result.
         """
@@ -195,7 +196,7 @@ class Utility(commands.Cog):
     @describe(
         objectid="The ID of the object to look for.",
     )
-    async def find(self, ctx: commands.Context, objectid: str):
+    async def find(self, ctx: BuilderContext, objectid: str):
         """
         Finds a Member, Role, Channel, Message, Custom Emoji, Sticker, Server, or User from its ID.
         """
@@ -242,7 +243,7 @@ class Utility(commands.Cog):
     @describe(
         term="The term to search urbanDictionary for.",
     )
-    async def urban(self, ctx: commands.Context, term: str):
+    async def urban(self, ctx: BuilderContext, term: str):
         """
         Searches the Urban Dictionary and returns the top results for a term
         """
@@ -278,7 +279,7 @@ class Utility(commands.Cog):
     @describe(
         term="The term to search urbanDictionary for.",
     )
-    async def define(self, ctx: commands.Context, term: str):
+    async def define(self, ctx: BuilderContext, term: str):
         """
         Searches Merriam-Webster's Collegiate dictionary and returns the top results for a term
         """
@@ -332,7 +333,7 @@ class Utility(commands.Cog):
     @describe(
         zone="The timezone to get the time from.",
     )
-    async def time(self, ctx: commands.Context, zone: str = "UTC"):
+    async def time(self, ctx: BuilderContext, zone: str = "UTC"):
         """
         Gets the current time in the desired time zone.
         """
@@ -360,14 +361,14 @@ class Utility(commands.Cog):
 
     @commands.hybrid_command()
     @discord.app_commands.rename(_time="time")
-    async def timestamp(self, ctx: commands.Context, _time: TimeConvert):
+    async def timestamp(self, ctx: BuilderContext, _time: TimeConvert):
         """
         Converts a string such as "1 hour 13 minutes" to a UNIX timestamp.
         """
         await ctx.send(_time + time.time())
 
     @commands.hybrid_command()
-    async def eval(self, ctx: commands.Context):
+    async def eval(self, ctx: BuilderContext):
         """
         Creates an asynchronous sandbox Python environment using SnekBox
         """
@@ -375,7 +376,7 @@ class Utility(commands.Cog):
 
 
 class CodeModal(BaseModal):
-    def __init__(self, ctx: commands.Context) -> None:
+    def __init__(self, ctx: BuilderContext) -> None:
         self.ctx = ctx
         self.bot = ctx.bot
         super().__init__(title=f"{ctx.author}: Python Evaluation")

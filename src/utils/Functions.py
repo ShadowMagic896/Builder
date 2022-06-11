@@ -10,7 +10,7 @@ from importlib import import_module
 import inspect
 from os import PathLike
 import os
-from typing import Callable, List, Literal, Optional
+from typing import Any, Callable, List, Literal, Optional
 from urllib.parse import quote_plus
 
 from data.Config import DB_PASSWORD, DB_USERNAME
@@ -119,9 +119,7 @@ async def enforceChecks(bot: commands.Bot):
             command.checks.extend(checks)
 
 
-async def applyGlobalCheck(
-    bot: commands.Bot, check: Callable[[commands.Context], bool]
-):
+async def applyGlobalCheck(bot: commands.Bot, check: Callable[[Any], bool]):
     for command in explode(bot.commands):
         if command.qualified_name in IGNORED_GLOBALLY_CHECKED_COMMANDS:
             continue

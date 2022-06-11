@@ -1,7 +1,5 @@
 from os import PathLike
-from typing import Callable, List, Set
-
-from discord.ext import commands
+from typing import Any, Callable, List, Set
 
 from src.utils.Checks import interactionChoke
 
@@ -63,7 +61,7 @@ PRINT_COMMAND_TREE_ERROR_TRACKEBACK: bool = False and CATCH_ERRORS
 
 
 # Checks that are applied on every command
-GLOBAL_CHECKS: List[Callable[[commands.Context], bool]] = [
+GLOBAL_CHECKS: List[Callable[[Any], bool]] = [
     interactionChoke,
 ]
 
@@ -74,7 +72,7 @@ IGNORED_GLOBALLY_CHECKED_COMMANDS: List[str] = []
 INHERIT_GROUP_CHECKS: bool = True
 
 # A list of checks to NOT inherit, if `INHERIT_GROUP_CHECKS` is true.
-IGNORED_INHERITED_GROUP_CHECKS: List[Callable[[commands.Context], bool]] = []
+IGNORED_INHERITED_GROUP_CHECKS: List[Callable[[Any], bool]] = []
 
 EVALUATION_FILE_THRESHOLD = 4000
 EVALUATION_TRUNCATION_THRESHOLD = 20000

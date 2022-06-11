@@ -1,12 +1,16 @@
 from multiprocessing import freeze_support
 import time
-from typing import Iterable, Union
+from typing import Iterable, Union, List, Any, Optional, Dict
 import aiohttp
 import discord
+from discord import Interaction
 from discord.ext import commands
-
+from discord.ext.commands import Command, Parameter
+from discord.ext.commands.view import StringView
 import asyncio
 import logging
+
+import openai
 
 from src.utils.Extensions import load_extensions
 from src.utils.Functions import (
@@ -17,7 +21,7 @@ from src.utils.Functions import (
 )
 from src.utils.Database import ensure_database
 from src.utils.Stats import Stats
-from data.Config import BOT_KEY
+from data.Config import BOT_KEY, OPENAI_KEY
 from data.Settings import (
     COG_DIRECTORIES,
     LOAD_COGS_ON_STARTUP,
@@ -73,12 +77,53 @@ class Builder(commands.Bot):
         status: str = "idle"
         self.status = discord.Status(status)
         self.tree.fallback_to_global = False
+        self.openai = openai
+        self.openai.api_key = OPENAI_KEY
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
         self.start_unix = time.time()
 
     async def setup_hook(self) -> None:
         await startupPrint(self)
+
+
+class BuilderContext(commands.Context):
+    def __init__(
+        self,
+        *,
+        message: discord.Message,
+        bot: Builder,
+        view: StringView,
+        args: List[Any] = ...,
+        kwargs: Dict[str, Any] = ...,
+        prefix: Optional[str] = None,
+        command: Optional[Command[Any, ..., Any]] = None,
+        invoked_with: Optional[str] = None,
+        invoked_parents: List[str] = ...,
+        invoked_subcommand: Optional[Command[Any, ..., Any]] = None,
+        subcommand_passed: Optional[str] = None,
+        command_failed: bool = False,
+        current_parameter: Optional[Parameter] = None,
+        current_argument: Optional[str] = None,
+        interaction: Optional[Interaction] = None,
+    ):
+        super().__init__(
+            message=message,
+            bot=bot,
+            view=view,
+            args=args,
+            kwargs=kwargs,
+            prefix=prefix,
+            command=command,
+            invoked_with=invoked_with,
+            invoked_parents=invoked_parents,
+            invoked_subcommand=invoked_subcommand,
+            subcommand_passed=subcommand_passed,
+            command_failed=command_failed,
+            current_parameter=current_parameter,
+            current_argument=current_argument,
+            interaction=interaction,
+        )
 
 
 async def main():

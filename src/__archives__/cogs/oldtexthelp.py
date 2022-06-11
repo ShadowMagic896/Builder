@@ -1,6 +1,6 @@
 # class TextHelp(commands.HelpCommand):
 #     async def send_bot_help(self, mapping):
-#         ctx: commands.Context = self.context
+#         ctx: BuilderContext = self.context
 #         embed = fmte(
 #             ctx,
 #             t = "Help Screen",

@@ -16,6 +16,7 @@ from data.Config import CUSTOM_GOOGLE_SEARCH_KEY
 
 from src.utils.Converters import UrlGet, UrlFind
 from src.utils.Embeds import fmte
+from bot import BuilderContext
 
 
 class Web(commands.Cog):
@@ -31,12 +32,12 @@ class Web(commands.Cog):
         return "\N{GLOBE WITH MERIDIANS}"
 
     @commands.hybrid_group()
-    async def web(self, ctx: commands.Context):
+    async def web(self, ctx: BuilderContext):
         pass
 
     @web.command()
     @describe(url="The URL to analyze")
-    async def parse(self, ctx: commands.Context, url: UrlFind):
+    async def parse(self, ctx: BuilderContext, url: UrlFind):
         """
         Gathers data about a URL. Does not actually get any data from the server.
         """
@@ -62,7 +63,7 @@ class Web(commands.Cog):
         as_payload="Whether to give the mass payload or automatically format the attachment to the URL format",
     )
     async def get(
-        self, ctx: commands.Context, response: UrlGet, as_payload: bool = False
+        self, ctx: BuilderContext, response: UrlGet, as_payload: bool = False
     ):
         """
         Gets the direct response payload of a request
@@ -88,7 +89,7 @@ class Web(commands.Cog):
         wait="How long to wait for the page to load",
     )
     async def screenshot(
-        self, ctx: commands.Context, url: UrlFind, wait: Range[int, 0, 25] = 0
+        self, ctx: BuilderContext, url: UrlFind, wait: Range[int, 0, 25] = 0
     ):
         """
         Get a screenshot of a webpage
@@ -103,7 +104,7 @@ class Web(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @web.command()
-    async def search(self, ctx: commands.Context, query: str):
+    async def search(self, ctx: BuilderContext, query: str):
         await ctx.interaction.response.defer()
         query = parse.quote_plus(query.replace(" ", "+"))
         key = CUSTOM_GOOGLE_SEARCH_KEY

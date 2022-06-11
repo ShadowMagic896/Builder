@@ -33,6 +33,7 @@ from data import Config
 
 from src.utils.Embeds import fmte, Desc
 from src.utils import Constants
+from bot import BuilderContext
 
 
 class Images(commands.Cog):
@@ -56,7 +57,7 @@ class Images(commands.Cog):
             raise IOError("Attachment is too large. Please keep files under 40MB")
 
     @commands.hybrid_group()
-    async def image(self, ctx: commands.Context):
+    async def image(self, ctx: BuilderContext):
         pass
 
     @image.command()
@@ -66,7 +67,7 @@ class Images(commands.Cog):
         height="The new image's height.",
     )
     async def resize(
-        self, ctx: commands.Context, image: discord.Attachment, width: int, height: int
+        self, ctx: BuilderContext, image: discord.Attachment, width: int, height: int
     ):
         """
         Resizes an image to a certain width and height
@@ -95,7 +96,7 @@ class Images(commands.Cog):
     )
     async def steal(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         name: str,
         image: discord.Attachment,
         reason: Optional[str] = "No reason given",
@@ -133,7 +134,7 @@ class Images(commands.Cog):
     )
     async def text(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         text: str,
         xpos: int,
@@ -189,7 +190,7 @@ class Images(commands.Cog):
     )
     async def crop(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         left: int,
         upper: int,
@@ -214,7 +215,7 @@ class Images(commands.Cog):
     @describe(
         image="The image to get information on.",
     )
-    async def info(self, ctx: commands.Context, image: discord.Attachment):
+    async def info(self, ctx: BuilderContext, image: discord.Attachment):
         """
         Retrieves information about the image
         """
@@ -244,7 +245,7 @@ class Images(commands.Cog):
     )
     async def rotate(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         degrees: int,
         centerx: Optional[int] = None,
@@ -282,7 +283,7 @@ class Images(commands.Cog):
     )
     async def filter(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         filter: str,
     ):
@@ -314,7 +315,7 @@ class Images(commands.Cog):
 
     @image.command()
     @describe(image="The image to convert.")
-    async def greyscale(self, ctx: commands.Context, image: discord.Attachment):
+    async def greyscale(self, ctx: BuilderContext, image: discord.Attachment):
         """
         Convert an image to a grey-scale color scheme
         """
@@ -330,7 +331,7 @@ class Images(commands.Cog):
     @describe(image="The image to convert", mode="The Image Type to convert to")
     async def convert(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         mode: Literal[
             "1",
@@ -366,7 +367,7 @@ class Images(commands.Cog):
     )
     async def invert(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         channels: TypeHints.COLOR_CHANNEL_ALPHA = Parameters.COLOR_CHANNEL_ALPHA,
         pivot: Range[int, 1, 510] = 255,
@@ -394,7 +395,7 @@ class Images(commands.Cog):
         phrase="The passphrase to encipher the image with.",
     )
     async def encipher(
-        self, ctx: commands.Context, image: discord.Attachment, phrase: str
+        self, ctx: BuilderContext, image: discord.Attachment, phrase: str
     ):
         """Enciphers an image using a passphrase, which can be deciphered later."""
         img = await WandImageFunctions.fromAttachment(image)
@@ -411,7 +412,7 @@ class Images(commands.Cog):
         phrase="The passphrase to decipher the image with.",
     )
     async def decipher(
-        self, ctx: commands.Context, image: discord.Attachment, phrase: str
+        self, ctx: BuilderContext, image: discord.Attachment, phrase: str
     ):
         """Deciphers an image from a passphrase."""
         img = await WandImageFunctions.fromAttachment(image)
@@ -426,7 +427,7 @@ class Images(commands.Cog):
 
     @image.command()
     @describe(image="The image to manipulate")
-    async def manipulate(self, ctx: commands.Context, image: discord.Attachment):
+    async def manipulate(self, ctx: BuilderContext, image: discord.Attachment):
         """
         Opens up a large menu to transform and edit an image in many ways.
         """
@@ -449,7 +450,7 @@ class Images(commands.Cog):
     )
     async def colors(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         tolerance: Range[int, 1, 100] = 3,
     ):
@@ -525,7 +526,7 @@ class Images(commands.Cog):
     )
     async def replace(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         fromcolor: RGB(True, 255),
         tocolor: RGB(True, 255),
@@ -547,11 +548,11 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @image.group()
-    async def meme(self, ctx: commands.Context):
+    async def meme(self, ctx: BuilderContext):
         pass
 
     @meme.command()
-    async def slap(self, ctx: commands.Context, user: discord.Member):
+    async def slap(self, ctx: BuilderContext, user: discord.Member):
         auth_buf: BytesIO = await ctx.author.display_avatar.read()
         auth_buf.seek(0)
         user_buf: BytesIO = await user.display_avatar.read()
@@ -560,7 +561,7 @@ class Images(commands.Cog):
         pass
 
     @image.group()
-    async def enhance(self, ctx: commands.Context):
+    async def enhance(self, ctx: BuilderContext):
         pass
 
     @enhance.command()
@@ -570,7 +571,7 @@ class Images(commands.Cog):
     )
     async def contrast(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         factor: Range[float, 0, 100],
     ):
@@ -592,7 +593,7 @@ class Images(commands.Cog):
     )
     async def brightness(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         factor: Range[float, 0, 100],
     ):
@@ -614,7 +615,7 @@ class Images(commands.Cog):
     )
     async def color(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         factor: Range[float, 0, 100],
     ):
@@ -636,7 +637,7 @@ class Images(commands.Cog):
     )
     async def sharpness(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         image: discord.Attachment,
         factor: Range[float, 0, 100],
     ):
@@ -655,9 +656,7 @@ class Images(commands.Cog):
     @describe(
         user=Desc.user,
     )
-    async def avatar(
-        self, ctx: commands.Context, user: TypeHints.USER = Parameters.USER
-    ):
+    async def avatar(self, ctx: BuilderContext, user: TypeHints.USER = Parameters.USER):
         """
         Gets the avatar / profile picture of a member.
         """
@@ -670,7 +669,7 @@ class Images(commands.Cog):
         embed.set_image(url=user.display_avatar.url)
 
         class _GView(BaseView):
-            def __init__(self, ctx: commands.Context, timeout: Optional[float] = 300):
+            def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
                 super().__init__(ctx, timeout)
 
             @discord.ui.button(label="View Profile Avatar")
@@ -693,7 +692,7 @@ class Images(commands.Cog):
                 await inter.message.delete()
 
         class _NView(BaseView):
-            def __init__(self, ctx: commands.Context, timeout: Optional[float] = 300):
+            def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
                 super().__init__(ctx, timeout)
 
             @discord.ui.button(label="View Guild Avatar")
@@ -822,7 +821,7 @@ class WandImageFunctions:
 
 class ImageManipulateView(BaseView):
     def __init__(
-        self, ctx: commands.Context, buffer: BytesIO, timeout: Optional[float] = 45
+        self, ctx: BuilderContext, buffer: BytesIO, timeout: Optional[float] = 45
     ):
         self.initial = buffer
         self.img = wimage.Image(blob=self.initial)
@@ -1106,10 +1105,10 @@ class ImageManipulateView(BaseView):
 
     async def getUserInput(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         prompt_data: Tuple[Optional[List[Any]], Optional[Mapping[str, Any]]],
         *,
-        check: Callable[[commands.Context], bool] = None,
+        check: Callable[[BuilderContext], bool] = None,
         post_process: Callable[
             [
                 Any,
@@ -1155,7 +1154,7 @@ class ImageManipulateView(BaseView):
             pass
         return num % 360
 
-    async def getImageFrom(ctx: commands.Context, message: discord.Message):
+    async def getImageFrom(ctx: BuilderContext, message: discord.Message):
         """
         Gets an Image object from a message. If it references a message, it uses that message instead
         """
@@ -1166,7 +1165,7 @@ class ImageManipulateView(BaseView):
             message = await ctx.channel.fetch_message(message.reference.message_id)
             return await ImageManipulateView._getAttachmentFrom(ctx, message)
 
-    async def _getAttachmentFrom(ctx: commands.Context, message: discord.Message):
+    async def _getAttachmentFrom(ctx: BuilderContext, message: discord.Message):
         """
         Gets an image object from a message, not taking into account message references.
         """

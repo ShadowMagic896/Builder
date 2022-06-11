@@ -12,6 +12,7 @@ from src.cogs.economy.Atoms import AtomsDatabase
 from src.cogs.economy.Currency import BalanceDatabase
 from src.utils.Subclass import BaseView, Paginator
 from src.utils.Constants import CONSTANTS
+from bot import BuilderContext
 
 
 class Shop(commands.Cog):
@@ -26,7 +27,7 @@ class Shop(commands.Cog):
         return "\N{Convenience Store}"
 
     @commands.hybrid_group()
-    async def shop(self, ctx: commands.Context):
+    async def shop(self, ctx: BuilderContext):
         pass
 
     @shop.command()
@@ -37,7 +38,7 @@ class Shop(commands.Cog):
     )
     async def post(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         atom: Atom,
         amount: Range[int, 1],
         price: Range[int, 1],
@@ -69,7 +70,7 @@ class Shop(commands.Cog):
     @describe(
         listing="The ID of the listing to remove. Can be gotten by using viewing all of your shops"
     )
-    async def remove(self, ctx: commands.Context, listing: Range[int, 1]):
+    async def remove(self, ctx: BuilderContext, listing: Range[int, 1]):
         """
         Removes a posting from the market and refunds your atoms.
         """
@@ -103,7 +104,7 @@ class Shop(commands.Cog):
                 value=shop["identity"],
             )
             for shop in await ShopDatabase(
-                await commands.Context.from_interaction(inter)
+                await BuilderContext.from_interaction(inter)
             ).getBy(inter.user)
             if str(shop["identity"]) in str(current)
             or str(current) in str(shop["identity"])
@@ -114,7 +115,7 @@ class Shop(commands.Cog):
         atom="Only view shops selling this atom", user="Only view shops by this user"
     )
     async def view(
-        self, ctx: commands.Context, atom: Optional[Atom], user: Optional[discord.User]
+        self, ctx: BuilderContext, atom: Optional[Atom], user: Optional[discord.User]
     ):
         """
         Shows all shop entries meeting certain criteria.
@@ -143,7 +144,7 @@ class Shop(commands.Cog):
         view.message = msg
 
     @shop.command()
-    async def info(self, ctx: commands.Context, listing: Range[int, 1]):
+    async def info(self, ctx: BuilderContext, listing: Range[int, 1]):
         """
         Gets all available information about a shop posting.
         """
@@ -163,8 +164,8 @@ class Shop(commands.Cog):
 
 
 class ShopDatabase:
-    def __init__(self, ctx: commands.Context) -> None:
-        self.ctx: commands.Context = ctx
+    def __init__(self, ctx: BuilderContext) -> None:
+        self.ctx: BuilderContext = ctx
         self.apg: asyncpg.Connection = ctx.bot.apg
 
     async def getAll(self):
@@ -250,7 +251,7 @@ class ShopDatabase:
 class ShopView(Paginator):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         values: Iterable,
         pagesize: int,
         *,
@@ -287,7 +288,7 @@ class ShopView(Paginator):
 class PersonalShopView(Paginator):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         user: Union[discord.User, discord.Member],
         values: Iterable,
         pagesize: int,
@@ -325,7 +326,7 @@ class PersonalShopView(Paginator):
 class PurchaseView(BaseView):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         record: asyncpg.Record,
         timeout: Optional[float] = 45,
     ):

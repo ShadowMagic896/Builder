@@ -12,6 +12,7 @@ from data import Config
 from src.utils.Embeds import fmte, fmte_i
 from src.utils.Constants import CONSTANTS
 from src.utils.Subclass import BaseModal, BaseView, Paginator
+from bot import BuilderContext
 
 
 class Currency(commands.Cog):
@@ -38,7 +39,7 @@ class Currency(commands.Cog):
         return "\N{MONEY BAG}"
 
     @commands.hybrid_group()
-    async def cur(self, ctx: commands.Context):
+    async def cur(self, ctx: BuilderContext):
         pass
 
     @cur.command()
@@ -46,7 +47,7 @@ class Currency(commands.Cog):
     @describe(user="The user to get the balance of")
     async def balance(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         user: Optional[discord.User] = parameter(
             default=lambda c: c.author, displayed_default=lambda c: str(c.author)
         ),
@@ -67,7 +68,7 @@ class Currency(commands.Cog):
     @commands.cooldown(2, 30, commands.BucketType.user)
     @describe(user="The user to give money to", amount="How much money to give")
     async def give(
-        self, ctx: commands.Context, user: discord.User, amount: Range[int, 1]
+        self, ctx: BuilderContext, user: discord.User, amount: Range[int, 1]
     ):
         """
         Sends money to a user.
@@ -90,7 +91,7 @@ class Currency(commands.Cog):
     @commands.cooldown(2, 120, commands.BucketType.user)
     @describe(user="The user to request money from", amount="How much money to request")
     async def request(
-        self, ctx: commands.Context, user: discord.User, amount: Range[int, 1]
+        self, ctx: BuilderContext, user: discord.User, amount: Range[int, 1]
     ):
         """
         Requests money from a user.
@@ -116,7 +117,7 @@ class Currency(commands.Cog):
 
     @cur.command()
     @commands.cooldown(1, 30, commands.BucketType.user)
-    async def beg(self, ctx: commands.Context):
+    async def beg(self, ctx: BuilderContext):
         """
         Begs for money. You can win some, but you can also lose some.
         """
@@ -149,7 +150,7 @@ class Currency(commands.Cog):
         await ctx.send(embed=embed)
 
     @cur.command()
-    async def leaderboard(self, ctx: commands.Context):
+    async def leaderboard(self, ctx: BuilderContext):
         """
         See who's the wealthiest in this server.
         """
@@ -166,7 +167,7 @@ class Currency(commands.Cog):
     @cur.command()
     @commands.cooldown(3, 120, commands.BucketType.user)
     @describe(user="The user to steal from", amount="How to to attempt to steal")
-    async def steal(self, ctx: commands.Context, user: discord.User, amount: int):
+    async def steal(self, ctx: BuilderContext, user: discord.User, amount: int):
         """
         Attempts to steal money from a user. You may gain some, but you may also lose some!
         """
@@ -219,7 +220,7 @@ class Currency(commands.Cog):
 
     @cur.command()
     @commands.cooldown(1, 3600, commands.BucketType.user)
-    async def hourly(self, ctx: commands.Context):
+    async def hourly(self, ctx: BuilderContext):
         """
         Claim your hourly Coins!
         """
@@ -237,7 +238,7 @@ class Currency(commands.Cog):
 
     @cur.command()
     @commands.cooldown(1, 3600 * 24, commands.BucketType.user)
-    async def daily(self, ctx: commands.Context):
+    async def daily(self, ctx: BuilderContext):
         """
         Claim your daily Coins!
         """
@@ -255,7 +256,7 @@ class Currency(commands.Cog):
 
     @cur.command()
     @commands.cooldown(1, 3600 * 24 * 7, commands.BucketType.user)
-    async def weekly(self, ctx: commands.Context):
+    async def weekly(self, ctx: BuilderContext):
         """
         Claim your daily Coins!
         """
@@ -272,7 +273,7 @@ class Currency(commands.Cog):
         await ctx.send(embed=embed)
 
     @cur.command()
-    async def quiz(self, ctx: commands.Context):
+    async def quiz(self, ctx: BuilderContext):
         embed = fmte(ctx, t="Select Options", d="Once you are finished, press `Start`")
         view = StartQuizView(ctx)
         view.message = await ctx.send(embed=embed, view=view)
@@ -281,7 +282,7 @@ class Currency(commands.Cog):
     # @commands.is_owner()
     async def manualadd(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         user: Optional[discord.User] = parameter(
             default=lambda c: c.author, displayed_default=lambda c: str(c.author)
         ),
@@ -294,7 +295,7 @@ class Currency(commands.Cog):
     # @commands.is_owner()
     async def manualset(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         user: Optional[discord.User] = parameter(
             default=lambda c: c.author, displayed_default=lambda c: str(c.author)
         ),
@@ -307,7 +308,7 @@ class Currency(commands.Cog):
     # @commands.is_owner()
     async def manualdel(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         user: Optional[discord.User] = parameter(
             default=lambda c: c.author, displayed_default=lambda c: str(c.author)
         ),
@@ -316,12 +317,12 @@ class Currency(commands.Cog):
         await db.delete(user)
 
     async def giveMenu(self, inter: discord.Interaction, member: discord.Member):
-        ctx: commands.Context = await commands.Context.from_interaction(inter)
+        ctx: BuilderContext = await BuilderContext.from_interaction(inter)
         ctx.author = inter.user
         await inter.response.send_modal(GiveContextModal(ctx, member))
 
     async def requestMenu(self, inter: discord.Interaction, member: discord.Member):
-        ctx: commands.Context = await commands.Context.from_interaction(inter)
+        ctx: BuilderContext = await BuilderContext.from_interaction(inter)
         ctx.author = inter.user
         await inter.response.send_modal(RequestContextModal(ctx, member))
 
@@ -332,7 +333,7 @@ class Currency(commands.Cog):
 
 
 class GiveContextModal(BaseModal):
-    def __init__(self, ctx: commands.Context, member: discord.Member):
+    def __init__(self, ctx: BuilderContext, member: discord.Member):
         self.ctx = ctx
         self.member = member
         super().__init__(title=f"Give Coins to {member}")
@@ -351,7 +352,7 @@ class GiveContextModal(BaseModal):
 
 
 class RequestContextModal(BaseModal):
-    def __init__(self, ctx: commands.Context, member: discord.Member):
+    def __init__(self, ctx: BuilderContext, member: discord.Member):
         self.ctx = ctx
         self.member = member
         super().__init__(title=f"Request Coins from {member}")
@@ -373,7 +374,7 @@ class GiveView(BaseView):
     def __init__(self, ctx, amount, auth, user):
         self.amount: int = amount
         self.auth: discord.User = auth
-        self.ctx: commands.Context = ctx
+        self.ctx: BuilderContext = ctx
         self.user: discord.User = user
         super().__init__(ctx)
 
@@ -412,7 +413,7 @@ class GiveView(BaseView):
 
 class RequestView(BaseView):
     def __init__(self, ctx, amount, auth, user):
-        self.ctx: commands.Context = ctx
+        self.ctx: BuilderContext = ctx
         self.amount: int = amount
         self.auth: discord.User = auth
         self.user: discord.User = user
@@ -452,7 +453,7 @@ class RequestView(BaseView):
 class LeaderboardView(Paginator):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         values: List[asyncpg.Record],
         pagesize: int,
         *,
@@ -480,7 +481,7 @@ class LeaderboardView(Paginator):
 
 
 class StartQuizView(BaseView):
-    def __init__(self, ctx: commands.Context):
+    def __init__(self, ctx: BuilderContext):
         self.ctx = ctx
         self.dif = None
         self.cat = None
@@ -563,7 +564,7 @@ class MainQuizView(BaseView):
 
     def embed(self, ctx_or_inter):
         q = self.questions[self.pos - 1]
-        if isinstance(ctx_or_inter, commands.Context):
+        if isinstance(ctx_or_inter, BuilderContext):
             return fmte(
                 ctx_or_inter,
                 t=f"Question `{self.pos}`:\n{q['question']}",
@@ -608,7 +609,7 @@ class QuizAnsSelect(discord.ui.Select):
 class QuizQuestionSubmit(discord.ui.Button):
     def __init__(self, view: discord.ui.View, select: discord.ui.Select):
         self._view = view
-        self.ctx: commands.Context = self._view.ctx
+        self.ctx: BuilderContext = self._view.ctx
         self.select = select
         super().__init__(
             style=discord.ButtonStyle.green,
@@ -693,7 +694,7 @@ class QuizClose(discord.ui.Button):
 
 
 class BalanceDatabase:
-    def __init__(self, ctx: commands.Context):
+    def __init__(self, ctx: BuilderContext):
         self.bot: commands.Bot = ctx.bot
         self.apg: asyncpg.Connection = ctx.bot.apg
 

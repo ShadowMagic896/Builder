@@ -10,6 +10,7 @@ from pyfiglet import Figlet
 from typing import List
 
 from src.utils.Embeds import fmte, Desc
+from bot import BuilderContext
 
 
 class Fun(commands.Cog):
@@ -32,7 +33,7 @@ class Fun(commands.Cog):
     )
     async def font(
         self,
-        ctx: commands.context.Context,
+        ctx: BuilderContext,
         font: str,
         text: str,
     ):
@@ -454,7 +455,7 @@ class TTT_GameView(discord.ui.View):
 
 
 class RPS_View(discord.ui.View):
-    def __init__(self, ctx: commands.Context, p1, p2, choices={}):
+    def __init__(self, ctx: BuilderContext, p1, p2, choices={}):
         super().__init__(timeout=30)
         self.ctx = ctx
         self.bot = ctx.bot

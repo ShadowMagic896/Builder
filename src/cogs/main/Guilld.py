@@ -6,6 +6,7 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from src.utils.Embeds import fmte
+from bot import BuilderContext
 
 
 class Guild(commands.Cog):
@@ -21,11 +22,11 @@ class Guild(commands.Cog):
 
     @commands.hybrid_group()
     @commands.guild_only()
-    async def guild(self, ctx: commands.Context):
+    async def guild(self, ctx: BuilderContext):
         pass
 
     @guild.group()
-    async def channel(self, ctx: commands.Context):
+    async def channel(self, ctx: BuilderContext):
         pass
 
     @channel.command()
@@ -37,7 +38,7 @@ class Guild(commands.Cog):
     )
     async def rename(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         name: str,
         reason: Optional[str] = "No reason given",
         channel: discord.TextChannel = commands.parameter(
@@ -63,7 +64,7 @@ class Guild(commands.Cog):
     )
     async def nuke(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         reason: Optional[str] = "No reason provided",
         channel: discord.TextChannel = commands.parameter(
             default=lambda c: c.channel, displayed_default=lambda c: c.channel.name

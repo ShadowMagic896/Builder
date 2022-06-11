@@ -12,6 +12,7 @@ from src.utils.Converters import Atom
 from src.utils.Embeds import fmte
 from src.utils.Subclass import Paginator
 from data.ItemMaps import getAtomicName, Chemistry
+from bot import BuilderContext
 
 chem = Chemistry()
 
@@ -28,12 +29,12 @@ class Atoms(commands.Cog):
         return "\N{ATOM SYMBOL}"
 
     @commands.hybrid_group()
-    async def atoms(self, ctx: commands.Context):
+    async def atoms(self, ctx: BuilderContext):
         pass
 
     # @atoms.command()
     # @commands.is_owner()
-    # async def run(self, ctx: commands.Context, command: str, mode: str = "fetch"):
+    # async def run(self, ctx: BuilderContext, command: str, mode: str = "fetch"):
     #     return await ctx.send(
     #         str(await getattr(self.bot.apg, mode, "fetch")(command))[:2000]
     #     )
@@ -42,7 +43,7 @@ class Atoms(commands.Cog):
     @describe(atom="The atoms to give. Can be a full name, symbol, or atomic number.")
     async def give(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         atom: Atom,
         amount: int,
         user: Optional[discord.User] = parameter(
@@ -66,7 +67,7 @@ class Atoms(commands.Cog):
         await ctx.send(embed=embed)
 
     @atoms.command()
-    async def all(self, ctx: commands.Context):
+    async def all(self, ctx: BuilderContext):
         """
         Shows a list of all atoms you can get.
         """
@@ -93,7 +94,7 @@ class Atoms(commands.Cog):
     @describe(user="Whose atoms to view", sort="How to sort the data")
     async def view(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         user: Optional[discord.User] = parameter(
             default=lambda c: c.author, displayed_default=lambda c: str(c.author)
         ),
@@ -112,7 +113,7 @@ class Atoms(commands.Cog):
 
 
 class AtomsDatabase:
-    def __init__(self, ctx: commands.Context):
+    def __init__(self, ctx: BuilderContext):
         self.bot: commands.Bot = ctx.bot
         self.apg: Connection = self.bot.apg
 
@@ -220,7 +221,7 @@ class AtomsDatabase:
 class AtomsView(Paginator):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         *,
         values: List[Record],
         title: str,

@@ -23,6 +23,7 @@ from src.utils.UserIO import (
 )
 from src.utils.Embeds import fmte, fmte_i
 from src.utils.Functions import explode
+from bot import BuilderContext
 
 
 class Client(commands.Cog):
@@ -39,7 +40,7 @@ class Client(commands.Cog):
 
     @commands.hybrid_command()
     @describe()
-    async def invite(self, ctx: commands.Context):
+    async def invite(self, ctx: BuilderContext):
         """
         Gets a link to invite me to a server!
         """
@@ -60,7 +61,7 @@ class Client(commands.Cog):
     @commands.hybrid_command()
     @describe(anonymous="Whether to send the feedback anonymously or not")
     @commands.cooldown(2, 60 * 60, commands.BucketType.user)
-    async def bug(self, ctx: commands.Context, anonymous: bool = False):
+    async def bug(self, ctx: BuilderContext, anonymous: bool = False):
         """
         Opens up a modal where you can send anonymous bug feedback to the developers
         """
@@ -69,7 +70,7 @@ class Client(commands.Cog):
     @commands.hybrid_command()
     @describe(anonymous="Whether to send the feedback anonymously or not")
     @commands.cooldown(2, 60 * 60, commands.BucketType.user)
-    async def suggest(self, ctx: commands.Context, anonymous: bool = False):
+    async def suggest(self, ctx: BuilderContext, anonymous: bool = False):
         """
         Opens up a modal where you can send anonymous suggestions to the developers
         """
@@ -78,7 +79,7 @@ class Client(commands.Cog):
     @commands.hybrid_command()
     @describe(anonymous="Whether to send the feedback anonymously or not")
     @commands.cooldown(2, 60 * 60, commands.BucketType.user)
-    async def feedback(self, ctx: commands.Context, anonymous: bool = False):
+    async def feedback(self, ctx: BuilderContext, anonymous: bool = False):
         """
         Opens up a modal where you can send anonymous feedback to the developers
         """
@@ -92,7 +93,7 @@ class Client(commands.Cog):
     )
     async def source(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         cog: Optional[Cog],
         group: Optional[Group],
         command: Optional[Command],
@@ -157,7 +158,7 @@ class Client(commands.Cog):
         return await commandAutocomplete(self.bot, inter, current)
 
     @commands.hybrid_command()
-    async def uptime(self, ctx: commands.Context):
+    async def uptime(self, ctx: BuilderContext):
         """
         Find out how long the bot has been online for
         """
@@ -166,7 +167,7 @@ class Client(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    async def github(self, ctx: commands.Context):
+    async def github(self, ctx: BuilderContext):
         """
         Gets the bot's GitHub push log
         """
@@ -189,14 +190,14 @@ class Client(commands.Cog):
         file.close()
 
     @commands.hybrid_command()
-    async def about(self, ctx: commands.Context):
+    async def about(self, ctx: BuilderContext):
         """
         Who is this guy, anyways?
         """
         view = ServerInformation(ctx)
         view.message = await ctx.send(embed=await Client.getAboutEmbed(ctx), view=view)
 
-    async def getAboutEmbed(ctx: commands.Context):
+    async def getAboutEmbed(ctx: BuilderContext):
         embed = fmte(
             ctx,
             t=f"About: {ctx.bot.user}",
@@ -223,7 +224,7 @@ class Client(commands.Cog):
 
 
 class FeedbackModal(BaseModal):
-    def __init__(self, ctx: commands.Context, anon: bool) -> None:
+    def __init__(self, ctx: BuilderContext, anon: bool) -> None:
         self.anon = anon
         super().__init__(title=f"{ctx.author}: Feedback Forum")
 
@@ -270,7 +271,7 @@ class FeedbackModal(BaseModal):
 
 
 class SuggestionModal(BaseModal):
-    def __init__(self, ctx: commands.Context, anon: bool) -> None:
+    def __init__(self, ctx: BuilderContext, anon: bool) -> None:
         self.anon = anon
         super().__init__(title=f"{ctx.author}: Suggestion Forum", timeout=600)
 
@@ -291,7 +292,7 @@ class SuggestionModal(BaseModal):
 
 
 class BugReportModal(BaseModal):
-    def __init__(self, ctx: commands.Context, anon: bool):
+    def __init__(self, ctx: BuilderContext, anon: bool):
         self.anon = anon
         super().__init__(title=f"{ctx.author}: Bug Report Forum", timeout=600)
 
@@ -312,7 +313,7 @@ class BugReportModal(BaseModal):
 
 
 class ServerInformation(BaseView):
-    def __init__(self, ctx: commands.Context, timeout: Optional[float] = 300):
+    def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
         super().__init__(ctx, timeout)
 
     @discord.ui.button(label="Server Information", emoji="\N{DESKTOP COMPUTER}")
@@ -341,7 +342,7 @@ class ServerInformation(BaseView):
 
 
 class ReturnToAbout(BaseView):
-    def __init__(self, ctx: commands.Context, timeout: Optional[float] = 300):
+    def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
         super().__init__(ctx, timeout)
 
     @discord.ui.button(label="Return", emoji="\N{LEFTWARDS BLACK ARROW}")

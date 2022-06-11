@@ -23,7 +23,7 @@ class Guild(commands.Cog):
     @describe(
         ephemeral=Desc.ephemeral,
     )
-    async def guildinfo(self, ctx: commands.Context, ephemeral: bool = False):
+    async def guildinfo(self, ctx: BuilderContext, ephemeral: bool = False):
         """
         Returns information on the current server
         """
@@ -93,7 +93,7 @@ class Guild(commands.Cog):
     )
     async def dump(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         datatype: Literal["channel", "user", "role"],
         ephemeral: bool = False,
     ):

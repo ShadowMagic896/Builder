@@ -2,8 +2,6 @@ import os
 from typing import Iterable, Optional, Tuple, List, Mapping, Any
 import discord
 
-from discord.ext import commands
-
 from data.Settings import NOLOAD_COGS
 
 
@@ -11,9 +9,7 @@ def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):
     return d[k] if k in d else default
 
 
-async def load_extensions(
-    bot: commands.Bot, extension_paths: Iterable[str], **opts
-) -> str:
+async def load_extensions(bot: Any, extension_paths: Iterable[str], **opts) -> str:
     log: str = ""
 
     spaces: int = opts.get("spaces", 15)

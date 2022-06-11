@@ -11,6 +11,7 @@ from src.utils.Converters import RGB
 
 from PIL import Image
 
+from bot import BuilderContext
 
 
 class Colors(commands.Cog):
@@ -26,7 +27,7 @@ class Colors(commands.Cog):
         return "\N{Artist Palette}"
 
     @commands.hybrid_group()
-    async def color(self, ctx: commands.Context):
+    async def color(self, ctx: BuilderContext):
         pass
 
     @color.command()
@@ -37,7 +38,7 @@ class Colors(commands.Cog):
     )
     async def fill(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         color: RGB(),
         sizex: Optional[Range[int, 2**4, 2**11]] = 512,
         sizey: Optional[Range[int, 2**4, 2**11]] = 512,
@@ -60,7 +61,7 @@ class Colors(commands.Cog):
     )
     async def merge(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         color1: RGB(),
         color2: RGB(),
         channel=COLOR_CHANNEL_ALPHA,
@@ -87,7 +88,7 @@ class Colors(commands.Cog):
     )
     async def invert(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         color: RGB(),
         channel=COLOR_CHANNEL_ALPHA,
         sizex: Optional[Range[int, 2**4, 2**11]] = 512,

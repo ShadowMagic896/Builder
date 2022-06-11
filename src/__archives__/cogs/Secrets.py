@@ -50,7 +50,7 @@ class Secrets(commands.Cog):
         #         command
         #     )
         #     @self.encode.command(name=name)
-        #     async def __template__(self, ctx: commands.Context)
+        #     async def __template__(self, ctx: BuilderContext)
 
     def ge(self):
         return "\N{CLOSED LOCK WITH KEY}"
@@ -84,14 +84,14 @@ class Secrets(commands.Cog):
         return dec
 
     @commands.hybrid_group()
-    async def encode(self, ctx: commands.Context):
+    async def encode(self, ctx: BuilderContext):
         pass
 
     @encode.command()
     @describe(
         message="The message to encrypt", shifts="How many characters to shift by"
     )
-    async def shift(self, ctx: commands.Context, message: str, shifts: int):
+    async def shift(self, ctx: BuilderContext, message: str, shifts: int):
         """
         Encodes a message by shifting characters in the alphabet. Also known as Caesarean shifting.
         """
@@ -105,7 +105,7 @@ class Secrets(commands.Cog):
     @describe(
         message="The message to encrypt",
     )
-    async def morse(self, ctx: commands.Context, message: str):
+    async def morse(self, ctx: BuilderContext, message: str):
         """
         Encodes a message by to a series of dots and dashes.
         """
@@ -116,14 +116,14 @@ class Secrets(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_group()
-    async def decode(self, ctx: commands.Context):
+    async def decode(self, ctx: BuilderContext):
         pass
 
     @decode.command()
     @describe(
         message="The message to dncrypt", shifts="How many characters to shift by"
     )
-    async def shift(self, ctx: commands.Context, message: str, shifts: int):
+    async def shift(self, ctx: BuilderContext, message: str, shifts: int):
         """
         Decodes a message by shifting characters in the alphabet. Also known as Caesarean shifting.
         """
@@ -137,7 +137,7 @@ class Secrets(commands.Cog):
     @describe(
         message="The message to decrypt",
     )
-    async def morse(self, ctx: commands.Context, message: str):
+    async def morse(self, ctx: BuilderContext, message: str):
         """
         Decodes a message by to a series of dots and dashes.
         """

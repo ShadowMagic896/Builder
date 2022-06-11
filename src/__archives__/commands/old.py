@@ -1,4 +1,4 @@
-# async def nhentai(self, ctx: commands.Context, code: int, ephemeral: bool = False):
+# async def nhentai(self, ctx: BuilderContext, code: int, ephemeral: bool = False):
 #         """
 #         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
 #         """
@@ -61,16 +61,16 @@
 
 
 # class CodeModal(BaseModal):
-#     def __init__(self, util: Utility, ctx: commands.Context) -> None:
+#     def __init__(self, util: Utility, ctx: BuilderContext) -> None:
 #         self.util = util
-#         self.ctx: commands.Context = ctx
+#         self.ctx: BuilderContext = ctx
 #         super().__init__(title="Python Evaluation")
 
 #     code = discord.ui.TextInput(
 #         label="Please paste / type code here", style=discord.TextStyle.long
 #     )
 
-#     async def makeContainer(self, ctx: commands.Context, inter: discord.Interaction):
+#     async def makeContainer(self, ctx: BuilderContext, inter: discord.Interaction):
 #         """
 #         Runs a contianer. Returns the result STDOUT, STDERR, and return code.
 #         """

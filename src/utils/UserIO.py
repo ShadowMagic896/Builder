@@ -5,6 +5,7 @@ import re
 
 from src.utils.Functions import explode
 from src.utils.Constants import CONSTANTS
+from bot import BuilderContext
 
 
 def iototime(userinput: str):
@@ -43,7 +44,7 @@ def iototime(userinput: str):
         return 60 * 60  # Not sure what they meant, so just do an hour.
 
 
-async def actual_purge(ctx: commands.Context, limit, user: discord.Member = None):
+async def actual_purge(ctx: BuilderContext, limit, user: discord.Member = None):
     errors = 0
     dels = 0
     async for m in ctx.channel.history(limit=round((limit + 10) * 1.5)):

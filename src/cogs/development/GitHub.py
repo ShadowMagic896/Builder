@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 
 from src.utils.Embeds import fmte
+from bot import BuilderContext
 
 
 class GitHub(commands.Cog):
@@ -11,11 +12,11 @@ class GitHub(commands.Cog):
 
     @commands.group()
     @commands.is_owner()
-    async def git(self, ctx: commands.Context):
+    async def git(self, ctx: BuilderContext):
         pass
 
     @git.command()
-    async def push(self, ctx: commands.Context, message: str):
+    async def push(self, ctx: BuilderContext, message: str):
         command = "git add -A && git commit -am '%s' && git push origin main" % message
         os.system(command)
         embed = fmte(ctx, t="Code Successfully Pushed", d="```\n%s\n```" % command)

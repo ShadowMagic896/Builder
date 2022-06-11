@@ -24,7 +24,7 @@ class InterHelp(commands.Cog):
     )
     async def help(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         cog: str = None,
         command: str = None,
         ephemeral: bool = False,
@@ -182,7 +182,7 @@ class InterHelp(commands.Cog):
         else:
             raise commands.errors.ExtensionNotFound(command)
 
-    async def main_embed(self, ctx: commands.Context, bot: commands.Bot):
+    async def main_embed(self, ctx: BuilderContext, bot: commands.Bot):
         return fmte(
             ctx,
             t="Help",
@@ -223,7 +223,7 @@ class InterHelp(commands.Cog):
             c=color,
         )
 
-    def _cog_embed_ctx(self, ctx: commands.Context, cog: commands.Cog):
+    def _cog_embed_ctx(self, ctx: BuilderContext, cog: commands.Cog):
         return fmte(
             ctx,
             t="Cog: `{}`".format(cog.qualified_name),
@@ -267,7 +267,7 @@ class InterHelp(commands.Cog):
     def get_view(
         self,
         bot: commands.Bot,
-        context: commands.Context,
+        context: BuilderContext,
         ephemeral: bool,
         cog: commands.Cog = None,
     ):
@@ -290,7 +290,7 @@ class HelpMenu(discord.ui.View):  # Base to add things on
 
 
 class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
-    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
+    def __init__(self, bot: commands.Bot, context: BuilderContext, ephemeral: bool):
         placeholder = "Cog Selection..."
         options = []
 
@@ -327,7 +327,7 @@ class CommandSelect(discord.ui.Select):  # Shows all commands from a certain cog
     def __init__(
         self,
         bot: commands.Bot,
-        context: commands.Context,
+        context: BuilderContext,
         ephemeral: bool,
         cog: commands.Cog,
     ):
@@ -402,7 +402,7 @@ class InviteLink(discord.ui.Button):
 
 
 class OpenSrc(discord.ui.Button):
-    def __init__(self, bot: commands.Bot, context: commands.Context, ephemeral: bool):
+    def __init__(self, bot: commands.Bot, context: BuilderContext, ephemeral: bool):
         self.bot = bot
         self.context = context
         self.ephemeral = ephemeral

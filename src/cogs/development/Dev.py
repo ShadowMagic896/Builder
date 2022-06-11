@@ -9,6 +9,7 @@ from data.Settings import COG_DIRECTORIES
 from src.utils.Embeds import fmte
 from src.utils.Extensions import load_extensions
 from src.utils.Functions import explode
+from bot import BuilderContext
 
 
 class Dev(commands.Cog):
@@ -29,7 +30,7 @@ class Dev(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_owner()
-    async def sync(self, ctx: commands.Context, spec: str = None):
+    async def sync(self, ctx: BuilderContext, spec: str = None):
         if spec:
             l: List[app_commands.AppCommand] = await self.bot.tree.sync(guild=ctx.guild)
         else:
@@ -39,7 +40,7 @@ class Dev(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_owner()
-    async def reload(self, ctx: commands.Context):
+    async def reload(self, ctx: BuilderContext):
         await load_extensions(self.bot, COG_DIRECTORIES)
         await ctx.send("All Cogs Reloaded.")
 

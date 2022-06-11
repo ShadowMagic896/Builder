@@ -8,6 +8,7 @@ from src.cogs.development.ErrorHandling import ErrorHandling
 
 from src.utils.Embeds import fmte_i
 from src.utils.Constants import CONSTANTS
+from bot import BuilderContext
 
 
 class BaseView(discord.ui.View):
@@ -18,7 +19,7 @@ class BaseView(discord.ui.View):
 
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         timeout: Optional[float] = 300,
     ):
         self.message: discord.Message = None
@@ -57,7 +58,7 @@ class BaseView(discord.ui.View):
 class Paginator(BaseView):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         values: List,
         pagesize: int,
         *,

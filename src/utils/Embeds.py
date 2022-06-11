@@ -5,16 +5,18 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
+from bot import BuilderContext
 
-async def getv(inter) -> Union[commands.Context, None]:
+
+async def getv(inter) -> Union[BuilderContext, None]:
     try:
-        return await commands.Context.from_interaction(inter)
+        return await BuilderContext.from_interaction(inter)
     except ValueError:
         return None
 
 
 def fmte(
-    ctx: commands.Context = None,
+    ctx: BuilderContext = None,
     t: str = "",
     d: str = "",
     c: discord.Color = discord.Color.teal(),

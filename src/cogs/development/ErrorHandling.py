@@ -24,6 +24,8 @@ from data.Settings import (
 from src.utils.Embeds import fmte_i
 from simpleeval import NumberTooHigh
 
+from bot import BuilderContext
+
 
 class ErrorHandling(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -38,7 +40,7 @@ class ErrorHandling(commands.Cog):
             sys.stderr.write(f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}")
             traceback.print_exc(file=sys.stderr)
 
-    async def on_command_error(self, ctx: commands.Context, error: Exception):
+    async def on_command_error(self, ctx: BuilderContext, error: Exception):
         if PRINT_COMMAND_ERROR_TRACKEBACK:
             sys.stderr.write(
                 f"[COMMAND ERROR]\n{ctx.command.qualified_name} with {ctx.args}"
