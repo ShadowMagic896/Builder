@@ -107,6 +107,7 @@ class BuilderContext(commands.Context):
         current_argument: Optional[str] = None,
         interaction: Optional[Interaction] = None,
     ):
+        self.bot = bot
         super().__init__(
             message=message,
             bot=bot,

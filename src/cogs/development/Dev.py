@@ -1,5 +1,7 @@
+import io
 from subprocess import Popen
 from discord import app_commands
+import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
@@ -41,8 +43,14 @@ class Dev(commands.Cog):
     @commands.hybrid_command()
     @commands.is_owner()
     async def reload(self, ctx: BuilderContext):
-        await load_extensions(self.bot, COG_DIRECTORIES)
+        await load_extensions(self.bot, COG_DIRECTORIES, print_log=False)
         await ctx.send("All Cogs Reloaded.")
+
+    @commands.hybrid_command()
+    @commands.is_owner()
+    async def embe(self, ctx: BuilderContext, code: str):
+        file = discord.File(io.BytesIO(bytes(str(eval(code)), "UTF-8")), "untitled.txt")
+        await ctx.send(file=file)
 
     @app_commands.command()
     async def testing(self, inter):

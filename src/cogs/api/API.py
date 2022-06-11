@@ -2,6 +2,7 @@ import asyncio
 import functools
 from typing import Any
 import discord
+from discord.app_commands import describe, Range
 from discord.ext import commands
 import openai
 
@@ -23,8 +24,14 @@ class API(commands.Cog):
         pass
 
     @openai.command()
-    async def detect(self, ctx: BuilderContext, message: str):
-        preset = APIPresets.OpenAI.detect(message)
+    @describe(
+        message="The message to detect",
+    )
+    async def filter(self, ctx: BuilderContext, message: str):
+        """
+        Detects the estimated unsafe content coming from a message. Errs on the side of caution
+        """
+        preset = APIPresets.OpenAI.detect(message, 1)
         response: dict = await API.run(
             self.bot.loop, self.bot.openai.Completion.create, **preset
         )
@@ -32,29 +39,72 @@ class API(commands.Cog):
         if code == 0:
             embed = fmte(
                 ctx,
-                t="All Good!",
-                d="Nothing worrying was detected in this message.",
+                t="This Text is Safe",
                 c=discord.Color.teal(),
             )
         elif code == 1:
             embed = fmte(
                 ctx,
-                t="Hm...",
-                d="This one is a bit worrying. It may include sensitive topics, insults, or things of that sort.",
+                t="This text is sensitive.",
+                d="This means that the text could be talking about a sensitive topic, something political, religious, or talking about a protected class such as race or nationality.",
                 c=discord.Color.yellow(),
             )
         else:
             embed = fmte(
                 ctx,
-                t="Nada",
-                d="This one crossed the line. It most likely includes slurs, NSFW, etc.",
+                t="This text is unsafe.",
+                d="This means that the text contains profane language, prejudiced or hateful language, something that could be NSFW, or text that portrays certain groups/people in a harmful manner.",
                 c=discord.Color.red(),
             )
+        await ctx.send(embed=embed)
+
+    @openai.command()
+    @describe(
+        message="The message to complete or respond to",
+        stochasticism="How random the response is",
+    )
+    async def complete(
+        self, ctx: BuilderContext, message: str, stochasticism: Range[float, 0, 1] = 0.5
+    ):
+        """
+        Autocompltetes a sentence or responds to a question
+        """
+        preset = APIPresets.OpenAI.complete(message, stochasticism)
+        response: dict = await API.run(
+            self.bot.loop, self.bot.openai.Completion.create, **preset
+        )
+        embed = fmte(ctx, t="Completion Finished")
+        for choice in response["choices"]:
+            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
 
     async def run(loop: asyncio.BaseEventLoop, func, *args, **kwargs):
         partial = functools.partial(func, *args, **kwargs)
         return await loop.run_in_executor(None, partial)
+
+    @openai.command()
+    @describe(
+        message="The text to fix",
+        stochasticism="How random the response is",
+    )
+    async def grammar(
+        self,
+        ctx: BuilderContext,
+        message: str,
+        edits: Range[int, 1, 5] = 1,
+        stochasticism: Range[float, 0, 1] = 0.5,
+    ):
+        """
+        Fixes grammar in a statement
+        """
+        preset = APIPresets.OpenAI.grammar(message, edits, stochasticism)
+        response: dict = await API.run(
+            self.bot.loop, self.bot.openai.Edit.create, **preset
+        )
+        embed = fmte(ctx, t="Checking Completed")
+        for choice in response["choices"]:
+            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
+        await ctx.send(embed=embed)
 
 
 class APIPresets:
@@ -67,6 +117,23 @@ class APIPresets:
                 "max_tokens": 1,
                 "top_p": 0,
                 "logprobs": 10,
+            }
+
+        def complete(text: str, temp: float):
+            return {
+                "model": "text-ada-001",
+                "temperature": temp,
+                "prompt": text,
+                "max_tokens": 2000,
+            }
+
+        def grammar(text: str, edits: int, stochasticism: float):
+            return {
+                "model": "text-davinci-edit-001",
+                "input": text,
+                "instruction": "Fix all spelling mistakes",
+                "temperature": stochasticism,
+                "n": edits,
             }
 
 
