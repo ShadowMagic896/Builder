@@ -8,6 +8,7 @@ COG_DIRECTORIES: List[PathLike] = [
     "./src/cogs/development",
     "./src/cogs/economy",
     "./src/cogs/main",
+    "./src/cogs/api",
 ]
 
 # Cogs to not load on startup

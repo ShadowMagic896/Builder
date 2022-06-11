@@ -29,7 +29,7 @@ from src.utils.static import TypeHints, Parameters
 
 from wand import image as wimage
 
-from data import Config
+from data import Environ
 
 from src.utils.Embeds import fmte, Desc
 from src.utils import Constants
@@ -149,10 +149,10 @@ class Images(commands.Cog):
         Adds text to an image.
         """
         font = font.lower()
-        if font not in [p.lower() for p in os.listdir(Config.FONT_PATH)]:
+        if font not in [p.lower() for p in os.listdir(Environ.FONT_PATH)]:
             raise ValueError("Not a valid font. Please use the autocomplete.")
         try:
-            font = ImageFont.FreeTypeFont(Config.FONT_PATH + font, strokeweight)
+            font = ImageFont.FreeTypeFont(Environ.FONT_PATH + font, strokeweight)
         except BaseException as e:
             print(e)
         img = await PILFN.toimg(image)
@@ -175,7 +175,7 @@ class Images(commands.Cog):
     async def textfont_autocomplete(self, inter: discord.Interaction, current: str):
         return [
             discord.app_commands.Choice(name=p[:-4], value=p)
-            for p in os.listdir(Config.FONT_PATH)
+            for p in os.listdir(Environ.FONT_PATH)
             if (p.lower() in current.lower() or current.lower() in p.lower())
             and p.lower().endswith(".ttf")
         ][:25]
@@ -488,7 +488,7 @@ class Images(commands.Cog):
 
             draw = ImageDraw.ImageDraw(result, mode="RGBA")
             as_hex = to_hex(color[1][:-1])
-            font = ImageFont.FreeTypeFont(Config.FONT_PATH + "BOOKOSBI.TTF", size=20)
+            font = ImageFont.FreeTypeFont(Environ.FONT_PATH + "BOOKOSBI.TTF", size=20)
             inverse = 255 - np.array(color[1])
             draw.text(
                 (round(result.width / 4), round(result.height / 2)),

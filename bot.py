@@ -21,7 +21,7 @@ from src.utils.Functions import (
 )
 from src.utils.Database import ensure_database
 from src.utils.Stats import Stats
-from data.Config import BOT_KEY, OPENAI_KEY
+from data.Environ import BOT_KEY, OPENAI_KEY
 from data.Settings import (
     COG_DIRECTORIES,
     LOAD_COGS_ON_STARTUP,

@@ -13,7 +13,7 @@ import os
 from typing import Any, Callable, List, Literal, Optional
 from urllib.parse import quote_plus
 
-from data.Config import DB_PASSWORD, DB_USERNAME
+from data.Environ import DB_PASSWORD, DB_USERNAME
 from data.Settings import (
     GLOBAL_CHECKS,
     IGNORED_GLOBALLY_CHECKED_COMMANDS,

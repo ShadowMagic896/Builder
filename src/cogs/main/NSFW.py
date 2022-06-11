@@ -10,7 +10,7 @@ import os
 import random
 from bs4 import BeautifulSoup
 from src.utils.Types import NHSearchData
-from data.Config import NSFW_PATH
+from data.Environ import NSFW_PATH
 
 from src.utils.Subclass import Paginator
 from src.utils.Parsers import Parser

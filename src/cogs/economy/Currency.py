@@ -7,7 +7,7 @@ from discord.ext.commands import parameter
 
 import random
 from typing import Any, List, Optional
-from data import Config
+from data import Environ
 
 from src.utils.Embeds import fmte, fmte_i
 from src.utils.Constants import CONSTANTS
@@ -516,7 +516,7 @@ class StartQuizView(BaseView):
     )
     async def start(self, inter: discord.Interaction, _: Any):
         if self.dif is not None and self.cat is not None:
-            key = Config.QUIZAPI_KEY
+            key = Environ.QUIZAPI_KEY
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
             self.questions = await (await self.ctx.bot.session.get(url)).json()
             view = MainQuizView(self.questions, self.cat, self.dif, self.ctx)
