@@ -136,11 +136,11 @@ class API(commands.Cog):
         for translaton in translatons:
             name = translaton.select_one("a").text.strip()
             results.append(discord.app_commands.Choice(name=name, value=name))
-        # This erreounously assumes that all projects have a translation for english
+        # This erroneously assumes that all projects have a translation for english
         # But I have to because the static webpage only gives languages other than english, and
         # Loading the JS webpage with selenium is slow and expensive, so I guess it works like
         # 99% of the time, which is ok with me
-        if "en" not in [r.name for r in results]: 
+        if "en" not in [r.name for r in results]:
             results.append(discord.app_commands.Choice(name="en", value="en"))
 
         return results
