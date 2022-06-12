@@ -11,7 +11,7 @@ neither of these projects are in development still.
 
 ## What Is It?
 Builder doesn't really have much of a focus as of writing this. I simply add featues and commands that feel like 
-programming, usually to see if I am actually capable of doing it. I also add commands when I have a need for one, but have no way to easily do it.
+programming, usually to see if I am actually capable of doing it. I also add commands when I have a need for a feature when using Discord.
 
 Before I attempt to advertise this bot, I will most likely have chosen a particular set of categorized commands to focus 
 development on.
