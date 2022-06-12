@@ -25,7 +25,6 @@ from data.Settings import (
     LOAD_COGS_ON_STARTUP,
     LOAD_JISHAKU,
     PREFIXES,
-    SHOW_SOURCE_LINES,
     SOURCE_CODE_PATHS,
     START_DOCKER_ON_STARTUP,
 )

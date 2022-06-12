@@ -1,7 +1,5 @@
-from importlib import reload
 import importlib
 import io
-from os import listdir
 import os
 from subprocess import Popen
 from discord import app_commands
@@ -13,7 +11,6 @@ from typing import List
 from data.Settings import COG_DIRECTORIES, DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
 
 from src.utils.Embeds import fmte
-from src.utils.Extensions import load_extensions
 from src.utils.Functions import explode
 from bot import BuilderContext
 from src.utils.Stats import Stats
@@ -63,7 +60,7 @@ class Dev(commands.Cog):
         to_reload.extend(COG_DIRECTORIES)
         for directory in to_reload:
             for file in os.listdir(directory):
-                if os.path.isdir(f"{directory}/{file}"):
+                if os.path.isdir(f"{directory}/{file}"):  # Probably just pycaches
                     continue
                 fp = f"{directory[2:].replace('/','.')}.{file[:-3]}"
                 if fp in ctx.bot.extensions.keys():
