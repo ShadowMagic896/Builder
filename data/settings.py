@@ -3,12 +3,12 @@ from typing import Any, Callable, List, Set
 
 from src.utils.Checks import interactionChoke
 
+
 # Directories to look for cogs in
 COG_DIRECTORIES: List[PathLike] = [
     "./src/cogs/development",
     "./src/cogs/economy",
     "./src/cogs/main",
-    "./src/cogs/api",
 ]
 
 # Cogs to not load on startup
@@ -22,6 +22,9 @@ PREFIXES: Set[str] = {">>"}
 
 # Whether to execute load_extensions on startup
 LOAD_COGS_ON_STARTUP: bool = True
+
+
+START_DOCKER_ON_STARTUP: bool = False
 
 # Cogs that do not show up on help command
 INVISIBLE_COGS: List[str] = ["ErrorHandling", "Help", "Dev", "GitHub"]
@@ -77,3 +80,5 @@ IGNORED_INHERITED_GROUP_CHECKS: List[Callable[[Any], bool]] = []
 
 EVALUATION_FILE_THRESHOLD = 4000
 EVALUATION_TRUNCATION_THRESHOLD = 20000
+
+DOCKER_DESKTOP_LOCATION: str = "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe"

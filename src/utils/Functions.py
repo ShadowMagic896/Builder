@@ -13,6 +13,8 @@ import os
 from typing import Any, Callable, List, Literal, Optional
 from urllib.parse import quote_plus
 
+from sympy import comp
+
 from data.Environ import DB_PASSWORD, DB_USERNAME
 from data.Settings import (
     GLOBAL_CHECKS,
@@ -149,18 +151,21 @@ async def urlFind(url: str):
     return regex.findall(url)
 
 
-async def filterSimilarValues(values, req_prod_def):
+async def filterSimilarValues(values, req_ratio, req_diff):
     # this is kinda a cheap way of doing it. For example, (255, 0, 0) will get discarded if (0, 0, 255) exists
     # It just saves a signifgant amount of time, and I honestly don't want to write all of the required NumPy stuff to do this properly
     # Besides, having two start constasts like that is probably uncommon, and a small change like (1, 0, 255) can change it totally.
-    prods = [prod(v[1][:-1]) for v in values]
-    for c, p in enumerate(prods):
-        is_valid = True
-        for xc, xp in enumerate(prods[c + 1 :]):
-            if c == xc:
-                continue
-            if abs(p - xp) < req_prod_def:
-                is_valid = False
-                break
-        if is_valid:
-            yield c
+    for co, val in enumerate(values):
+        deleted: int = 0
+        for xco, xval in enumerate(values[co + 1 :], start=co + 1):
+            similar: int = 0
+            for channel in range(3):
+                ab_diff = abs(val[channel] - xval[channel])
+                ab_ratio = abs(1 - ((val[channel] or 1) / (xval[channel] or 1)))
+                if ab_diff < req_diff or ab_ratio < req_ratio:
+                    similar += 1
+            if similar > 1:
+                del values[xco - deleted]
+                deleted += 1
+    print(f"RETURNING: {values}")
+    return values

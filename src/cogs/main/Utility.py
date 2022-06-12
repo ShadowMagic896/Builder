@@ -10,13 +10,13 @@ import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 from data import Environ
 import bs4
 import requests
 import warnings
 from src.utils.Embeds import fmte
-from src.utils.Subclass import BaseModal
+from src.utils.Subclass import BaseModal, BaseView
 from src.utils.Converters import TimeConvert
 from src.utils.Errors import *
 from bot import BuilderContext
@@ -374,6 +374,17 @@ class Utility(commands.Cog):
         """
         await ctx.interaction.response.send_modal(CodeModal(ctx))
 
+    @commands.hybrid_command()
+    @commands.has_permissions(manage_messages=True)
+    async def embed(self, ctx: BuilderContext):
+        """
+        Customize and send an embed. Not just for bots!
+        """
+        embed: discord.Embed = fmte(ctx, t="Untitled")
+        embed.remove_footer()
+        view = EmbedView(ctx, embed)
+        view.message = await ctx.send(embed=embed, view=view, ephemeral=True)
+
 
 class CodeModal(BaseModal):
     def __init__(self, ctx: BuilderContext) -> None:
@@ -425,6 +436,205 @@ except ValueError:
             name="Evaluation Time", value=f"{(time.time() - start) * 1000}ms"
         )
         await interaction.response.send_message(embed=embed, file=file)
+
+
+class EmbedView(BaseView):
+    def __init__(
+        self, ctx: BuilderContext, embed: discord.Embed, timeout: Optional[float] = 300
+    ):
+        self.tinter: Optional[discord.Interaction] = None
+        self.embed = embed
+        super().__init__(ctx, timeout)
+
+    @discord.ui.button(label="Set Title")
+    async def title(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Set Title")
+
+            _title: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Title"
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                self.embed.title = str(_self._title.value)
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+    @discord.ui.button(label="Set Description")
+    async def description(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Set Description")
+
+            description: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Description"
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                self.embed.description = str(_self.description.value)
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+    @discord.ui.button(label="Set Color")
+    async def setcolor(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Set Color")
+
+            col = discord.ui.TextInput(label="Please Input the Hex Color Value")
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                v = _self.col.value
+                if not v.startswith("0x"):
+                    v = f"0x{v}"
+                try:
+                    c = int(v, 16)
+                except ValueError:
+                    raise commands.errors.BadArgument("Not a valid hexadecimal value")
+                self.embed.color = discord.Color(c)
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+    @discord.ui.button(label="Add Field")
+    async def addfield(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Add Field")
+
+            name: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Field Name"
+            )
+            value: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Field Value"
+            )
+            inline = discord.ui.Select(
+                placeholder="Will This Be In-Line?",
+                options=[
+                    discord.SelectOption(label="Yes", value=True),
+                    discord.SelectOption(label="No", value=False),
+                ],
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                self.embed.add_field(
+                    name=str(_self.name),
+                    value=str(_self.value),
+                    inline=_self.inline.values[0] == "True",
+                )
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+    @discord.ui.button(label="Remove Field")
+    async def removefield(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Remove Field")
+
+            field: discord.ui.TextInput = discord.ui.TextInput(
+                label="Which Field # do you Want to Remove?"
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                try:
+                    f = int(_self.field.value)
+                except ValueError:
+                    raise commands.errors.BadArgument("Not a valid number")
+                if f > len(self.embed.fields) or f < 1:
+                    raise commands.errors.BadArgument("That field does not exist")
+                self.embed.clear_fields()
+                for c, e in enumerate(self.embed.fields):
+                    if c == f - 1:
+                        continue
+                    self.embed.add_field(name=e.name, value=e.value, inline=e.inline)
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+    @discord.ui.button(label="Set Image URL")
+    async def setimage(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Set Image")
+
+            url: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Image URL"
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                self.embed.set_image(url=str(_self.url.value))
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+    @discord.ui.button(label="Set Thumbnail URL")
+    async def setthumbnail(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Set Thumbnail")
+
+            url: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Image URL"
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                self.embed.set_thumbnail(url=str(_self.url.value))
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+
+    @discord.ui.button(label="Set Footer Text")
+    async def setfootertext(
+        self, inter: discord.Interaction, button: discord.ui.Button
+    ):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Set Footer Text")
+
+            url: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Footer Text"
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                if self.embed.footer.icon_url:
+                    self.embed.set_footer(
+                        text=_self.url.value, icon_url=str(self.embed.footer.icon_url)
+                    )
+                else:
+                    self.embed.set_footer(text=_self.url.value)
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+
+    @discord.ui.button(label="Set Footer Image URL")
+    async def setfooterurl(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Set Footer Image URL")
+
+            url: discord.ui.TextInput = discord.ui.TextInput(
+                label="Please Input Footer Image URL"
+            )
+
+            async def on_submit(_self, interaction: discord.Interaction) -> None:
+                if self.embed.footer:
+                    self.embed.set_footer(
+                        text=self.embed.footer.text, icon_url=str(_self.url.value)
+                    )
+                else:
+                    self.embed.set_footer(icon_url=str(_self.url.value))
+                await interaction.response.edit_message(embed=self.embed)
+
+        await inter.response.send_modal(UpdateModal())
+    
+    @discord.ui.button(label="Send", emoji="\N{BLACK RIGHTWARDS ARROW}", row=2, style=discord.ButtonStyle.green)
+    async def send(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.send_message(embed=self.embed)
 
 
 async def setup(bot):

@@ -5,6 +5,7 @@ import functools
 import os
 import re
 import aiohttp
+from cv2 import trace
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
@@ -445,14 +446,13 @@ class Images(commands.Cog):
 
     @image.command()
     @describe(
-        image="The image to get the colors of",
-        tolerance="Filters similar colors. The smaller the number, the more strict the filtering",
+        image="The image to get the colors of", to_find="How many colors to look for."
     )
     async def colors(
         self,
         ctx: BuilderContext,
         image: discord.Attachment,
-        tolerance: Range[int, 1, 100] = 3,
+        to_find: Literal[4, 8, 12, 16] = 8,
     ):
         """
         Gets the most common colors in an image.
@@ -464,35 +464,33 @@ class Images(commands.Cog):
         asImage = Image.open(buffer)
         asImage: Image.Image = await PILFN.run(asImage.convert, "RGBA")
 
-        target_colors = 8
+        target_colors = to_find
         in_line: int = 4
 
-        values: List[Tuple[int, Tuple[int, int, int, int]]] = sorted(
-            asImage.getcolors(2**24), reverse=True
-        )[: target_colors * 3]
-        values = [values[x] async for x in filterSimilarValues(values, tolerance)][
-            :target_colors
+        sort = sorted(asImage.getcolors(2**24), key=lambda x: x[0], reverse=True)[
+            :100
         ]
+        sort = [value[1] for value in sort]
+        values = (await filterSimilarValues(sort, 0, 10))[:target_colors]
 
-        fp = os.getcwd() + "\\data\\assets\\PIL\\basePaintTemplate.png"
+        fp = ".\\data\\assets\\PIL\\basePaintTemplate.png"
         template = Image.open(fp)
         template = template.convert("RGBA")
 
         rendered_templates: List[Image.Image] = []
 
-        discord.TextChannel
         for color in values:
             result = await PILFN.run(
-                PILFN.replaceColor, template, (0, 0, 0, 255), color[1]
+                PILFN.replaceColor, template, (0, 0, 0, 255), color
             )
 
             draw = ImageDraw.ImageDraw(result, mode="RGBA")
-            as_hex = to_hex(color[1][:-1])
+            as_hex = to_hex(color[:-1])
             font = ImageFont.FreeTypeFont(Environ.FONT_PATH + "BOOKOSBI.TTF", size=20)
-            inverse = 255 - np.array(color[1])
+            inverse = 255 - np.array(color)
             draw.text(
                 (round(result.width / 4), round(result.height / 2)),
-                f"RGBA{tuple(color[1])}\n          {as_hex}",
+                f"RGBA{tuple(color)}\n          {as_hex}",
                 tuple(inverse)[:-1],
                 font,
             )

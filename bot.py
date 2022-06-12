@@ -29,6 +29,7 @@ from data.Settings import (
     PREFIXES,
     SHOW_SOURCE_LINES,
     SOURCE_CODE_PATHS,
+    START_DOCKER_ON_STARTUP,
 )
 from src.utils.External import snekbox_exec
 
@@ -141,7 +142,8 @@ async def main():
 
     await ensure_database(bot)
     await format_code()
-    await snekbox_exec()
+    if START_DOCKER_ON_STARTUP:
+        await snekbox_exec()
     await apply_global_checks(bot)
 
     await bot.start(BOT_KEY)

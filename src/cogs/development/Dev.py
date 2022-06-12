@@ -1,4 +1,8 @@
+from importlib import reload
+import importlib
 import io
+from os import listdir
+import os
 from subprocess import Popen
 from discord import app_commands
 import discord
@@ -43,8 +47,25 @@ class Dev(commands.Cog):
     @commands.hybrid_command()
     @commands.is_owner()
     async def reload(self, ctx: BuilderContext):
-        await load_extensions(self.bot, COG_DIRECTORIES, print_log=False)
-        await ctx.send("All Cogs Reloaded.")
+        log: str = ""
+        to_reload = ["./src/utils"]
+        to_reload.extend(COG_DIRECTORIES)
+        for directory in to_reload:
+            for file in os.listdir(directory):
+                if os.path.isdir(f"{directory}/{file}"):
+                    continue
+                fp = f"{directory[2:].replace('/','.')}.{file[:-3]}"
+                if fp in ctx.bot.extensions.keys():
+                    log += f"**[EXT] {fp}**\n"
+                    await ctx.bot.reload_extension(fp)
+                else:
+                    imp = importlib.import_module(fp)
+                    importlib.reload(imp)
+                    log += f"*{fp}* \n"
+
+        embed = fmte(ctx, t="All Files Reloaded.", d=log)
+        await ctx.send(embed=embed)
+        print("----------RELOADED----------")
 
     @commands.hybrid_command()
     @commands.is_owner()

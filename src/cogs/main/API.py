@@ -7,6 +7,7 @@ from discord.ext import commands
 import openai
 
 from bot import Builder, BuilderContext
+from data.Environ import CAT_API_KEY
 from src.utils.APIFuncs import evaulate_response
 from src.utils.Embeds import fmte
 
@@ -78,10 +79,6 @@ class API(commands.Cog):
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
 
-    async def run(loop: asyncio.BaseEventLoop, func, *args, **kwargs):
-        partial = functools.partial(func, *args, **kwargs)
-        return await loop.run_in_executor(None, partial)
-
     @openai.command()
     @describe(
         message="The text to fix",
@@ -106,6 +103,44 @@ class API(commands.Cog):
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
 
+    @openai.command()
+    @describe(
+        message="The message to edit",
+        instructions="How to edit the message. The more specific, the better",
+        edits="How many times to edit the message",
+        stochasticism="How random the response is",
+    )
+    async def edit(
+        self,
+        ctx: BuilderContext,
+        message: str,
+        instructions: str,
+        edits: Range[int, 1, 5] = 1,
+        stochasticism: Range[float, 0, 1] = 0.5,
+    ):
+        """
+        Attempts to edit a message based upon instructions
+        """
+        preset = APIPresets.OpenAI.gen_edit(message, instructions, edits, stochasticism)
+        response: dict = await API.run(
+            self.bot.loop, self.bot.openai.Edit.create, **preset
+        )
+        embed = fmte(ctx, t="Editing Completed")
+        for choice in response["choices"]:
+            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
+        await ctx.send(embed=embed)
+
+    @commands.hybrid_command()
+    async def cat(self, ctx: BuilderContext):
+        url: str = "https://api.thecatapi.com/v1/images/search?limit=50&order=Desc"
+        headers = {"x-api-key": CAT_API_KEY}
+        response = await self.bot.session.get(url, headers=headers)
+        print(response)
+
+    async def run(loop: asyncio.BaseEventLoop, func, *args, **kwargs):
+        partial = functools.partial(func, *args, **kwargs)
+        return await loop.run_in_executor(None, partial)
+
 
 class APIPresets:
     class OpenAI:
@@ -121,7 +156,7 @@ class APIPresets:
 
         def complete(text: str, temp: float):
             return {
-                "model": "text-ada-001",
+                "model": "text-davinci-001",
                 "temperature": temp,
                 "prompt": text,
                 "max_tokens": 2000,
@@ -132,6 +167,16 @@ class APIPresets:
                 "model": "text-davinci-edit-001",
                 "input": text,
                 "instruction": "Fix all spelling mistakes",
+                "temperature": stochasticism,
+                "n": edits,
+            }
+
+        def gen_edit(text: str, inst: str, edits: int, stochasticism: float):
+
+            return {
+                "model": "text-davinci-edit-001",
+                "input": text,
+                "instruction": inst,
                 "temperature": stochasticism,
                 "n": edits,
             }
