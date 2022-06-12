@@ -89,43 +89,9 @@ class Builder(commands.Bot):
 
 
 class BuilderContext(commands.Context):
-    def __init__(
-        self,
-        *,
-        message: discord.Message,
-        bot: Builder,
-        view: StringView,
-        args: List[Any] = ...,
-        kwargs: Dict[str, Any] = ...,
-        prefix: Optional[str] = None,
-        command: Optional[Command[Any, ..., Any]] = None,
-        invoked_with: Optional[str] = None,
-        invoked_parents: List[str] = ...,
-        invoked_subcommand: Optional[Command[Any, ..., Any]] = None,
-        subcommand_passed: Optional[str] = None,
-        command_failed: bool = False,
-        current_parameter: Optional[Parameter] = None,
-        current_argument: Optional[str] = None,
-        interaction: Optional[Interaction] = None,
-    ):
-        self.bot = bot
-        super().__init__(
-            message=message,
-            bot=bot,
-            view=view,
-            args=args,
-            kwargs=kwargs,
-            prefix=prefix,
-            command=command,
-            invoked_with=invoked_with,
-            invoked_parents=invoked_parents,
-            invoked_subcommand=invoked_subcommand,
-            subcommand_passed=subcommand_passed,
-            command_failed=command_failed,
-            current_parameter=current_parameter,
-            current_argument=current_argument,
-            interaction=interaction,
-        )
+    def __init__(self, **data):
+        self.bot: Builder = data["bot"]
+        super().__init__(**data)
 
 
 async def main():

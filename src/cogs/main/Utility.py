@@ -587,7 +587,6 @@ class EmbedView(BaseView):
 
         await inter.response.send_modal(UpdateModal())
 
-
     @discord.ui.button(label="Set Footer Text")
     async def setfootertext(
         self, inter: discord.Interaction, button: discord.ui.Button
@@ -631,8 +630,13 @@ class EmbedView(BaseView):
                 await interaction.response.edit_message(embed=self.embed)
 
         await inter.response.send_modal(UpdateModal())
-    
-    @discord.ui.button(label="Send", emoji="\N{BLACK RIGHTWARDS ARROW}", row=2, style=discord.ButtonStyle.green)
+
+    @discord.ui.button(
+        label="Send",
+        emoji="\N{BLACK RIGHTWARDS ARROW}",
+        row=2,
+        style=discord.ButtonStyle.green,
+    )
     async def send(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.response.send_message(embed=self.embed)
 
