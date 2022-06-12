@@ -28,7 +28,7 @@ async def ensure_database(
             userid BIGINT NOT NULL PRIMARY KEY,
             balance BIGINT DEFAULT 0 CHECK (balance >= 0)
         );
-        
+
         CREATE TABLE IF NOT EXISTS inventories (
             userid BIGINT NOT NULL,
             atomid INTEGER NOT NULL CHECK (atomid > 1),
@@ -54,7 +54,7 @@ async def ensure_database(
             commandname TEXT UNIQUE NOT NULL,
             FOREIGN KEY (commandname) REFERENCES commands (commandname) ON DELETE CASCADE
         );
-        
+
         CREATE TABLE IF NOT EXISTS commands (
             commandname TEXT PRIMARY KEY,
             parents TEXT[]

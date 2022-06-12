@@ -546,19 +546,6 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @image.group()
-    async def meme(self, ctx: BuilderContext):
-        pass
-
-    @meme.command()
-    async def slap(self, ctx: BuilderContext, user: discord.Member):
-        auth_buf: BytesIO = await ctx.author.display_avatar.read()
-        auth_buf.seek(0)
-        user_buf: BytesIO = await user.display_avatar.read()
-        user_buf.seek(0)
-
-        pass
-
-    @image.group()
     async def enhance(self, ctx: BuilderContext):
         pass
 
@@ -1138,7 +1125,7 @@ class ImageManipulateView(BaseView):
         num: int = int(inp.content.strip())
         try:
             await inp.delete()
-        except:
+        except BaseException:
             pass
         if num < 0:
             raise ValueError("This number must be positive")
@@ -1180,7 +1167,7 @@ class ImageManipulateView(BaseView):
                 img = await response.read()
                 try:
                     return wimage.Image(blob=img)
-                except:
+                except BaseException:
                     raise ValueError("Could not load URL image.")
         else:
             file = message.attachments[0]
@@ -1196,7 +1183,7 @@ class ImageManipulateView(BaseView):
 
             try:
                 return wimage.Image(blob=buffer)
-            except:
+            except BaseException:
                 raise ValueError("Could not load attachment into image.")
 
 

@@ -1,4 +1,5 @@
-# This file serves as an example of what to place in a config.py folder, in this directory
+# This file serves as an example of what to place in a config.py folder,
+# in this directory
 
 # The key to your bot
 BOT_KEY: str

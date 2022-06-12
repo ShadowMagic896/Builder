@@ -1,8 +1,7 @@
 import asyncio
 import functools
 from io import BytesIO
-from typing import Any, Callable
-import aiohttp
+from typing import Any, Callable, Optional
 import discord
 from discord import app_commands
 from discord.app_commands import describe, Range
@@ -11,8 +10,6 @@ from discord.ext import commands
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from urllib import parse
-from pyppeteer import __pyppeteer_home__
-from data.Environ import CUSTOM_GOOGLE_SEARCH_KEY
 
 from src.utils.Converters import UrlGet, UrlFind
 from src.utils.Embeds import fmte
@@ -60,27 +57,29 @@ class Web(commands.Cog):
     @app_commands.rename(response="url")
     @describe(
         response="The URL to get",
-        as_payload="Whether to give the mass payload or automatically format the attachment to the URL format",
+        fmt="How to format the response. Leave empty to automatically detect",
     )
     async def get(
-        self, ctx: BuilderContext, response: UrlGet, as_payload: bool = False
+        self, ctx: BuilderContext, response: UrlGet, fmt: Optional[str] = "Auto"
     ):
         """
         Gets the direct response payload of a request
         """
         url = str(response.url)
-        if as_payload == False:
+        if fmt == "Auto":
             path = parse.urlsplit(url).path
             rev: str = str(path)[::-1]
-            if "." not in rev or rev.index("/") < rev.index("."):
-                ext: str = ".txt"
+
+            if "." not in rev or rev.index("/") < rev.index("."):  # No format attached
+                ext: str = "txt"
             else:
-                ext = path[(len(rev) - rev.index(".")) - 1 :]
+                ext = path[(len(rev) - rev.index(".")) :]
         else:
-            ext = ""
+            ext = fmt
         embed = fmte(ctx, t="Request Sent, Response Recieved", d=url)
+        embed.add_field(name="Format Used:", value=ext)
         buffer: BytesIO = BytesIO(await response.read())
-        file = discord.File(buffer, filename=f"response{ext}")
+        file = discord.File(buffer, filename=f"response.{ext}")
         await ctx.send(embed=embed, file=file)
 
     @web.command()
@@ -102,16 +101,6 @@ class Web(commands.Cog):
         embed = fmte(ctx, t="Screenshot Captured")
         embed.set_image(url="attachment://image.png")
         await ctx.send(embed=embed, file=file)
-
-    @web.command()
-    async def search(self, ctx: BuilderContext, query: str):
-        await ctx.interaction.response.defer()
-        query = parse.quote_plus(query.replace(" ", "+"))
-        key = CUSTOM_GOOGLE_SEARCH_KEY
-        url = f"https://customsearch.googleapis.com/customsearch/v1?q={query}"
-        response: aiohttp.ClientResponse = await self.bot.session.get(url)
-        text = await response.text()
-        print(text)
 
     async def run(bot: commands.Bot, func: Callable, *args, **kwargs) -> Any:
         part = functools.partial(func, *args, **kwargs)

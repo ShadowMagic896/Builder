@@ -169,8 +169,8 @@ class AtomsDatabase:
                 )
             else:
                 command = """
-                    DELETE FROM inventories 
-                    WHERE userid = $1 
+                    DELETE FROM inventories
+                    WHERE userid = $1
                         AND atomid = $2
                 """
                 await self.apg.execute(command, user.id, atomid)

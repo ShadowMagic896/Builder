@@ -14,7 +14,7 @@ from data.Settings import DOCKER_DESKTOP_LOCATION
 async def snekbox_exec():
     if not ctypes.windll.shell32.IsUserAnAdmin():
         raise PermissionError("Not running in administrator")
-    if not "Docker Desktop.exe" in (i.name() for i in psutil.process_iter()):
+    if "Docker Desktop.exe" not in (i.name() for i in psutil.process_iter()):
         print("Starting Docker Desktop")
         os.startfile(DOCKER_DESKTOP_LOCATION)
         await asyncio.sleep(5)

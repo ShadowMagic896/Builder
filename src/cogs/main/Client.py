@@ -50,11 +50,7 @@ class Client(commands.Cog):
             scopes=["bot", "applications.commands"],
         )
         embed = fmte(ctx, t="Click the Button Below to Invite Me!")
-        view = discord.ui.View().add_item(
-            discord.ui.Button(
-                style=discord.ButtonStyle.link, label="Invite Me!", url=link
-            )
-        )
+        view = InviteView(link)
 
         await ctx.send(embed=embed, view=view)
 
@@ -351,6 +347,24 @@ class ReturnToAbout(BaseView):
         view.message = await inter.response.edit_message(
             embed=await Client.getAboutEmbed(self.ctx), view=view
         )
+
+
+class InviteView(discord.ui.View):
+    def __init__(self, url: str, *, timeout: Optional[float] = 180):
+        self.url = url
+        super().__init__(timeout=timeout)
+        self.add_item(
+            discord.ui.Button(
+                label="Invite Me!",
+                emoji="\N{ENVELOPE}",
+                style=discord.ButtonStyle.link,
+                url=url,
+            )
+        )
+
+    @discord.ui.button(label="Raw Link", emoji="\N{LINK SYMBOL}")
+    async def raw_link(self, inter: discord.Interaction, button: discord.ui.Button):
+        await inter.response.send_message(self.url, ephemeral=True)
 
 
 async def setup(bot: commands.Bot):

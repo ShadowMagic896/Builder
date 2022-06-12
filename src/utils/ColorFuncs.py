@@ -34,7 +34,7 @@ def to_hex(rgb: np.ndarray) -> str:
 
 def channels_to_names(indicies: Set[int]):
     return ", ".join(
-            {{0: "Red", 1: "Green", 2: "Blue", 3: "Alpha"}.get(c ,"Unknown... lol") for c in indicies}
+            {{0: "Red", 1: "Green", 2: "Blue", 3: "Alpha"}.get(c, "Unknown... lol") for c in indicies}
         )
 
 def names_to_channels(name: str):

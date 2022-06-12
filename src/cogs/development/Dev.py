@@ -10,12 +10,13 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import List
-from data.Settings import COG_DIRECTORIES
+from data.Settings import COG_DIRECTORIES, DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
 
 from src.utils.Embeds import fmte
 from src.utils.Extensions import load_extensions
 from src.utils.Functions import explode
 from bot import BuilderContext
+from src.utils.Stats import Stats
 
 
 class Dev(commands.Cog):
@@ -23,6 +24,7 @@ class Dev(commands.Cog):
         self.bot: commands.Bot = bot
 
     @commands.hybrid_command()
+    @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     @commands.is_owner()
     @describe(params="The arguments to pass to Popen & autopep8")
     async def fmtcode(self, ctx, params: str = "-aaair"):
@@ -35,17 +37,26 @@ class Dev(commands.Cog):
         await ctx.send("Code formatting completed.")
 
     @commands.hybrid_command()
-    @commands.is_owner()
-    async def sync(self, ctx: BuilderContext, spec: str = None):
-        if spec:
-            l: List[app_commands.AppCommand] = await self.bot.tree.sync(guild=ctx.guild)
+    @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
+    @app_commands.rename(glob="global")
+    async def sync(self, ctx: BuilderContext, glob: bool = False):
+        """
+        Sync global commands to discord
+        """
+        type_ = "Globally" if glob else f"Within {len(DEVELOPMENT_GUILD_IDS)} Guilds"
+        log: str = ""
+        if glob:
+            cmds = await self.bot.tree.sync()
+            log += f"**~ GLOBAL:** {len(cmds)} BASE"
         else:
-            l: List[app_commands.AppCommand] = await self.bot.tree.sync()
-        embed = fmte(ctx, t="%s Commands Synced" % len(explode(l)))
+            for guild in DEVELOPMENT_GUILD_IDS:
+                cmds = await ctx.bot.tree.sync(guild=discord.Object(guild))
+                log += f"**~ GUILD {guild}:** {len(cmds)} BASE"
+        embed = fmte(ctx, t=f"Synced Commands {type_}", d=log or discord.utils.MISSING)
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    @commands.is_owner()
+    @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     async def reload(self, ctx: BuilderContext):
         log: str = ""
         to_reload = ["./src/utils"]
@@ -64,19 +75,21 @@ class Dev(commands.Cog):
                     log += f"*{fp}* \n"
 
         embed = fmte(ctx, t="All Files Reloaded.", d=log)
+
+        activity: discord.Activity = discord.Activity(
+            type=discord.ActivityType.watching,
+            name=f"{Stats.lineCount(SOURCE_CODE_PATHS)} LINES, {len(explode(self.bot.commands))} COMMANDS",
+        )
+        self.bot.activity = activity
         await ctx.send(embed=embed)
         print("----------RELOADED----------")
 
     @commands.hybrid_command()
+    @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     @commands.is_owner()
     async def embe(self, ctx: BuilderContext, code: str):
         file = discord.File(io.BytesIO(bytes(str(eval(code)), "UTF-8")), "untitled.txt")
         await ctx.send(file=file)
-
-    @app_commands.command()
-    async def testing(self, inter):
-        print("Running testing")
-        raise Exception
 
 
 async def setup(bot):

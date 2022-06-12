@@ -26,6 +26,9 @@ LOAD_COGS_ON_STARTUP: bool = True
 # Whether to start docker on startup
 START_DOCKER_ON_STARTUP: bool = False
 
+# Location of docker desktop to run
+DOCKER_DESKTOP_LOCATION: str = "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe"
+
 # Cogs that do not show up on help command
 INVISIBLE_COGS: List[str] = ["ErrorHandling", "Help", "Dev", "GitHub"]
 
@@ -69,7 +72,8 @@ GLOBAL_CHECKS: List[Callable[[Any], bool]] = [
     interactionChoke,
 ]
 
-# Commands that are exempt from global checks, in string form. The string should be the fully qualified name of the command
+# Commands that are exempt from global checks, in string form. The string
+# should be the fully qualified name of the command
 IGNORED_GLOBALLY_CHECKED_COMMANDS: List[str] = []
 
 # Whether to force all commands of a group to inherit all checks of the group
@@ -78,7 +82,10 @@ INHERIT_GROUP_CHECKS: bool = True
 # A list of checks to NOT inherit, if `INHERIT_GROUP_CHECKS` is true.
 IGNORED_INHERITED_GROUP_CHECKS: List[Callable[[Any], bool]] = []
 
-EVALUATION_FILE_THRESHOLD = 4000
+# When to truncate /eval files (characters)
 EVALUATION_TRUNCATION_THRESHOLD = 20000
 
-DOCKER_DESKTOP_LOCATION: str = "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe"
+# Guils to enable dev commands in
+DEVELOPMENT_GUILD_IDS: List[int] = [
+    871913539936329768,
+]

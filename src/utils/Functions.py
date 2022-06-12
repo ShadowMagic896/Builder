@@ -63,7 +63,8 @@ async def _addCogLoaders(bot: commands.Bot, filename: PathLike):
     Automatically adds all cog classes to the bot from a given file.
     """
     module = import_module(filename[1:-3])  # Remove the "." and ".py"
-    cogs: List[commands.Cog] = []  # A list of all cog classes defined in the file
+    # A list of all cog classes defined in the file
+    cogs: List[commands.Cog] = []
 
     # Get all classes in the file
     classes = inspect.getmembers(module, inspect.isclass)
@@ -154,7 +155,8 @@ async def urlFind(url: str):
 async def filterSimilarValues(values, req_ratio, req_diff):
     # this is kinda a cheap way of doing it. For example, (255, 0, 0) will get discarded if (0, 0, 255) exists
     # It just saves a signifgant amount of time, and I honestly don't want to write all of the required NumPy stuff to do this properly
-    # Besides, having two start constasts like that is probably uncommon, and a small change like (1, 0, 255) can change it totally.
+    # Besides, having two start constasts like that is probably uncommon, and
+    # a small change like (1, 0, 255) can change it totally.
     for co, val in enumerate(values):
         deleted: int = 0
         for xco, xval in enumerate(values[co + 1 :], start=co + 1):
@@ -167,5 +169,4 @@ async def filterSimilarValues(values, req_ratio, req_diff):
             if similar > 1:
                 del values[xco - deleted]
                 deleted += 1
-    print(f"RETURNING: {values}")
     return values

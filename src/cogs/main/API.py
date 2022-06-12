@@ -1,18 +1,17 @@
-import asyncio
-import functools
-from typing import Any
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
-import openai
 
 from bot import Builder, BuilderContext
-from data.Environ import CAT_API_KEY
 from src.utils.APIFuncs import evaulate_response
 from src.utils.Embeds import fmte
 
 
 class API(commands.Cog):
+    """
+    Using external APIs! Suggestion one with /suggest
+    """
+
     def __init__(self, bot: Builder) -> None:
         self.bot = bot
         super().__init__()
@@ -129,17 +128,6 @@ class API(commands.Cog):
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
-
-    @commands.hybrid_command()
-    async def cat(self, ctx: BuilderContext):
-        url: str = "https://api.thecatapi.com/v1/images/search?limit=50&order=Desc"
-        headers = {"x-api-key": CAT_API_KEY}
-        response = await self.bot.session.get(url, headers=headers)
-        print(response)
-
-    async def run(loop: asyncio.BaseEventLoop, func, *args, **kwargs):
-        partial = functools.partial(func, *args, **kwargs)
-        return await loop.run_in_executor(None, partial)
 
 
 class APIPresets:

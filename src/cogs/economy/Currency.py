@@ -274,6 +274,9 @@ class Currency(commands.Cog):
 
     @cur.command()
     async def quiz(self, ctx: BuilderContext):
+        """
+        Take a quiz to earn some coins!
+        """
         embed = fmte(ctx, t="Select Options", d="Once you are finished, press `Start`")
         view = StartQuizView(ctx)
         view.message = await ctx.send(embed=embed, view=view)
