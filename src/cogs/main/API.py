@@ -1,8 +1,9 @@
 import asyncio
 from copy import copy
 import functools
-from typing import List, Optional
+from typing import List, Mapping, Optional
 from webbrowser import Chrome
+import aiohttp
 from selenium import webdriver
 from urllib.parse import quote_plus
 from bs4 import BeautifulSoup, ResultSet, Tag
@@ -14,6 +15,7 @@ from bot import Builder, BuilderContext
 from src.utils.APIFuncs import evaulate_response
 from src.utils.Embeds import fmte
 from src.utils.Subclass import Paginator
+from src.utils.Errors import NoDocumentsFound
 
 
 class API(commands.Cog):
@@ -33,6 +35,12 @@ class API(commands.Cog):
         return "\N{Clockwise Rightwards and Leftwards Open Circle Arrows}"  # Bruh
 
     @commands.hybrid_command()
+    @describe(
+        project="The project to search",
+        query="What to search for",
+        version="The project version to search on",
+        lang="What language to search on",
+    )
     async def rtfm(
         self,
         ctx: commands.Context,
@@ -44,12 +52,98 @@ class API(commands.Cog):
         """
         Read the F*cking Manual: Seach readthedocs.io
         """
+        await ctx.interaction.response.defer()
+        # for v in project, query, version, lang:
+        #     print(f"'{v}'")
 
         meta = await RTFMMeta.create(ctx, self.driver, project, query, version, lang)
         view = RTFMPaginator(meta, 10)
         embed = await view.page_zero(ctx.interaction)
         await view.checkButtons()
         view.message = await ctx.send(embed=embed, view=view)
+
+    @rtfm.autocomplete("project")
+    async def project_autocomplte(self, inter: discord.Interaction, current: str):
+        query = quote_plus(current)
+        params: dict = {}
+        if (lang := getattr(inter.namespace, "lang", None)) is not None:
+            params["language"] = lang
+        params["q"] = query
+        url: str = f"https://readthedocs.org/search/"
+        response: aiohttp.ClientResponse = await self.bot.session.get(
+            url, params=params
+        )
+        response.raise_for_status()
+        text: str = await response.text()
+
+        soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
+        selector: str = "div#content > div.wrapper > div.navigable > div > div.module > div.module-wrapper > div.module-list > div.module-list-wrapper > ul > li.module-item.search-result-item"
+        results: ResultSet[Tag] = soup.select(selector, limit=25)
+
+        choices: List[discord.app_commands.Choice] = []
+        for result in results:
+            name = result.select_one("p.module-item-title > a").text.strip()
+            name = name[: name.index("(")].strip()
+
+            choices.append(
+                discord.app_commands.Choice(
+                    name=name or "--- UNNAMED ---", value=name or "--- UNNAMED ---"
+                )
+            )
+        return choices
+
+    @rtfm.autocomplete("version")
+    async def version_autocomplete(self, inter: discord.Interaction, current: str):
+        if (proj := (getattr(inter.namespace, "project", None))) is None:
+            return discord.app_commands.Choice(
+                name="--- Please enter a project first ---", value="latest"
+            )
+        proj = proj.replace(".", "")
+        url: str = f"https://readthedocs.org/projects/{proj}/"
+        response: aiohttp.ClientResponse = await self.bot.session.get(url)
+        text: str = await response.text()
+
+        soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
+        selector: str = "div#project_details > div.wrapper > div.module > div.module-list > div.module-list-wrapper > ul > li"
+
+        versions: ResultSet[Tag] = soup.select(selector, limit=25)
+        results: List[discord.app_commands.Choice] = []
+
+        for version in versions:
+            name = version.select_one("a").text.strip()
+            if name.lower() in current.lower() or current.lower() in name.lower():
+                results.append(discord.app_commands.Choice(name=name, value=name))
+
+        return results
+
+    @rtfm.autocomplete("lang")
+    async def lang_autocomplete(self, inter: discord.Interaction, current: str):
+        if (proj := (getattr(inter.namespace, "project", None))) is None:
+            return discord.app_commands.Choice(
+                name="--- Please enter a project first ---", value="en"
+            )
+        proj = proj.replace(".", "")
+        url: str = f"https://readthedocs.org/projects/{proj}/"
+        response: aiohttp.ClientResponse = await self.bot.session.get(url)
+        text: str = await response.text()
+
+        soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
+        selector: str = "div#project_details > div.wrapper > div.project_details > ul"
+
+        translatons: ResultSet[Tag] = soup.select_one(selector).select("li", limit=25)
+        results: List[discord.app_commands.Choice] = []
+
+        for translaton in translatons:
+            name = translaton.select_one("a").text.strip()
+            results.append(discord.app_commands.Choice(name=name, value=name))
+        # This erreounously assumes that all projects have a translation for english
+        # But I have to because the static webpage only gives languages other than english, and
+        # Loading the JS webpage with selenium is slow and expensive, so I guess it works like
+        # 99% of the time, which is ok with me
+        if "en" not in [r.name for r in results]: 
+            results.append(discord.app_commands.Choice(name="en", value="en"))
+
+        return results
 
     @commands.hybrid_group()
     async def openai(self, ctx: BuilderContext):
@@ -240,14 +334,7 @@ class RTFMMeta:
         results: ResultSet[Tag] = soup.select(select)
 
         if len(results) == 0:
-            embed = fmte(
-                ctx,
-                t="Sorry, Nothing.",
-                d=f"[URL Generated]({url})",
-                c=discord.Color.yellow(),
-            )
-            await ctx.send(embed=embed)
-            return
+            raise NoDocumentsFound("No documents for those parameters were found.")
 
         values: List[str] = []
 

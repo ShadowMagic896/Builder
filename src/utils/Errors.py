@@ -116,3 +116,12 @@ class SessionInProgress(BaseException):
 
     def __init__(self, error: Any, *args: object) -> None:
         super().__init__(error, *args)
+
+
+class NoDocumentsFound(BaseException):
+    """
+    Raised when no results for a RTFM search are found
+    """
+
+    def __init__(self, error: Any, *args: object) -> None:
+        super().__init__(error, *args)
