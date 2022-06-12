@@ -23,7 +23,7 @@ PREFIXES: Set[str] = {">>"}
 # Whether to execute load_extensions on startup
 LOAD_COGS_ON_STARTUP: bool = True
 
-
+# Whether to start docker on startup
 START_DOCKER_ON_STARTUP: bool = False
 
 # Cogs that do not show up on help command

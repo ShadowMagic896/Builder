@@ -1,16 +1,13 @@
-from multiprocessing import freeze_support
-import time
-from typing import Iterable, Union, List, Any, Optional, Dict
 import aiohttp
-import discord
-from discord import Interaction
-from discord.ext import commands
-from discord.ext.commands import Command, Parameter
-from discord.ext.commands.view import StringView
 import asyncio
+import discord
 import logging
-
 import openai
+import time
+
+from multiprocessing import freeze_support
+from discord.ext import commands
+from typing import Iterable, Union
 
 from src.utils.Extensions import load_extensions
 from src.utils.Functions import (
@@ -34,15 +31,15 @@ from data.Settings import (
 from src.utils.External import snekbox_exec
 
 # Logging ---------------------------------------------------
-logger = logging.getLogger("discord")
+logger: logging.Logger = logging.getLogger("discord")
 logger.setLevel(logging.ERROR)
 
-filename = "data\\logs\\_discord.log"
-encoding = "UTF-8"
-mode = "w"
+filename: str = "data\\logs\\_discord.log"
+encoding: str = "UTF-8"
+mode: str = "w"
 
-handler = logging.FileHandler(filename=filename, encoding=encoding, mode=mode)
-formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+handler: logging.FileHandler = logging.FileHandler(filename=filename, encoding=encoding, mode=mode)
+formatter: logging.Formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 # -----------------------------------------------------------
@@ -56,13 +53,10 @@ class Builder(commands.Bot):
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
-        if SHOW_SOURCE_LINES:
-            activity: discord.Activity = discord.Activity(
-                type=discord.ActivityType.watching,
-                name=f"{Stats.lineCount(SOURCE_CODE_PATHS)} LINES",
-            )
-        else:
-            activity: discord.Activity = None
+        activity: discord.Activity = discord.Activity(
+            type=discord.ActivityType.watching,
+            name=f"{Stats.lineCount(SOURCE_CODE_PATHS)} LINES",
+        )
         application_id: str = "963411905018466314"
         case_insensitive: bool = True
 
@@ -75,14 +69,15 @@ class Builder(commands.Bot):
             application_id=application_id,
             case_insensitive=case_insensitive,
         )
-        status: str = "idle"
-        self.status = discord.Status(status)
-        self.tree.fallback_to_global = False
+        
+        self.status = discord.Status("idle")
         self.openai = openai
         self.openai.api_key = OPENAI_KEY
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
         self.start_unix = time.time()
+
+        self.tree.fallback_to_global = True
 
     async def setup_hook(self) -> None:
         await startupPrint(self)
