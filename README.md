@@ -21,7 +21,7 @@ For now, a full list of commands is only available through the bot itself.
 ## What Is It Not?
 At the moment, I do know that the following categories will **not** be worked on or developed any further:
 - Moderation / Verification
-- NSFW Commands
+- Games
 
 
 ## Can I Try It?
