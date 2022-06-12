@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+import asyncpg
 import discord
 import logging
 import openai
@@ -38,8 +39,12 @@ filename: str = "data\\logs\\_discord.log"
 encoding: str = "UTF-8"
 mode: str = "w"
 
-handler: logging.FileHandler = logging.FileHandler(filename=filename, encoding=encoding, mode=mode)
-formatter: logging.Formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+handler: logging.FileHandler = logging.FileHandler(
+    filename=filename, encoding=encoding, mode=mode
+)
+formatter: logging.Formatter = logging.Formatter(
+    "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 # -----------------------------------------------------------
@@ -69,13 +74,14 @@ class Builder(commands.Bot):
             application_id=application_id,
             case_insensitive=case_insensitive,
         )
-        
-        self.status = discord.Status("idle")
-        self.openai = openai
+
+        self.status: discord.Status = discord.Status("idle")
+        self.openai: openai = openai
         self.openai.api_key = OPENAI_KEY
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
-        self.start_unix = time.time()
+        self.apg: asyncpg.Connection = None
+        self.start_unix: float = time.time()
 
         self.tree.fallback_to_global = True
 
