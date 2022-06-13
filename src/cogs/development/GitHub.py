@@ -2,7 +2,7 @@ from discord.ext import commands
 
 import os
 
-from src.utils.Embeds import fmte
+from src.utils.embeds import fmte
 from bot import BuilderContext
 
 

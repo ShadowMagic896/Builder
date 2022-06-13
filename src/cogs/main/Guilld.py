@@ -5,7 +5,7 @@ import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-from src.utils.Embeds import fmte
+from src.utils.embeds import fmte
 from bot import BuilderContext
 
 

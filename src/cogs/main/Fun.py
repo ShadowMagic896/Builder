@@ -9,7 +9,7 @@ import pyfiglet
 from pyfiglet import Figlet
 from typing import List
 
-from src.utils.Embeds import fmte, Desc
+from src.utils.embeds import fmte, Desc
 from bot import BuilderContext
 
 

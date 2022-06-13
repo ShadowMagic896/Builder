@@ -5,7 +5,6 @@ import functools
 import os
 import re
 import aiohttp
-from cv2 import trace
 import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
@@ -22,19 +21,20 @@ from typing import (
     Tuple,
 )
 import numpy as np
-from src.utils.Functions import filterSimilarValues
-from src.utils.ColorFuncs import to_hex
-from src.utils.Converters import RGB
-from src.utils.Subclass import BaseView
-from src.utils.static import TypeHints, Parameters
+from src.utils.functions import filter_similar
+from src.utils.colors import to_hex
+from src.utils.converters import RGB
+from src.utils.subclass import BaseView
+from src.utils.static import typehints
 
 from wand import image as wimage
 
-from data import Environ
+from data import environ
 
-from src.utils.Embeds import fmte, Desc
-from src.utils import Constants
+from src.utils.embeds import fmte, Desc
+from src.utils import constants
 from bot import BuilderContext
+from src.utils.static import parameters
 
 
 class Images(commands.Cog):
@@ -49,11 +49,11 @@ class Images(commands.Cog):
     def ge(self):
         return "\N{FRAME WITH PICTURE}\N{VARIATION SELECTOR-16}"
 
-    def getExtension(self, image: discord.Attachment):
+    def get_extension(self, image: discord.Attachment):
         fn = image.filename
         return fn[fn.replace(".", "_", fn.count(".") - 1).index(".") + 1 :]
 
-    def checkAttachment(self, image: discord.Attachment):
+    def check_attachment(self, image: discord.Attachment):
         if image.size > 40000000:
             raise IOError("Attachment is too large. Please keep files under 40MB")
 
@@ -150,10 +150,10 @@ class Images(commands.Cog):
         Adds text to an image.
         """
         font = font.lower()
-        if font not in [p.lower() for p in os.listdir(Environ.FONT_PATH)]:
+        if font not in [p.lower() for p in os.listdir(environ.FONT_PATH)]:
             raise ValueError("Not a valid font. Please use the autocomplete.")
         try:
-            font = ImageFont.FreeTypeFont(Environ.FONT_PATH + font, strokeweight)
+            font = ImageFont.FreeTypeFont(environ.FONT_PATH + font, strokeweight)
         except BaseException as e:
             print(e)
         img = await PILFN.toimg(image)
@@ -176,7 +176,7 @@ class Images(commands.Cog):
     async def textfont_autocomplete(self, inter: discord.Interaction, current: str):
         return [
             discord.app_commands.Choice(name=p[:-4], value=p)
-            for p in os.listdir(Environ.FONT_PATH)
+            for p in os.listdir(environ.FONT_PATH)
             if (p.lower() in current.lower() or current.lower() in p.lower())
             and p.lower().endswith(".ttf")
         ][:25]
@@ -273,7 +273,7 @@ class Images(commands.Cog):
         file = discord.File(buffer, "rotate.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
-    def getFilters(self):
+    def get_filters(self):
         """Basically get all constants in ImageFilter"""
         return [c for c in dir(ImageFilter) if c.upper() == c]
 
@@ -291,7 +291,7 @@ class Images(commands.Cog):
         """
         Applies a filter onto the image
         """
-        filts = self.getFilters()
+        filts = self.get_filters()
         if filter not in filts:
             raise commands.BadArgument(filter)
 
@@ -310,7 +310,7 @@ class Images(commands.Cog):
     ):
         return [
             discord.app_commands.Choice(name=c, value=c)
-            for c in self.getFilters()
+            for c in self.get_filters()
             if c.lower() in current.lower() or current.lower() in c.lower()
         ][:25]
 
@@ -370,7 +370,7 @@ class Images(commands.Cog):
         self,
         ctx: BuilderContext,
         image: discord.Attachment,
-        channels: TypeHints.COLOR_CHANNEL_ALPHA = Parameters.COLOR_CHANNEL_ALPHA,
+        channels: typehints.COLOR_CHANNEL_ALPHA = parameters.COLOR_CHANNEL_ALPHA,
         pivot: Range[int, 1, 510] = 255,
     ):
         """
@@ -471,7 +471,7 @@ class Images(commands.Cog):
             :100
         ]
         sort = [value[1] for value in sort]
-        values = (await filterSimilarValues(sort, 0, 10))[:target_colors]
+        values = (await filter_similar(sort, 0, 10))[:target_colors]
 
         fp = ".\\data\\assets\\PIL\\basePaintTemplate.png"
         template = Image.open(fp)
@@ -486,7 +486,7 @@ class Images(commands.Cog):
 
             draw = ImageDraw.ImageDraw(result, mode="RGBA")
             as_hex = to_hex(color[:-1])
-            font = ImageFont.FreeTypeFont(Environ.FONT_PATH + "BOOKOSBI.TTF", size=20)
+            font = ImageFont.FreeTypeFont(environ.FONT_PATH + "BOOKOSBI.TTF", size=20)
             inverse = 255 - np.array(color)
             draw.text(
                 (round(result.width / 4), round(result.height / 2)),
@@ -641,7 +641,7 @@ class Images(commands.Cog):
     @describe(
         user=Desc.user,
     )
-    async def avatar(self, ctx: BuilderContext, user: TypeHints.USER = Parameters.USER):
+    async def avatar(self, ctx: BuilderContext, user: typehints.USER = parameters.USER):
         """
         Gets the avatar / profile picture of a member.
         """
@@ -1033,7 +1033,7 @@ class ImageManipulateView(BaseView):
         await self.update(inter, button)
 
     @discord.ui.button(
-        emoji=Constants.CONSTANTS.Emojis().BBARROW_ID,
+        emoji=constants.CONSTANTS.Emojis().BBARROW_ID,
         label="Revert",
         style=discord.ButtonStyle.red,
         row=4,
@@ -1047,7 +1047,7 @@ class ImageManipulateView(BaseView):
         await self.update(inter, button)
 
     @discord.ui.button(
-        emoji=Constants.CONSTANTS.Emojis().BARROW_ID,
+        emoji=constants.CONSTANTS.Emojis().BARROW_ID,
         label="Back",
         style=discord.ButtonStyle.gray,
         row=4,

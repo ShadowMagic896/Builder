@@ -8,12 +8,12 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import List
-from data.Settings import COG_DIRECTORIES, DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
+from data.settings import COG_DIRECTORIES, DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
 
-from src.utils.Embeds import fmte
-from src.utils.Functions import explode
+from src.utils.embeds import fmte
+from src.utils.functions import explode
 from bot import BuilderContext
-from src.utils.Stats import Stats
+from src.utils.stats import Stats
 
 
 class Dev(commands.Cog):
@@ -75,7 +75,7 @@ class Dev(commands.Cog):
 
         activity: discord.Activity = discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{Stats.lineCount(SOURCE_CODE_PATHS)} LINES, {len(explode(self.bot.commands))} COMMANDS",
+            name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES, {len(explode(self.bot.commands))} COMMANDS",
         )
         self.bot.activity = activity
         await ctx.send(embed=embed)

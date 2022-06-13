@@ -7,11 +7,11 @@ from discord.ext.commands import parameter
 
 from typing import List, Optional, Union
 from chempy.util import periodic
-from src.utils.Converters import Atom
+from src.utils.converters import Atom
 
-from src.utils.Embeds import fmte
-from src.utils.Subclass import Paginator
-from data.ItemMaps import getAtomicName, Chemistry
+from src.utils.embeds import fmte
+from src.utils.subclass import Paginator
+from data.item_maps import get_atomic_name, Chemistry
 from bot import BuilderContext
 
 chem = Chemistry()
@@ -54,11 +54,11 @@ class Atoms(commands.Cog):
         Magically creates atoms and gives them to a user.
         """
         atomname = periodic.names[atom - 1]
-        old = await AtomsDatabase(ctx).getAtoms(user)
+        old = await AtomsDatabase(ctx).get_atoms(user)
         old_amount = (
             [v for v in old if v["atomid"] == atom][0]["count"] if len(old) != 0 else 0
         )
-        await AtomsDatabase(ctx).giveAtom(user, atom, amount)
+        await AtomsDatabase(ctx).give_atom(user, atom, amount)
         embed = fmte(
             ctx,
             t=f"Resources Given to `{user}`",
@@ -75,7 +75,7 @@ class Atoms(commands.Cog):
 
         view = AtomsView(ctx, values=values, title="All Atoms", sort="atomid")
         embed = await view.page_zero(ctx.interaction)
-        await view.checkButtons()
+        await view.check_buttons()
 
         message = await ctx.send(embed=embed, view=view)
         view.message = message
@@ -103,10 +103,10 @@ class Atoms(commands.Cog):
         """
         Shows all atoms that a user has.
         """
-        values: Union[List[Record], List] = await AtomsDatabase(ctx).getAtoms(user)
+        values: Union[List[Record], List] = await AtomsDatabase(ctx).get_atoms(user)
         view = AtomsView(ctx, values=values, title=f"`{user}`'s Atoms", sort=sort)
         embed = await view.page_zero(ctx.interaction)
-        await view.checkButtons()
+        await view.check_buttons()
 
         message = await ctx.send(embed=embed, view=view)
         view.message = message
@@ -117,10 +117,10 @@ class AtomsDatabase:
         self.bot: commands.Bot = ctx.bot
         self.apg: Connection = self.bot.apg
 
-    async def getAtoms(
+    async def get_atoms(
         self, user: Union[discord.Member, discord.User]
     ) -> List[asyncpg.Record]:
-        await self.registerUser(user)
+        await self.register_user(user)
         command = """
             SELECT *
             FROM inventories
@@ -130,10 +130,10 @@ class AtomsDatabase:
         """
         return await self.apg.fetch(command, user.id)
 
-    async def giveAtom(
+    async def give_atom(
         self, user: Union[discord.Member, discord.User], atomid: int, amount: int
     ) -> asyncpg.Record:
-        await self.registerUser(user)
+        await self.register_user(user)
         command = """
             INSERT INTO inventories
             VALUES (
@@ -175,7 +175,7 @@ class AtomsDatabase:
                 """
                 await self.apg.execute(command, user.id, atomid)
 
-    async def createatom(
+    async def create_atom(
         self, name: str, description: Optional[str] = "No Description"
     ) -> asyncpg.Record:
         """
@@ -191,7 +191,7 @@ class AtomsDatabase:
         """
         return await self.apg.fetchrow(command, name, description)
 
-    async def getatom(
+    async def get_atom(
         self,
         *,
         atom: Optional[str] = None,
@@ -201,10 +201,10 @@ class AtomsDatabase:
             FROM atoms
             WHERE name = $1
         """
-        result = await self.apg.fetchrow(command, getAtomicName(atom))
+        result = await self.apg.fetchrow(command, get_atomic_name(atom))
         return result
 
-    async def registerUser(self, user: discord.User):
+    async def register_user(self, user: discord.User):
         command = """
             INSERT INTO users(userid)
             VALUES (

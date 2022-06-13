@@ -21,7 +21,7 @@ class Chemistry:
         }
 
 
-def getAtomicName(item: str):
+def get_atomic_name(item: str):
     """
     Finds the name of an atom from either its name, symbol, or atomic number.
     """

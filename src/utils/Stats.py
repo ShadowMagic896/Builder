@@ -19,8 +19,8 @@ class Stats:
                 with open(path) as f:
                     yield len(f.readlines())
 
-    def lineCount(directories: List[os.PathLike]):
+    def line_count(directories: List[os.PathLike]):
         return sum([sum(Stats.__iter_lines(directory)) for directory in directories])
 
-    def getInviteLink(clientID: int, perms: int = 0):
+    def invite_link(clientID: int, perms: int = 0):
         return discord.utils.oauth_url(clientID)

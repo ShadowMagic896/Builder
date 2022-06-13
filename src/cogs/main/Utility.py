@@ -3,7 +3,7 @@ from datetime import datetime
 import io
 from textwrap import indent
 import pytz
-from data.Settings import EVALUATION_TRUNCATION_THRESHOLD
+from data.settings import EVALUATION_TRUNCATION_THRESHOLD
 import time
 
 import discord
@@ -11,14 +11,14 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import Any, List, Optional, Tuple
-from data import Environ
+from data import environ
 import bs4
 import requests
 import warnings
-from src.utils.Embeds import fmte
-from src.utils.Subclass import BaseModal, BaseView
-from src.utils.Converters import TimeConvert
-from src.utils.Errors import *
+from src.utils.embeds import fmte
+from src.utils.subclass import BaseModal, BaseView
+from src.utils.converters import TimeConvert
+from src.utils.errors import *
 from bot import BuilderContext
 
 warnings.filterwarnings("error")
@@ -253,7 +253,7 @@ class Utility(commands.Cog):
 
         headers = {
             "X-RapidAPI-Host": "mashape-community-urban-dictionary.p.rapidapi.com",
-            "X-RapidAPI-Key": Environ.X_RAPID_API_KEY,
+            "X-RapidAPI-Key": environ.X_RAPID_API_KEY,
         }
 
         response = requests.request("GET", url, headers=headers, params=params)
@@ -285,7 +285,7 @@ class Utility(commands.Cog):
         """
         response = requests.get(
             "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
-                term.lower(), Environ.DICT_API_KEY
+                term.lower(), environ.DICT_API_KEY
             )
         ).json()
         defs = []

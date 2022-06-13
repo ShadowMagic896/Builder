@@ -3,15 +3,15 @@ import asyncpg
 import discord
 from discord.app_commands import Range, describe
 from discord.ext import commands
-from src.utils.Errors import MissingShopEntry, MissingFunds, SelfAction, Unowned
-from data.ItemMaps import Chemistry, getAtomicName
+from src.utils.errors import MissingShopEntry, MissingFunds, SelfAction, Unowned
+from data.item_maps import Chemistry, get_atomic_name
 
-from src.utils.Converters import Atom
-from src.utils.Embeds import fmte
-from src.cogs.economy.Atoms import AtomsDatabase
-from src.cogs.economy.Currency import BalanceDatabase
-from src.utils.Subclass import BaseView, Paginator
-from src.utils.Constants import CONSTANTS
+from src.utils.converters import Atom
+from src.utils.embeds import fmte
+from src.cogs.economy.atoms import AtomsDatabase
+from src.cogs.economy.currency import BalanceDatabase
+from src.utils.subclass import BaseView, Paginator
+from src.utils.constants import CONSTANTS
 from bot import BuilderContext
 
 
@@ -46,18 +46,18 @@ class Shop(commands.Cog):
         """
         Creates a new posting selling atoms for coins.
         """
-        await AtomsDatabase(ctx).registerUser(ctx.author)
+        await AtomsDatabase(ctx).register_user(ctx.author)
 
-        useratoms = await AtomsDatabase(ctx).getAtoms(ctx.author)
+        useratoms = await AtomsDatabase(ctx).get_atoms(ctx.author)
         urec = [rec for rec in useratoms if rec["atomid"] == atom]
         atomname = Chemistry().names[atom - 1]
 
         if len(urec) == 0 or urec[0]["count"] < amount:
             raise MissingFunds(f"You don't have that much `{atomname}`!")
 
-        rec = await ShopDatabase(ctx).createShop(ctx.author, atom, amount, price)
+        rec = await ShopDatabase(ctx).create(ctx.author, atom, amount, price)
         identity = rec["identity"]
-        await AtomsDatabase(ctx).giveAtom(ctx.author, atom, -amount)
+        await AtomsDatabase(ctx).give_atom(ctx.author, atom, -amount)
 
         embed = fmte(
             ctx,
@@ -75,13 +75,13 @@ class Shop(commands.Cog):
         Removes a posting from the market and refunds your atoms.
         """
 
-        res = await ShopDatabase(ctx).getShop(listing)
+        res = await ShopDatabase(ctx).get_shop(listing)
         if res is None:
             raise MissingShopEntry("Cannot find a shop listing with that ID.")
         if res["userid"] != ctx.author.id:
             raise Unowned("This is not your posting.")
-        await ShopDatabase(ctx).removeShop(res["identity"])
-        atomname = getAtomicName(res["atomid"])
+        await ShopDatabase(ctx).remove(res["identity"])
+        atomname = get_atomic_name(res["atomid"])
         atom = res["atomid"]
         amount = res["amount"]
         price = res["price"]
@@ -92,7 +92,7 @@ class Shop(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-        await AtomsDatabase(ctx).giveAtom(ctx.author, atom, amount)
+        await AtomsDatabase(ctx).give_atom(ctx.author, atom, amount)
 
     @remove.autocomplete("listing")
     async def removelisting_autocomplete(
@@ -100,12 +100,12 @@ class Shop(commands.Cog):
     ):
         return [
             discord.app_commands.Choice(
-                name=f"{shop['identity']}: {shop['amount']} {getAtomicName(shop['atomid'])} for {shop['price']}",
+                name=f"{shop['identity']}: {shop['amount']} {get_atomic_name(shop['atomid'])} for {shop['price']}",
                 value=shop["identity"],
             )
             for shop in await ShopDatabase(
                 await BuilderContext.from_interaction(inter)
-            ).getBy(inter.user)
+            ).get_by_user(inter.user)
             if str(shop["identity"]) in str(current)
             or str(current) in str(shop["identity"])
         ]
@@ -126,20 +126,20 @@ class Shop(commands.Cog):
             if atom is None:
                 vals = await db.getAll()
             else:
-                vals = await db.getWithAttrs("atomid = $1", atom)
+                vals = await db.get_with_attrs("atomid = $1", atom)
             vals = sorted(vals, key=lambda r: r["price"] / r["amount"])
             view = ShopView(ctx, vals, 10)
         else:
             if atom is None:
-                vals = await db.getBy(user)
+                vals = await db.get_by_user(user)
             else:
-                vals = await db.getWithAttrs(
+                vals = await db.get_with_attrs(
                     "atomid = $1 AND userid = $2", atom, user.id
                 )
             vals = sorted(vals, key=lambda r: r["price"] / r["amount"])
             view = PersonalShopView(ctx, user, vals, 10)
         embed = await view.page_zero(ctx.interaction)
-        await view.checkButtons()
+        await view.check_buttons()
         msg = await ctx.send(embed=embed, view=view)
         view.message = msg
 
@@ -148,7 +148,7 @@ class Shop(commands.Cog):
         """
         Gets all available information about a shop posting.
         """
-        shop: asyncpg.Record = await ShopDatabase(ctx).getShop(listing)
+        shop: asyncpg.Record = await ShopDatabase(ctx).get_shop(listing)
         if shop is None:
             raise MissingShopEntry(
                 "A shop with this ID does not exist. Maybe it was deleted, or you misspelled something."
@@ -156,7 +156,7 @@ class Shop(commands.Cog):
 
         embed = fmte(
             ctx,
-            d=listingInformation(shop),
+            d=listing_information(shop),
         )
         view = PurchaseView(ctx, shop)
         message = await ctx.send(embed=embed, view=view)
@@ -174,7 +174,7 @@ class ShopDatabase:
         """
         return await self.apg.fetch(command)
 
-    async def getAllBy(
+    async def get_by_any(
         self, users: Optional[List[Union[discord.User, discord.Member]]]
     ) -> List[asyncpg.Record]:
         ids = str(tuple([user.id for user in users]))
@@ -186,7 +186,7 @@ class ShopDatabase:
         allEntries: List[asyncpg.Record] = await self.apg.fetch(command)
         return allEntries
 
-    async def getBy(self, user: discord.User) -> List[asyncpg.Record]:
+    async def get_by_user(self, user: discord.User) -> List[asyncpg.Record]:
         command = """
             SELECT * FROM shops
             WHERE userid = $1
@@ -201,7 +201,7 @@ class ShopDatabase:
         """
         return await self.apg.fetchrow(command, identity)
 
-    async def createShop(
+    async def create(
         self,
         user: Union[discord.Member, discord.User],
         atomid: int,
@@ -225,14 +225,14 @@ class ShopDatabase:
         """
         return await self.apg.fetchrow(command, user.id, atomid, amount, price)
 
-    async def getShop(self, identity: int):
+    async def get_shop(self, identity: int):
         command = """
             SELECT * FROM shops
             WHERE identity = $1
         """
         return await self.apg.fetchrow(command, identity)
 
-    async def removeShop(self, identity: int) -> List[asyncpg.Record]:
+    async def remove(self, identity: int) -> List[asyncpg.Record]:
         command = """
             DELETE FROM shops
             WHERE identity = $1
@@ -240,7 +240,7 @@ class ShopDatabase:
         """
         return await self.apg.fetchrow(command, identity)
 
-    async def getWithAttrs(self, wherestr: str, *args):
+    async def get_with_attrs(self, wherestr: str, *args):
         command = f"""
             SELECT * FROM shops
             WHERE {wherestr}
@@ -264,7 +264,7 @@ class ShopView(Paginator):
         stop = self.pagesize * self.position
 
         for shop in self.vals[start:stop]:
-            name = getAtomicName(shop["atomid"])
+            name = get_atomic_name(shop["atomid"])
             amt = shop["amount"]
             price = shop["price"]
             coin = CONSTANTS.Emojis().COIN_ID
@@ -303,7 +303,7 @@ class PersonalShopView(Paginator):
         stop = self.pagesize * self.position
 
         for shop in self.vals[start:stop]:
-            name = getAtomicName(shop["atomid"])
+            name = get_atomic_name(shop["atomid"])
             amt = shop["amount"]
             price = shop["price"]
             transid = shop["identity"]
@@ -339,23 +339,23 @@ class PurchaseView(BaseView):
     async def purchase(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user.id == self.record["userid"]:
             raise SelfAction("You cannot purchase your own shop!")
-        rec = await ShopDatabase(self.ctx).delete(self.record["identity"])
+        rec = await ShopDatabase(self.ctx).remove(self.record["identity"])
         if rec is None:
             raise MissingShopEntry("This appears to already have been puchased. Sorry!")
 
         bdb: BalanceDatabase = BalanceDatabase(self.ctx)
         adb: AtomsDatabase = AtomsDatabase(self.ctx)
-        if (price := rec["price"]) > (bal := await bdb.getBalance(self.ctx.author)):
+        if (price := rec["price"]) > (bal := await bdb.get_balance(self.ctx.author)):
             raise MissingFunds(f"Need {price:,}, have {bal:,}")
 
-        new_balance = await bdb.addToBalance(self.ctx.author, -price)
-        atoms = await adb.giveAtom(self.ctx.author, rec["atomid"], rec["amount"])
-        atomname = getAtomicName(atoms["atomid"])
+        new_balance = await bdb.add_to_balance(self.ctx.author, -price)
+        atoms = await adb.give_atom(self.ctx.author, rec["atomid"], rec["amount"])
+        atomname = get_atomic_name(atoms["atomid"])
 
         embed = fmte(
             self.ctx,
             t="Shop Purchased!",
-            d=listingInformation(rec)
+            d=listing_information(rec)
             + f"\n**New balance:** `{new_balance:,}` [Before: `{bal:,}`{CONSTANTS.Emojis().COIN_ID}]\n**New Amount:** `{atomname}: {atoms['amount']}`",
         )
 
@@ -368,20 +368,20 @@ class PurchaseView(BaseView):
     async def destroy(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user.id != self.record["userid"]:
             raise Unowned("You cannot delete a shop that isn't yours!")
-        result = await ShopDatabase(self.ctx).delete(self.record["identity"])
+        result = await ShopDatabase(self.ctx).remove(self.record["identity"])
         if result is None:
             raise MissingShopEntry("Cannot find shop, it was most likely deleted.")
         else:
             embed = fmte(
                 self.ctx,
                 t="Listing Successfully Removed",
-                d=listingInformation(result),
+                d=listing_information(result),
             )
             await inter.response.send_message(embed=embed)
 
 
-def listingInformation(record: asyncpg.Record):
-    atomname: str = getAtomicName(record["atomid"])
+def listing_information(record: asyncpg.Record):
+    atomname: str = get_atomic_name(record["atomid"])
     atom: int = record["atomid"]
     amount: int = record["amount"]
     price: int = record["price"]

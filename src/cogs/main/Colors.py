@@ -3,11 +3,11 @@ from typing import Optional
 from discord.ext import commands
 from discord.app_commands import Range, describe
 
-from src.utils.ColorFuncs import channels_to_names, merge
-from src.utils.Embeds import fmte
-from src.cogs.main.Images import PILFN
-from src.utils.static.Parameters import COLOR_CHANNEL_ALPHA
-from src.utils.Converters import RGB
+from src.utils.colors import channels_to_names, merge
+from src.utils.embeds import fmte
+from src.cogs.main.images import PILFN
+from src.utils.static.parameters import COLOR_CHANNEL_ALPHA
+from src.utils.converters import RGB
 
 from PIL import Image
 

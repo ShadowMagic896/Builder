@@ -4,10 +4,10 @@ from discord.app_commands import errors as app_errors
 
 import math
 from typing import Any, List, Optional, Type
-from src.cogs.development.ErrorHandling import ErrorHandling
+from src.cogs.development.error_handling import ErrorHandling
 
-from src.utils.Embeds import fmte_i
-from src.utils.Constants import CONSTANTS
+from src.utils.embeds import fmte_i
+from src.utils.constants import CONSTANTS
 from bot import BuilderContext
 
 
@@ -80,7 +80,7 @@ class Paginator(BaseView):
     @discord.ui.button(emoji=CONSTANTS.Emojis().BBARROW_ID, custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = 1
-        await self.checkButtons(button)
+        await self.check_buttons(button)
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
@@ -88,7 +88,7 @@ class Paginator(BaseView):
     @discord.ui.button(emoji=CONSTANTS.Emojis().BARROW_ID, custom_id="b")
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position -= 1
-        await self.checkButtons(button)
+        await self.check_buttons(button)
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
@@ -102,7 +102,7 @@ class Paginator(BaseView):
     @discord.ui.button(emoji=CONSTANTS.Emojis().FARROW_ID, custom_id="f")
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position += 1
-        await self.checkButtons(button)
+        await self.check_buttons(button)
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
@@ -110,7 +110,7 @@ class Paginator(BaseView):
     @discord.ui.button(emoji=CONSTANTS.Emojis().FFARROW_ID, custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = self.maxpos
-        await self.checkButtons(button)
+        await self.check_buttons(button)
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
@@ -154,7 +154,7 @@ class Paginator(BaseView):
         self.position = 1
         return await self.adjust(await self.embed(interaction))
 
-    async def checkButtons(self, button: discord.Button = None):
+    async def check_buttons(self, button: discord.Button = None):
         """
         Can be overwritten if necessary.
         """

@@ -7,11 +7,11 @@ from discord.ext.commands import parameter
 
 import random
 from typing import Any, List, Optional
-from data import Environ
+from data import environ
 
-from src.utils.Embeds import fmte, fmte_i
-from src.utils.Constants import CONSTANTS
-from src.utils.Subclass import BaseModal, BaseView, Paginator
+from src.utils.embeds import fmte, fmte_i
+from src.utils.constants import CONSTANTS
+from src.utils.subclass import BaseModal, BaseView, Paginator
 from bot import BuilderContext
 
 
@@ -59,7 +59,7 @@ class Currency(commands.Cog):
             raise TypeError("User cannot be a bot.")
 
         db = BalanceDatabase(ctx)
-        rec = await db.getBalance(user)
+        rec = await db.get_balance(user)
 
         embed = fmte(ctx, t=f"`{user}`'s Balance: `{rec:,}`{self.coin}")
         await ctx.send(embed=embed)
@@ -76,7 +76,7 @@ class Currency(commands.Cog):
         if user.bot:
             raise TypeError("User cannot be a bot.")
         db = BalanceDatabase(ctx)
-        if (cv := (await db.getBalance(ctx.author))) < amount:
+        if (cv := (await db.get_balance(ctx.author))) < amount:
             raise ValueError("You don't have that much money!")
 
         embed = fmte(
@@ -103,7 +103,7 @@ class Currency(commands.Cog):
             raise TypeError("That user cannot see this channel.")
 
         db = BalanceDatabase(ctx)
-        if (cv := (await db.getBalance(user))) < amount:
+        if (cv := (await db.get_balance(user))) < amount:
             raise ValueError("They don't have that much money!")
 
         embed = fmte(
@@ -122,7 +122,7 @@ class Currency(commands.Cog):
         Begs for money. You can win some, but you can also lose some.
         """
         db = BalanceDatabase(ctx)
-        amount = random.randint(max(-500, -await db.getBalance(ctx.author)), 1000)
+        amount = random.randint(max(-500, -await db.get_balance(ctx.author)), 1000)
         if amount < 0:
             k = random.choice(
                 [
@@ -143,7 +143,7 @@ class Currency(commands.Cog):
             k = "You did nothing, and nothing happened."
 
         db = BalanceDatabase(ctx)
-        await db.addToBalance(ctx.author, amount)
+        await db.add_to_balance(ctx.author, amount)
 
         sign = "+" if amount >= 0 else ""
         embed = fmte(ctx, t=f"`{sign}{amount:,}`{self.coin}", d=k)
@@ -177,8 +177,8 @@ class Currency(commands.Cog):
             raise ValueError("Cannot steal from yourself!")
 
         db = BalanceDatabase(ctx)
-        auth_bal = await db.getBalance(ctx.author)
-        user_bal = await db.getBalance(user)
+        auth_bal = await db.get_balance(ctx.author)
+        user_bal = await db.get_balance(user)
 
         if amount > auth_bal:
             raise ValueError("You cannot risk more than you own!")
@@ -191,8 +191,8 @@ class Currency(commands.Cog):
         success = random.random() < chnc
         db = BalanceDatabase(ctx)
         if success:
-            na = (await db.addToBalance(ctx.author, amount))["balance"]
-            nu = (await db.addToBalance(user, -amount))["balance"]
+            na = (await db.add_to_balance(ctx.author, amount))["balance"]
+            nu = (await db.add_to_balance(user, -amount))["balance"]
 
             embed = fmte(
                 ctx,
@@ -207,8 +207,8 @@ class Currency(commands.Cog):
             )
             await user.send(embed=embed)
         else:
-            na = (await db.addToBalance(ctx.author, -amount))["balance"]
-            nu = (await db.addToBalance(user, amount))["balance"]
+            na = (await db.add_to_balance(ctx.author, -amount))["balance"]
+            nu = (await db.add_to_balance(user, amount))["balance"]
 
             embed = fmte(
                 ctx,
@@ -227,7 +227,7 @@ class Currency(commands.Cog):
         rate = CONSTANTS.Rates().HOURLY
 
         db = BalanceDatabase(ctx)
-        balance = (await db.addToBalance(ctx.author, rate))["balance"]
+        balance = (await db.add_to_balance(ctx.author, rate))["balance"]
 
         embed = fmte(
             ctx,
@@ -245,7 +245,7 @@ class Currency(commands.Cog):
         rate = CONSTANTS.Rates().DAILY
 
         db = BalanceDatabase(ctx)
-        balance = (await db.addToBalance(ctx.author, rate))["balance"]
+        balance = (await db.add_to_balance(ctx.author, rate))["balance"]
 
         embed = fmte(
             ctx,
@@ -263,7 +263,7 @@ class Currency(commands.Cog):
         rate = CONSTANTS.Rates().WEEKLY
 
         db = BalanceDatabase(ctx)
-        balance = (await db.addToBalance(ctx.author, rate))["balance"]
+        balance = (await db.add_to_balance(ctx.author, rate))["balance"]
 
         embed = fmte(
             ctx,
@@ -292,7 +292,7 @@ class Currency(commands.Cog):
         amount: Optional[int] = 1000,
     ):
         db = BalanceDatabase(ctx)
-        await db.addToBalance(user, amount)
+        await db.add_to_balance(user, amount)
 
     # @cur.command()
     # @commands.is_owner()
@@ -389,8 +389,8 @@ class GiveView(BaseView):
     async def ack(self, inter: discord.Interaction, button: discord.Button):
 
         db = BalanceDatabase(self.ctx)
-        authnew = (await db.addToBalance(self.auth, -self.amount))["balance"]
-        usernew = (await db.addToBalance(self.user, self.amount))["balance"]
+        authnew = (await db.add_to_balance(self.auth, -self.amount))["balance"]
+        usernew = (await db.add_to_balance(self.user, self.amount))["balance"]
         coin = CONSTANTS.Emojis().COIN_ID
 
         embed = fmte(
@@ -430,8 +430,8 @@ class RequestView(BaseView):
     async def ack(self, inter: discord.Interaction, button: discord.Button):
 
         db = BalanceDatabase(self.ctx)
-        authnew = await db.addToBalance(self.auth, self.amount)
-        usernew = await db.addToBalance(self.user, -self.amount)
+        authnew = await db.add_to_balance(self.auth, self.amount)
+        usernew = await db.add_to_balance(self.user, -self.amount)
         coin = CONSTANTS.Emojis().COIN_ID
         embed = fmte(
             self.ctx,
@@ -519,7 +519,7 @@ class StartQuizView(BaseView):
     )
     async def start(self, inter: discord.Interaction, _: Any):
         if self.dif is not None and self.cat is not None:
-            key = Environ.QUIZAPI_KEY
+            key = environ.QUIZAPI_KEY
             url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
             self.questions = await (await self.ctx.bot.session.get(url)).json()
             view = MainQuizView(self.questions, self.cat, self.dif, self.ctx)
@@ -664,7 +664,7 @@ class QuizQuestionSubmit(discord.ui.Button):
             )
 
             db = BalanceDatabase(self.ctx)
-            await db.addToBalance(self.ctx.author, perc)
+            await db.add_to_balance(self.ctx.author, perc)
 
             await interaction.response.edit_message(embed=embed, view=None)
         else:
@@ -701,7 +701,7 @@ class BalanceDatabase:
         self.bot: commands.Bot = ctx.bot
         self.apg: asyncpg.Connection = ctx.bot.apg
 
-    async def registerUser(self, user: discord.User) -> asyncpg.Record:
+    async def register_user(self, user: discord.User) -> asyncpg.Record:
         command = """
             INSERT INTO users(userid)
             VALUES (
@@ -712,9 +712,9 @@ class BalanceDatabase:
         """
         return await self.apg.fetchrow(command, user.id)
 
-    async def addToBalance(self, user: discord.User, value: int) -> asyncpg.Record:
+    async def add_to_balance(self, user: discord.User, value: int) -> asyncpg.Record:
         try:
-            await self.registerUser(user)
+            await self.register_user(user)
             command = """
                 UPDATE users
                 SET balance = balance + $1
@@ -731,8 +731,8 @@ class BalanceDatabase:
             """
             return await self.apg.fetchrow(command, value, user.id)
 
-    async def getBalance(self, user: discord.User) -> int:
-        await self.registerUser(user)
+    async def get_balance(self, user: discord.User) -> int:
+        await self.register_user(user)
         command = """
             SELECT balance
             FROM users

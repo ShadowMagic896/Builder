@@ -9,12 +9,12 @@ from discord.ext import commands
 import os
 import random
 from bs4 import BeautifulSoup
-from src.utils.Types import NHSearchData
-from data.Environ import NSFW_PATH
+from src.utils.types import NHSearchData
+from data.environ import NSFW_PATH
 
-from src.utils.Subclass import Paginator
-from src.utils.Parsers import Parser
-from src.utils.Embeds import fmte, fmte_i
+from src.utils.subclass import Paginator
+from src.utils.parsers import Parser
+from src.utils.embeds import fmte, fmte_i
 from bot import BuilderContext
 
 
@@ -191,7 +191,7 @@ class NHSearchMeta:
         }
         sort = fmt_dict.get(query, "")
         url = f"https://nhentai.xxx/search/?q={query}{sort}"
-        data = [x async for x in Parser(ctx.bot.session, url).nhentaiSearch()]
+        data = [x async for x in Parser(ctx.bot.session, url).nh_search()]
 
         cls.ctx = ctx
         cls.query = query

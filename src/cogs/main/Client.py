@@ -14,15 +14,15 @@ import inspect
 import psutil
 from typing import List, Optional
 
-from src.utils.Converters import Cog, Command, Group
-from src.utils.Subclass import BaseModal, BaseView
-from src.utils.UserIO import (
-    cogAutocomplete,
-    groupAutocomplete,
-    commandAutocomplete,
+from src.utils.converters import Cog, Command, Group
+from src.utils.subclass import BaseModal, BaseView
+from src.utils.user_io import (
+    cog_autocomplete,
+    group_autocomplete,
+    command_autocomplete,
 )
-from src.utils.Embeds import fmte, fmte_i
-from src.utils.Functions import explode
+from src.utils.embeds import fmte, fmte_i
+from src.utils.functions import explode
 from bot import BuilderContext
 
 
@@ -139,19 +139,19 @@ class Client(commands.Cog):
     async def cog_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await cogAutocomplete(self.bot, inter, current)
+        return await cog_autocomplete(self.bot, inter, current)
 
     @source.autocomplete("group")
     async def group_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await groupAutocomplete(self.bot, inter, current)
+        return await group_autocomplete(self.bot, inter, current)
 
     @source.autocomplete("command")
     async def command_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await commandAutocomplete(self.bot, inter, current)
+        return await command_autocomplete(self.bot, inter, current)
 
     @commands.hybrid_command()
     async def uptime(self, ctx: BuilderContext):
@@ -313,7 +313,7 @@ class ServerInformation(BaseView):
         super().__init__(ctx, timeout)
 
     @discord.ui.button(label="Server Information", emoji="\N{DESKTOP COMPUTER}")
-    async def serverInfo(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def server_info(self, inter: discord.Interaction, button: discord.ui.Button):
         freq = psutil.cpu_freq(False)
         embed = fmte_i(inter, t="Server Information")
         values = psutil.disk_io_counters(True)
@@ -342,7 +342,7 @@ class ReturnToAbout(BaseView):
         super().__init__(ctx, timeout)
 
     @discord.ui.button(label="Return", emoji="\N{LEFTWARDS BLACK ARROW}")
-    async def ret(self, inter: discord.Interaction, button: discord.Button):
+    async def go_back(self, inter: discord.Interaction, button: discord.Button):
         view = ServerInformation(self.ctx)
         view.message = await inter.response.edit_message(
             embed=await Client.getAboutEmbed(self.ctx), view=view

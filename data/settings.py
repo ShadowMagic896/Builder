@@ -1,7 +1,7 @@
 from os import PathLike
 from typing import Any, Callable, List, Set
 
-from src.utils.Checks import interactionChoke
+from src.utils.checks import interactionChoke
 
 
 # Directories to look for cogs in

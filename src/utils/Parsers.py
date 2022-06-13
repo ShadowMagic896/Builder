@@ -2,7 +2,7 @@ from typing import AsyncIterator
 from typing_extensions import Self
 import aiohttp
 from bs4 import BeautifulSoup, ResultSet, Tag
-from src.utils.Types import GoogleSearchData, NHSearchData
+from src.utils.types import GoogleSearchData, NHSearchData
 
 
 class Parser:
@@ -10,7 +10,7 @@ class Parser:
         self.session = session
         self.url = url
 
-    async def nhentaiSearch(self) -> AsyncIterator[NHSearchData]:
+    async def nh_search(self) -> AsyncIterator[NHSearchData]:
         res: aiohttp.ClientResponse = await self.session.get(self.url)
         res.raise_for_status()
         parse: BeautifulSoup = BeautifulSoup(await res.text(), "html.parser")

@@ -12,10 +12,10 @@ from discord.app_commands import describe, Range
 from discord.ext import commands
 
 from bot import Builder, BuilderContext
-from src.utils.APIFuncs import evaulate_response
-from src.utils.Embeds import fmte
-from src.utils.Subclass import Paginator
-from src.utils.Errors import NoDocumentsFound
+from src.utils.api import evaulate_response
+from src.utils.embeds import fmte
+from src.utils.subclass import Paginator
+from src.utils.errors import NoDocumentsFound
 
 
 class API(commands.Cog):
@@ -59,7 +59,7 @@ class API(commands.Cog):
         meta = await RTFMMeta.create(ctx, self.driver, project, query, version, lang)
         view = RTFMPaginator(meta, 10)
         embed = await view.page_zero(ctx.interaction)
-        await view.checkButtons()
+        await view.check_buttons()
         view.message = await ctx.send(embed=embed, view=view)
 
     @rtfm.autocomplete("project")

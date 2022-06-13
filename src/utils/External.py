@@ -1,14 +1,12 @@
 import asyncio
 from asyncio.subprocess import Process
-import logging
 import os
 
-import aiofiles
 import ctypes
 
 import psutil
 
-from data.Settings import DOCKER_DESKTOP_LOCATION
+from data.settings import DOCKER_DESKTOP_LOCATION
 
 
 async def snekbox_exec():

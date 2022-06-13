@@ -10,17 +10,17 @@ from multiprocessing import freeze_support
 from discord.ext import commands
 from typing import Iterable, Union
 
-from src.utils.Extensions import load_extensions
-from src.utils.Functions import (
+from src.utils.extensions import load_extensions
+from src.utils.functions import (
     apply_global_checks,
     aquire_connection,
     format_code,
-    startupPrint,
+    startup_print,
 )
-from src.utils.Database import ensure_database
-from src.utils.Stats import Stats
-from data.Environ import BOT_KEY, OPENAI_KEY
-from data.Settings import (
+from src.utils.database import ensure_database
+from src.utils.stats import Stats
+from data.environ import BOT_KEY, OPENAI_KEY
+from data.settings import (
     COG_DIRECTORIES,
     LOAD_COGS_ON_STARTUP,
     LOAD_JISHAKU,
@@ -28,7 +28,7 @@ from data.Settings import (
     SOURCE_CODE_PATHS,
     START_DOCKER_ON_STARTUP,
 )
-from src.utils.External import snekbox_exec
+from src.utils.external import snekbox_exec
 
 # Logging ---------------------------------------------------
 logger: logging.Logger = logging.getLogger("discord")
@@ -59,7 +59,7 @@ class Builder(commands.Bot):
         intents.message_content = True
         activity: discord.Activity = discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{Stats.lineCount(SOURCE_CODE_PATHS)} LINES",
+            name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES",
         )
         application_id: str = "963411905018466314"
         case_insensitive: bool = True
@@ -85,7 +85,7 @@ class Builder(commands.Bot):
         self.tree.fallback_to_global = True
 
     async def setup_hook(self) -> None:
-        await startupPrint(self)
+        await startup_print(self)
 
 
 class BuilderContext(commands.Context):

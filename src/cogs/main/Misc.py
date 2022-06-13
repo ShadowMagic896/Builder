@@ -5,7 +5,7 @@ from discord.ext import commands
 from unidecode import unidecode_expect_nonascii
 
 from bot import Builder, BuilderContext
-from src.utils.Embeds import fmte
+from src.utils.embeds import fmte
 
 
 class Misc(commands.Cog):
@@ -16,7 +16,7 @@ class Misc(commands.Cog):
     def __init__(self, bot: Builder) -> None:
         self.bot = bot
 
-    async def ge(self):
+    def ge(self):
         return "\N{BLACK QUESTION MARK ORNAMENT}"
 
     @commands.hybrid_command()

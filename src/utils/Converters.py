@@ -5,12 +5,12 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 import numpy as np
-from src.utils.Functions import urlFind
-from src.utils.Constants import CONSTANTS
-from data.ItemMaps import Chemistry, getAtomicName
+from src.utils.functions import find_url
+from src.utils.constants import CONSTANTS
+from data.item_maps import Chemistry, get_atomic_name
 import re
 
-from src.utils.Errors import ForbiddenData, MissingCog, MissingCommand, ScopeError
+from src.utils.errors import ForbiddenData, MissingCog, MissingCommand, ScopeError
 
 
 class TimeConvert(commands.Converter):
@@ -95,7 +95,7 @@ class Atom(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, argument: str) -> int:
-        return Chemistry().names.index(getAtomicName(argument)) + 1
+        return Chemistry().names.index(get_atomic_name(argument)) + 1
 
 
 class Bound(commands.Converter, int):
@@ -154,7 +154,7 @@ class UrlGet(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, url: str) -> commands.HybridCommand:
-        if not (result := await urlFind(url)):
+        if not (result := await find_url(url)):
             raise commands.errors.BadArgument("Invalid URL")
         try:
             res: aiohttp.ClientResponse = await ctx.bot.session.get(result[0])
@@ -177,7 +177,7 @@ class UrlFind(commands.Converter):
         super().__init__()
 
     async def convert(self, ctx: Context, url: str) -> commands.HybridCommand:
-        if not (result := await urlFind(url)):
+        if not (result := await find_url(url)):
             raise commands.errors.BadArgument("Invalid URL")
         return result
 

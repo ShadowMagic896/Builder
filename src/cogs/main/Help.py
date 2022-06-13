@@ -5,19 +5,17 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import Any, List, Optional, Union
-from data.Settings import INVISIBLE_COGS
-from src.utils.Converters import Cog, Command, Group
-from src.utils.UserIO import (
-    cogAutocomplete,
-    groupAutocomplete,
-    commandAutocomplete,
+from data.settings import INVISIBLE_COGS
+from src.utils.converters import Cog, Command, Group
+from src.utils.user_io import (
+    cog_autocomplete,
+    group_autocomplete,
+    command_autocomplete,
 )
 
-from src.utils.Embeds import fmte, fmte_i
-from src.utils.Functions import explode
-from src.utils.Subclass import BaseView, Paginator
-
-from src.utils.Constants import CONSTANTS
+from src.utils.embeds import fmte, fmte_i
+from src.utils.functions import explode
+from src.utils.subclass import BaseView, Paginator
 from bot import BuilderContext
 
 
@@ -94,19 +92,19 @@ class Help(commands.Cog):
     async def cog_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await cogAutocomplete(self.bot, inter, current)
+        return await cog_autocomplete(self.bot, inter, current)
 
     @help.autocomplete("group")
     async def group_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await groupAutocomplete(self.bot, inter, current)
+        return await group_autocomplete(self.bot, inter, current)
 
     @help.autocomplete("command")
     async def command_autocomplete(
         self, inter: discord.Interaction, current: str
     ) -> List[discord.app_commands.Choice[str]]:
-        return await commandAutocomplete(self.bot, inter, current)
+        return await command_autocomplete(self.bot, inter, current)
 
     async def main_embed(self, ctx: BuilderContext, bot: commands.Bot):
         return fmte(

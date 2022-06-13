@@ -11,8 +11,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from urllib import parse
 
-from src.utils.Converters import UrlGet, UrlFind
-from src.utils.Embeds import fmte
+from src.utils.converters import UrlGet, UrlFind
+from src.utils.embeds import fmte
 from bot import BuilderContext
 
 

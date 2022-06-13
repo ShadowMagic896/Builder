@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ext.commands.errors import *
 from discord.errors import *
 
-from src.utils.Errors import (
+from src.utils.errors import (
     InternalError,
     MissingArguments,
     MissingFunds,
@@ -14,14 +14,14 @@ from src.utils.Errors import (
     SelfAction,
     Unowned,
 )
-from data.Settings import (
+from data.settings import (
     CATCH_ERRORS,
     MODERATE_JISHAKU_COMMANDS,
     PRINT_COMMAND_ERROR_TRACKEBACK,
     PRINT_EVENT_ERROR_TRACEACK,
 )
 
-from src.utils.Embeds import fmte_i
+from src.utils.embeds import fmte_i
 from simpleeval import NumberTooHigh
 
 from bot import BuilderContext

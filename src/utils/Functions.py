@@ -15,8 +15,8 @@ from urllib.parse import quote_plus
 
 from sympy import comp
 
-from data.Environ import DB_PASSWORD, DB_USERNAME
-from data.Settings import (
+from data.environ import DB_PASSWORD, DB_USERNAME
+from data.settings import (
     GLOBAL_CHECKS,
     IGNORED_GLOBALLY_CHECKED_COMMANDS,
     IGNORED_INHERITED_GROUP_CHECKS,
@@ -44,7 +44,7 @@ def fmtDict(d: dict):
     return str(d).replace("'", '"')
 
 
-async def addCogLoaders(bot: commands.Bot, paths: List[PathLike]):
+async def add_cog_loaders(bot: commands.Bot, paths: List[PathLike]):
     for dir_ in paths:
         if dir_.startswith("_"):
             continue
@@ -55,10 +55,10 @@ async def addCogLoaders(bot: commands.Bot, paths: List[PathLike]):
             fullname = f"{dir_.replace('.', '')}\\{_formatted}".replace(
                 "/", "."
             ).replace("\\", ".")
-            await _addCogLoaders(bot, fullname)
+            await _add_cog_loaders(bot, fullname)
 
 
-async def _addCogLoaders(bot: commands.Bot, filename: PathLike):
+async def _add_cog_loaders(bot: commands.Bot, filename: PathLike):
     """
     Automatically adds all cog classes to the bot from a given file.
     """
@@ -84,7 +84,7 @@ async def format_code():
     await proc.communicate()
 
 
-async def startupPrint(bot: commands.Bot):
+async def startup_print(bot: commands.Bot):
     _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = (
         lambda value, size=25, style="before": str(value)
         + " " * (size - len(str(value)))
@@ -109,8 +109,8 @@ async def startupPrint(bot: commands.Bot):
     )
 
 
-async def enforceChecks(bot: commands.Bot):
-    if INHERIT_GROUP_CHECKS:
+async def apply_inherit_checks(bot: commands.Bot):
+    if not INHERIT_GROUP_CHECKS:
         return
     for group in [
         c for c in explode(bot.commands) if isinstance(c, commands.HybridGroup)
@@ -122,7 +122,7 @@ async def enforceChecks(bot: commands.Bot):
             command.checks.extend(checks)
 
 
-async def applyGlobalCheck(bot: commands.Bot, check: Callable[[Any], bool]):
+async def apply_to_global(bot: commands.Bot, check: Callable[[Any], bool]):
     for command in explode(bot.commands):
         if command.qualified_name in IGNORED_GLOBALLY_CHECKED_COMMANDS:
             continue
@@ -131,7 +131,7 @@ async def applyGlobalCheck(bot: commands.Bot, check: Callable[[Any], bool]):
 
 async def apply_global_checks(bot: commands.Bot):
     for check in GLOBAL_CHECKS:
-        await applyGlobalCheck(bot, check)
+        await apply_to_global(bot, check)
 
 
 async def aquire_connection():
@@ -143,7 +143,7 @@ async def aquire_connection():
     return connection
 
 
-async def urlFind(url: str):
+async def find_url(url: str):
     if not url.startswith("http"):
         url = f"https://{url}"
     regex = re.compile(
@@ -152,7 +152,7 @@ async def urlFind(url: str):
     return regex.findall(url)
 
 
-async def filterSimilarValues(values, req_ratio, req_diff):
+async def filter_similar(values, req_ratio, req_diff):
     # this is kinda a cheap way of doing it. For example, (255, 0, 0) will get discarded if (0, 0, 255) exists
     # It just saves a signifgant amount of time, and I honestly don't want to write all of the required NumPy stuff to do this properly
     # Besides, having two start constasts like that is probably uncommon, and

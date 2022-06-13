@@ -2,7 +2,7 @@ import os
 from typing import Iterable, Optional, Tuple, List, Mapping, Any
 import discord
 
-from data.Settings import NOLOAD_COGS
+from data.settings import NOLOAD_COGS
 
 
 def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):
