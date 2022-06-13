@@ -10,25 +10,14 @@ from multiprocessing import freeze_support
 from discord.ext import commands
 from typing import Iterable, Union
 
-from src.utils.extensions import load_extensions
-from src.utils.functions import (
-    apply_global_checks,
-    aquire_connection,
-    format_code,
+from src.utils.startup_functions import (
+    connect_database,
+    do_prep,
+    get_activity,
     startup_print,
 )
-from src.utils.database import ensure_database
-from src.utils.stats import Stats
-from data.environ import BOT_KEY, OPENAI_KEY
-from data.settings import (
-    COG_DIRECTORIES,
-    LOAD_COGS_ON_STARTUP,
-    LOAD_JISHAKU,
-    PREFIXES,
-    SOURCE_CODE_PATHS,
-    START_DOCKER_ON_STARTUP,
-)
-from src.utils.external import snekbox_exec
+from data.environ import APPLICATION_ID, BOT_KEY, OPENAI_KEY
+from data.settings import PREFIXES
 
 # Logging ---------------------------------------------------
 logger: logging.Logger = logging.getLogger("discord")
@@ -57,11 +46,7 @@ class Builder(commands.Bot):
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
-        activity: discord.Activity = discord.Activity(
-            type=discord.ActivityType.watching,
-            name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES",
-        )
-        application_id: str = "963411905018466314"
+        application_id: str = APPLICATION_ID
         case_insensitive: bool = True
 
         super().__init__(
@@ -69,16 +54,13 @@ class Builder(commands.Bot):
             help_command=help_command,
             tree_cls=tree_cls,
             intents=intents,
-            activity=activity,
             application_id=application_id,
             case_insensitive=case_insensitive,
         )
 
-        self.status: discord.Status = discord.Status("idle")
         self.openai: openai = openai
         self.openai.api_key = OPENAI_KEY
 
-        self.session: aiohttp.ClientSession = aiohttp.ClientSession()
         self.apg: asyncpg.Connection = None
         self.start_unix: float = time.time()
 
@@ -96,23 +78,9 @@ class BuilderContext(commands.Context):
 
 async def main():
     bot: commands.Bot = Builder()
-    if LOAD_JISHAKU:
-        await bot.load_extension("jishaku")
-
-    if LOAD_COGS_ON_STARTUP:
-        await load_extensions(
-            bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=False
-        )
-
-    bot.apg = await aquire_connection()
-
-    await ensure_database(bot)
-    await format_code()
-    if START_DOCKER_ON_STARTUP:
-        await snekbox_exec()
-    await apply_global_checks(bot)
-
-    await bot.start(BOT_KEY)
+    async with aiohttp.ClientSession() as bot.session:
+        bot = await do_prep(bot)
+        await bot.start(BOT_KEY)
 
 
 if __name__ == "__main__":

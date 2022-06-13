@@ -1,27 +1,14 @@
 import asyncio
 from asyncio.subprocess import PIPE, Process
-from math import prod
 import re
-import time
-import asyncpg
 import discord
 from discord.ext import commands
-from importlib import import_module
 import inspect
-from os import PathLike
 import os
-from typing import Any, Callable, List, Literal, Optional
-from urllib.parse import quote_plus
+from typing import List
 
-from sympy import comp
 
-from data.environ import DB_PASSWORD, DB_USERNAME
-from data.settings import (
-    GLOBAL_CHECKS,
-    IGNORED_GLOBALLY_CHECKED_COMMANDS,
-    IGNORED_INHERITED_GROUP_CHECKS,
-    INHERIT_GROUP_CHECKS,
-)
+from importlib import import_module
 
 
 def explode(l: List[commands.HybridCommand]) -> List[commands.HybridCommand]:
@@ -44,7 +31,7 @@ def fmtDict(d: dict):
     return str(d).replace("'", '"')
 
 
-async def add_cog_loaders(bot: commands.Bot, paths: List[PathLike]):
+async def add_cog_loaders(bot: commands.Bot, paths: List[os.PathLike]):
     for dir_ in paths:
         if dir_.startswith("_"):
             continue
@@ -58,7 +45,7 @@ async def add_cog_loaders(bot: commands.Bot, paths: List[PathLike]):
             await _add_cog_loaders(bot, fullname)
 
 
-async def _add_cog_loaders(bot: commands.Bot, filename: PathLike):
+async def _add_cog_loaders(bot: commands.Bot, filename: os.PathLike):
     """
     Automatically adds all cog classes to the bot from a given file.
     """
@@ -82,65 +69,6 @@ async def _add_cog_loaders(bot: commands.Bot, filename: PathLike):
 async def format_code():
     proc: Process = await asyncio.create_subprocess_shell(f"py -m black .", stdout=PIPE)
     await proc.communicate()
-
-
-async def startup_print(bot: commands.Bot):
-    _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = (
-        lambda value, size=25, style="before": str(value)
-        + " " * (size - len(str(value)))
-        if style == "after"
-        else " " * (size - len(str(value))) + str(value)
-    )
-    fmt: Callable[
-        [str, str, Optional[int], Optional[int]]
-    ] = lambda name, value, buf1=10, buf2=22: "%s: %s|" % (
-        _fmt(name, buf1, "after"),
-        _fmt(value, buf2, "after"),
-    )
-
-    client: str = fmt("Client", bot.user)
-    userid: str = fmt("User ID", bot.user.id)
-    dpyver: str = fmt("Version", discord.__version__)
-
-    bdr = "\n+-----------------------------------+\n"
-
-    print(
-        f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
-    )
-
-
-async def apply_inherit_checks(bot: commands.Bot):
-    if not INHERIT_GROUP_CHECKS:
-        return
-    for group in [
-        c for c in explode(bot.commands) if isinstance(c, commands.HybridGroup)
-    ]:
-        checks = group.checks
-        for command in explode(group.commands):
-            if command in IGNORED_INHERITED_GROUP_CHECKS:
-                continue
-            command.checks.extend(checks)
-
-
-async def apply_to_global(bot: commands.Bot, check: Callable[[Any], bool]):
-    for command in explode(bot.commands):
-        if command.qualified_name in IGNORED_GLOBALLY_CHECKED_COMMANDS:
-            continue
-        command.add_check(check)
-
-
-async def apply_global_checks(bot: commands.Bot):
-    for check in GLOBAL_CHECKS:
-        await apply_to_global(bot, check)
-
-
-async def aquire_connection():
-    user = quote_plus(DB_USERNAME)
-    password = quote_plus(DB_PASSWORD)
-    connection: asyncpg.connection.Connection = await asyncpg.connect(
-        user=user, password=password
-    )
-    return connection
 
 
 async def find_url(url: str):

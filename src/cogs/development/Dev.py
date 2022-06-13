@@ -55,6 +55,7 @@ class Dev(commands.Cog):
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     async def reload(self, ctx: BuilderContext):
+        await ctx.interaction.response.defer()
         log: str = ""
         to_reload = ["./src/utils"]
         to_reload.extend(COG_DIRECTORIES)
@@ -77,7 +78,7 @@ class Dev(commands.Cog):
             type=discord.ActivityType.watching,
             name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES, {len(explode(self.bot.commands))} COMMANDS",
         )
-        self.bot.activity = activity
+        await self.bot.change_presence(activity=activity, status="idle")
         await ctx.send(embed=embed)
         print("----------RELOADED----------")
 
