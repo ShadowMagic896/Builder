@@ -4,6 +4,7 @@ from typing_extensions import Self
 import aiohttp
 from bs4 import BeautifulSoup, ResultSet, Tag
 from src.utils.types import GoogleSearchData, NHSearchData
+from src.utils.coro import run
 
 
 class Parser:
@@ -27,16 +28,20 @@ class Parser:
             yield NHSearchData(code, thumbnail, name)
 
     async def googleSearch(self, driver) -> AsyncIterator[GoogleSearchData]:
-        # TODO Make this async
-        driver.get(self.url)
-        text = driver.execute_script("return document.documentElement.outerHTML")
+        # Running Selenium here forces Google to treat me as a user
+        await run(driver.get, self.url)
+        text = await run(
+            driver.execute_script, "return document.documentElement.outerHTML"
+        )
         parse: BeautifulSoup = BeautifulSoup(text, "html.parser")
         selector: str = "div#center_col > div#res > div#search > div > div#rso > div"
-        items = parse.select(selector)
+        items = await run(parse.select, selector)
         for item in items:
 
+            # Unwrap primary results
             if "hlcw0c" in item.get("class", []):
                 item = item.select_one("div")
+            # Get rid of results that aren't just URL and text (videos, "People Also Ask", etc.)
             if "tF2Cxc" not in item.get("class", []):
                 continue
             xsoup: BeautifulSoup = BeautifulSoup(str(item), "html.parser")

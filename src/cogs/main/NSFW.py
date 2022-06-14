@@ -15,7 +15,7 @@ from data.environ import NSFW_PATH
 from src.utils.subclass import Paginator
 from src.utils.parsers import Parser
 from src.utils.embeds import fmte, fmte_i
-from bot import BuilderContext
+from bot import Builder, BuilderContext
 from src.utils.constants import Const
 
 
@@ -30,8 +30,12 @@ class NSFW(commands.Cog):
     def ge(self):
         return "\N{NO ONE UNDER EIGHTEEN SYMBOL}"
 
-    @commands.hybrid_command()
-    # @commands.is_nsfw()
+    @commands.hybrid_group()
+    @commands.is_nsfw()
+    async def nsfw(self, ctx: BuilderContext):
+        pass
+
+    @nsfw.command()
     @describe(
         query="The keywords to search for.",
     )
@@ -70,8 +74,7 @@ class NSFW(commands.Cog):
             embed.set_image(url=url)
             await ctx.author.send(embed=embed)
 
-    @commands.hybrid_command()
-    # @commands.is_nsfw()
+    @nsfw.command()
     @describe(
         amount="The amount of images to send.",
     )
@@ -106,8 +109,7 @@ class NSFW(commands.Cog):
             embed.set_image(url=l)
             await ctx.author.send(embed=embed)
 
-    @commands.hybrid_command()
-    # @commands.is_nsfw()
+    @nsfw.command()
     @describe(
         amount="The amount of images to send.",
     )
@@ -142,7 +144,7 @@ class NSFW(commands.Cog):
             await ctx.author.send(embed=embed, file=l)
             await asyncio.sleep(1)
 
-    @commands.hybrid_group()
+    @nsfw.group()
     async def nhentai(self, ctx: BuilderContext):
         pass
 
