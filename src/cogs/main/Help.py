@@ -58,7 +58,7 @@ class Help(commands.Cog):
                     discord.utils.get(sel.options, label=group.cog.qualified_name)
                 )
                 view.add_item(sel)
-            await view.checkButtons()
+            await view.check_buttons()
 
             message = await ctx.send(embed=embed, view=view)
             view.message = message
@@ -72,7 +72,7 @@ class Help(commands.Cog):
             sel.placeholder = "%s Cog Selection..." % cog.ge()
             sel.options.remove(discord.utils.get(sel.options, label=cog.qualified_name))
             view.add_item(sel)
-            await view.checkButtons()
+            await view.check_buttons()
 
             message = await ctx.send(embed=embed, view=view)
             view.message = message
@@ -266,7 +266,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
 
         view = CommandView(self.ctx, obj)
         embed = await view.page_zero(interaction)
-        await view.checkButtons()
+        await view.check_buttons()
         view.add_item(self)
 
         await interaction.response.edit_message(embed=embed, view=view)

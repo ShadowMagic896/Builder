@@ -1,3 +1,5 @@
+import asyncio
+from urllib.parse import quote_plus
 import aiohttp
 from datetime import datetime
 import io
@@ -19,7 +21,7 @@ from src.utils.embeds import fmte
 from src.utils.subclass import BaseModal, BaseView
 from src.utils.converters import TimeConvert
 from src.utils.errors import *
-from bot import BuilderContext
+from bot import Builder, BuilderContext
 
 warnings.filterwarnings("error")
 
@@ -29,8 +31,8 @@ class Utility(commands.Cog):
     Helpful stuff
     """
 
-    def __init__(self, bot: commands.Bot) -> None:
-        self.bot: commands.Bot = bot
+    def __init__(self, bot: Builder) -> None:
+        self.bot: Builder = bot
         self.container_users: List[int] = []
         self.jobs: List[int] = []
         pass
@@ -141,8 +143,8 @@ class Utility(commands.Cog):
         """
         Returns information about the bot.
         """
-        b = "\n{s}{s}".format(s="ㅤ")
-        bb = "\n{s}{s}{s}".format(s="ㅤ")
+        b = "\nㅤㅤ"
+        bb = "\nㅤㅤㅤ"
         embed = fmte(
             ctx,
             t="Hello! I'm {}.".format(self.bot.user.name),
@@ -162,18 +164,18 @@ class Utility(commands.Cog):
     @commands.hybrid_command()
     @commands.is_nsfw()
     @describe(
-        query="What to search for.",
+        query="What to search for",
     )
     async def search(self, ctx: BuilderContext, query: str):
         """
-        Searches the web for a website and returns the first result.
+        Searches the web for a website and returns the first result
         """
-        url = "https://www.google.com/search?q={}".format(query)
+        url = f"https://www.google.com/search?q={quote_plus(query)}"
 
-        res = requests.get(url)
+        res = await self.bot.session.get(url)
 
         res.raise_for_status()
-        soup = bs4.BeautifulSoup(res.text, "html.parser")
+        soup = bs4.BeautifulSoup(await res.text(), "html.parser")
         linkElements = soup.select("div#main > div > div > div > a")
 
         if len(linkElements) == 0:
@@ -404,16 +406,15 @@ class CodeModal(BaseModal):
         sess: aiohttp.ClientSession = self.bot.session
         code = f"""
 async def main():
-{indent(self.code.value, '    ')}
-import asyncio, typing
-try:
-    result: typing.Any = asyncio.run(main())
-    if result is not None:
-        print(result)
-except ValueError:
-    async def iterate() -> None:
-        print([value async for value in main()])
-    asyncio.run(iterate())
+{indent(self.code.value, '    ').replace('"', "'")}
+import asyncio, typing, warnings
+if asyncio.iscoroutinefunction(main):
+    result = asyncio.run(main())
+    print(result)
+else:
+    async def iter():
+        [print(v) async for v in main()]
+    asyncio.run(iter())
 """
         data = {"input": code}
         response = await sess.post(url, data=data)

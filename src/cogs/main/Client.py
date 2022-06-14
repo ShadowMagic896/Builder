@@ -24,6 +24,7 @@ from src.utils.user_io import (
 from src.utils.embeds import fmte, fmte_i
 from src.utils.functions import explode
 from bot import BuilderContext
+from src.utils.constants import Const
 
 
 class Client(commands.Cog):
@@ -101,7 +102,7 @@ class Client(commands.Cog):
             embed = fmte(
                 ctx,
                 t="Source Code!",
-                d="[View on GitHub](%s)" % "https://github.com/ShadowMagic896/Builder",
+                d=f"[View on GitHub]({Const.URLs.REPO_URL})",
             )
             await ctx.send(embed=embed)
         if command:

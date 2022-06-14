@@ -670,11 +670,14 @@ class Images(commands.Cog):
                 embed.set_image(url=(user.avatar or inter.user.default_avatar).url)
                 await inter.message.edit(embed=embed, view=_NView(ctx))
 
-            @discord.ui.button(
-                label="Close", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
-            )
+            @discord.ui.button(emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger)
             async def close(self, inter: discord.Interaction, _: Any):
-                await inter.message.delete()
+                for c in self.children:
+                    c.disabled = True
+                try:
+                    await inter.response.edit_message(view=self)
+                except (discord.NotFound, AttributeError):
+                    pass
 
         class _NView(BaseView):
             def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
@@ -697,7 +700,12 @@ class Images(commands.Cog):
                 label="Close", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
             )
             async def close(self, inter: discord.Interaction, _: Any):
-                await inter.message.delete()
+                for c in self.children:
+                    c.disabled = True
+                try:
+                    await inter.response.edit_message(view=self)
+                except (discord.NotFound, AttributeError):
+                    pass
 
         await ctx.send(embed=embed, view=_GView(ctx))
 
@@ -839,7 +847,7 @@ class ImageManipulateView(BaseView):
         file = discord.File(fp=buffer, filename="image.png")
         embed.set_image(url="attachment://image.png")
 
-        self = await self.checkButtons(button)
+        self = await self.check_buttons(button)
         try:
             await inter.response.edit_message(
                 embed=embed,
@@ -857,7 +865,7 @@ class ImageManipulateView(BaseView):
                 view=self,
             )
 
-    async def checkButtons(self, button: discord.ui.Button):
+    async def check_buttons(self, button: discord.ui.Button):
         for i in self.children:
             if (
                 isinstance(i, discord.ui.Button)
@@ -1033,7 +1041,7 @@ class ImageManipulateView(BaseView):
         await self.update(inter, button)
 
     @discord.ui.button(
-        emoji=constants.CONSTANTS.Emojis().BBARROW_ID,
+        emoji=constants.Const.Emojis().BBARROW_ID,
         label="Revert",
         style=discord.ButtonStyle.red,
         row=4,
@@ -1047,7 +1055,7 @@ class ImageManipulateView(BaseView):
         await self.update(inter, button)
 
     @discord.ui.button(
-        emoji=constants.CONSTANTS.Emojis().BARROW_ID,
+        emoji=constants.Const.Emojis().BARROW_ID,
         label="Back",
         style=discord.ButtonStyle.gray,
         row=4,

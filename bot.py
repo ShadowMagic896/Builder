@@ -8,7 +8,7 @@ import time
 
 from multiprocessing import freeze_support
 from discord.ext import commands
-from typing import Iterable, Union
+from typing import Any, Iterable, Union
 
 from src.utils.startup_functions import (
     connect_database,
@@ -62,6 +62,7 @@ class Builder(commands.Bot):
         self.openai.api_key = OPENAI_KEY
 
         self.apg: asyncpg.Connection = None
+        self.session: aiohttp.ClientSession = None
         self.start_unix: float = time.time()
 
         self.tree.fallback_to_global = True
@@ -77,8 +78,10 @@ class BuilderContext(commands.Context):
 
 
 async def main():
-    bot: commands.Bot = Builder()
-    async with aiohttp.ClientSession() as bot.session:
+    bot: Builder = Builder()
+    async with aiohttp.ClientSession(
+        headers={"User-Agent": "python-requests/2.27.1"} # :troll:
+    ) as bot.session:
         bot = await do_prep(bot)
         await bot.start(BOT_KEY)
 

@@ -11,7 +11,7 @@ from src.utils.embeds import fmte
 from src.cogs.economy.atoms import AtomsDatabase
 from src.cogs.economy.currency import BalanceDatabase
 from src.utils.subclass import BaseView, Paginator
-from src.utils.constants import CONSTANTS
+from src.utils.constants import Const
 from bot import BuilderContext
 
 
@@ -62,7 +62,7 @@ class Shop(commands.Cog):
         embed = fmte(
             ctx,
             t="Shop Listing Created!",
-            d=f"**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{identity}`",
+            d=f"**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{Const.Emojis().COIN_ID}\n**Listing ID:** `{identity}`",
         )
         await ctx.send(embed=embed)
 
@@ -88,7 +88,7 @@ class Shop(commands.Cog):
         embed = fmte(
             ctx,
             t="Listing Successfully Removed",
-            d=f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{listing}`",
+            d=f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{Const.Emojis().COIN_ID}\n**Listing ID:** `{listing}`",
         )
         await ctx.send(embed=embed)
 
@@ -267,7 +267,7 @@ class ShopView(Paginator):
             name = get_atomic_name(shop["atomid"])
             amt = shop["amount"]
             price = shop["price"]
-            coin = CONSTANTS.Emojis().COIN_ID
+            coin = Const.Emojis().COIN_ID
 
             transid = shop["identity"]
 
@@ -307,7 +307,7 @@ class PersonalShopView(Paginator):
             amt = shop["amount"]
             price = shop["price"]
             transid = shop["identity"]
-            coin = CONSTANTS.Emojis().COIN_ID
+            coin = Const.Emojis().COIN_ID
 
             embed.add_field(
                 name=f"`{name} [{amt}]` -> `{price}`{coin}",
@@ -356,7 +356,7 @@ class PurchaseView(BaseView):
             self.ctx,
             t="Shop Purchased!",
             d=listing_information(rec)
-            + f"\n**New balance:** `{new_balance:,}` [Before: `{bal:,}`{CONSTANTS.Emojis().COIN_ID}]\n**New Amount:** `{atomname}: {atoms['amount']}`",
+            + f"\n**New balance:** `{new_balance:,}` [Before: `{bal:,}`{Const.Emojis().COIN_ID}]\n**New Amount:** `{atomname}: {atoms['amount']}`",
         )
 
         await inter.response.send_message(embed=embed)
@@ -387,7 +387,7 @@ def listing_information(record: asyncpg.Record):
     price: int = record["price"]
     listingid: int = record["identity"]
 
-    data = f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{CONSTANTS.Emojis().COIN_ID}\n**Listing ID:** `{listingid}`"
+    data = f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{Const.Emojis().COIN_ID}\n**Listing ID:** `{listingid}`"
     return data
 
 

@@ -16,6 +16,7 @@ from src.utils.api import evaulate_response
 from src.utils.embeds import fmte
 from src.utils.subclass import Paginator
 from src.utils.errors import NoDocumentsFound
+from src.utils.constants import Const
 
 
 class API(commands.Cog):
@@ -69,7 +70,7 @@ class API(commands.Cog):
         if (lang := getattr(inter.namespace, "lang", None)) is not None:
             params["language"] = lang
         params["q"] = query
-        url: str = f"https://readthedocs.org/search/"
+        url: str = Const.URLs.RTD + f"search/"
         response: aiohttp.ClientResponse = await self.bot.session.get(
             url, params=params
         )
@@ -123,7 +124,7 @@ class API(commands.Cog):
                 name="--- Please enter a project first ---", value="en"
             )
         proj = proj.replace(".", "")
-        url: str = f"https://readthedocs.org/projects/{proj}/"
+        url: str = Const.Urls.RTD + f"projects/{proj}/"
         response: aiohttp.ClientResponse = await self.bot.session.get(url)
         text: str = await response.text()
 

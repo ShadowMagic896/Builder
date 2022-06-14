@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 import numpy as np
 from src.utils.functions import find_url
-from src.utils.constants import CONSTANTS
+from src.utils.constants import Const
 from data.item_maps import Chemistry, get_atomic_name
 import re
 
@@ -191,7 +191,7 @@ class Cog(commands.Converter):
         _cog: Optional[commands.Cog] = ctx.bot.get_cog(cog)
         if _cog is None:
             raise MissingCog(f"Cannot find cog: {cog}")
-        if cog in CONSTANTS.Cogs().FORBIDDEN_COGS:
+        if cog in Const.Cogs.FORBIDDEN_COGS:
             raise ForbiddenData("Sorry! No help command is available for that.")
         return _cog
 
@@ -205,7 +205,7 @@ class Group(commands.Converter):
         _grp: Optional[commands.HybridGroup] = ctx.bot.get_command(grp)
         if _grp is None or not isinstance(_grp, commands.HybridGroup):
             raise MissingCog(f"Cannot find group: {grp}")
-        if grp in CONSTANTS.Cogs().FORBIDDEN_GROUPS:
+        if grp in Const.Cogs.FORBIDDEN_GROUPS:
             raise ForbiddenData("Sorry! No help command is available for that.")
         return _grp
 
@@ -220,7 +220,7 @@ class Command(commands.Converter):
         ] = ctx.bot.get_command(command)
         if _command is None:
             raise MissingCommand(f"Cannot find command: {command}")
-        if command in CONSTANTS.Cogs().FORBIDDEN_COMMANDS:
+        if command in Const.Cogs.FORBIDDEN_COMMANDS:
             raise ForbiddenData("Sorry! No help command is available for that.")
         return _command
 

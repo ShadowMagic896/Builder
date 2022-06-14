@@ -10,7 +10,7 @@ from typing import Any, List, Optional
 from data import environ
 
 from src.utils.embeds import fmte, fmte_i
-from src.utils.constants import CONSTANTS
+from src.utils.constants import Const
 from src.utils.subclass import BaseModal, BaseView, Paginator
 from bot import BuilderContext
 
@@ -22,7 +22,7 @@ class Currency(commands.Cog):
 
     def __init__(self, bot: commands.Bot, add_commands: bool = False):
         self.bot = bot
-        self.coin = CONSTANTS.Emojis().COIN_ID
+        self.coin = Const.Emojis().COIN_ID
         if add_commands:
             self.bot.tree.add_command(
                 app_commands.ContextMenu(
@@ -161,7 +161,7 @@ class Currency(commands.Cog):
         ]
         view = LeaderboardView(ctx, values, 5)
         embed = await view.page_zero(ctx.interaction)
-        await view.checkButtons()
+        await view.check_buttons()
         view.message = await ctx.send(embed=embed, view=view)
 
     @cur.command()
@@ -224,7 +224,7 @@ class Currency(commands.Cog):
         """
         Claim your hourly Coins!
         """
-        rate = CONSTANTS.Rates().HOURLY
+        rate = Const.Rates.HOURLY
 
         db = BalanceDatabase(ctx)
         balance = (await db.add_to_balance(ctx.author, rate))["balance"]
@@ -242,7 +242,7 @@ class Currency(commands.Cog):
         """
         Claim your daily Coins!
         """
-        rate = CONSTANTS.Rates().DAILY
+        rate = Const.Rates.DAILY
 
         db = BalanceDatabase(ctx)
         balance = (await db.add_to_balance(ctx.author, rate))["balance"]
@@ -260,7 +260,7 @@ class Currency(commands.Cog):
         """
         Claim your daily Coins!
         """
-        rate = CONSTANTS.Rates().WEEKLY
+        rate = Const.Rates.WEEKLY
 
         db = BalanceDatabase(ctx)
         balance = (await db.add_to_balance(ctx.author, rate))["balance"]
@@ -391,7 +391,7 @@ class GiveView(BaseView):
         db = BalanceDatabase(self.ctx)
         authnew = (await db.add_to_balance(self.auth, -self.amount))["balance"]
         usernew = (await db.add_to_balance(self.user, self.amount))["balance"]
-        coin = CONSTANTS.Emojis().COIN_ID
+        coin = Const.Emojis().COIN_ID
 
         embed = fmte(
             self.ctx,
@@ -432,7 +432,7 @@ class RequestView(BaseView):
         db = BalanceDatabase(self.ctx)
         authnew = await db.add_to_balance(self.auth, self.amount)
         usernew = await db.add_to_balance(self.user, -self.amount)
-        coin = CONSTANTS.Emojis().COIN_ID
+        coin = Const.Emojis().COIN_ID
         embed = fmte(
             self.ctx,
             t=f"Transaction Completed\nTransferred `{self.amount:,}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
@@ -520,7 +520,10 @@ class StartQuizView(BaseView):
     async def start(self, inter: discord.Interaction, _: Any):
         if self.dif is not None and self.cat is not None:
             key = environ.QUIZAPI_KEY
-            url = f"https://quizapi.io/api/v1/questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
+            url = (
+                Const.QUIZ_API
+                + f"questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
+            )
             self.questions = await (await self.ctx.bot.session.get(url)).json()
             view = MainQuizView(self.questions, self.cat, self.dif, self.ctx)
             s = QuizAnsSelect(self.questions[0], self.ctx)
@@ -534,7 +537,12 @@ class StartQuizView(BaseView):
         style=discord.ButtonStyle.danger, label="Close", emoji="\N{CROSS MARK}"
     )
     async def close(self, inter: discord.Interaction, _: Any) -> Any:
-        await inter.message.delete()
+        for c in self.children:
+            c.disabled = True
+        try:
+            await inter.response.edit_message(view=self)
+        except (discord.NotFound, AttributeError):
+            pass
 
     async def sil(self, inter: discord.Interaction):
         try:
@@ -656,7 +664,7 @@ class QuizQuestionSubmit(discord.ui.Button):
                 * ([x[3] for x in cc].count(True) / self._view.maxpos)
             )
 
-            coin = CONSTANTS.Emojis().COIN_ID
+            coin = Const.Emojis().COIN_ID
             embed = fmte_i(
                 interaction,
                 t=f"Quiz Finished! You Earned `{perc:,}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
@@ -688,12 +696,15 @@ class QuizQuestionSubmit(discord.ui.Button):
 class QuizClose(discord.ui.Button):
     def __init__(self, ctx):
         self.ctx = ctx
-        super().__init__(
-            style=discord.ButtonStyle.danger, label="Close", emoji="\N{CROSS MARK}"
-        )
+        super().__init__(style=discord.ButtonStyle.danger, emoji="\N{CROSS MARK}")
 
     async def callback(self, interaction: discord.Interaction) -> Any:
-        await interaction.message.delete()
+        for c in self.children:
+            c.disabled = True
+        try:
+            await interaction.response.edit_message(view=self)
+        except (discord.NotFound, AttributeError):
+            pass
 
 
 class BalanceDatabase:

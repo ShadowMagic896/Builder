@@ -16,6 +16,7 @@ from src.utils.subclass import Paginator
 from src.utils.parsers import Parser
 from src.utils.embeds import fmte, fmte_i
 from bot import BuilderContext
+from src.utils.constants import Const
 
 
 class NSFW(commands.Cog):
@@ -41,7 +42,7 @@ class NSFW(commands.Cog):
         query = query.replace(" ", "+")
         res = await (
             await self.bot.session.get(
-                f"https://rule34.xxx/index.php?page=post&s=list&tags=%s)" % query
+                Const.URLs.RULE_34 + f"index.php?page=post&s=list&tags=%s)" % query
             )
         ).text()
         soup = BeautifulSoup(res, "html.parser")
@@ -86,7 +87,7 @@ class NSFW(commands.Cog):
         data = []
 
         for co in range(amount):
-            res = await (await self.bot.session.get(f"https://nekos.life")).text()
+            res = await (await self.bot.session.get(Const.URLs.NEKO_LIFE)).text()
             soup = BeautifulSoup(res, "html.parser")
             img = soup.find_all("img")
             data.append(img[0]["src"])
@@ -156,7 +157,7 @@ class NSFW(commands.Cog):
         meta: NHGetMeta = await NHGetMeta.create(ctx, code)
         view = NHentaiGetView(meta=meta)
         embed = await view.page_zero(ctx.interaction)
-        await view.checkButtons()
+        await view.check_buttons()
         await ctx.send(embed=embed, view=view)
 
     @nhentai.command()
@@ -174,7 +175,7 @@ class NSFW(commands.Cog):
         """
         meta = await NHSearchMeta.create(ctx, query, sort)
         view = NHSearchView(meta)
-        await view.checkButtons()
+        await view.check_buttons()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
 
@@ -190,7 +191,7 @@ class NHSearchMeta:
             "all-time": "",
         }
         sort = fmt_dict.get(query, "")
-        url = f"https://nhentai.xxx/search/?q={query}{sort}"
+        url = Const.URLs.NHENTAI + f"search/?q={query}{sort}"
         data = [x async for x in Parser(ctx.bot.session, url).nh_search()]
 
         cls.ctx = ctx
@@ -212,7 +213,7 @@ class NHSearchView(Paginator):
 
     async def adjust(self, embed: discord.Embed):
         value: NHSearchData = self.meta.data[self.position - 1]
-        url = f"[Visit URL](https://nhentai.xxx/g/{value.code})"
+        url = f"[Visit URL]({Const.URls.NHENTAI}g/{value.code})"
         embed.add_field(name="Name:", value=value.name, inline=False)
         embed.add_field(name="URL:", value=url, inline=False)
         embed.add_field(name="HNentai Code:", value=value.code, inline=False)
@@ -232,7 +233,7 @@ class NHSearchView(Paginator):
         meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position - 1].code)
         view = NHentaiGetView(meta)
         embed = await view.page_zero(inter)
-        await view.checkButtons()
+        await view.check_buttons()
         view.message = await self.meta.ctx.interaction.followup.send(
             embed=embed, view=view, wait=True
         )
@@ -245,7 +246,7 @@ class NHGetMeta:
         Get the base metadata for a page
         """
         result: aiohttp.ClientResponse = await ctx.bot.session.get(
-            f"https://nhentai.xxx/g/{code}/1"
+            f"{Const.URls.NHENTAI}g/{code}/1"
         )
         if result.status != 200:
             raise ValueError(
@@ -268,7 +269,7 @@ class NHGetMeta:
         codestart = str(__pages)[:-1].index(substring) + len(substring)
         pages = int(__pages[codestart:-1])
 
-        baseurl = f"https://cdn.nhentai.xxx/g/{datacode}/"
+        baseurl = Const.URLs.NHENTAI_CDN + f"g/{datacode}/"
 
         cls.ctx: BuilderContext = ctx
 

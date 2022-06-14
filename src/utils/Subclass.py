@@ -7,7 +7,7 @@ from typing import Any, List, Optional, Type
 from src.cogs.development.error_handling import ErrorHandling
 
 from src.utils.embeds import fmte_i
-from src.utils.constants import CONSTANTS
+from src.utils.constants import Const
 from bot import BuilderContext
 
 
@@ -77,7 +77,7 @@ class Paginator(BaseView):
 
         super().__init__(ctx, timeout=timeout)
 
-    @discord.ui.button(emoji=CONSTANTS.Emojis().BBARROW_ID, custom_id="bb")
+    @discord.ui.button(emoji=Const.Emojis().BBARROW_ID, custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = 1
         await self.check_buttons(button)
@@ -85,7 +85,7 @@ class Paginator(BaseView):
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=CONSTANTS.Emojis().BARROW_ID, custom_id="b")
+    @discord.ui.button(emoji=Const.Emojis().BARROW_ID, custom_id="b")
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position -= 1
         await self.check_buttons(button)
@@ -97,9 +97,14 @@ class Paginator(BaseView):
         emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
     )
     async def close(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.message.delete()
+        for c in self.children:
+            c.disabled = True
+        try:
+            await inter.response.edit_message(view=self)
+        except (discord.NotFound, AttributeError):
+            pass
 
-    @discord.ui.button(emoji=CONSTANTS.Emojis().FARROW_ID, custom_id="f")
+    @discord.ui.button(emoji=Const.Emojis().FARROW_ID, custom_id="f")
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position += 1
         await self.check_buttons(button)
@@ -107,7 +112,7 @@ class Paginator(BaseView):
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=CONSTANTS.Emojis().FFARROW_ID, custom_id="ff")
+    @discord.ui.button(emoji=Const.Emojis().FFARROW_ID, custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = self.maxpos
         await self.check_buttons(button)
