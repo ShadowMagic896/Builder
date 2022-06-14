@@ -65,16 +65,14 @@ class Utility(commands.Cog):
         results: List[Tuple[str, Tuple[float, str]]] = []
         expected = [0.05, 0.0015, 0.175]
         botlat = self.bot.latency
-        results.append(
-            ("\N{Shinto Shrine} Gateway Latency", (botlat, getSym(botlat, expected[0])))
-        )
+        results.append(("\N{Shinto Shrine} Gateway Latency",
+                        (botlat, getSym(botlat, expected[0]))))
 
         st = time.time()
         await self.bot.apg.execute("SELECT 1")
         end = time.time() - st
-        results.append(
-            ("\N{Floppy Disk} Database Latency", (end, getSym(end, expected[1])))
-        )
+        results.append(("\N{Floppy Disk} Database Latency",
+                        (end, getSym(end, expected[1]))))
 
         st = time.time()
         await self.bot.session.get("https://www.google.com")
@@ -162,39 +160,6 @@ class Utility(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    @commands.is_nsfw()
-    @describe(
-        query="What to search for",
-    )
-    async def search(self, ctx: BuilderContext, query: str):
-        """
-        Searches the web for a website and returns the first result
-        """
-        url = f"https://www.google.com/search?q={quote_plus(query)}"
-
-        res = await self.bot.session.get(url)
-
-        res.raise_for_status()
-        soup = bs4.BeautifulSoup(await res.text(), "html.parser")
-        linkElements = soup.select("div#main > div > div > div > a")
-
-        if len(linkElements) == 0:
-            raise commands.errors.BadArgument(
-                "Could not find any valid link elements..."
-            )
-        else:
-            link = linkElements[0].get("href")
-            i = 0
-            while link[0:4] != "/url" or link[14:20] == "google":
-                i += 1
-                link = linkElements[i].get("href")
-        embed = fmte(
-            ctx,
-            t="Result found!",
-        )
-        await ctx.send("https://google.com{}".format(link), embed=embed)
-
-    @commands.hybrid_command()
     @describe(
         objectid="The ID of the object to look for.",
     )
@@ -279,7 +244,7 @@ class Utility(commands.Cog):
 
     @commands.hybrid_command()
     @describe(
-        term="The term to search urbanDictionary for.",
+        term="The term to define",
     )
     async def define(self, ctx: BuilderContext, term: str):
         """
@@ -287,9 +252,7 @@ class Utility(commands.Cog):
         """
         response = requests.get(
             "https://dictionaryapi.com/api/v3/references/collegiate/json/{}?key={}".format(
-                term.lower(), environ.DICT_API_KEY
-            )
-        ).json()
+                term.lower(), environ.DICT_API_KEY)).json()
         defs = []
         dates = []
         types = []
@@ -420,9 +383,11 @@ else:
         response = await sess.post(url, data=data)
         data = await response.json()
 
-        color = discord.Color.teal() if data["returncode"] == 0 else discord.Color.red()
+        color = discord.Color.teal(
+        ) if data["returncode"] == 0 else discord.Color.red()
         buffer: io.BytesIO = io.BytesIO()
-        buffer.write(bytes(data["stdout"][:EVALUATION_TRUNCATION_THRESHOLD], "UTF-8"))
+        buffer.write(
+            bytes(data["stdout"][:EVALUATION_TRUNCATION_THRESHOLD], "UTF-8"))
         buffer.seek(0)
         file: discord.File = discord.File(buffer, filename="result.py")
         embed = fmte(
@@ -441,8 +406,10 @@ else:
 
 class EmbedView(BaseView):
     def __init__(
-        self, ctx: BuilderContext, embed: discord.Embed, timeout: Optional[float] = 300
-    ):
+            self,
+            ctx: BuilderContext,
+            embed: discord.Embed,
+            timeout: Optional[float] = 300):
         self.tinter: Optional[discord.Interaction] = None
         self.embed = embed
         super().__init__(ctx, timeout)
@@ -485,7 +452,8 @@ class EmbedView(BaseView):
             def __init__(_self) -> None:
                 super().__init__(title="Set Color")
 
-            col = discord.ui.TextInput(label="Please Input the Hex Color Value")
+            col = discord.ui.TextInput(
+                label="Please Input the Hex Color Value")
 
             async def on_submit(_self, interaction: discord.Interaction) -> None:
                 v = _self.col.value
@@ -494,7 +462,8 @@ class EmbedView(BaseView):
                 try:
                     c = int(v, 16)
                 except ValueError:
-                    raise commands.errors.BadArgument("Not a valid hexadecimal value")
+                    raise commands.errors.BadArgument(
+                        "Not a valid hexadecimal value")
                 self.embed.color = discord.Color(c)
                 await interaction.response.edit_message(embed=self.embed)
 
@@ -546,12 +515,14 @@ class EmbedView(BaseView):
                 except ValueError:
                     raise commands.errors.BadArgument("Not a valid number")
                 if f > len(self.embed.fields) or f < 1:
-                    raise commands.errors.BadArgument("That field does not exist")
+                    raise commands.errors.BadArgument(
+                        "That field does not exist")
                 self.embed.clear_fields()
                 for c, e in enumerate(self.embed.fields):
                     if c == f - 1:
                         continue
-                    self.embed.add_field(name=e.name, value=e.value, inline=e.inline)
+                    self.embed.add_field(
+                        name=e.name, value=e.value, inline=e.inline)
                 await interaction.response.edit_message(embed=self.embed)
 
         await inter.response.send_modal(UpdateModal())
@@ -603,8 +574,8 @@ class EmbedView(BaseView):
             async def on_submit(_self, interaction: discord.Interaction) -> None:
                 if self.embed.footer.icon_url:
                     self.embed.set_footer(
-                        text=_self.url.value, icon_url=str(self.embed.footer.icon_url)
-                    )
+                        text=_self.url.value, icon_url=str(
+                            self.embed.footer.icon_url))
                 else:
                     self.embed.set_footer(text=_self.url.value)
                 await interaction.response.edit_message(embed=self.embed)
@@ -624,8 +595,8 @@ class EmbedView(BaseView):
             async def on_submit(_self, interaction: discord.Interaction) -> None:
                 if self.embed.footer:
                     self.embed.set_footer(
-                        text=self.embed.footer.text, icon_url=str(_self.url.value)
-                    )
+                        text=self.embed.footer.text, icon_url=str(
+                            _self.url.value))
                 else:
                     self.embed.set_footer(icon_url=str(_self.url.value))
                 await interaction.response.edit_message(embed=self.embed)

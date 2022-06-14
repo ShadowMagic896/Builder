@@ -1,7 +1,10 @@
 import asyncio
 import functools
 from io import BytesIO
-from typing import Any, Callable, Optional
+from typing import Any, Callable, ItemsView, List, Optional
+from typing_extensions import Self
+import aiohttp
+from bs4 import BeautifulSoup
 import discord
 from discord import app_commands
 from discord.app_commands import describe, Range
@@ -13,7 +16,11 @@ from urllib import parse
 
 from src.utils.converters import UrlGet, UrlFind
 from src.utils.embeds import fmte
-from bot import BuilderContext
+from bot import Builder, BuilderContext
+from src.utils.subclass import Paginator
+from src.utils.types import GoogleSearchData
+from src.utils.parsers import Parser
+from src.utils.coro import run
 
 
 class Web(commands.Cog):
@@ -21,7 +28,7 @@ class Web(commands.Cog):
     The wonders of the interwebs!
     """
 
-    def __init__(self, bot: commands, driver: webdriver.Chrome) -> None:
+    def __init__(self, bot: Builder, driver: webdriver.Chrome) -> None:
         self.bot = bot
         self.driver: webdriver.Chrome = driver
 
@@ -70,10 +77,11 @@ class Web(commands.Cog):
             path = parse.urlsplit(url).path
             rev: str = str(path)[::-1]
 
-            if "." not in rev or rev.index("/") < rev.index("."):  # No format attached
+            if "." not in rev or rev.index(
+                    "/") < rev.index("."):  # No format attached
                 ext: str = "txt"
             else:
-                ext = path[(len(rev) - rev.index(".")) :]
+                ext = path[(len(rev) - rev.index(".")):]
         else:
             ext = fmt
         embed = fmte(ctx, t="Request Sent, Response Recieved", d=url)
@@ -96,21 +104,65 @@ class Web(commands.Cog):
         await ctx.interaction.response.defer()
         self.driver.get(url[0])
         await asyncio.sleep(wait)
-        buffer: BytesIO = BytesIO(await self.run(self.driver.get_screenshot_as_png))
+        buffer: BytesIO = BytesIO(await run(self.driver.get_screenshot_as_png))
         file = discord.File(buffer, filename="image.png")
         embed = fmte(ctx, t="Screenshot Captured")
         embed.set_image(url="attachment://image.png")
         await ctx.send(embed=embed, file=file)
 
-    async def run(bot: commands.Bot, func: Callable, *args, **kwargs) -> Any:
-        part = functools.partial(func, *args, **kwargs)
-        return await asyncio.get_event_loop().run_in_executor(None, part)
+    @web.command()
+    @commands.is_nsfw()
+    @describe(
+        query="What to search for",
+    )
+    async def search(self, ctx: BuilderContext, query: str):
+        """
+        Searches the web for links
+        """
+        url: str = f"https://www.google.com/search?q={parse.quote_plus(query)}"
+        data: List[GoogleSearchData] = [
+            data
+            async for data in Parser(self.bot.session, url).googleSearch(self.driver)
+        ]
+        view = GoogleView(ctx, query, data)
+        embed = await view.page_zero(ctx.interaction)
+        await view.check_buttons()
+        await ctx.send(embed=embed, view=view)
+
+
+class GoogleView(Paginator):
+    def __init__(
+        self,
+        ctx: BuilderContext,
+        q: str,
+        values: List[GoogleSearchData],
+        *,
+        timeout: Optional[float] = 45,
+    ):
+        self.q = q
+        super().__init__(ctx, values, 5, timeout=timeout)
+
+    async def adjust(self, embed: discord.Embed):
+        start = self.pagesize * (self.position - 1)
+        stop = self.pagesize * self.position
+        values: List[GoogleSearchData] = self.vals[start:stop]
+        for co, data in enumerate(values):
+            fmt_co = str(co + 1 + (self.position - 1)
+                         * self.pagesize).rjust(2, "0")
+            embed.description += f"\n**`{fmt_co}`: [{data.title}]({data.url})**\n*{data.body or 'Google gave no body...'}*"
+        return embed
+
+    async def embed(self, inter: discord.Interaction):
+        return fmte(
+            self.ctx,
+            t=f"Results: {self.q}\nPage `{self.position}` of `{self.maxpos or 1}` [{len(self.vals)} Results]",
+        )
 
 
 async def setup(bot: commands.Bot):
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.headless = True
-    driver: webdriver.Chrome = await Web.run(bot, webdriver.Chrome, options=options)
+    driver: webdriver.Chrome = await run(webdriver.Chrome, options=options)
     driver.set_window_size(1920, 1080)
     await bot.add_cog(Web(bot, driver))

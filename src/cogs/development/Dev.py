@@ -29,8 +29,8 @@ class Dev(commands.Cog):
         Formats the bot's code using autopep8
         """
         Popen(
-            "py -m autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" % params,
-        ).stdout
+            "py -m autopep8 %s R:\\VSCode-Projects\\Discord-Bots\\Builder" %
+            params, ).stdout
         await ctx.send("Code formatting completed.")
 
     @commands.hybrid_command()
@@ -49,7 +49,10 @@ class Dev(commands.Cog):
             for guild in DEVELOPMENT_GUILD_IDS:
                 cmds = await ctx.bot.tree.sync(guild=discord.Object(guild))
                 log += f"**~ GUILD {guild}:** {len(cmds)} BASE"
-        embed = fmte(ctx, t=f"Synced Commands {type_}", d=log or discord.utils.MISSING)
+        embed = fmte(
+            ctx,
+            t=f"Synced Commands {type_}",
+            d=log or discord.utils.MISSING)
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
@@ -61,7 +64,8 @@ class Dev(commands.Cog):
         to_reload.extend(COG_DIRECTORIES)
         for directory in to_reload:
             for file in os.listdir(directory):
-                if os.path.isdir(f"{directory}/{file}"):  # Probably just pycaches
+                if os.path.isdir(
+                        f"{directory}/{file}"):  # Probably just pycaches
                     continue
                 fp = f"{directory[2:].replace('/','.')}.{file[:-3]}"
                 if fp in ctx.bot.extensions.keys():
@@ -86,7 +90,8 @@ class Dev(commands.Cog):
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     @commands.is_owner()
     async def embe(self, ctx: BuilderContext, code: str):
-        file = discord.File(io.BytesIO(bytes(str(eval(code)), "UTF-8")), "untitled.txt")
+        file = discord.File(io.BytesIO(
+            bytes(str(eval(code)), "UTF-8")), "untitled.txt")
         await ctx.send(file=file)
 
 

@@ -17,6 +17,7 @@ from src.utils.embeds import fmte
 from src.utils.subclass import Paginator
 from src.utils.errors import NoDocumentsFound
 from src.utils.constants import Const
+from src.utils.coro import run
 
 
 class API(commands.Cog):
@@ -88,9 +89,8 @@ class API(commands.Cog):
 
             choices.append(
                 discord.app_commands.Choice(
-                    name=name or "--- UNNAMED ---", value=name or "--- UNNAMED ---"
-                )
-            )
+                    name=name or "--- UNNAMED ---",
+                    value=name or "--- UNNAMED ---"))
         return choices
 
     @rtfm.autocomplete("version")
@@ -113,7 +113,9 @@ class API(commands.Cog):
         for version in versions:
             name = version.select_one("a").text.strip()
             if name.lower() in current.lower() or current.lower() in name.lower():
-                results.append(discord.app_commands.Choice(name=name, value=name))
+                results.append(
+                    discord.app_commands.Choice(
+                        name=name, value=name))
 
         return results
 
@@ -131,7 +133,8 @@ class API(commands.Cog):
         soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
         selector: str = "div#project_details > div.wrapper > div.project_details > ul"
 
-        translatons: ResultSet[Tag] = soup.select_one(selector).select("li", limit=25)
+        translatons: ResultSet[Tag] = soup.select_one(
+            selector).select("li", limit=25)
         results: List[discord.app_commands.Choice] = []
 
         for translaton in translatons:
@@ -159,7 +162,7 @@ class API(commands.Cog):
         Detects the estimated unsafe content coming from a message. Errs on the side of caution
         """
         preset = APIPresets.OpenAI.detect(message, 1)
-        response: dict = await API.run(
+        response: dict = await run(
             self.bot.loop, self.bot.openai.Completion.create, **preset
         )
         code: int = int(evaulate_response(response))
@@ -197,12 +200,14 @@ class API(commands.Cog):
         Autocompltetes a sentence or responds to a question
         """
         preset = APIPresets.OpenAI.complete(message, stochasticism)
-        response: dict = await API.run(
+        response: dict = await run(
             self.bot.loop, self.bot.openai.Completion.create, **preset
         )
         embed = fmte(ctx, t="Completion Finished")
         for choice in response["choices"]:
-            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
+            embed.add_field(
+                name=f"Choice {choice['index']+1}:",
+                value=choice["text"])
         await ctx.send(embed=embed)
 
     @openai.command()
@@ -221,12 +226,12 @@ class API(commands.Cog):
         Fixes grammar in a statement
         """
         preset = APIPresets.OpenAI.grammar(message, edits, stochasticism)
-        response: dict = await API.run(
-            self.bot.loop, self.bot.openai.Edit.create, **preset
-        )
+        response: dict = await run(self.bot.loop, self.bot.openai.Edit.create, **preset)
         embed = fmte(ctx, t="Checking Completed")
         for choice in response["choices"]:
-            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
+            embed.add_field(
+                name=f"Choice {choice['index']+1}:",
+                value=choice["text"])
         await ctx.send(embed=embed)
 
     @openai.command()
@@ -247,13 +252,14 @@ class API(commands.Cog):
         """
         Attempts to edit a message based upon instructions
         """
-        preset = APIPresets.OpenAI.gen_edit(message, instructions, edits, stochasticism)
-        response: dict = await API.run(
-            self.bot.loop, self.bot.openai.Edit.create, **preset
-        )
+        preset = APIPresets.OpenAI.gen_edit(
+            message, instructions, edits, stochasticism)
+        response: dict = await run(self.bot.loop, self.bot.openai.Edit.create, **preset)
         embed = fmte(ctx, t="Editing Completed")
         for choice in response["choices"]:
-            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
+            embed.add_field(
+                name=f"Choice {choice['index']+1}:",
+                value=choice["text"])
         await ctx.send(embed=embed)
 
     async def run(loop: asyncio.BaseEventLoop, func, *args, **kwargs):
@@ -321,8 +327,8 @@ class RTFMMeta:
             f"https://{project}.readthedocs.io/{lang}/{version}/search.html?q={query}"
         )
 
-        await API.run(ctx.bot.loop, driver.get, url)
-        text = await API.run(
+        await run(ctx.bot.loop, driver.get, url)
+        text = await run(
             ctx.bot.loop,
             driver.execute_script,
             "return document.documentElement.outerHTML",
@@ -335,29 +341,30 @@ class RTFMMeta:
         results: ResultSet[Tag] = soup.select(select)
 
         if len(results) == 0:
-            raise NoDocumentsFound("No documents for those parameters were found.")
+            raise NoDocumentsFound(
+                "No documents for those parameters were found.")
 
         values: List[str] = []
 
-        for co, item in enumerate(results):
-            fmt_co = str(co + 1).rjust(2, "0")
-            name = item.select_one("a").text
-            link = item.select_one("a")["href"]
-            values.append(f"**`{fmt_co}`:** [`{name}`]({reference_url + link})\n")
-
         cls.ctx = ctx
+        cls.ref = reference_url
         cls.project = project
         cls.query = query
         cls.query_raw = c_query
         cls.version = version
         cls.lang = lang
-        cls.values = values
+        cls.values = results
 
         return cls
 
 
 class RTFMPaginator(Paginator):
-    def __init__(self, meta: RTFMMeta, pagesize: int, *, timeout: Optional[float] = 45):
+    def __init__(
+            self,
+            meta: RTFMMeta,
+            pagesize: int,
+            *,
+            timeout: Optional[float] = 45):
         self.meta = meta
         super().__init__(meta.ctx, meta.values, pagesize, timeout=timeout)
 
@@ -372,7 +379,12 @@ class RTFMPaginator(Paginator):
         stop = self.pagesize * self.position
         embed.description = ""
         for co, value in enumerate(self.vals[start:stop]):
-            embed.description += value
+            fmt_co = str(co + 1 + (self.position - 1)
+                         * self.pagesize).rjust(2, "0")
+            name = value.select_one("a").text
+            link = value.select_one("a")["href"]
+
+            embed.description += f"**`{fmt_co}`:** [`{name}`]({self.meta.ref + link})\n"
         return embed
 
 

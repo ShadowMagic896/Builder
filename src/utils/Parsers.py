@@ -1,3 +1,4 @@
+import asyncio
 from typing import AsyncIterator
 from typing_extensions import Self
 import aiohttp
@@ -25,12 +26,20 @@ class Parser:
 
             yield NHSearchData(code, thumbnail, name)
 
-    async def googleSearch(self: Self) -> AsyncIterator[GoogleSearchData]:
-        response: aiohttp.ClientResponse = await self.session.get(self.url)
-        response.raise_for_status()
-        parse: BeautifulSoup = BeautifulSoup(await response.text(), "html.parser")
-        selector: str = "body > div#main > div#center_col > div#res > div#search > div > div#rso > div"
-        for item in parse.select(selector):
+    async def googleSearch(self, driver) -> AsyncIterator[GoogleSearchData]:
+        # TODO Make this async
+        driver.get(self.url)
+        text = driver.execute_script(
+            "return document.documentElement.outerHTML")
+        parse: BeautifulSoup = BeautifulSoup(text, "html.parser")
+        selector: str = "div#center_col > div#res > div#search > div > div#rso > div"
+        items = parse.select(selector)
+        for item in items:
+
+            if "hlcw0c" in item.get("class", []):
+                item = item.select_one("div")
+            if "tF2Cxc" not in item.get("class", []):
+                continue
             xsoup: BeautifulSoup = BeautifulSoup(str(item), "html.parser")
 
             # The last item is a spacer between it and the next item
@@ -39,6 +48,9 @@ class Parser:
 
             url: str = meta_packet["href"]
             title: str = meta_packet.select_one("h3").text
-            body: str = xitems[1].select_one("div > div > span").text
+            desc_feature = [
+                v for v in xitems if v.get("data-content-feature", None) == "1"
+            ][0]
+            body: str = desc_feature.select_one("div > div").text
 
             yield GoogleSearchData(title, url, body)

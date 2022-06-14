@@ -26,6 +26,7 @@ from src.utils.colors import to_hex
 from src.utils.converters import RGB
 from src.utils.subclass import BaseView
 from src.utils.static import typehints
+from src.utils.coro import run
 
 from wand import image as wimage
 
@@ -51,11 +52,12 @@ class Images(commands.Cog):
 
     def get_extension(self, image: discord.Attachment):
         fn = image.filename
-        return fn[fn.replace(".", "_", fn.count(".") - 1).index(".") + 1 :]
+        return fn[fn.replace(".", "_", fn.count(".") - 1).index(".") + 1:]
 
     def check_attachment(self, image: discord.Attachment):
         if image.size > 40000000:
-            raise IOError("Attachment is too large. Please keep files under 40MB")
+            raise IOError(
+                "Attachment is too large. Please keep files under 40MB")
 
     @commands.hybrid_group()
     async def image(self, ctx: BuilderContext):
@@ -75,15 +77,18 @@ class Images(commands.Cog):
         """
         ogsize = (image.width, image.height)
 
-        buffer: io.BytesIO = await PILFN.run(
+        buffer: io.BytesIO = await run(
             PILFN.callOnImage, await PILFN.tobuf(image), "resize", (width, height)
         )
 
         embed = fmte(
             ctx,
             t="Image successfully resized!",
-            d="File of dimensions (%s, %s) converted to file of dimensions (%s, %s)"
-            % (ogsize[0], ogsize[1], width, height),
+            d="File of dimensions (%s, %s) converted to file of dimensions (%s, %s)" %
+            (ogsize[0],
+             ogsize[1],
+                width,
+                height),
         )
 
         file = discord.File(buffer, filename="resize.%s" % image.filename)
@@ -106,7 +111,7 @@ class Images(commands.Cog):
         Copies an image image and adds it to the guild as an emoji
         """
 
-        buffer: io.BytesIO = await PILFN.run(
+        buffer: io.BytesIO = await run(
             PILFN.callOnImage, await PILFN.tobuf(image), "resize", (128, 128)
         )
         e: discord.Emoji = await ctx.guild.create_custom_emoji(
@@ -153,12 +158,13 @@ class Images(commands.Cog):
         if font not in [p.lower() for p in os.listdir(environ.FONT_PATH)]:
             raise ValueError("Not a valid font. Please use the autocomplete.")
         try:
-            font = ImageFont.FreeTypeFont(environ.FONT_PATH + font, strokeweight)
+            font = ImageFont.FreeTypeFont(
+                environ.FONT_PATH + font, strokeweight)
         except BaseException as e:
             print(e)
         img = await PILFN.toimg(image)
 
-        await PILFN.run(
+        await run(
             lambda i: i.text(xy=(xpos, ypos), text=text, fill=(r, g, b), font=font),
             ImageDraw.ImageDraw(img),
         )
@@ -201,7 +207,7 @@ class Images(commands.Cog):
         """
         Crops an image to the given dimensions
         """
-        buffer: BytesIO = await PILFN.run(
+        buffer: BytesIO = await run(
             PILFN.callOnImage,
             await PILFN.tobuf(image),
             "crop",
@@ -229,7 +235,11 @@ class Images(commands.Cog):
             value="`{}x{}`".format(image.width, image.height),
             inline=False,
         )
-        embed.add_field(name="File Size", value="`%s bytes`" % image.size, inline=False)
+        embed.add_field(
+            name="File Size",
+            value="`%s bytes`" %
+            image.size,
+            inline=False)
         embed.add_field(
             name="File Type", value="`%s`" % image.content_type, inline=False
         )
@@ -237,13 +247,12 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @image.command()
-    @describe(
-        image="The image to rotate",
-        degrees="The amount of degrees to rotate the image.",
-        centerx="The X Coordinate of the center of rotation.",
-        centery="The Y Coordinate of the center of rotation.",
-        fillcolor="The color to fill the remaining parts of the image after rotation.",
-    )
+    @describe(image="The image to rotate",
+              degrees="The amount of degrees to rotate the image.",
+              centerx="The X Coordinate of the center of rotation.",
+              centery="The Y Coordinate of the center of rotation.",
+              fillcolor="The color to fill the remaining parts of the image after rotation.",
+              )
     async def rotate(
         self,
         ctx: BuilderContext,
@@ -256,7 +265,7 @@ class Images(commands.Cog):
         """
         Rotates an image by a given amount of degrees
         """
-        buffer: BytesIO = await PILFN.run(
+        buffer: BytesIO = await run(
             PILFN.callOnImage,
             await PILFN.tobuf(image),
             "rotate",
@@ -296,7 +305,7 @@ class Images(commands.Cog):
             raise commands.BadArgument(filter)
 
         filter: ImageFilter = getattr(ImageFilter, filter)
-        buffer: BytesIO = await PILFN.run(
+        buffer: BytesIO = await run(
             PILFN.callOnImage, await PILFN.tobuf(image), "filter", filter
         )
 
@@ -320,7 +329,7 @@ class Images(commands.Cog):
         """
         Convert an image to a grey-scale color scheme
         """
-        buffer: BytesIO = await PILFN.run(
+        buffer: BytesIO = await run(
             PILFN.callOnImage, await PILFN.tobuf(image), "convert", "L"
         )
 
@@ -329,7 +338,8 @@ class Images(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @image.command()
-    @describe(image="The image to convert", mode="The Image Type to convert to")
+    @describe(image="The image to convert",
+              mode="The Image Type to convert to")
     async def convert(
         self,
         ctx: BuilderContext,
@@ -352,9 +362,7 @@ class Images(commands.Cog):
         """
         Attempts to convert the image into the specified mode.
         """
-        buffer = await PILFN.run(
-            PILFN.callOnImage, await PILFN.tobuf(image), "convert", mode
-        )
+        buffer = await run(PILFN.callOnImage, await PILFN.tobuf(image), "convert", mode)
 
         embed = fmte(ctx, t="Image Successfully Converted")
         file = discord.File(buffer, "conv.%s" % image.filename)
@@ -402,8 +410,9 @@ class Images(commands.Cog):
         img = await WandImageFunctions.fromAttachment(image)
         await WandImageFunctions.apply(img.encipher, phrase)
         embed = fmte(
-            ctx, t="Image Enciphered", d=f"Passphrase to decipher: ||{phrase}||"
-        )
+            ctx,
+            t="Image Enciphered",
+            d=f"Passphrase to decipher: ||{phrase}||")
         embed, file = await WandImageFunctions.spawnItems(embed, img)
         await ctx.send(embed=embed, file=file)
 
@@ -438,16 +447,16 @@ class Images(commands.Cog):
         embed = fmte(ctx, t="Currently Applied Filters")
         url = image.url or image.proxy_url or None
         if url is None:
-            raise commands.errors.MessageNotFound("Cannot find image for message.")
+            raise commands.errors.MessageNotFound(
+                "Cannot find image for message.")
         embed.set_image(url=url)
         await view.initialCheck()
         message = await ctx.send(embed=embed, view=view)
         view.message = message
 
     @image.command()
-    @describe(
-        image="The image to get the colors of", to_find="How many colors to look for."
-    )
+    @describe(image="The image to get the colors of",
+              to_find="How many colors to look for.")
     async def colors(
         self,
         ctx: BuilderContext,
@@ -462,14 +471,17 @@ class Images(commands.Cog):
         await image.save(buffer)
         buffer.seek(0)
         asImage = Image.open(buffer)
-        asImage: Image.Image = await PILFN.run(asImage.convert, "RGBA")
+        asImage: Image.Image = await run(asImage.convert, "RGBA")
 
         target_colors = to_find
         in_line: int = 4
 
-        sort = sorted(asImage.getcolors(2**24), key=lambda x: x[0], reverse=True)[
-            :100
-        ]
+        sort = sorted(
+            asImage.getcolors(
+                2**24),
+            key=lambda x: x[0],
+            reverse=True)[
+            :100]
         sort = [value[1] for value in sort]
         values = (await filter_similar(sort, 0, 10))[:target_colors]
 
@@ -480,13 +492,12 @@ class Images(commands.Cog):
         rendered_templates: List[Image.Image] = []
 
         for color in values:
-            result = await PILFN.run(
-                PILFN.replaceColor, template, (0, 0, 0, 255), color
-            )
+            result = await run(PILFN.replaceColor, template, (0, 0, 0, 255), color)
 
             draw = ImageDraw.ImageDraw(result, mode="RGBA")
             as_hex = to_hex(color[:-1])
-            font = ImageFont.FreeTypeFont(environ.FONT_PATH + "BOOKOSBI.TTF", size=20)
+            font = ImageFont.FreeTypeFont(
+                environ.FONT_PATH + "BOOKOSBI.TTF", size=20)
             inverse = 255 - np.array(color)
             draw.text(
                 (round(result.width / 4), round(result.height / 2)),
@@ -509,7 +520,7 @@ class Images(commands.Cog):
             # Add BL vals because PIL can't use self.size ig
             box.extend([box[0] + w, box[1] + h])
 
-            await PILFN.run(base.paste, im=im, box=box)
+            await run(base.paste, im=im, box=box)
 
         embed = fmte(ctx, t="Colors Retrieved")
         embed, file = await PILFN.spawnItems(embed, base)
@@ -654,7 +665,10 @@ class Images(commands.Cog):
         embed.set_image(url=user.display_avatar.url)
 
         class _GView(BaseView):
-            def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
+            def __init__(
+                    self,
+                    ctx: BuilderContext,
+                    timeout: Optional[float] = 300):
                 super().__init__(ctx, timeout)
 
             @discord.ui.button(label="View Profile Avatar")
@@ -664,13 +678,17 @@ class Images(commands.Cog):
                     inter.user.avatar = inter.user.default_avatar
                 embed = fmte(
                     ctx,
-                    t="%s's Avatar" % user,
+                    t="%s's Avatar" %
+                    user,
                     d=f"[View Link]({(user.avatar or inter.user.default_avatar).url})",
                 )
-                embed.set_image(url=(user.avatar or inter.user.default_avatar).url)
+                embed.set_image(
+                    url=(
+                        user.avatar or inter.user.default_avatar).url)
                 await inter.message.edit(embed=embed, view=_NView(ctx))
 
-            @discord.ui.button(emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger)
+            @discord.ui.button(emoji="\N{CROSS MARK}",
+                               style=discord.ButtonStyle.danger)
             async def close(self, inter: discord.Interaction, _: Any):
                 for c in self.children:
                     c.disabled = True
@@ -680,7 +698,10 @@ class Images(commands.Cog):
                     pass
 
         class _NView(BaseView):
-            def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
+            def __init__(
+                    self,
+                    ctx: BuilderContext,
+                    timeout: Optional[float] = 300):
                 super().__init__(ctx, timeout)
 
             @discord.ui.button(label="View Guild Avatar")
@@ -696,9 +717,9 @@ class Images(commands.Cog):
                 embed.set_image(url=user.display_avatar.url)
                 await inter.message.edit(embed=embed, view=_GView(ctx))
 
-            @discord.ui.button(
-                label="Close", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
-            )
+            @discord.ui.button(label="Close",
+                               emoji="\N{CROSS MARK}",
+                               style=discord.ButtonStyle.danger)
             async def close(self, inter: discord.Interaction, _: Any):
                 for c in self.children:
                     c.disabled = True
@@ -711,14 +732,6 @@ class Images(commands.Cog):
 
 
 class PILFN:
-    async def run(func: Callable, *args, **kwargs) -> Any:
-        """
-        Runs a synchronous method in the current async loop's executor
-        All *args and **kwargs get passed to the function
-        """
-        partial = functools.partial(func, *args, **kwargs)
-        return await asyncio.get_event_loop().run_in_executor(None, partial)
-
     def callOnImage(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
         ri = kwargs.pop("ri")
         img = Image.open(buffer)
@@ -732,7 +745,9 @@ class PILFN:
 
     def callForEnhance(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
         img = Image.open(buffer)
-        img: Image.Image = getattr(ImageEnhance, function)(img).enhance(*args, **kwargs)
+        img: Image.Image = getattr(
+            ImageEnhance, function)(img).enhance(
+            *args, **kwargs)
         buffer: io.BytesIO = io.BytesIO()
         img.save(buffer, "png")
         buffer.seek(0)
@@ -814,8 +829,10 @@ class WandImageFunctions:
 
 class ImageManipulateView(BaseView):
     def __init__(
-        self, ctx: BuilderContext, buffer: BytesIO, timeout: Optional[float] = 45
-    ):
+            self,
+            ctx: BuilderContext,
+            buffer: BytesIO,
+            timeout: Optional[float] = 45):
         self.initial = buffer
         self.img = wimage.Image(blob=self.initial)
         self.last = None
@@ -842,8 +859,9 @@ class ImageManipulateView(BaseView):
         buffer.seek(0)
 
         embed = fmte(
-            self.ctx, t="Effect Applied", d=f"Total Effects: {', '.join(self.filters)}"
-        )
+            self.ctx,
+            t="Effect Applied",
+            d=f"Total Effects: {', '.join(self.filters)}")
         file = discord.File(fp=buffer, filename="image.png")
         embed.set_image(url="attachment://image.png")
 
@@ -1110,7 +1128,8 @@ class ImageManipulateView(BaseView):
         ] = None,
         post_process_arguments: Tuple[List[Any], Mapping[str, Any]] = ([], {}),
     ):
-        check = check or (lambda c: c.author == ctx.author and c.channel == ctx.channel)
+        check = check or (lambda c: c.author ==
+                          ctx.author and c.channel == ctx.channel)
         args = prompt_data[0] if len(prompt_data) >= 1 else ()
         kwargs = prompt_data[1] if len(prompt_data) >= 2 else {}
         kwargs.update({"ephemeral": True})
@@ -1126,8 +1145,9 @@ class ImageManipulateView(BaseView):
             )
         else:
             return post_process(
-                *post_process_arguments[0], response, **post_process_arguments[1]
-            )
+                *post_process_arguments[0],
+                response,
+                **post_process_arguments[1])
 
     async def uint_check(self, inp: discord.Message):
         num: int = int(inp.content.strip())
