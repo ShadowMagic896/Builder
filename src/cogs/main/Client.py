@@ -118,8 +118,9 @@ class Client(commands.Cog):
             await ctx.send(embed=embed, file=file)
         elif group:
             src = "\n\n".join(
-                inspect.getsource(c.callback.__code__) for c in explode(group.commands)
-            )
+                inspect.getsource(
+                    c.callback.__code__) for c in explode(
+                    group.commands))
             buffer = io.BytesIO()
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
@@ -160,7 +161,8 @@ class Client(commands.Cog):
         Find out how long the bot has been online for
         """
         start = datetime.datetime.fromtimestamp(self.bot.start_unix)
-        embed = fmte(ctx, t=f"Last Restart: <t:{round(self.bot.start_unix)}:R>")
+        embed = fmte(
+            ctx, t=f"Last Restart: <t:{round(self.bot.start_unix)}:R>")
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
@@ -258,7 +260,8 @@ class FeedbackModal(BaseModal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         async with aiofiles.open("data/logs/users/feedback.log", "a") as file:
-            vals = ["\n".join([self.rating, self.bugs, self.requests, self.comments])]
+            vals = ["\n".join(
+                [self.rating, self.bugs, self.requests, self.comments])]
             formatted = f"{datetime.datetime.now()}: {interaction.user if not self.anon else 'Anonymous'} from {interaction.guild} [{interaction.guild.id}]\n{vals}\n\n"
             await file.write(formatted)
         await interaction.response.send_message(
@@ -313,7 +316,8 @@ class ServerInformation(BaseView):
     def __init__(self, ctx: BuilderContext, timeout: Optional[float] = 300):
         super().__init__(ctx, timeout)
 
-    @discord.ui.button(label="Server Information", emoji="\N{DESKTOP COMPUTER}")
+    @discord.ui.button(label="Server Information",
+                       emoji="\N{DESKTOP COMPUTER}")
     async def server_info(self, inter: discord.Interaction, button: discord.ui.Button):
         freq = psutil.cpu_freq(False)
         embed = fmte_i(inter, t="Server Information")

@@ -55,9 +55,8 @@ class Atoms(commands.Cog):
         """
         atomname = periodic.names[atom - 1]
         old = await AtomsDatabase(ctx).get_atoms(user)
-        old_amount = (
-            [v for v in old if v["atomid"] == atom][0]["count"] if len(old) != 0 else 0
-        )
+        old_amount = ([v for v in old if v["atomid"] == atom]
+                      [0]["count"] if len(old) != 0 else 0)
         await AtomsDatabase(ctx).give_atom(user, atom, amount)
         embed = fmte(
             ctx,
@@ -104,7 +103,11 @@ class Atoms(commands.Cog):
         Shows all atoms that a user has.
         """
         values: Union[List[Record], List] = await AtomsDatabase(ctx).get_atoms(user)
-        view = AtomsView(ctx, values=values, title=f"`{user}`'s Atoms", sort=sort)
+        view = AtomsView(
+            ctx,
+            values=values,
+            title=f"`{user}`'s Atoms",
+            sort=sort)
         embed = await view.page_zero(ctx.interaction)
         await view.check_buttons()
 
@@ -250,8 +253,8 @@ class AtomsView(Paginator):
 
     async def embed(self, inter: discord.Interaction):
         embed = fmte(
-            self.ctx, t=f"{self.title}: Page `{self.position}` / `{self.maxpos or 1}`"
-        )
+            self.ctx,
+            t=f"{self.title}: Page `{self.position}` / `{self.maxpos or 1}`")
         return embed
 
 

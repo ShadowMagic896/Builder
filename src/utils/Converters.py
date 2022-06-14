@@ -100,8 +100,9 @@ class Atom(commands.Converter):
 
 class Bound(commands.Converter, int):
     def __init__(
-        self, lower_bound: Optional[int] = None, upper_bound: Optional[int] = None
-    ) -> None:
+            self,
+            lower_bound: Optional[int] = None,
+            upper_bound: Optional[int] = None) -> None:
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         super().__init__()
@@ -120,14 +121,16 @@ class Bound(commands.Converter, int):
             self.lower_bound is not None and self.upper_bound is None
         ):  # Just lower bound
             if argument < self.lower_bound:
-                raise ValueError(f"Value not in bounds: at least {self.lower_bound}")
+                raise ValueError(
+                    f"Value not in bounds: at least {self.lower_bound}")
             else:
                 return argument
         elif (
             self.lower_bound is None and self.upper_bound is not None
         ):  # Just upper bound
             if argument > self.upper_bound:
-                raise ValueError(f"Value not in bounds: at most {self.upper_bound}")
+                raise ValueError(
+                    f"Value not in bounds: at most {self.upper_bound}")
             else:
                 return argument
         else:  # No bounds on argument
@@ -192,7 +195,8 @@ class Cog(commands.Converter):
         if _cog is None:
             raise MissingCog(f"Cannot find cog: {cog}")
         if cog in Const.Cogs.FORBIDDEN_COGS:
-            raise ForbiddenData("Sorry! No help command is available for that.")
+            raise ForbiddenData(
+                "Sorry! No help command is available for that.")
         return _cog
 
 
@@ -206,7 +210,8 @@ class Group(commands.Converter):
         if _grp is None or not isinstance(_grp, commands.HybridGroup):
             raise MissingCog(f"Cannot find group: {grp}")
         if grp in Const.Cogs.FORBIDDEN_GROUPS:
-            raise ForbiddenData("Sorry! No help command is available for that.")
+            raise ForbiddenData(
+                "Sorry! No help command is available for that.")
         return _grp
 
 
@@ -221,7 +226,8 @@ class Command(commands.Converter):
         if _command is None:
             raise MissingCommand(f"Cannot find command: {command}")
         if command in Const.Cogs.FORBIDDEN_COMMANDS:
-            raise ForbiddenData("Sorry! No help command is available for that.")
+            raise ForbiddenData(
+                "Sorry! No help command is available for that.")
         return _command
 
 
@@ -252,7 +258,8 @@ class RGB(commands.Converter):
                     f"Invalid amount of colors given, expected 3. Got: {len(values)}"
                 )
         if np.any(values[(values > 255) | (values < 0)]):
-            raise ValueError("Value given is either greater an 255 or less than 0")
+            raise ValueError(
+                "Value given is either greater an 255 or less than 0")
         return values
 
 

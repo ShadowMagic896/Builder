@@ -55,8 +55,9 @@ class Help(commands.Cog):
             if group.cog is not None:
                 sel.placeholder = "%s Cog Selection..." % group.cog.ge()
                 sel.options.remove(
-                    discord.utils.get(sel.options, label=group.cog.qualified_name)
-                )
+                    discord.utils.get(
+                        sel.options,
+                        label=group.cog.qualified_name))
                 view.add_item(sel)
             await view.check_buttons()
 
@@ -70,7 +71,10 @@ class Help(commands.Cog):
 
             sel = CogSelect(ctx)
             sel.placeholder = "%s Cog Selection..." % cog.ge()
-            sel.options.remove(discord.utils.get(sel.options, label=cog.qualified_name))
+            sel.options.remove(
+                discord.utils.get(
+                    sel.options,
+                    label=cog.qualified_name))
             view.add_item(sel)
             await view.check_buttons()
 
@@ -172,8 +176,8 @@ class Help(commands.Cog):
         )
         if command.params:
             embed.add_field(
-                name="***Parameters:***", value="-----------------------------------"
-            )
+                name="***Parameters:***",
+                value="-----------------------------------")
             embed = await formatParams(embed)
         return embed
 
@@ -191,7 +195,9 @@ class CommandView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return fmte_i(inter, t=f"Commands: Page `{self.position}` of `{self.maxpos}`")
+        return fmte_i(
+            inter,
+            t=f"Commands: Page `{self.position}` of `{self.maxpos}`")
 
     async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
@@ -217,8 +223,8 @@ class GroupView(Paginator):
 
     async def embed(self, inter: discord.Interaction):
         return fmte_i(
-            inter, t=f"`{self.group.name}`: Page `{self.position}` of `{self.maxpos}`"
-        )
+            inter,
+            t=f"`{self.group.name}`: Page `{self.position}` of `{self.maxpos}`")
 
     async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)

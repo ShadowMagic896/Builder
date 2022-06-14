@@ -31,9 +31,8 @@ class Currency(commands.Cog):
             )
             self.bot.tree.add_command(
                 app_commands.ContextMenu(
-                    name="\N{MONEY BAG} Request Money", callback=self.requestMenu
-                )
-            )
+                    name="\N{MONEY BAG} Request Money",
+                    callback=self.requestMenu))
 
     def ge(self):
         return "\N{MONEY BAG}"
@@ -66,7 +65,8 @@ class Currency(commands.Cog):
 
     @cur.command()
     @commands.cooldown(2, 30, commands.BucketType.user)
-    @describe(user="The user to give money to", amount="How much money to give")
+    @describe(user="The user to give money to",
+              amount="How much money to give")
     async def give(
         self, ctx: BuilderContext, user: discord.User, amount: Range[int, 1]
     ):
@@ -89,7 +89,8 @@ class Currency(commands.Cog):
 
     @cur.command()
     @commands.cooldown(2, 120, commands.BucketType.user)
-    @describe(user="The user to request money from", amount="How much money to request")
+    @describe(user="The user to request money from",
+              amount="How much money to request")
     async def request(
         self, ctx: BuilderContext, user: discord.User, amount: Range[int, 1]
     ):
@@ -129,16 +130,14 @@ class Currency(commands.Cog):
                     "Some villain saw you begging and mugged you. Sucks to suck.",
                     "You tripped on the curb and somehow lost your wallet. Nice job...",
                     "You ate the coins. For some reason.",
-                ]
-            )
+                ])
         elif amount > 0:
             k = random.choice(
                 [
                     "You saw someone begging and decied to mug them. You villain!",
                     "Some buffoon left some coins out on the road, might as well keep them for good fortune.",
                     "You found some coins in the toilet... why were you looking there!?",
-                ]
-            )
+                ])
         else:
             k = "You did nothing, and nothing happened."
 
@@ -156,9 +155,8 @@ class Currency(commands.Cog):
         """
         db = BalanceDatabase(ctx)
         data = await db.leaderboard(ctx.guild.members)
-        values = [
-            {ctx.guild.get_member(entry["userid"]): entry["balance"]} for entry in data
-        ]
+        values = [{ctx.guild.get_member(
+            entry["userid"]): entry["balance"]} for entry in data]
         view = LeaderboardView(ctx, values, 5)
         embed = await view.page_zero(ctx.interaction)
         await view.check_buttons()
@@ -166,7 +164,8 @@ class Currency(commands.Cog):
 
     @cur.command()
     @commands.cooldown(3, 120, commands.BucketType.user)
-    @describe(user="The user to steal from", amount="How to to attempt to steal")
+    @describe(user="The user to steal from",
+              amount="How to to attempt to steal")
     async def steal(self, ctx: BuilderContext, user: discord.User, amount: int):
         """
         Attempts to steal money from a user. You may gain some, but you may also lose some!
@@ -277,7 +276,10 @@ class Currency(commands.Cog):
         """
         Take a quiz to earn some coins!
         """
-        embed = fmte(ctx, t="Select Options", d="Once you are finished, press `Start`")
+        embed = fmte(
+            ctx,
+            t="Select Options",
+            d="Once you are finished, press `Start`")
         view = StartQuizView(ctx)
         view.message = await ctx.send(embed=embed, view=view)
 
@@ -329,7 +331,11 @@ class Currency(commands.Cog):
         ctx.author = inter.user
         await inter.response.send_modal(RequestContextModal(ctx, member))
 
-    def clamp(self, value: int, lower_bound: int = None, upper_bound: int = None):
+    def clamp(
+            self,
+            value: int,
+            lower_bound: int = None,
+            upper_bound: int = None):
         lower_bound = lower_bound or value
         upper_bound = upper_bound or value
         return max([min([value, upper_bound]), lower_bound])
@@ -400,13 +406,12 @@ class GiveView(BaseView):
         )
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
-    @discord.ui.button(
-        label="Decline", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
-    )
+    @discord.ui.button(label="Decline",
+                       emoji="\N{CROSS MARK}",
+                       style=discord.ButtonStyle.danger)
     async def dec(self, inter: discord.Interaction, button: discord.Button):
-        embed = fmte(
-            self.ctx, t="Transaction Declined", d="No currency has been transfered."
-        )
+        embed = fmte(self.ctx, t="Transaction Declined",
+                     d="No currency has been transfered.")
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
     async def on_timeout(self) -> None:
@@ -440,13 +445,12 @@ class RequestView(BaseView):
         )
         await inter.response.edit_message(embed=embed, view=None)
 
-    @discord.ui.button(
-        label="Decline", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
-    )
+    @discord.ui.button(label="Decline",
+                       emoji="\N{CROSS MARK}",
+                       style=discord.ButtonStyle.danger)
     async def dec(self, inter: discord.Interaction, button: discord.Button):
-        embed = fmte(
-            self.ctx, t="Transaction Declined", d="No currency has been transfered."
-        )
+        embed = fmte(self.ctx, t="Transaction Declined",
+                     d="No currency has been transfered.")
         await inter.response.edit_message(embed=embed, view=None)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -494,8 +498,12 @@ class StartQuizView(BaseView):
     @discord.ui.select(
         placeholder="Please choose a difficulty...",
         options=[
-            discord.SelectOption(label=x, value=x) for x in ["Easy", "Medium", "Hard"]
-        ],
+            discord.SelectOption(
+                label=x,
+                value=x) for x in [
+                "Easy",
+                "Medium",
+                "Hard"]],
     )
     async def dif(self, inter: discord.Interaction, _: Any):
         self.dif = inter.data["values"][0]
@@ -521,9 +529,8 @@ class StartQuizView(BaseView):
         if self.dif is not None and self.cat is not None:
             key = environ.QUIZAPI_KEY
             url = (
-                Const.QUIZ_API
-                + f"questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
-            )
+                Const.QUIZ_API +
+                f"questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5")
             self.questions = await (await self.ctx.bot.session.get(url)).json()
             view = MainQuizView(self.questions, self.cat, self.dif, self.ctx)
             s = QuizAnsSelect(self.questions[0], self.ctx)
@@ -569,7 +576,8 @@ class MainQuizView(BaseView):
         self.ctx = ctx
 
         # [Question, Chosen Option, Correct Answers, Correct Bool, Readable Chosen Option, Readable Correct Answers]
-        self.selected: List[List[str, str, List[str], bool, str, List[str]]] = []
+        self.selected: List[List[str, str,
+                                 List[str], bool, str, List[str]]] = []
 
         super().__init__(ctx, timeout=timeout)
 
@@ -602,9 +610,8 @@ class QuizAnsSelect(discord.ui.Select):
         self.correct = [
             k[:-8] for k, v in list(question["correct_answers"].items()) if v != "false"
         ]
-        self.correct_readable = [
-            v for k, v in list(question["answers"].items()) if k in self.correct
-        ]
+        self.correct_readable = [v for k, v in list(
+            question["answers"].items()) if k in self.correct]
         super().__init__(placeholder="Please choose an answer!", options=self.ops)
 
     def getValueReadable(self, val):
@@ -680,8 +687,10 @@ class QuizQuestionSubmit(discord.ui.Button):
             question = self._view.questions[self._view.pos - 1]
             embed = self._view.embed(interaction)
             view = MainQuizView(
-                self._view.questions, self._view.cat, self._view.dif, self._view.ctx
-            )
+                self._view.questions,
+                self._view.cat,
+                self._view.dif,
+                self._view.ctx)
             view.pos = self._view.pos
             view.selected = self._view.selected
 
@@ -696,7 +705,9 @@ class QuizQuestionSubmit(discord.ui.Button):
 class QuizClose(discord.ui.Button):
     def __init__(self, ctx):
         self.ctx = ctx
-        super().__init__(style=discord.ButtonStyle.danger, emoji="\N{CROSS MARK}")
+        super().__init__(
+            style=discord.ButtonStyle.danger,
+            emoji="\N{CROSS MARK}")
 
     async def callback(self, interaction: discord.Interaction) -> Any:
         for c in self.children:

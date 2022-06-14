@@ -111,9 +111,8 @@ class Shop(commands.Cog):
         ]
 
     @shop.command()
-    @describe(
-        atom="Only view shops selling this atom", user="Only view shops by this user"
-    )
+    @describe(atom="Only view shops selling this atom",
+              user="Only view shops by this user")
     async def view(
         self, ctx: BuilderContext, atom: Optional[Atom], user: Optional[discord.User]
     ):
@@ -333,15 +332,16 @@ class PurchaseView(BaseView):
         self.record = record
         super().__init__(ctx, timeout)
 
-    @discord.ui.button(
-        label="Purchase", emoji="\N{MONEY BAG}", style=discord.ButtonStyle.primary
-    )
+    @discord.ui.button(label="Purchase",
+                       emoji="\N{MONEY BAG}",
+                       style=discord.ButtonStyle.primary)
     async def purchase(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user.id == self.record["userid"]:
             raise SelfAction("You cannot purchase your own shop!")
         rec = await ShopDatabase(self.ctx).remove(self.record["identity"])
         if rec is None:
-            raise MissingShopEntry("This appears to already have been puchased. Sorry!")
+            raise MissingShopEntry(
+                "This appears to already have been puchased. Sorry!")
 
         bdb: BalanceDatabase = BalanceDatabase(self.ctx)
         adb: AtomsDatabase = AtomsDatabase(self.ctx)
@@ -355,22 +355,23 @@ class PurchaseView(BaseView):
         embed = fmte(
             self.ctx,
             t="Shop Purchased!",
-            d=listing_information(rec)
-            + f"\n**New balance:** `{new_balance:,}` [Before: `{bal:,}`{Const.Emojis().COIN_ID}]\n**New Amount:** `{atomname}: {atoms['amount']}`",
+            d=listing_information(rec) +
+            f"\n**New balance:** `{new_balance:,}` [Before: `{bal:,}`{Const.Emojis().COIN_ID}]\n**New Amount:** `{atomname}: {atoms['amount']}`",
         )
 
         await inter.response.send_message(embed=embed)
         self.message = await self.ctx.interaction.original_message()
 
-    @discord.ui.button(
-        label="Remove", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
-    )
+    @discord.ui.button(label="Remove",
+                       emoji="\N{CROSS MARK}",
+                       style=discord.ButtonStyle.danger)
     async def destroy(self, inter: discord.Interaction, button: discord.ui.Button):
         if inter.user.id != self.record["userid"]:
             raise Unowned("You cannot delete a shop that isn't yours!")
         result = await ShopDatabase(self.ctx).remove(self.record["identity"])
         if result is None:
-            raise MissingShopEntry("Cannot find shop, it was most likely deleted.")
+            raise MissingShopEntry(
+                "Cannot find shop, it was most likely deleted.")
         else:
             embed = fmte(
                 self.ctx,
