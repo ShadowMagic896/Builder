@@ -4,7 +4,11 @@ import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
+import selenium
 from data.environ import DB_PASSWORD, DB_USERNAME
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 from data.settings import (
     COG_DIRECTORIES,
@@ -17,11 +21,12 @@ from data.settings import (
     SOURCE_CODE_PATHS,
     START_DOCKER_ON_STARTUP,
 )
-from src.utils.database import ensure_database
+from src.utils.database import ensure_db
 from src.utils.extensions import load_extensions
 from src.utils.external import snekbox_exec
 from src.utils.functions import explode, format_code
 from src.utils.stats import Stats
+from src.utils.coro import run
 
 
 def get_activity(bot: commands.Bot):
@@ -31,6 +36,15 @@ def get_activity(bot: commands.Bot):
         name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES, {len(explode(bot.commands))} COMMANDS",
     )
     return activity
+
+
+async def aquire_driver() -> webdriver.Chrome:
+    options = Options()
+    options.add_experimental_option("excludeSwitches", ["enable-logging"])
+    options.headless = True
+    driver: webdriver.Chrome = await run(webdriver.Chrome, options=options)
+    driver.set_window_size(1920, 1080)
+    return driver
 
 
 async def do_prep(bot: commands.Bot) -> aiohttp.ClientSession:
@@ -49,8 +63,9 @@ async def do_prep(bot: commands.Bot) -> aiohttp.ClientSession:
 
     await apply_global_checks(bot)
 
-    bot.apg = await connect_database()
-    await ensure_database(bot)
+    bot.apg = await aquire_db()
+    bot.driver = await aquire_driver()
+    await ensure_db(bot)
 
     return bot
 
@@ -80,7 +95,7 @@ async def apply_global_checks(bot: commands.Bot):
         await apply_to_global(bot, check)
 
 
-async def connect_database():
+async def aquire_db():
     user = quote_plus(DB_USERNAME)
     password = quote_plus(DB_PASSWORD)
     connection: asyncpg.connection.Connection = await asyncpg.connect(

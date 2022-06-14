@@ -8,10 +8,12 @@ import time
 
 from multiprocessing import freeze_support
 from discord.ext import commands
-from typing import Any, Iterable, Union
+from typing import Iterable, Union
+
+from selenium.webdriver import Chrome
 
 from src.utils.startup_functions import (
-    connect_database,
+    aquire_db,
     do_prep,
     get_activity,
     startup_print,
@@ -61,9 +63,11 @@ class Builder(commands.Bot):
         self.openai: openai = openai
         self.openai.api_key = OPENAI_KEY
 
-        self.apg: asyncpg.Connection = None
-        self.session: aiohttp.ClientSession = None
         self.start_unix: float = time.time()
+
+        self.apg: asyncpg.Connection
+        self.driver: Chrome
+        self.session: aiohttp.ClientSession
 
         self.tree.fallback_to_global = True
 

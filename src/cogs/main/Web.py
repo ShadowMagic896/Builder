@@ -1,10 +1,6 @@
 import asyncio
-import functools
 from io import BytesIO
-from typing import Any, Callable, ItemsView, List, Optional
-from typing_extensions import Self
-import aiohttp
-from bs4 import BeautifulSoup
+from typing import List, Optional
 import discord
 from discord import app_commands
 from discord.app_commands import describe, Range
@@ -18,7 +14,7 @@ from src.utils.converters import UrlGet, UrlFind
 from src.utils.embeds import fmte
 from bot import Builder, BuilderContext
 from src.utils.subclass import Paginator
-from src.utils.types import GoogleSearchData
+from src.utils.types import FeatureType, GoogleSearchData
 from src.utils.parsers import Parser
 from src.utils.coro import run
 
@@ -28,9 +24,8 @@ class Web(commands.Cog):
     The wonders of the interwebs!
     """
 
-    def __init__(self, bot: Builder, driver: webdriver.Chrome) -> None:
+    def __init__(self, bot: Builder) -> None:
         self.bot = bot
-        self.driver: webdriver.Chrome = driver
 
     def ge(self):
         return "\N{GLOBE WITH MERIDIANS}"
@@ -101,9 +96,9 @@ class Web(commands.Cog):
         Get a screenshot of a webpage
         """
         await ctx.interaction.response.defer()
-        self.driver.get(url[0])
+        self.bot.driver.get(url[0])
         await asyncio.sleep(wait)
-        buffer: BytesIO = BytesIO(await run(self.driver.get_screenshot_as_png))
+        buffer: BytesIO = BytesIO(await run(self.bot.driver.get_screenshot_as_png))
         file = discord.File(buffer, filename="image.png")
         embed = fmte(ctx, t="Screenshot Captured")
         embed.set_image(url="attachment://image.png")
@@ -116,12 +111,13 @@ class Web(commands.Cog):
     )
     async def search(self, ctx: BuilderContext, query: str):
         """
-        Searches the web for links
+        Searches duckduckgo.com for a query
         """
-        url: str = f"https://www.google.com/search?q={parse.quote_plus(query)}"
+        await ctx.interaction.response.defer()
+        url: str = f"https://duckduckgo.com/?q={parse.quote_plus(query)}"
         data: List[GoogleSearchData] = [
             data
-            async for data in Parser(self.bot.session, url).googleSearch(self.driver)
+            async for data in Parser(self.bot.session, url).ddg_search(self.bot.driver)
         ]
         view = GoogleView(ctx, query, data)
         embed = await view.page_zero(ctx.interaction)
@@ -147,7 +143,14 @@ class GoogleView(Paginator):
         values: List[GoogleSearchData] = self.vals[start:stop]
         for co, data in enumerate(values):
             fmt_co = str(co + 1 + (self.position - 1) * self.pagesize).rjust(2, "0")
-            embed.description += f"\n**`{fmt_co}`: [{data.title}]({data.url})**\n*{data.body or 'Google gave no body...'}*"
+            if data.feature_type == FeatureType.link:
+                embed.description += (
+                    f"\n**`{fmt_co}`: [{data.title}]({data.url})**\n*{data.body}*"
+                )
+            elif data.feature_type == FeatureType.video_module:
+                embed.description += f"\n**`{fmt_co}`: VIDEO: [{data.title}]({data.url})**\n*{data.body}*"
+            elif data.feature_type == FeatureType.image_module:
+                embed.description += f"\n**`{fmt_co}`: IMAGES: [{data.title}]({data.url})**\n*{data.body}*"
         return embed
 
     async def embed(self, inter: discord.Interaction):
@@ -158,9 +161,4 @@ class GoogleView(Paginator):
 
 
 async def setup(bot: commands.Bot):
-    options = Options()
-    options.add_experimental_option("excludeSwitches", ["enable-logging"])
-    options.headless = True
-    driver: webdriver.Chrome = await run(webdriver.Chrome, options=options)
-    driver.set_window_size(1920, 1080)
-    await bot.add_cog(Web(bot, driver))
+    await bot.add_cog(Web(bot))
