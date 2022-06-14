@@ -161,5 +161,5 @@ async def command_autocomplete(
             )
             and c.cog_name not in Const.Cogs.FORBIDDEN_COGS
         ][:25],
-        key=lambda c: c.name[c.name.index("]") + 1:],
+        key=lambda c: c.name[c.name.index("]") + 1 :],
     )

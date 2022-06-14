@@ -89,8 +89,9 @@ class API(commands.Cog):
 
             choices.append(
                 discord.app_commands.Choice(
-                    name=name or "--- UNNAMED ---",
-                    value=name or "--- UNNAMED ---"))
+                    name=name or "--- UNNAMED ---", value=name or "--- UNNAMED ---"
+                )
+            )
         return choices
 
     @rtfm.autocomplete("version")
@@ -113,9 +114,7 @@ class API(commands.Cog):
         for version in versions:
             name = version.select_one("a").text.strip()
             if name.lower() in current.lower() or current.lower() in name.lower():
-                results.append(
-                    discord.app_commands.Choice(
-                        name=name, value=name))
+                results.append(discord.app_commands.Choice(name=name, value=name))
 
         return results
 
@@ -133,8 +132,7 @@ class API(commands.Cog):
         soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
         selector: str = "div#project_details > div.wrapper > div.project_details > ul"
 
-        translatons: ResultSet[Tag] = soup.select_one(
-            selector).select("li", limit=25)
+        translatons: ResultSet[Tag] = soup.select_one(selector).select("li", limit=25)
         results: List[discord.app_commands.Choice] = []
 
         for translaton in translatons:
@@ -205,9 +203,7 @@ class API(commands.Cog):
         )
         embed = fmte(ctx, t="Completion Finished")
         for choice in response["choices"]:
-            embed.add_field(
-                name=f"Choice {choice['index']+1}:",
-                value=choice["text"])
+            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
 
     @openai.command()
@@ -229,9 +225,7 @@ class API(commands.Cog):
         response: dict = await run(self.bot.loop, self.bot.openai.Edit.create, **preset)
         embed = fmte(ctx, t="Checking Completed")
         for choice in response["choices"]:
-            embed.add_field(
-                name=f"Choice {choice['index']+1}:",
-                value=choice["text"])
+            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
 
     @openai.command()
@@ -252,14 +246,11 @@ class API(commands.Cog):
         """
         Attempts to edit a message based upon instructions
         """
-        preset = APIPresets.OpenAI.gen_edit(
-            message, instructions, edits, stochasticism)
+        preset = APIPresets.OpenAI.gen_edit(message, instructions, edits, stochasticism)
         response: dict = await run(self.bot.loop, self.bot.openai.Edit.create, **preset)
         embed = fmte(ctx, t="Editing Completed")
         for choice in response["choices"]:
-            embed.add_field(
-                name=f"Choice {choice['index']+1}:",
-                value=choice["text"])
+            embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
 
     async def run(loop: asyncio.BaseEventLoop, func, *args, **kwargs):
@@ -341,8 +332,7 @@ class RTFMMeta:
         results: ResultSet[Tag] = soup.select(select)
 
         if len(results) == 0:
-            raise NoDocumentsFound(
-                "No documents for those parameters were found.")
+            raise NoDocumentsFound("No documents for those parameters were found.")
 
         values: List[str] = []
 
@@ -359,12 +349,7 @@ class RTFMMeta:
 
 
 class RTFMPaginator(Paginator):
-    def __init__(
-            self,
-            meta: RTFMMeta,
-            pagesize: int,
-            *,
-            timeout: Optional[float] = 45):
+    def __init__(self, meta: RTFMMeta, pagesize: int, *, timeout: Optional[float] = 45):
         self.meta = meta
         super().__init__(meta.ctx, meta.values, pagesize, timeout=timeout)
 
@@ -379,8 +364,7 @@ class RTFMPaginator(Paginator):
         stop = self.pagesize * self.position
         embed.description = ""
         for co, value in enumerate(self.vals[start:stop]):
-            fmt_co = str(co + 1 + (self.position - 1)
-                         * self.pagesize).rjust(2, "0")
+            fmt_co = str(co + 1 + (self.position - 1) * self.pagesize).rjust(2, "0")
             name = value.select_one("a").text
             link = value.select_one("a")["href"]
 

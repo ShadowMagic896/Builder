@@ -37,8 +37,7 @@ class ErrorHandling(commands.Cog):
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
         if PRINT_EVENT_ERROR_TRACEACK:
-            sys.stderr.write(
-                f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}")
+            sys.stderr.write(f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}")
             traceback.print_exc(file=sys.stderr)
 
     async def on_command_error(self, ctx: BuilderContext, error: Exception):

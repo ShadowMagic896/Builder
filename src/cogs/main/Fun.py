@@ -216,7 +216,8 @@ class Fun(commands.Cog):
                 ctx,
                 t="Waiting for anyone to respond...",
                 d="React to this message to play Rock Paper Scissors with {}!".format(
-                    ctx.author),
+                    ctx.author
+                ),
             )
             ms = await ctx.send(embed=embed)
             await ms.add_reaction(self.emoji_check)
@@ -274,10 +275,7 @@ class Fun(commands.Cog):
 
 
 class TTT_GameView(discord.ui.View):
-    def __init__(self,
-                 ctx,
-                 players: List[discord.Member],
-                 current: discord.Member):
+    def __init__(self, ctx, players: List[discord.Member], current: discord.Member):
         super().__init__(timeout=45)
         self.ctx = ctx
         self.bot = ctx.bot
@@ -375,7 +373,8 @@ class TTT_GameView(discord.ui.View):
             return
 
         self.current = (
-            self.players[1] if self.current == self.players[0] else self.players[0])
+            self.players[1] if self.current == self.players[0] else self.players[0]
+        )
 
         button.label = "X" if interaction.user == self.players[0] else "O"
 
@@ -415,54 +414,42 @@ class TTT_GameView(discord.ui.View):
         else:
             for b in self._children:
                 b.disabled = True
-            embed = fmte(
-                ctx=self.ctx,
-                t="It's a tie!",
-                d="Well played, both sides.")
+            embed = fmte(ctx=self.ctx, t="It's a tie!", d="Well played, both sides.")
             await interaction.message.edit(embed=embed, view=self)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=0, custom_id="0")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=0, custom_id="0")
     async def b0(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=0, custom_id="1")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=0, custom_id="1")
     async def b1(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=0, custom_id="2")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=0, custom_id="2")
     async def b2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=1, custom_id="3")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=1, custom_id="3")
     async def b3(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=1, custom_id="4")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=1, custom_id="4")
     async def b4(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=1, custom_id="5")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=1, custom_id="5")
     async def b5(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=2, custom_id="6")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=2, custom_id="6")
     async def b6(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=2, custom_id="7")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=2, custom_id="7")
     async def b7(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
-    @discord.ui.button(style=discord.ButtonStyle.grey,
-                       label=" ", row=2, custom_id="8")
+    @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=2, custom_id="8")
     async def b8(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.update_events(interaction, button)
 
@@ -476,12 +463,7 @@ class RPS_View(discord.ui.View):
         self.p2 = p2
         self.choices = choices
 
-    def state(
-            self,
-            p1: discord.Member,
-            p2: discord.Member,
-            p1choice,
-            p2choice):
+    def state(self, p1: discord.Member, p2: discord.Member, p1choice, p2choice):
         if p1choice == p2choice:
             return None
         if p1choice == "Rock":
@@ -504,9 +486,9 @@ class RPS_View(discord.ui.View):
         self, interaction: discord.Interaction, select: discord.ui.Select
     ):
         await TTT_GameView.pong(interaction)
-        if interaction.user not in [
-                self.p1, self.p2] or interaction.user in list(
-                self.choices.keys()):
+        if interaction.user not in [self.p1, self.p2] or interaction.user in list(
+            self.choices.keys()
+        ):
             await self.ctx.send("something happened")
             return
         self.choices[interaction.user] = interaction.data["values"][0]
@@ -521,9 +503,8 @@ class RPS_View(discord.ui.View):
                 embed = fmte(
                     self.ctx,
                     t="{} has won! {} beats {}.".format(
-                        gamestate.name,
-                        self.choices[gamestate],
-                        self.choices[loser]),
+                        gamestate.name, self.choices[gamestate], self.choices[loser]
+                    ),
                     d="Well guessed, both sides.",
                 )
                 await interaction.message.edit(embed=embed, view=None)
@@ -549,14 +530,14 @@ class RPS_View(discord.ui.View):
         placeholder="Please choose an option...",
         options=[
             discord.SelectOption(
-                label="Rock",
-                description="Crushes scissors, but gets covered by paper."),
+                label="Rock", description="Crushes scissors, but gets covered by paper."
+            ),
             discord.SelectOption(
-                label="Paper",
-                description="Covers rock, but gets cut by scissors."),
+                label="Paper", description="Covers rock, but gets cut by scissors."
+            ),
             discord.SelectOption(
-                label="Scissors",
-                description="Cuts paper, but gets crushed by rock."),
+                label="Scissors", description="Cuts paper, but gets crushed by rock."
+            ),
         ],
     )
     async def selector(

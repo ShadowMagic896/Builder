@@ -124,9 +124,7 @@ class Paginator(BaseView):
         """
         Should be overwritten to provide custom labeling
         """
-        return fmte_i(
-            inter,
-            t=f"Pages: `{self.position}` of `{self.maxpos or 1}`")
+        return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos or 1}`")
 
     async def adjust(self, embed: discord.Embed):
         """
@@ -208,11 +206,8 @@ class Paginator(BaseView):
 
 class BaseModal(discord.ui.Modal):
     def __init__(
-            self,
-            *,
-            title: str,
-            timeout: Optional[float] = None,
-            custom_id: str = None) -> None:
+        self, *, title: str, timeout: Optional[float] = None, custom_id: str = None
+    ) -> None:
         super().__init__(
             title=title, timeout=timeout, custom_id=custom_id
         ) if custom_id else super().__init__(title=title, timeout=timeout)

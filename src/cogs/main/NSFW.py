@@ -124,11 +124,8 @@ class NSFW(commands.Cog):
 
         for co in range(amount):
             data.append(
-                discord.File(
-                    mdir +
-                    random.choice(
-                        os.listdir(mdir)),
-                    "Neko.jpg"))
+                discord.File(mdir + random.choice(os.listdir(mdir)), "Neko.jpg")
+            )
 
         embed = fmte(
             ctx,

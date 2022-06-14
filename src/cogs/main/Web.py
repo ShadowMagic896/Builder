@@ -77,11 +77,10 @@ class Web(commands.Cog):
             path = parse.urlsplit(url).path
             rev: str = str(path)[::-1]
 
-            if "." not in rev or rev.index(
-                    "/") < rev.index("."):  # No format attached
+            if "." not in rev or rev.index("/") < rev.index("."):  # No format attached
                 ext: str = "txt"
             else:
-                ext = path[(len(rev) - rev.index(".")):]
+                ext = path[(len(rev) - rev.index(".")) :]
         else:
             ext = fmt
         embed = fmte(ctx, t="Request Sent, Response Recieved", d=url)
@@ -147,8 +146,7 @@ class GoogleView(Paginator):
         stop = self.pagesize * self.position
         values: List[GoogleSearchData] = self.vals[start:stop]
         for co, data in enumerate(values):
-            fmt_co = str(co + 1 + (self.position - 1)
-                         * self.pagesize).rjust(2, "0")
+            fmt_co = str(co + 1 + (self.position - 1) * self.pagesize).rjust(2, "0")
             embed.description += f"\n**`{fmt_co}`: [{data.title}]({data.url})**\n*{data.body or 'Google gave no body...'}*"
         return embed
 

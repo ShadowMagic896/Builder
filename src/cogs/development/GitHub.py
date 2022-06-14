@@ -19,11 +19,7 @@ class GitHub(commands.Cog):
     async def push(self, ctx: BuilderContext, message: str):
         command = "git add -A && git commit -am '%s' && git push origin main" % message
         os.system(command)
-        embed = fmte(
-            ctx,
-            t="Code Successfully Pushed",
-            d="```\n%s\n```" %
-            command)
+        embed = fmte(ctx, t="Code Successfully Pushed", d="```\n%s\n```" % command)
         await ctx.send(embed=embed)
 
 

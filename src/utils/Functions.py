@@ -87,12 +87,11 @@ async def filter_similar(values, req_ratio, req_diff):
     # a small change like (1, 0, 255) can change it totally.
     for co, val in enumerate(values):
         deleted: int = 0
-        for xco, xval in enumerate(values[co + 1:], start=co + 1):
+        for xco, xval in enumerate(values[co + 1 :], start=co + 1):
             similar: int = 0
             for channel in range(3):
                 ab_diff = abs(val[channel] - xval[channel])
-                ab_ratio = abs(
-                    1 - ((val[channel] or 1) / (xval[channel] or 1)))
+                ab_ratio = abs(1 - ((val[channel] or 1) / (xval[channel] or 1)))
                 if ab_diff < req_diff or ab_ratio < req_ratio:
                     similar += 1
             if similar > 1:

@@ -29,8 +29,7 @@ class Parser:
     async def googleSearch(self, driver) -> AsyncIterator[GoogleSearchData]:
         # TODO Make this async
         driver.get(self.url)
-        text = driver.execute_script(
-            "return document.documentElement.outerHTML")
+        text = driver.execute_script("return document.documentElement.outerHTML")
         parse: BeautifulSoup = BeautifulSoup(text, "html.parser")
         selector: str = "div#center_col > div#res > div#search > div > div#rso > div"
         items = parse.select(selector)

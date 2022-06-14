@@ -226,17 +226,18 @@ class Graphing(commands.Cog):
         return self.color_autocomplete(inter, current)
 
     @graph.command()
-    @describe(function="The functiont to graph, in slope-intercept form.",
-              start="Where to start graphing Y. Inclusive",
-              stop="Where to stop graphing Y. Exclusive",
-              step="how many plots of Y to make.",
-              xlabel="The label of the graph's X axis.",
-              ylabel="The label of the graph's Y axis.",
-              title="The title of the graph",
-              color="The color of the line.",
-              linewidth="Width of the line. If left empty, it will be decided automatically.",
-              font="The font of the text for the labels and title.",
-              )
+    @describe(
+        function="The functiont to graph, in slope-intercept form.",
+        start="Where to start graphing Y. Inclusive",
+        stop="Where to stop graphing Y. Exclusive",
+        step="how many plots of Y to make.",
+        xlabel="The label of the graph's X axis.",
+        ylabel="The label of the graph's Y axis.",
+        title="The title of the graph",
+        color="The color of the line.",
+        linewidth="Width of the line. If left empty, it will be decided automatically.",
+        font="The font of the text for the labels and title.",
+    )
     async def psi(
         self,
         ctx: BuilderContext,

@@ -27,13 +27,10 @@ def get_atomic_name(item: str):
     """
     chem = Chemistry()
     item: str = str(item).capitalize()
-    if (_item := chem.sym_to_name.get(item, None)
-        ) is None:  # Check if not full name
-        if (_item := chem.name_to_sym.get(item, None)
-            ) is None:  # Check if not symbol
+    if (_item := chem.sym_to_name.get(item, None)) is None:  # Check if not full name
+        if (_item := chem.name_to_sym.get(item, None)) is None:  # Check if not symbol
             if not (_item := item.isdigit()):
-                raise ValueError(
-                    "Invalid element: Not name, symbol, or atomic number.")
+                raise ValueError("Invalid element: Not name, symbol, or atomic number.")
             else:
                 item = int(item)
                 if item < 1 or item > len(periodic.names):
