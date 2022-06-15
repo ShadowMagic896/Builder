@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.app_commands import errors as app_errors
 
 import math
-from typing import Any, List, Optional, Type
+from typing import Any, List, Optional, Tuple, Type
 from src.cogs.development.error_handling import ErrorHandling
 
 from src.utils.embeds import fmte_i
@@ -67,19 +67,22 @@ class Paginator(BaseView):
         self.ctx = ctx
         self.pagesize = pagesize
 
-        self.position = 1
+        self.position = 0
 
-        self.vals = values
+        self.values = values
         self.message: Optional[discord.Message] = None
 
-        self.maxpos = math.ceil((len(self.vals) / pagesize))
+        self.maxpos = math.floor((len(self.values) / pagesize)) - 1
         self.start, self.stop = 0, pagesize
+
+        self.item_start = 0
+        self.item_stop = pagesize
 
         super().__init__(ctx, timeout=timeout)
 
     @discord.ui.button(emoji=Const.Emojis().BBARROW_ID, custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
-        self.position = 1
+        self.position = 0
         await self.check_buttons(button)
 
         embed = await self.adjust(await self.embed(inter))
@@ -124,54 +127,26 @@ class Paginator(BaseView):
         """
         Should be overwritten to provide custom labeling
         """
-        return fmte_i(inter, t=f"Pages: `{self.position}` of `{self.maxpos or 1}`")
+        return fmte_i(inter, t=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`")
 
     async def adjust(self, embed: discord.Embed):
-        """
-        This must be overwritten by inheriting classes.
-        Should return an embed with self.pagesize fields. Example:
-
-        ```py
-        #------------------------------------------------------------------
-
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-
-        values = self.vals[start:stop]
-        # In this scenario, 'values' is a list of tups of (user, integer)
-
-        for count, entry in enumerate(values):
-            user, bal = entry
-            place = count + 1 + (self.pos - 1) * self.pagesize # Account for shifting if this is not the first page.
-
-            embed.add_field(
-                name=f"{place}: {user}",
-                value=f"`{bal}`",
-                inline=False
-            )
-        return embed
-        #------------------------------------------------------------------
-        ```
-        """
         return embed
 
     async def page_zero(self, interaction: discord.Interaction):
-        self.position = 1
+        self.position = 0
         return await self.adjust(await self.embed(interaction))
 
     async def check_buttons(self, button: discord.Button = None):
         """
         Can be overwritten if necessary.
         """
-        self.start = self.pagesize * (self.position - 1)
-        self.start = self.pagesize * self.position
-        if self.maxpos <= 1:
+        if self.maxpos <= 0:
             for b in self.children:
                 if isinstance(b, discord.ui.Button) and b.custom_id != "x":
                     b.disabled = True
                     b.style = discord.ButtonStyle.grey
         else:
-            if self.position == 1:
+            if self.position == 0:
                 for b in self.children:
                     if isinstance(b, discord.ui.Button):
                         if b.custom_id in ("b", "bb"):
@@ -202,6 +177,25 @@ class Paginator(BaseView):
                 b.style = discord.ButtonStyle.success
             else:
                 b.style = discord.ButtonStyle.secondary
+
+    @property
+    def value_start(self) -> int:
+        return self.pagesize * (self.position)
+
+    @property
+    def value_stop(self) -> int:
+        return self.pagesize * (self.position + 1)
+
+    @property
+    def value_range(self):
+        return self.values[self.item_start : self.item_stop]
+
+    @property
+    def abs_position(self) -> int:
+        return self.position * self.pagesize
+
+    def fmt_abs_pos(self, count: int = 0) -> str:
+        return str(self.abs_position + count).rjust(3, "0")
 
 
 class BaseModal(discord.ui.Modal):

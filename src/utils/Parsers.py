@@ -69,7 +69,7 @@ class Parser:
                     url: str = data["href"]
                     title: str = data["title"]
                     body: str = data.text
-                    feature_type: FeatureType = FeatureType.video_module
+                    feature_type: FeatureType = FeatureType.video
 
                     yield DDGSearchData(title, url, body, feature_type)
                 if "module--images" in item.select_one("div")["class"]:  # Image Results
@@ -80,7 +80,7 @@ class Parser:
                         "div > div.module--images__thumbnails.js-images-thumbnails > div"
                     )
                     body: str = f"{len(images)} Images"
-                    feature_type: FeatureType = FeatureType.image_module
+                    feature_type: FeatureType = FeatureType.image
 
                     yield DDGSearchData(title, url, body, feature_type)
 
@@ -91,7 +91,7 @@ class Parser:
                 url: str = components[0].select_one("div > a")["href"]
                 title: str = components[1].select_one("h2 > a > span").text
                 body: str = components[2].select_one("div > span").text
-                feature_type: FeatureType = FeatureType.link
+                feature_type: FeatureType = FeatureType.result
 
                 yield DDGSearchData(title, url, body, feature_type)
 

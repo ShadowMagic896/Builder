@@ -1,6 +1,8 @@
 import asyncio
+from copy import copy
 from io import BytesIO
 from typing import List, Optional
+from bs4 import BeautifulSoup, ResultSet, Tag
 import discord
 from discord import app_commands
 from discord.app_commands import describe, Range
@@ -10,12 +12,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from urllib import parse
 
+from urllib import parse as uparse
+
 from src.utils.converters import UrlGet, UrlFind
 from src.utils.embeds import fmte
 from bot import Builder, BuilderContext
 from src.utils.subclass import Paginator
-from src.utils.types import FeatureType, DDGSearchData
-from src.utils.parsers import Parser
+from src.utils.types import DDGImageData, FeatureType, DDGSearchData
 from src.utils.coro import run
 
 
@@ -105,7 +108,6 @@ class Web(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
     @web.command()
-    @commands.is_nsfw()
     @describe(
         query="What to search for",
     )
@@ -114,51 +116,164 @@ class Web(commands.Cog):
         Searches duckduckgo.com for a query
         """
         await ctx.interaction.response.defer()
-        url: str = f"https://duckduckgo.com/?q={parse.quote_plus(query)}"
-        data: List[DDGSearchData] = [
-            data
-            async for data in Parser(self.bot.session, url).ddg_search(self.bot.driver)
-        ]
-        view = GoogleView(ctx, query, data)
+        meta = await DDGSearchMeta.create(ctx, query)
+        view = DDGSearchView(meta)
         embed = await view.page_zero(ctx.interaction)
         await view.check_buttons()
-        await ctx.send(embed=embed, view=view)
+        view.message = await ctx.send(embed=embed, view=view)
+
+    @web.command()
+    @describe(query="What to search for")
+    async def image(self, ctx: BuilderContext, query: str):
+        """
+        Searches duckduckgo.com for an image
+        """
+        await ctx.interaction.response.defer()
+        meta = await DDGImageMeta.create(ctx, query)
+        view = DDGImageView(meta)
+        embed = await view.page_zero(ctx.interaction)
+        await view.check_buttons()
+        view.message = await ctx.send(embed=embed, view=view)
 
 
-class GoogleView(Paginator):
+class DDGSearchMeta:
+    @classmethod
+    async def create(cls, ctx: BuilderContext, query: str):
+        url: str = f"https://duckduckgo.com/?q={uparse.quote_plus(query)}&kp=-2"
+        original = copy(url)
+        await run(ctx.bot.driver.get, url)
+        text = await run(
+            ctx.bot.driver.execute_script, "return document.documentElement.outerHTML"
+        )
+        parse: BeautifulSoup = BeautifulSoup(text, "html.parser")
+        selector: str = "div.results--main > div#links > div"
+        items: ResultSet[Tag] = await run(parse.select, selector)
+
+        cls.data: List[DDGSearchData] = []
+        for item in items:
+            if "module-slot" in item["class"]:  # Special result
+                if not item.select_one("div"):
+                    continue
+                if (
+                    "module--carousel-videos" in item.select_one("div")["class"]
+                ):  # Video
+                    data: Tag = item.select_one(
+                        "div > div.module--carousel__wrap > div > div > div > div.module--carousel__body > a"
+                    )
+                    url: str = data["href"]
+                    title: str = data["title"]
+                    body: str = data.text
+                    feature_type: FeatureType = FeatureType.video
+
+                    cls.data.append(DDGSearchData(title, url, body, feature_type))
+                if "module--images" in item.select_one("div")["class"]:  # Image Results
+                    query: str = url[url.index("=") + 1 :]
+                    url: str = f"https://duckduckgo.com/?q={query}&iax=images&ia=images"
+                    title: str = item.select("div > span")[1].text
+                    images: ResultSet[Tag] = item.select(
+                        "div > div.module--images__thumbnails.js-images-thumbnails > div"
+                    )
+                    body: str = f"{len(images)} Images"
+                    feature_type: FeatureType = FeatureType.image
+
+                    cls.data.append(DDGSearchData(title, url, body, feature_type))
+
+            else:
+                if "nrn-react-div" not in item["class"]:
+                    continue
+                components: ResultSet[Tag] = item.select("article > div")
+                url: str = components[0].select_one("div > a")["href"]
+                title: str = components[1].select_one("h2 > a > span").text
+                body: str = components[2].select_one("div > span").text
+                feature_type: FeatureType = FeatureType.result
+
+                cls.data.append(DDGSearchData(title, url, body, feature_type))
+
+        cls.ctx = ctx
+        cls.query = query
+        cls.url = original
+        return cls
+
+
+class DDGSearchView(Paginator):
     def __init__(
         self,
-        ctx: BuilderContext,
-        q: str,
-        values: List[DDGSearchData],
+        meta: DDGSearchMeta,
         *,
         timeout: Optional[float] = 45,
     ):
-        self.q = q
-        super().__init__(ctx, values, 5, timeout=timeout)
+        self.meta = meta
+        super().__init__(meta.ctx, meta.data, 5, timeout=timeout)
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-        values: List[DDGSearchData] = self.vals[start:stop]
-        for co, data in enumerate(values):
-            fmt_co = str(co + 1 + (self.position - 1) * self.pagesize).rjust(2, "0")
-            if data.feature_type == FeatureType.link:
-                embed.description += (
-                    f"\n**`{fmt_co}`: [{data.title}]({data.url})**\n*{data.body}*"
-                )
-            elif data.feature_type == FeatureType.video_module:
-                embed.description += f"\n**`{fmt_co}`: VIDEO: [{data.title}]({data.url})**\n*{data.body}*"
-            elif data.feature_type == FeatureType.image_module:
-                embed.description += f"\n**`{fmt_co}`: IMAGES: [{data.title}]({data.url})**\n*{data.body}*"
+        for co, data in enumerate(self.value_range):
+            if data.feature_type == FeatureType.result:
+                embed.description += f"\n**`{self.fmt_abs_pos(co)}`: [{data.title}]({data.url})**\n*{data.body}*"
+            elif data.feature_type == FeatureType.video:
+                embed.description += f"\n**`{self.fmt_abs_pos(co)}`: VIDEO: [{data.title}]({data.url})**\n*{data.body}*"
+            elif data.feature_type == FeatureType.image:
+                embed.description += f"\n**`{self.fmt_abs_pos(co)}`: IMAGES: [{data.title}]({data.url})**\n*{data.body}*"
             else:
                 print(data.feature_type)
         return embed
 
     async def embed(self, inter: discord.Interaction):
         return fmte(
-            self.ctx,
-            t=f"Results: {self.q}\nPage `{self.position}` of `{self.maxpos or 1}` [{len(self.vals)} Results]",
+            self.meta.ctx,
+            t=f"Results: {self.meta.query}\nPage `{self.position}` of `{self.maxpos+1}` [{len(self.values)} Results]",
+        )
+
+
+class DDGImageMeta:
+    @classmethod
+    async def create(cls, ctx: BuilderContext, query: str):
+        url: str = f"https://duckduckgo.com/?t=ffab&q={uparse.quote_plus(query)}&iar=images&iax=images&ia=images&kp=-2"
+        await run(ctx.bot.driver.get, url)
+        await asyncio.sleep(1)
+        text = await run(
+            ctx.bot.driver.execute_script, "return document.documentElement.outerHTML"
+        )
+        parse: BeautifulSoup = BeautifulSoup(text, "html.parser")
+
+        cls.data: List[DDGImageData] = []
+
+        selector: str = "div > div.tile-wrap > div > div.tile"
+        for item in parse.select(selector, limit=25):
+            try:
+                title: str = item.select_one("a > span.tile--img__title").text
+                thumbnail: str = (
+                    "https:"
+                    + item.select_one(
+                        "div.tile--img__media > span.tile--img__media__i > img"
+                    )["data-src"]
+                )
+                url: str = item.select_one("a > span.tile--img__domain")["title"]
+                data: DDGSearchData = DDGImageData(title, thumbnail, url)
+                cls.data.append(data)
+            except:  # Incomplete image, stop looking
+                break
+
+        cls.ctx = ctx
+        cls.query = query
+        return cls
+
+
+class DDGImageView(Paginator):
+    def __init__(self, meta: DDGImageMeta, *, timeout: Optional[float] = 45):
+        self.meta = meta
+        super().__init__(meta.ctx, meta.data, 1, timeout=timeout)
+
+    async def adjust(self, embed: discord.Embed):
+        value: DDGImageData = self.values[self.position]
+
+        embed.description = f"[{value.title}]({value.url})"
+        embed.set_image(url=value.thumbnail)
+        return embed
+
+    async def embed(self, inter: discord.Interaction):
+        return fmte(
+            self.meta.ctx,
+            t=f"Image Results: `{self.meta.query}`\nPage `{self.position+1}` of `{self.maxpos+1}` [{len(self.values)} Results]",
         )
 
 

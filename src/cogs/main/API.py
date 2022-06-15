@@ -356,19 +356,17 @@ class RTFMPaginator(Paginator):
     async def embed(self, inter: discord.Interaction):
         return fmte(
             self.ctx,
-            t=f"`{self.meta.project}`/`{self.meta.version}`: `{self.meta.query_raw}`\nPage `{self.position}` of `{self.maxpos or 1}` [`{len(self.meta.values)}` Results]",
+            t=f"`{self.meta.project}`/`{self.meta.version}`: `{self.meta.query_raw}`\nPage `{self.position+1}` of `{self.maxpos+1}` [`{len(self.meta.values)}` Results]",
         )
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-        embed.description = ""
-        for co, value in enumerate(self.vals[start:stop]):
-            fmt_co = str(co + 1 + (self.position - 1) * self.pagesize).rjust(2, "0")
+        for co, value in enumerate(self.value_range):
             name = value.select_one("a").text
             link = value.select_one("a")["href"]
 
-            embed.description += f"**`{fmt_co}`:** [`{name}`]({self.meta.ref + link})\n"
+            embed.description += (
+                f"**`{self.fmt_abs_pos(co)}`:** [`{name}`]({self.meta.ref + link})\n"
+            )
         return embed
 
 

@@ -191,13 +191,12 @@ class CommandView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return fmte_i(inter, t=f"Commands: Page `{self.position}` of `{self.maxpos}`")
+        return fmte_i(
+            inter, t=f"Commands: Page `{self.position+1}` of `{self.maxpos+1}`"
+        )
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * (self.position)
-
-        for command in self.vals[start:stop]:
+        for command in self.value_range:
             command: commands.HybridCommand = command
             embed.add_field(
                 name=f"`/{command.qualified_name}`",
@@ -217,14 +216,12 @@ class GroupView(Paginator):
 
     async def embed(self, inter: discord.Interaction):
         return fmte_i(
-            inter, t=f"`{self.group.name}`: Page `{self.position}` of `{self.maxpos}`"
+            inter,
+            t=f"`{self.group.name}`: Page `{self.position+1}` of `{self.maxpos+1}`",
         )
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-
-        for command in self.vals[start:stop]:
+        for command in self.value_range:
             embed.add_field(
                 name=f"/{command.qualified_name}",
                 value=f"*{command.short_doc}*\n**Parameters:** {len(command.params)}",

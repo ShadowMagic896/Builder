@@ -9,20 +9,26 @@ class DDGSearchData(NamedTuple):
     feature_type: "FeatureType"
 
 
+class DDGImageData(NamedTuple):
+    title: str
+    thumbnail: str
+    url: str
+
+
 class FeatureType(Enum):
-    link: int = 0
-    video_module: int = 1
-    image_module: int = 2
+    result: int = 0
+    video: int = 1
+    image: int = 2
 
 
 class NHSearchData(NamedTuple):
+    title: str
     code: int
     thumbnail: str
-    name: str
 
 
 class PHSearchData(NamedTuple):
-    name: str
+    title: str
     thumbnail: str
     link: str
     duration: str

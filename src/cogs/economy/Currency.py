@@ -466,17 +466,14 @@ class LeaderboardView(Paginator):
 
     async def embed(self, inter: discord.Interaction):
         return fmte_i(
-            inter, t=f"Leaderboard: Page `{self.position}` of `{self.maxpos}`"
+            inter, t=f"Leaderboard: Page `{self.position+1}` of `{self.maxpos+1}`"
         )
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-
-        for place, entry in enumerate(self.vals[start:stop]):
+        for place, entry in enumerate(self.value_range):
             user, bal = list(entry.keys())[0], list(entry.values())[0]
             embed.add_field(
-                name=f"{place + 1 + (self.position - 1) * self.pagesize}: {user}",
+                name=f"{self.fmt_abs_pos}: {user}",
                 value=f"`{bal:,}`",
                 inline=False,
             )

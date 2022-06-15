@@ -243,9 +243,9 @@ class NHSearchView(Paginator):
         super().__init__(self.meta.ctx, range(len(self.meta.data)), 1, timeout=timeout)
 
     async def adjust(self, embed: discord.Embed):
-        value: NHSearchData = self.meta.data[self.position - 1]
+        value: NHSearchData = self.meta.data[self.position]
         url = f"[Visit URL]({Const.URls.NHENTAI}g/{value.code})"
-        embed.add_field(name="Name:", value=value.name, inline=False)
+        embed.add_field(name="Name:", value=value.title, inline=False)
         embed.add_field(name="URL:", value=url, inline=False)
         embed.add_field(name="HNentai Code:", value=value.code, inline=False)
         embed.set_image(url=value.thumbnail)
@@ -255,13 +255,13 @@ class NHSearchView(Paginator):
     async def embed(self, inter: discord.Interaction):
         return fmte(
             self.ctx,
-            f"NHentai Search Results for `{self.meta.query}`: `{self.position}` / `{self.maxpos or 1}`",
+            f"NHentai Search Results for `{self.meta.query}`: `{self.position+1}` / `{self.maxpos+1}`",
         )
 
     @discord.ui.button(label="Select This", emoji="\N{BLACK RIGHTWARDS ARROW}")
     async def viewthis(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.response.defer()
-        meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position - 1].code)
+        meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position].code)
         view = NHGetView(meta)
         embed = await view.page_zero(inter)
         await view.check_buttons()
@@ -326,14 +326,14 @@ class NHGetView(Paginator):
         )
 
     async def adjust(self, embed: discord.Embed):
-        image_url: str = f"{self.meta.baseurl}{self.position}.jpg"
+        image_url: str = f"{self.meta.baseurl}{self.position+1}.jpg"
         embed.set_image(url=image_url)
         return embed
 
     async def embed(self, inter: discord.Interaction):
         return fmte_i(
             inter,
-            t=f"NHentai `{self.meta.code}`: `{self.position}` / `{self.maxpos or 1}`",
+            t=f"NHentai `{self.meta.code}`: `{self.position+1}` / `{self.maxpos+1}`",
         )
 
 
@@ -379,14 +379,14 @@ class PHSearchView(Paginator):
         super().__init__(meta.ctx, meta.data, 1, timeout=timeout)
 
     async def adjust(self, embed: discord.Embed):
-        embed.set_image(url=self.vals[self.position - 1].thumbnail)
-        embed.description = f"**[{self.vals[self.position-1].name}]({self.vals[self.position-1].link})**\nDuration: `{self.vals[self.position-1].duration}`"
+        embed.set_image(url=self.values[self.position].thumbnail)
+        embed.description = f"**[{self.values[self.position].title}]({self.values[self.position].link})**\nDuration: `{self.values[self.position].duration}`"
         return embed
 
     async def embed(self, inter: discord.Interaction):
         return fmte(
             self.ctx,
-            t=f"PornHub Results: `{self.meta.query}`\nResult `{self.position}` of `{self.maxpos or 1}`",
+            t=f"PornHub Results: `{self.meta.query}`\nResult `{self.position+1}` of `{self.maxpos +1}`",
         )
 
 

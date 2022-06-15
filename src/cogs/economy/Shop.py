@@ -260,10 +260,7 @@ class ShopView(Paginator):
         super().__init__(ctx, values, pagesize, timeout=timeout)
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-
-        for shop in self.vals[start:stop]:
+        for shop in self.value_range:
             name = get_atomic_name(shop["atomid"])
             amt = shop["amount"]
             price = shop["price"]
@@ -279,9 +276,7 @@ class ShopView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        embed = fmte(
-            self.ctx, t=f"Shops: Page `{self.position}` / `{self.maxpos or 1}`"
-        )
+        embed = fmte(self.ctx, t=f"Shops: Page `{self.position+1}` / `{self.maxpos+1}`")
         return embed
 
 
@@ -299,10 +294,7 @@ class PersonalShopView(Paginator):
         super().__init__(ctx, values, pagesize, timeout=timeout)
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-
-        for shop in self.vals[start:stop]:
+        for shop in self.value_range:
             name = get_atomic_name(shop["atomid"])
             amt = shop["amount"]
             price = shop["price"]
@@ -318,7 +310,7 @@ class PersonalShopView(Paginator):
     async def embed(self, inter: discord.Interaction):
         embed = fmte(
             self.ctx,
-            t=f"`{self.user}`'s Shops: Page `{self.position}` / `{self.maxpos or 1}`",
+            t=f"`{self.user}`'s Shops: Page `{self.position+1}` / `{self.maxpos+1}`",
         )
         return embed
 

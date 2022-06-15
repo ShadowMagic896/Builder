@@ -232,11 +232,7 @@ class AtomsView(Paginator):
         super().__init__(ctx, values, 5)
 
     async def adjust(self, embed: discord.Embed):
-        start = self.pagesize * (self.position - 1)
-        stop = self.pagesize * self.position
-
-        values = self.vals[start:stop]
-        for value in values:
+        for value in self.value_range:
             try:
                 name = f"{value['name']}: `{value['count']:,}`"
             except KeyError:
@@ -250,7 +246,7 @@ class AtomsView(Paginator):
 
     async def embed(self, inter: discord.Interaction):
         embed = fmte(
-            self.ctx, t=f"{self.title}: Page `{self.position}` / `{self.maxpos or 1}`"
+            self.ctx, t=f"{self.title}: Page `{self.position+1}` / `{self.maxpos+1}`"
         )
         return embed
 
