@@ -43,3 +43,4 @@ class Const:
         NEKO_LIFE: str = "https://nekos.life/"
         NHENTAI: str = "https://nhentai.xxx/"
         NHENTAI_CDN: str = "https://cdn.nhentai.xxx/"
+        PORNHUB: str = "https://pornhub.com/"

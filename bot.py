@@ -13,9 +13,7 @@ from typing import Iterable, Union
 from selenium.webdriver import Chrome
 
 from src.utils.startup_functions import (
-    aquire_db,
     do_prep,
-    get_activity,
     startup_print,
 )
 from data.environ import APPLICATION_ID, BOT_KEY, OPENAI_KEY
@@ -84,7 +82,7 @@ class BuilderContext(commands.Context):
 async def main():
     bot: Builder = Builder()
     async with aiohttp.ClientSession(
-        headers={"User-Agent": "python-requests/2.27.1"}  # :troll:
+        headers={"User-Agent": "python-requests/2.27.1"},  # :troll:
     ) as bot.session:
         bot = await do_prep(bot)
         await bot.start(BOT_KEY)

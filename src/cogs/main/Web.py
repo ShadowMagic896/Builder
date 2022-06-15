@@ -14,7 +14,7 @@ from src.utils.converters import UrlGet, UrlFind
 from src.utils.embeds import fmte
 from bot import Builder, BuilderContext
 from src.utils.subclass import Paginator
-from src.utils.types import FeatureType, GoogleSearchData
+from src.utils.types import FeatureType, DDGSearchData
 from src.utils.parsers import Parser
 from src.utils.coro import run
 
@@ -115,7 +115,7 @@ class Web(commands.Cog):
         """
         await ctx.interaction.response.defer()
         url: str = f"https://duckduckgo.com/?q={parse.quote_plus(query)}"
-        data: List[GoogleSearchData] = [
+        data: List[DDGSearchData] = [
             data
             async for data in Parser(self.bot.session, url).ddg_search(self.bot.driver)
         ]
@@ -130,7 +130,7 @@ class GoogleView(Paginator):
         self,
         ctx: BuilderContext,
         q: str,
-        values: List[GoogleSearchData],
+        values: List[DDGSearchData],
         *,
         timeout: Optional[float] = 45,
     ):
@@ -140,7 +140,7 @@ class GoogleView(Paginator):
     async def adjust(self, embed: discord.Embed):
         start = self.pagesize * (self.position - 1)
         stop = self.pagesize * self.position
-        values: List[GoogleSearchData] = self.vals[start:stop]
+        values: List[DDGSearchData] = self.vals[start:stop]
         for co, data in enumerate(values):
             fmt_co = str(co + 1 + (self.position - 1) * self.pagesize).rjust(2, "0")
             if data.feature_type == FeatureType.link:
@@ -151,6 +151,8 @@ class GoogleView(Paginator):
                 embed.description += f"\n**`{fmt_co}`: VIDEO: [{data.title}]({data.url})**\n*{data.body}*"
             elif data.feature_type == FeatureType.image_module:
                 embed.description += f"\n**`{fmt_co}`: IMAGES: [{data.title}]({data.url})**\n*{data.body}*"
+            else:
+                print(data.feature_type)
         return embed
 
     async def embed(self, inter: discord.Interaction):

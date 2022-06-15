@@ -1,13 +1,8 @@
-from collections import namedtuple
 from enum import Enum
 from typing import NamedTuple
 
 
-class GoogleSearchData(NamedTuple):
-    """
-    Represesnts a result packet with website title, URL, and body
-    """
-
+class DDGSearchData(NamedTuple):
     title: str
     url: str
     body: str
@@ -21,10 +16,13 @@ class FeatureType(Enum):
 
 
 class NHSearchData(NamedTuple):
-    """
-    Represents a result packet with a code, thumbnail, and name
-    """
-
     code: int
     thumbnail: str
     name: str
+
+
+class PHSearchData(NamedTuple):
+    name: str
+    thumbnail: str
+    link: str
+    duration: str

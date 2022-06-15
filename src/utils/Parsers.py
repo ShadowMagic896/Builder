@@ -1,12 +1,8 @@
 import asyncio
-from enum import Enum
-import time
-from timeit import timeit
 from typing import AsyncIterator
-from typing_extensions import Self
 import aiohttp
 from bs4 import BeautifulSoup, ResultSet, Tag
-from src.utils.types import FeatureType, GoogleSearchData, NHSearchData
+from src.utils.types import FeatureType, DDGSearchData, NHSearchData, PHSearchData
 from src.utils.coro import run
 
 
@@ -30,7 +26,28 @@ class Parser:
 
             yield NHSearchData(code, thumbnail, name)
 
-    async def ddg_search(self, driver) -> AsyncIterator[GoogleSearchData]:
+    async def ph_search(self) -> AsyncIterator[PHSearchData]:
+        res: aiohttp.ClientResponse = await self.session.get(self.url)
+        text = await res.text()
+        select = "div.wrapper > div.container > div.gridWrapper > div.nf-videos > div.sectionWrapper > ul#videoSearchResult.videos.search-video-thumbs > li"
+        soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
+        items: ResultSet[Tag] = soup.select(select)
+        for item in items:
+
+            meta = item.select_one("div.wrap > div.phimage > a")
+            if meta is None:
+                continue
+            try:
+                name: str = meta["data-title"]
+            except KeyError:
+                name: str = meta["title"]
+            thumbnail: str = meta.select_one("img")["data-mediumthumb"]
+            link: str = "https://pornhub.com" + meta["href"]
+            duration: str = meta.select_one("div > var.duration").text
+
+            yield PHSearchData(name, thumbnail, link, duration)
+
+    async def ddg_search(self, driver) -> AsyncIterator[DDGSearchData]:
         # Running Selenium here forces DDG to treat me as a user
         await run(driver.get, self.url)
         text = await run(
@@ -54,7 +71,7 @@ class Parser:
                     body: str = data.text
                     feature_type: FeatureType = FeatureType.video_module
 
-                    yield GoogleSearchData(title, url, body, feature_type)
+                    yield DDGSearchData(title, url, body, feature_type)
                 if "module--images" in item.select_one("div")["class"]:  # Image Results
                     query: str = self.url[self.url.index("=") + 1 :]
                     url: str = f"https://duckduckgo.com/?q={query}&iax=images&ia=images"
@@ -65,7 +82,7 @@ class Parser:
                     body: str = f"{len(images)} Images"
                     feature_type: FeatureType = FeatureType.image_module
 
-                    yield GoogleSearchData(title, url, body, feature_type)
+                    yield DDGSearchData(title, url, body, feature_type)
 
             else:
                 if "nrn-react-div" not in item["class"]:
@@ -76,6 +93,6 @@ class Parser:
                 body: str = components[2].select_one("div > span").text
                 feature_type: FeatureType = FeatureType.link
 
-                yield GoogleSearchData(title, url, body, feature_type)
+                yield DDGSearchData(title, url, body, feature_type)
 
             feature_type: FeatureType

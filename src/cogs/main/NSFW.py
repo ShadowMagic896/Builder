@@ -1,5 +1,6 @@
 import asyncio
 from typing import List, Literal, Optional
+from urllib.parse import quote_plus
 import aiohttp
 import bs4
 import discord
@@ -8,8 +9,8 @@ from discord.ext import commands
 
 import os
 import random
-from bs4 import BeautifulSoup
-from src.utils.types import NHSearchData
+from bs4 import BeautifulSoup, ResultSet, Tag
+from src.utils.types import NHSearchData, PHSearchData
 from data.environ import NSFW_PATH
 
 from src.utils.subclass import Paginator
@@ -25,7 +26,7 @@ class NSFW(commands.Cog):
     """
 
     def __init__(self, bot) -> None:
-        self.bot: commands.Bot = bot
+        self.bot: Builder = bot
 
     def ge(self):
         return "\N{NO ONE UNDER EIGHTEEN SYMBOL}"
@@ -157,7 +158,7 @@ class NSFW(commands.Cog):
         Uses [nhentai.xxx](https://nhentai.xxx) to get all pages within a manga, and sends them to you.
         """
         meta: NHGetMeta = await NHGetMeta.create(ctx, code)
-        view = NHentaiGetView(meta=meta)
+        view = NHGetView(meta=meta)
         embed = await view.page_zero(ctx.interaction)
         await view.check_buttons()
         await ctx.send(embed=embed, view=view)
@@ -181,6 +182,22 @@ class NSFW(commands.Cog):
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
 
+    @nsfw.group()
+    async def pornhub(self, ctx: BuilderContext):
+        pass
+
+    @pornhub.command()
+    @describe(query="What to search for")
+    async def search(self, ctx: BuilderContext, query: str):
+        """
+        Searches PorhHub
+        """
+        meta: PHSeachMeta = await PHSeachMeta.create(ctx, query)
+        view = PHSearchView(meta)
+        embed = await view.page_zero(ctx.interaction)
+        await view.check_buttons()
+        view.message = await ctx.send(embed=embed, view=view)
+
 
 class NHSearchMeta:
     @classmethod
@@ -194,11 +211,23 @@ class NHSearchMeta:
         }
         sort = fmt_dict.get(query, "")
         url = Const.URLs.NHENTAI + f"search/?q={query}{sort}"
-        data = [x async for x in Parser(ctx.bot.session, url).nh_search()]
+        res: aiohttp.ClientResponse = await ctx.bot.session.session.get(url)
+        res.raise_for_status()
+        parse: BeautifulSoup = BeautifulSoup(await res.text(), "html.parser")
+
+        selector: str = "body > div.container.index-container > div"
+
+        cls.data: List[NHSearchData] = []
+        for image in parse.select(selector):
+            nparse: BeautifulSoup = BeautifulSoup(str(image), "html.parser")
+            code: int = nparse.select_one("div > a")["href"][3:-1]
+            thumbnail: str = nparse.select_one("div > a > img")["src"]
+            name: str = nparse.select_one("div > a > div").text
+
+            cls.data.append(NHSearchData(code, thumbnail, name))
 
         cls.ctx = ctx
         cls.query = query
-        cls.data = data
 
         return cls
 
@@ -233,7 +262,7 @@ class NHSearchView(Paginator):
     async def viewthis(self, inter: discord.Interaction, button: discord.ui.Button):
         await inter.response.defer()
         meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position - 1].code)
-        view = NHentaiGetView(meta)
+        view = NHGetView(meta)
         embed = await view.page_zero(inter)
         await view.check_buttons()
         view.message = await self.meta.ctx.interaction.followup.send(
@@ -284,7 +313,7 @@ class NHGetMeta:
         return cls
 
 
-class NHentaiGetView(Paginator):
+class NHGetView(Paginator):
     def __init__(
         self,
         meta: NHGetMeta,
@@ -305,6 +334,59 @@ class NHentaiGetView(Paginator):
         return fmte_i(
             inter,
             t=f"NHentai `{self.meta.code}`: `{self.position}` / `{self.maxpos or 1}`",
+        )
+
+
+class PHSeachMeta:
+    @classmethod
+    async def create(cls, ctx: BuilderContext, query: str):
+        url: str = Const.URLs.PORNHUB + f"video/search?search={quote_plus(query)}"
+        res: aiohttp.ClientResponse = await ctx.bot.session.get(url)
+        text = await res.text()
+        select = "div.wrapper > div.container > div.gridWrapper > div.nf-videos > div.sectionWrapper > ul#videoSearchResult.videos.search-video-thumbs > li"
+        soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
+        items: ResultSet[Tag] = soup.select(select)
+
+        cls.data: List[PHSearchData] = []
+        for item in items:
+
+            meta = item.select_one("div.wrap > div.phimage > a")
+            if meta is None:
+                continue
+            try:
+                name: str = meta["data-title"]
+            except KeyError:
+                name: str = meta["title"]
+            thumbnail: str = meta.select_one("img")["data-mediumthumb"]
+            link: str = Const.URLs.PORNHUB + meta["href"][1:]
+            duration: str = meta.select_one("div > var.duration").text
+
+            cls.data.append(PHSearchData(name, thumbnail, link, duration))
+
+        cls.ctx = ctx
+        cls.query = query
+        return cls
+
+
+class PHSearchView(Paginator):
+    def __init__(
+        self,
+        meta: PHSeachMeta,
+        *,
+        timeout: Optional[float] = 45,
+    ):
+        self.meta = meta
+        super().__init__(meta.ctx, meta.data, 1, timeout=timeout)
+
+    async def adjust(self, embed: discord.Embed):
+        embed.set_image(url=self.vals[self.position - 1].thumbnail)
+        embed.description = f"**[{self.vals[self.position-1].name}]({self.vals[self.position-1].link})**\nDuration: `{self.vals[self.position-1].duration}`"
+        return embed
+
+    async def embed(self, inter: discord.Interaction):
+        return fmte(
+            self.ctx,
+            t=f"PornHub Results: `{self.meta.query}`\nResult `{self.position}` of `{self.maxpos or 1}`",
         )
 
 

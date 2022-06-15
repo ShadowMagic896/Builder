@@ -59,7 +59,7 @@ class Paginator(BaseView):
     def __init__(
         self,
         ctx: BuilderContext,
-        values: List,
+        values,
         pagesize: int,
         *,
         timeout: Optional[float] = 45,
@@ -69,7 +69,7 @@ class Paginator(BaseView):
 
         self.position = 1
 
-        self.vals: List[Type[values]] = values
+        self.vals = values
         self.message: Optional[discord.Message] = None
 
         self.maxpos = math.ceil((len(self.vals) / pagesize))
