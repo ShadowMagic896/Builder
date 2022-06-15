@@ -34,9 +34,13 @@ class Const:
         FONT = "C:/Windows/Fonts/"
 
     class URLs:
-        REPO_URL: str = "https://github.com/ShadowMagic896/Builder/"
+        REPO: str = "https://github.com/ShadowMagic896/Builder/"
         ADVICE: str = "https://www.affirmations.dev/"
         AFFIRMATION: str = "https://api.adviceslip.com/advice/"
+        DOG_API: str = "https://dog.ceo/api/breeds/image/random/"
+        CAT_API: str = "https://cataas.com/"
+        FOX_API: str = "https://randomfox.ca/floof/"
+        DUCK_API: str = "https://random-d.uk/api/random"  # For some reason the API cares about the trailing slash
         QUIZ_API: str = "https://quizapi.io/api/v1/"
         RTD: str = "https://readthedocs.org/"
         RULE_34: str = "https://rule34.xxx/"

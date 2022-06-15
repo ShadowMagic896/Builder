@@ -54,7 +54,8 @@ class API(commands.Cog):
         """
         Read the F*cking Manual: Seach readthedocs.io
         """
-        await ctx.interaction.response.defer()
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
         # for v in project, query, version, lang:
         #     print(f"'{v}'")
 
@@ -318,9 +319,8 @@ class RTFMMeta:
             f"https://{project}.readthedocs.io/{lang}/{version}/search.html?q={query}"
         )
 
-        await run(ctx.bot.loop, driver.get, url)
+        await run(driver.get, url)
         text = await run(
-            ctx.bot.loop,
             driver.execute_script,
             "return document.documentElement.outerHTML",
         )

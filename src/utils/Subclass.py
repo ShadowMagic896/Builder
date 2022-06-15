@@ -75,9 +75,6 @@ class Paginator(BaseView):
         self.maxpos = math.floor((len(self.values) / pagesize)) - 1
         self.start, self.stop = 0, pagesize
 
-        self.item_start = 0
-        self.item_stop = pagesize
-
         super().__init__(ctx, timeout=timeout)
 
     @discord.ui.button(emoji=Const.Emojis().BBARROW_ID, custom_id="bb")
@@ -188,14 +185,14 @@ class Paginator(BaseView):
 
     @property
     def value_range(self):
-        return self.values[self.item_start : self.item_stop]
+        return self.values[self.value_start : self.value_stop]
 
     @property
     def abs_position(self) -> int:
         return self.position * self.pagesize
 
     def fmt_abs_pos(self, count: int = 0) -> str:
-        return str(self.abs_position + count).rjust(3, "0")
+        return str(self.abs_position + count + 1).rjust(3, "0")
 
 
 class BaseModal(discord.ui.Modal):

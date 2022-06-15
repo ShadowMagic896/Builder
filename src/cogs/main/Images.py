@@ -375,7 +375,8 @@ class Images(commands.Cog):
         """
         Inverts an image's colors for certain channels
         """
-        await ctx.interaction.response.defer()
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
         img: Image.Image = await PILFN.toimg(image)
         array = np.array(img)
         for chan in channels:
@@ -456,7 +457,8 @@ class Images(commands.Cog):
         """
         Gets the most common colors in an image.
         """
-        await ctx.interaction.response.defer()
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
         buffer: BytesIO = BytesIO()
         await image.save(buffer)
         buffer.seek(0)

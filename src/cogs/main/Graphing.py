@@ -257,7 +257,8 @@ class Graphing(commands.Cog):
         """
         Graphs Y using a function in slope-intercept form (y = mx + b)
         """
-        await ctx.interaction.response.defer(thinking=True)
+        if ctx.interaction:
+            await ctx.interaction.response.defer(thinking=True)
         clamp: Callable[[Union[float, int], Optional[int], Optional[int]]] = (
             lambda n, l=None, m=None: min(max(n, l), m)
             if m is not None and l is not None

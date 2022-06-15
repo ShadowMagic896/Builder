@@ -1,6 +1,6 @@
 import os
 from random import randint
-from typing import Union
+from typing import Optional, Union
 import discord
 from discord.ext import commands
 from datetime import datetime
@@ -25,14 +25,18 @@ def fmte(
     """
     Takes the sent information and returns an embed with a footer and timestamp added, with the default color being teal.
     """
-    if not (ctx or u):
-        raise Exception("my guy")
-    user = ctx.author if not u else u
+    user: Optional[Union[discord.Member, discord.User]] = None
+    if ctx is None:
+        if u is None:
+            raise Exception("Bruh")
+        user = u
+    else:
+        user = ctx.author
 
     if ctx is not None:
         ti = ctx.bot.latency
     else:
-        ti = (randint(50, 60) + randint(0, 99) / 100) / 1000  # This is ethical
+        ti = None
 
     embed = discord.Embed(title=t, description=d, color=c)
     embed.set_author(
@@ -40,8 +44,18 @@ def fmte(
         url="https://discordapp.com/users/%s" % user.id,
         icon_url=user.avatar.url,
     )
+    footer: str = ""
+    if ctx:
+        args = (
+            " " + " ".join({str(value) for value in ctx.args[2:]})
+            if len(ctx.args) > 2
+            else ""
+        )
+        footer += f"{ctx.prefix}{ctx.command.qualified_name}{args}  •  "
     if ti:
-        embed.set_footer(text="Response in %sms" % round(ti * 1000, 3))
+        footer += "Response in %sms" % round(ti * 1000, 3)
+    if footer:
+        embed.set_footer(text=footer)
     embed.timestamp = datetime.now()
     return embed
 

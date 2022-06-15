@@ -206,7 +206,6 @@ class NHSearchMeta:
         fmt_dict = {
             "today": base_sort + "-today",
             "week": base_sort + "-week",
-            "week": base_sort + "-week",
             "all-time": "",
         }
         sort = fmt_dict.get(query, "")

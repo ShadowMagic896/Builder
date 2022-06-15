@@ -82,7 +82,9 @@ class BuilderContext(commands.Context):
 async def main():
     bot: Builder = Builder()
     async with aiohttp.ClientSession(
-        headers={"User-Agent": "python-requests/2.27.1"},  # :troll:
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0"
+        },  # :troll:
     ) as bot.session:
         bot = await do_prep(bot)
         await bot.start(BOT_KEY)

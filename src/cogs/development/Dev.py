@@ -55,7 +55,8 @@ class Dev(commands.Cog):
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     async def reload(self, ctx: BuilderContext):
-        await ctx.interaction.response.defer()
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
         log: str = ""
         to_reload = ["./src/utils"]
         to_reload.extend(COG_DIRECTORIES)

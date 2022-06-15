@@ -98,7 +98,8 @@ class Web(commands.Cog):
         """
         Get a screenshot of a webpage
         """
-        await ctx.interaction.response.defer()
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
         self.bot.driver.get(url[0])
         await asyncio.sleep(wait)
         buffer: BytesIO = BytesIO(await run(self.bot.driver.get_screenshot_as_png))
@@ -115,7 +116,8 @@ class Web(commands.Cog):
         """
         Searches duckduckgo.com for a query
         """
-        await ctx.interaction.response.defer()
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
         meta = await DDGSearchMeta.create(ctx, query)
         view = DDGSearchView(meta)
         embed = await view.page_zero(ctx.interaction)
@@ -128,7 +130,8 @@ class Web(commands.Cog):
         """
         Searches duckduckgo.com for an image
         """
-        await ctx.interaction.response.defer()
+        if ctx.interaction:
+            await ctx.interaction.response.defer()
         meta = await DDGImageMeta.create(ctx, query)
         view = DDGImageView(meta)
         embed = await view.page_zero(ctx.interaction)
@@ -151,43 +154,50 @@ class DDGSearchMeta:
 
         cls.data: List[DDGSearchData] = []
         for item in items:
-            if "module-slot" in item["class"]:  # Special result
-                if not item.select_one("div"):
-                    continue
-                if (
-                    "module--carousel-videos" in item.select_one("div")["class"]
-                ):  # Video
-                    data: Tag = item.select_one(
-                        "div > div.module--carousel__wrap > div > div > div > div.module--carousel__body > a"
-                    )
-                    url: str = data["href"]
-                    title: str = data["title"]
-                    body: str = data.text
-                    feature_type: FeatureType = FeatureType.video
+            try:
+                if "module-slot" in item["class"]:  # Special result
+                    if not item.select_one("div"):
+                        continue
+                    if (
+                        "module--carousel-videos" in item.select_one("div")["class"]
+                    ):  # Video
+                        data: Tag = item.select_one(
+                            "div > div.module--carousel__wrap > div > div > div > div.module--carousel__body > a"
+                        )
+                        url: str = data["href"]
+                        title: str = data["title"]
+                        body: str = data.text
+                        feature_type: FeatureType = FeatureType.video
+
+                        cls.data.append(DDGSearchData(title, url, body, feature_type))
+                    if (
+                        "module--images" in item.select_one("div")["class"]
+                    ):  # Image Results
+                        query: str = url[url.index("=") + 1 :]
+                        url: str = (
+                            f"https://duckduckgo.com/?q={query}&iax=images&ia=images"
+                        )
+                        title: str = item.select("div > span")[1].text
+                        images: ResultSet[Tag] = item.select(
+                            "div > div.module--images__thumbnails.js-images-thumbnails > div"
+                        )
+                        body: str = f"{len(images)} Images"
+                        feature_type: FeatureType = FeatureType.image
+
+                        cls.data.append(DDGSearchData(title, url, body, feature_type))
+
+                else:
+                    if "nrn-react-div" not in item["class"]:
+                        continue
+                    components: ResultSet[Tag] = item.select("article > div")
+                    url: str = components[0].select_one("div > a")["href"]
+                    title: str = components[1].select_one("h2 > a > span").text
+                    body: str = components[2].select_one("div > span").text
+                    feature_type: FeatureType = FeatureType.result
 
                     cls.data.append(DDGSearchData(title, url, body, feature_type))
-                if "module--images" in item.select_one("div")["class"]:  # Image Results
-                    query: str = url[url.index("=") + 1 :]
-                    url: str = f"https://duckduckgo.com/?q={query}&iax=images&ia=images"
-                    title: str = item.select("div > span")[1].text
-                    images: ResultSet[Tag] = item.select(
-                        "div > div.module--images__thumbnails.js-images-thumbnails > div"
-                    )
-                    body: str = f"{len(images)} Images"
-                    feature_type: FeatureType = FeatureType.image
-
-                    cls.data.append(DDGSearchData(title, url, body, feature_type))
-
-            else:
-                if "nrn-react-div" not in item["class"]:
-                    continue
-                components: ResultSet[Tag] = item.select("article > div")
-                url: str = components[0].select_one("div > a")["href"]
-                title: str = components[1].select_one("h2 > a > span").text
-                body: str = components[2].select_one("div > span").text
-                feature_type: FeatureType = FeatureType.result
-
-                cls.data.append(DDGSearchData(title, url, body, feature_type))
+            except:
+                break
 
         cls.ctx = ctx
         cls.query = query
@@ -220,7 +230,7 @@ class DDGSearchView(Paginator):
     async def embed(self, inter: discord.Interaction):
         return fmte(
             self.meta.ctx,
-            t=f"Results: {self.meta.query}\nPage `{self.position}` of `{self.maxpos+1}` [{len(self.values)} Results]",
+            t=f"Results: {self.meta.query}\nPage `{self.position+1}` of `{self.maxpos+1}` [{len(self.values)} Results]",
         )
 
 

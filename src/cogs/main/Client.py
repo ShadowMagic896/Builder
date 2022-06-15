@@ -102,7 +102,7 @@ class Client(commands.Cog):
             embed = fmte(
                 ctx,
                 t="Source Code!",
-                d=f"[View on GitHub]({Const.URLs.REPO_URL})",
+                d=f"[View on GitHub]({Const.URLs.REPO})",
             )
             await ctx.send(embed=embed)
         if command:
