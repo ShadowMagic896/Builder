@@ -17,6 +17,7 @@ from src.utils.startup_functions import (
     startup_print,
 )
 from data.environ import APPLICATION_ID, BOT_KEY, OPENAI_KEY
+from src.utils.types import Caches
 from data.settings import PREFIXES
 
 # Logging ---------------------------------------------------
@@ -57,15 +58,16 @@ class Builder(commands.Bot):
             application_id=application_id,
             case_insensitive=case_insensitive,
         )
-
         self.openai: openai = openai
         self.openai.api_key = OPENAI_KEY
 
         self.start_unix: float = time.time()
 
         self.apg: asyncpg.Connection
+        self.caches: Caches
         self.driver: Chrome
         self.session: aiohttp.ClientSession
+        self.tree: BuilderTree
 
     async def setup_hook(self) -> None:
         await startup_print(self)
@@ -82,16 +84,13 @@ class BuilderTree(discord.app_commands.CommandTree):
         super().__init__(client, fallback_to_global=True)
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if hasattr(interaction.command.callback, "defer"):
-            attrs: Mapping[str, bool] = interaction.command.defer
-            if attrs["defer"]:
-                await interaction.response.defer(
-                    thinking=attrs["thinkng"], ephemeral=attrs["ephemeral"]
-                )
-        else:
-            def_mapping: Mapping[str, bool] = {"thinking": True, "ephemeral": False}
+        default: Mapping[str, bool] = {"defer": True, "thinking": True, "ephemeral": False}
+        settings: Mapping[str, bool] = getattr(
+            interaction.command.callback, "defer", default
+        )
+        if settings["defer"]:
             await interaction.response.defer(
-                thinking=def_mapping["thinking"], ephemeral=def_mapping["ephemeral"]
+                thinking=settings["thinking"], ephemeral=settings["ephemeral"]
             )
         return True
 

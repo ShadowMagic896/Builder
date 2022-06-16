@@ -48,3 +48,6 @@ class Const:
         NHENTAI: str = "https://nhentai.xxx/"
         NHENTAI_CDN: str = "https://cdn.nhentai.xxx/"
         PORNHUB: str = "https://pornhub.com/"
+    
+    class Timers:
+        RTFM_CACHE_CLEAR: int = 120

@@ -1,6 +1,7 @@
 import asyncio
 from copy import copy
 import functools
+import time
 from typing import List, Mapping, Optional
 from webbrowser import Chrome
 import aiohttp
@@ -18,6 +19,7 @@ from src.utils.subclass import Paginator
 from src.utils.errors import NoDocumentsFound
 from src.utils.constants import Const
 from src.utils.coro import run
+from src.utils.types import RTFMCache
 
 
 class API(commands.Cog):
@@ -27,10 +29,6 @@ class API(commands.Cog):
 
     def __init__(self, bot: Builder) -> None:
         self.bot = bot
-        opts = webdriver.ChromeOptions()
-        opts.headless = True
-        opts.add_experimental_option("excludeSwitches", ["enable-logging"])
-        self.driver = webdriver.Chrome(options=opts)
         super().__init__()
 
     def ge(self):
@@ -55,7 +53,7 @@ class API(commands.Cog):
         Read the F*cking Manual: Seach readthedocs.io
         """
 
-        meta = await RTFMMeta.create(ctx, self.driver, project, query, version, lang)
+        meta = await RTFMMeta.create(ctx, self.bot.driver, project, query, version, lang)
         view = RTFMPaginator(meta, 10)
         embed = await view.page_zero(ctx.interaction)
         await view.check_buttons()
@@ -306,48 +304,70 @@ class RTFMMeta:
         version: str,
         lang: str,
     ):
+        async def retrieve(project: str, query: str, version: str, lang: str):
+            project: str = project.replace(".", "")
+            c_query = copy(query)
+            query: str = quote_plus(query)
+            reference_url: str = f"https://{project}.readthedocs.io/{lang}/{version}/"
+            url: str = (
+                f"https://{project}.readthedocs.io/{lang}/{version}/search.html?q={query}"
+            )
 
-        project: str = project.replace(".", "")
-        c_query = copy(query)
-        query: str = quote_plus(query)
-        reference_url: str = f"https://{project}.readthedocs.io/{lang}/{version}/"
-        url: str = (
-            f"https://{project}.readthedocs.io/{lang}/{version}/search.html?q={query}"
+            await run(driver.get, url)
+            text = await run(
+                driver.execute_script,
+                "return document.documentElement.outerHTML",
+            )
+            soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
+
+            select: str = (
+                "div.main-grid > main.grid-item > div#search-results > ul.search > li"
+            )
+            results: ResultSet[Tag] = soup.select(select)
+
+            if len(results) == 0:
+                raise NoDocumentsFound("No documents for those parameters were found.")
+
+            cls.ctx = ctx
+            cls.ref = reference_url
+            cls.project = project
+            cls.query = query
+            cls.query_raw = c_query
+            cls.version = version
+            cls.lang = lang
+            cls.values = results
+
+            return cls
+        searcher = RTFMCache(
+            project.lower().replace(".", ""),
+            query.lower(),
+            version.lower(),
+            lang.lower(),
+            RTFMCache.round_to_track(time.time())
         )
-
-        await run(driver.get, url)
-        text = await run(
-            driver.execute_script,
-            "return document.documentElement.outerHTML",
-        )
-        soup: BeautifulSoup = BeautifulSoup(text, "html.parser")
-
-        select: str = (
-            "div.main-grid > main.grid-item > div#search-results > ul.search > li"
-        )
-        results: ResultSet[Tag] = soup.select(select)
-
-        if len(results) == 0:
-            raise NoDocumentsFound("No documents for those parameters were found.")
-
-        values: List[str] = []
-
-        cls.ctx = ctx
-        cls.ref = reference_url
-        cls.project = project
-        cls.query = query
-        cls.query_raw = c_query
-        cls.version = version
-        cls.lang = lang
-        cls.values = results
-
-        return cls
+    
+        if (cache := ctx.bot.caches.RTFM.get(
+            searcher, None
+        )) is None:
+            results = await retrieve(project, query, version, lang)
+            searcher = RTFMCache(
+                results.project.lower().replace(".",""),
+                results.query.lower(),
+                results.version.lower(),
+                results.lang.lower(),
+                RTFMCache.round_to_track(time.time())
+            )
+            # Ensure the timestamp is rounded to nearest 120
+            ctx.bot.caches.RTFM[searcher] = results
+            return results, 1
+        return cache, 0
 
 
 class RTFMPaginator(Paginator):
     def __init__(self, meta: RTFMMeta, pagesize: int, *, timeout: Optional[float] = 45):
-        self.meta = meta
-        super().__init__(meta.ctx, meta.values, pagesize, timeout=timeout)
+        self.was_cached: bool = meta[1] == 0
+        self.meta = meta[0]
+        super().__init__(self.meta.ctx, self.meta.values, pagesize, timeout=timeout)
 
     async def embed(self, inter: discord.Interaction):
         return fmte(
@@ -363,6 +383,9 @@ class RTFMPaginator(Paginator):
             embed.description += (
                 f"**`{self.fmt_abs_pos(co)}`:** [`{name}`]({self.meta.ref + link})\n"
             )
+        
+        if self.was_cached:
+            embed.description += f"This result was cached. It will in decache in {Const.Timers.RTFM_CACHE_CLEAR - round(time.time() % Const.Timers.RTFM_CACHE_CLEAR)} seconds"
         return embed
 
 

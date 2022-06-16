@@ -16,12 +16,11 @@ from src.utils.user_io import (
 from src.utils.embeds import fmte, fmte_i
 from src.utils.functions import explode
 from src.utils.subclass import BaseView, Paginator
-from src.utils.checks import control_defer
-from bot import BuilderContext
+from bot import Builder, BuilderContext
 
 
 class Help(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: Builder):
         self.bot = bot
 
     @commands.hybrid_command()

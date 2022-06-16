@@ -24,25 +24,26 @@ from data.settings import (
 from src.utils.embeds import fmte_i
 from simpleeval import NumberTooHigh
 
-from bot import BuilderContext
+from bot import Builder, BuilderContext
 
 
 class ErrorHandling(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
-        print("Load error handler")
+    def __init__(self, bot: Builder) -> None:
         self.bot = bot
         if CATCH_ERRORS:
-            print("Setting attrs")
             self.bot.on_error = self.on_error
             self.bot.on_command_error = self.on_command_error
             self.bot.tree.on_error = self.on_tree_error
+        print(self.bot.on_error, self.bot.on_command_error, self.bot.tree.on_error)
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
+        print("on_error")
         if PRINT_EVENT_ERROR_TRACEACK:
             sys.stderr.write(f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}")
             traceback.print_exc(file=sys.stderr)
 
     async def on_command_error(self, ctx: BuilderContext, error: Exception):
+        print("on_command_error")
         if PRINT_COMMAND_ERROR_TRACKEBACK:
             sys.stderr.write(
                 f"[COMMAND ERROR]\n{ctx.command.qualified_name} with {ctx.args}"
@@ -51,12 +52,13 @@ class ErrorHandling(commands.Cog):
         return await self._interaction_error_handler(ctx.interaction, error)
 
     async def on_tree_error(self, interaction: discord.Interaction, error: Exception):
+        print("on_tree_error")
         return await self._interaction_error_handler(interaction, error)
 
     async def _interaction_error_handler(
         self, inter: discord.Interaction, error: Exception = None
     ):
-        print("CATCH ERROR")
+        print("_interaction_error_handler")
         if error is None:
             inter, error = self, inter
         if not CATCH_ERRORS:

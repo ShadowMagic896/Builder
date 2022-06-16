@@ -4,7 +4,6 @@ import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
-import selenium
 from data.environ import DB_PASSWORD, DB_USERNAME
 
 from selenium import webdriver
@@ -21,12 +20,12 @@ from data.settings import (
     SOURCE_CODE_PATHS,
     START_DOCKER_ON_STARTUP,
 )
-from src.utils.database import ensure_db
 from src.utils.extensions import load_extensions
 from src.utils.external import snekbox_exec
-from src.utils.functions import explode, format_code
+from src.utils.functions import explode
 from src.utils.stats import Stats
 from src.utils.coro import run
+from src.utils.types import Caches
 
 
 def get_activity(bot: commands.Bot):
@@ -56,7 +55,6 @@ async def do_prep(bot: commands.Bot) -> aiohttp.ClientSession:
             bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=False
         )
 
-    await format_code()
 
     if START_DOCKER_ON_STARTUP:
         await snekbox_exec()
@@ -65,9 +63,24 @@ async def do_prep(bot: commands.Bot) -> aiohttp.ClientSession:
 
     bot.apg = await aquire_db()
     bot.driver = await aquire_driver()
-    await ensure_db(bot)
+    bot.caches = aquire_caches()
 
     return bot
+
+
+async def aquire_db():
+    user = quote_plus(DB_USERNAME)
+    password = quote_plus(DB_PASSWORD)
+    connection: asyncpg.connection.Connection = await asyncpg.connect(
+        user=user, password=password
+    )
+    return connection
+
+
+def aquire_caches():
+    return Caches(
+        RTFM={}
+    )
 
 
 async def apply_inherit_checks(bot: commands.Bot):
@@ -94,16 +107,6 @@ async def apply_global_checks(bot: commands.Bot):
     for check in GLOBAL_CHECKS:
         await apply_to_global(bot, check)
 
-
-async def aquire_db():
-    user = quote_plus(DB_USERNAME)
-    password = quote_plus(DB_PASSWORD)
-    connection: asyncpg.connection.Connection = await asyncpg.connect(
-        user=user, password=password
-    )
-    return connection
-
-
 async def startup_print(bot: commands.Bot):
     _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = (
         lambda value, size=25, style="before": str(value)
@@ -127,3 +130,4 @@ async def startup_print(bot: commands.Bot):
     print(
         f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
     )
+
