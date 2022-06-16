@@ -8,7 +8,7 @@ import time
 
 from multiprocessing import freeze_support
 from discord.ext import commands
-from typing import Iterable, Union
+from typing import Iterable, Mapping, Union
 
 from selenium.webdriver import Chrome
 
@@ -42,7 +42,7 @@ class Builder(commands.Bot):
     def __init__(self):
         command_prefix: Iterable[str] = PREFIXES
         help_command: Union[commands.HelpCommand, None] = None
-        tree_cls: type = discord.app_commands.CommandTree
+        tree_cls: type = BuilderTree
         intents: discord.Intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
@@ -67,8 +67,6 @@ class Builder(commands.Bot):
         self.driver: Chrome
         self.session: aiohttp.ClientSession
 
-        self.tree.fallback_to_global = True
-
     async def setup_hook(self) -> None:
         await startup_print(self)
 
@@ -77,6 +75,25 @@ class BuilderContext(commands.Context):
     def __init__(self, **data):
         self.bot: Builder = data["bot"]
         super().__init__(**data)
+
+
+class BuilderTree(discord.app_commands.CommandTree):
+    def __init__(self, client: discord.Client):
+        super().__init__(client, fallback_to_global=True)
+
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        if hasattr(interaction.command.callback, "defer"):
+            attrs: Mapping[str, bool] = interaction.command.defer
+            if attrs["defer"]:
+                await interaction.response.defer(
+                    thinking=attrs["thinkng"], ephemeral=attrs["ephemeral"]
+                )
+        else:
+            def_mapping: Mapping[str, bool] = {"thinking": True, "ephemeral": False}
+            await interaction.response.defer(
+                thinking=def_mapping["thinking"], ephemeral=def_mapping["ephemeral"]
+            )
+        return True
 
 
 async def main():

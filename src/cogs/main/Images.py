@@ -375,8 +375,6 @@ class Images(commands.Cog):
         """
         Inverts an image's colors for certain channels
         """
-        if ctx.interaction:
-            await ctx.interaction.response.defer()
         img: Image.Image = await PILFN.toimg(image)
         array = np.array(img)
         for chan in channels:
@@ -457,8 +455,6 @@ class Images(commands.Cog):
         """
         Gets the most common colors in an image.
         """
-        if ctx.interaction:
-            await ctx.interaction.response.defer()
         buffer: BytesIO = BytesIO()
         await image.save(buffer)
         buffer.seek(0)
@@ -658,7 +654,6 @@ class Images(commands.Cog):
 
             @discord.ui.button(label="View Profile Avatar")
             async def get(self, inter: discord.Interaction, button: discord.ui.Button):
-                await inter.response.defer()
                 if inter.user.avatar is None:
                     inter.user.avatar = inter.user.default_avatar
                 embed = fmte(
@@ -684,7 +679,6 @@ class Images(commands.Cog):
 
             @discord.ui.button(label="View Guild Avatar")
             async def get(self, inter: discord.Interaction, button: discord.ui.Button):
-                await inter.response.defer()
                 if inter.user.avatar is None:
                     inter.user.avatar = inter.user.default_avatar
                 embed = fmte(
@@ -900,7 +894,6 @@ class ImageManipulateView(BaseView):
 
     @discord.ui.button(label="Decipher")
     async def decipher(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.response.defer()
         prompt = "Please enter a **PASSPHRASE:**"
         passphrase = (
             await self.getUserInput(
@@ -918,7 +911,6 @@ class ImageManipulateView(BaseView):
 
     @discord.ui.button(label="Encipher")
     async def encipher(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.response.defer()
         prompt = "Please enter a **PASSPHRASE:**"
         passphrase = (
             await self.getUserInput(self.ctx, ((), {"embed": fmte(self.ctx, prompt)}))
@@ -953,7 +945,6 @@ class ImageManipulateView(BaseView):
 
     @discord.ui.button(label="Paste")
     async def paste(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.response.defer()
         prompt: str = "Please send the image to paste..."
         ext_data: str = (
             "You can also send a link, or reply to a message with an image or link."
@@ -1000,7 +991,6 @@ class ImageManipulateView(BaseView):
 
     @discord.ui.button(label="Resize")
     async def resize(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.response.defer()
         prompt: str = "Please enter a new **WIDTH** value:"
         w = await self.getUserInput(
             self.ctx,
@@ -1020,7 +1010,6 @@ class ImageManipulateView(BaseView):
 
     @discord.ui.button(label="Rotate")
     async def rotate(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.response.defer()
         prompt: str = "Please enter a **DEGREES** value:"
         degs = await self.getUserInput(
             self.ctx,

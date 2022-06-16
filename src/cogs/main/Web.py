@@ -98,8 +98,6 @@ class Web(commands.Cog):
         """
         Get a screenshot of a webpage
         """
-        if ctx.interaction:
-            await ctx.interaction.response.defer()
         self.bot.driver.get(url[0])
         await asyncio.sleep(wait)
         buffer: BytesIO = BytesIO(await run(self.bot.driver.get_screenshot_as_png))
@@ -130,8 +128,6 @@ class Web(commands.Cog):
         """
         Searches duckduckgo.com for an image
         """
-        if ctx.interaction:
-            await ctx.interaction.response.defer()
         meta = await DDGImageMeta.create(ctx, query)
         view = DDGImageView(meta)
         embed = await view.page_zero(ctx.interaction)

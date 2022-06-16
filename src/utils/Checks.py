@@ -1,11 +1,9 @@
-"""
-Contains all command checks that the bot uses
-"""
-
+import asyncio
+from typing import Any, Callable, Coroutine, Mapping
 from discord.ext import commands
 
 
-def interactionChoke(ctx: commands.Context):
+def inter_choke(ctx: commands.Context):
     async def predicate():
         command = """
             SELECT commands
@@ -19,3 +17,11 @@ def interactionChoke(ctx: commands.Context):
         return True
 
     return commands.check(predicate)
+
+
+def control_defer(defer: bool = True, thinking: bool = True, ephemeral: bool = False):
+    def deco(func: Callable):
+        func.defer = {"defer": defer, "thinking": thinking, "ephemeral": ephemeral}
+        return func
+
+    return deco

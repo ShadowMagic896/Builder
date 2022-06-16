@@ -29,8 +29,10 @@ from bot import BuilderContext
 
 class ErrorHandling(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
+        print("Load error handler")
         self.bot = bot
         if CATCH_ERRORS:
+            print("Setting attrs")
             self.bot.on_error = self.on_error
             self.bot.on_command_error = self.on_command_error
             self.bot.tree.on_error = self.on_tree_error
@@ -54,6 +56,7 @@ class ErrorHandling(commands.Cog):
     async def _interaction_error_handler(
         self, inter: discord.Interaction, error: Exception = None
     ):
+        print("CATCH ERROR")
         if error is None:
             inter, error = self, inter
         if not CATCH_ERRORS:

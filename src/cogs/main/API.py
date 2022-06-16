@@ -54,10 +54,6 @@ class API(commands.Cog):
         """
         Read the F*cking Manual: Seach readthedocs.io
         """
-        if ctx.interaction:
-            await ctx.interaction.response.defer()
-        # for v in project, query, version, lang:
-        #     print(f"'{v}'")
 
         meta = await RTFMMeta.create(ctx, self.driver, project, query, version, lang)
         view = RTFMPaginator(meta, 10)
@@ -126,7 +122,7 @@ class API(commands.Cog):
                 name="--- Please enter a project first ---", value="en"
             )
         proj = proj.replace(".", "")
-        url: str = Const.Urls.RTD + f"projects/{proj}/"
+        url: str = Const.URLs.RTD + f"projects/{proj}/"
         response: aiohttp.ClientResponse = await self.bot.session.get(url)
         text: str = await response.text()
 

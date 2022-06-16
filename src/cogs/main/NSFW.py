@@ -259,7 +259,6 @@ class NHSearchView(Paginator):
 
     @discord.ui.button(label="Select This", emoji="\N{BLACK RIGHTWARDS ARROW}")
     async def viewthis(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.response.defer()
         meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position].code)
         view = NHGetView(meta)
         embed = await view.page_zero(inter)

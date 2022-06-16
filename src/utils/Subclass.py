@@ -72,7 +72,7 @@ class Paginator(BaseView):
         self.values = values
         self.message: Optional[discord.Message] = None
 
-        self.maxpos = math.floor((len(self.values) / pagesize)) - 1
+        self.maxpos = math.ceil((len(self.values) / pagesize)) - 1
         self.start, self.stop = 0, pagesize
 
         super().__init__(ctx, timeout=timeout)

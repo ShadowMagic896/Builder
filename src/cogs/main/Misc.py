@@ -106,7 +106,7 @@ class Misc(commands.Cog):
         embed.set_image(url=json["image"])
 
         view.message = await ctx.send(embed=embed, view=view)
-    
+
     @commands.hybrid_command()
     async def duck(self, ctx: BuilderContext):
         """
@@ -120,7 +120,6 @@ class Misc(commands.Cog):
         embed.set_image(url=json["url"])
 
         view.message = await ctx.send(embed=embed, view=view)
-
 
 
 class NewImgView(BaseView):

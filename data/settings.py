@@ -1,8 +1,7 @@
 from os import PathLike
-from typing import Any, Callable, List, Set
+from typing import Any, Callable, List, Set, Tuple
 
-from src.utils.checks import interactionChoke
-
+from src.utils.checks import inter_choke
 
 # Directories to look for cogs in
 COG_DIRECTORIES: List[PathLike] = [
@@ -48,28 +47,21 @@ STARTUP_ENSURE_DEFAULT_ATOMS: bool = False
 STARTUP_UPDATE_COMMANDS: bool = True
 
 # Whether to apply all error-catching functions to the bot
-CATCH_ERRORS: bool = False
-
-# Whether to catch  errors in text commands / hybrid commands
-CATCH_COMMAND_ERRORS: bool = True and CATCH_ERRORS
-
-# Whether to catch errors in app commands
-CATCH_COMMAND_TREE_ERRORS: bool = True and CATCH_ERRORS
-
+CATCH_ERRORS: bool = True
 
 # Errors on events / event listeners
-PRINT_EVENT_ERROR_TRACEACK: bool = False and CATCH_ERRORS
+PRINT_EVENT_ERROR_TRACEACK: bool = True and CATCH_ERRORS
 
 # Errors in text commands / hybrid commands
-PRINT_COMMAND_ERROR_TRACKEBACK: bool = False and CATCH_ERRORS
+PRINT_COMMAND_ERROR_TRACKEBACK: bool = True and CATCH_ERRORS
 
 # Errors in app commands
-PRINT_COMMAND_TREE_ERROR_TRACKEBACK: bool = False and CATCH_ERRORS
+PRINT_COMMAND_TREE_ERROR_TRACKEBACK: bool = True and CATCH_ERRORS
 
 
 # Checks that are applied on every command
 GLOBAL_CHECKS: List[Callable[[Any], bool]] = [
-    interactionChoke,
+    inter_choke,
 ]
 
 # Commands that are exempt from global checks, in string form. The string
