@@ -1,11 +1,9 @@
 import asyncio
 from asyncio.subprocess import Process
+import datetime
 import os
-from pprint import pprint
 import time
-from urllib.parse import quote_plus
 import discord
-from discord.app_commands import describe, Range
 from discord.ext import commands
 
 from aiohttp import ClientResponse
@@ -31,12 +29,46 @@ class GitHub(commands.Cog):
     @github.command()
     async def user(self, ctx: BuilderContext, query: str):
         url: str = f"{Const.URLs.LIBRARY_API}/github/{query}"
-        print(url)
-        params = {"apikey": LIBRARY_KEY}
+        params = {"api_key": LIBRARY_KEY}
         response = await self.bot.session.get(url, params=params)
-        json = await response.json()
-        pprint(json)
+        json: dict = await response.json()
+        if json.pop("error", None) is not None:
+            raise commands.errors.BadArgument("Cannot find user")
+        embed = fmte(
+            ctx,
+            t = f"Information on: {query}"
+        )
+        def at(x: str):
+            parts = str(x).replace(
+                "T", "-"
+            ).replace(
+                ":", "-"
+            ).removesuffix("Z").split(
+                "-"
+            )
+            parts = [float(x) for x in parts]
+            mults = [31557600, 2629800, 86400, 3600, 60, 1]
+            parts[0] -= 1970 # Unix begins at 1970, Jan 1 00:00:00.00 not 0
+            result = sum(float(x) * mults[c] for c, x in enumerate(parts))
+            return f"<t:{round(result)}:R>"
 
+        embed.add_field(name="GitHub ID:", value=str(json["github_id"]))
+        embed.add_field(name="Login:", value=str(json["login"]))
+        embed.add_field(name="User Type:", value=str(json["user_type"]))
+        embed.add_field(name="Creation:", value=at(json["created_at"]))
+        embed.add_field(name="Last Updated:", value=at(json["updated_at"]))
+        embed.add_field(name="Last Synced:", value=at(json["last_synced_at"]))
+        embed.add_field(name="Name:", value=str(json["name"]))
+        embed.add_field(name="Company:", value=str(json["company"]))
+        embed.add_field(name="Blog:", value=f'[VIEW]({str(json["blog"])})' if json["blog"] else "None")
+        embed.add_field(name="Location:", value=str(json["location"]))
+        embed.add_field(name="Hidden:", value=str(json["hidden"]))
+        embed.add_field(name="Email:", value=str(json["email"]))
+        embed.add_field(name="Bio:", value=str(json["bio"]))
+        embed.add_field(name="UUID:", value=str(json["uuid"]))
+
+        await ctx.send(embed=embed)
+                
     @github.command()
     async def builder(self, ctx: BuilderContext):
         """
