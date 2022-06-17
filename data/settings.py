@@ -5,13 +5,11 @@ from src.utils.checks import inter_choke
 
 # Directories to look for cogs in
 COG_DIRECTORIES: List[PathLike] = [
-    "./src/cogs/development",
-    "./src/cogs/economy",
-    "./src/cogs/main",
+    "./src/cogs"
 ]
 
 # Cogs to not load on startup
-NOLOAD_COGS: List[str] = []
+NOLOAD_EXTS: List[str] = []
 
 # ALl cogs to load on startup
 SOURCE_CODE_PATHS: List[PathLike] = ["./data", "./src"]
@@ -29,7 +27,7 @@ START_DOCKER_ON_STARTUP: bool = False
 DOCKER_DESKTOP_LOCATION: str = "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe"
 
 # Cogs that do not show up on help command
-INVISIBLE_COGS: List[str] = ["ErrorHandling", "Help", "Dev", "GitHub"]
+INVISIBLE_COGS: List[str] = ["ErrorHandling", "Help", "Dev"]
 
 # Whether to set the bot's status to the amount of source lines
 SHOW_SOURCE_LINES: bool = True

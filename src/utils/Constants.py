@@ -34,15 +34,18 @@ class Const:
         FONT = "C:/Windows/Fonts/"
 
     class URLs:
-        REPO: str = "https://github.com/ShadowMagic896/Builder/"
-        ADVICE: str = "https://www.affirmations.dev/"
-        AFFIRMATION: str = "https://api.adviceslip.com/advice/"
-        DOG_API: str = "https://dog.ceo/api/breeds/image/random/"
-        CAT_API: str = "https://cataas.com/"
-        FOX_API: str = "https://randomfox.ca/floof/"
-        DUCK_API: str = "https://random-d.uk/api/random"  # For some reason the API cares about the trailing slash
-        QUIZ_API: str = "https://quizapi.io/api/v1/"
-        RTD: str = "https://readthedocs.org/"
+        REPO: str = "https://github.com/ShadowMagic896/Builder"
+        AFFIRMATION_API: str = "https://www.affirmations.dev"
+        ADVICE_API: str = "https://api.adviceslip.com/advice" # For some reason the API cares about the trailing slash
+        DOG_API: str = "https://dog.ceo/api/breeds/image/random"
+        CAT_API: str = "https://cataas.com"
+        FOX_API: str = "https://randomfox.ca/floof"
+        DUCK_API: str = "https://random-d.uk/api/random"  
+        QUIZ_API: str = "https://quizapi.io/api/v1"
+        LIBRARY_API: str = "https://libraries.io/api"
+        RTD: str = "https://readthedocs.org"
+
+
         RULE_34: str = "https://rule34.xxx/"
         NEKO_LIFE: str = "https://nekos.life/"
         NHENTAI: str = "https://nhentai.xxx/"

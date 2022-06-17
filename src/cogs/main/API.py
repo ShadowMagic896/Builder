@@ -66,7 +66,7 @@ class API(commands.Cog):
         if (lang := getattr(inter.namespace, "lang", None)) is not None:
             params["language"] = lang
         params["q"] = query
-        url: str = Const.URLs.RTD + f"search/"
+        url: str = f"{Const.URLs.RTD}/search"
         response: aiohttp.ClientResponse = await self.bot.session.get(
             url, params=params
         )
@@ -357,7 +357,6 @@ class RTFMMeta:
                 results.lang.lower(),
                 RTFMCache.round_to_track(time.time())
             )
-            # Ensure the timestamp is rounded to nearest 120
             ctx.bot.caches.RTFM[searcher] = results
             return results, 1
         return cache, 0

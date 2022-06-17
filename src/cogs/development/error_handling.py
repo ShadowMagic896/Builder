@@ -34,7 +34,6 @@ class ErrorHandling(commands.Cog):
             self.bot.on_error = self.on_error
             self.bot.on_command_error = self.on_command_error
             self.bot.tree.on_error = self.on_tree_error
-        print(self.bot.on_error, self.bot.on_command_error, self.bot.tree.on_error)
 
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
         print("on_error")

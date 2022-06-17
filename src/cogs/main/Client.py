@@ -34,7 +34,6 @@ class Client(commands.Cog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.last_updated_log = 0
 
     def ge(self):
         return "\N{ROBOT FACE}"
@@ -162,29 +161,6 @@ class Client(commands.Cog):
         start = datetime.datetime.fromtimestamp(self.bot.start_unix)
         embed = fmte(ctx, t=f"Last Restart: <t:{round(self.bot.start_unix)}:R>")
         await ctx.send(embed=embed)
-
-    @commands.hybrid_command()
-    async def github(self, ctx: BuilderContext):
-        """
-        Gets the bot's GitHub push log
-        """
-        if time.time() - self.last_updated_log > 300:
-            shell: Process = await asyncio.create_subprocess_shell(
-                f"cd /d {os.getcwd()} && git config --global --add safe.directory R:/VSCode-Projects/Discord-Bots/Builder && git log -t --diff-merges=on --max-count 3 > data/logs/git.log"
-            )
-            await shell.communicate()
-            self.last_updated_log = time.time()
-        file: discord.File = discord.File(
-            "data/logs/git.log",
-            filename="repo.diff",
-            description="Builder's GitHub repository log",
-        )
-        embed = fmte(
-            ctx,
-            t="Showing Git Log",
-        )
-        await ctx.send(embed=embed, file=file)
-        file.close()
 
     @commands.hybrid_command()
     async def about(self, ctx: BuilderContext):

@@ -41,7 +41,7 @@ class Misc(commands.Cog):
         """
         You are a good person
         """
-        url: str = Const.URLs.AFFIRMATION
+        url: str = Const.URLs.AFFIRMATION_API
         response = await self.bot.session.get(url, ssl=False)
         json: dict = await response.json()
         quote: str = json["affirmation"]
@@ -50,13 +50,24 @@ class Misc(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    async def advice(self, ctx: BuilderContext):
+    @describe(
+        id="The specific advice ID to get"
+    )
+    async def advice(self, ctx: BuilderContext, id: Optional[int] = None):
         """
         Gives you life advice
         """
-        url: str = Const.URLs.ADVICE
+        if id is not None:
+            url: str = Const.URLs.ADVICE_API + f"/{id}"
+        else:
+            url: str = Const.URLs.ADVICE_API
+        print(url)
         response = await self.bot.session.get(url, ssl=False)
+
         json: dict = js.loads(await response.text())
+        if json.get("slip", None) is None:
+            raise commands.errors.BadArgument("Couldn't find advice")
+
         id_, advice = json["slip"]["id"], json["slip"]["advice"]
 
         embed = fmte(ctx, t=advice, d=f"ID: `{id_}`")
@@ -83,13 +94,13 @@ class Misc(commands.Cog):
         """
         Gets a random picture of a catto
         """
-        url: str = f"{Const.URLs.CAT_API}cat?json=true"
+        url: str = f"{Const.URLs.CAT_API}/cat?json=true"
         response = await self.bot.session.get(url, ssl=False)
         json = await response.json()
 
-        view = NewImgView(ctx, url, lambda x: Const.URLs.CAT_API + x["url"])
+        view = NewImgView(ctx, url, lambda x: f"{Const.URLs.CAT_API}/{x['url']}")
         embed = fmte(ctx)
-        embed.set_image(url=Const.URLs.CAT_API + json["url"])
+        embed.set_image(url=f"{Const.URLs.CAT_API}/{json['url']}")
 
         view.message = await ctx.send(embed=embed, view=view)
 
