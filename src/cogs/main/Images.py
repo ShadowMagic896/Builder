@@ -362,28 +362,21 @@ class Images(commands.Cog):
     @image.command()
     @describe(
         image="The image to invert",
-        channels="The channels to invert the image on",
-        pivot="What to pivot the colors upon",
     )
     async def invert(
         self,
         ctx: BuilderContext,
         image: discord.Attachment,
-        channels: typehints.COLOR_CHANNEL_ALPHA = parameters.COLOR_CHANNEL_ALPHA,
-        pivot: Range[int, 1, 510] = 255,
     ):
         """
-        Inverts an image's colors for certain channels
+        Inverts an image's colors
         """
+        if image.size > 2 ** 22:
+            raise commands.errors.BadArgument(f"Image is too big: {image.size}")
         img: Image.Image = await PILFN.toimg(image)
         array = np.array(img)
-        for chan in channels:
-            array[..., chan] = pivot - array[..., chan]
-        if pivot != 255:
-            array[array < 0] = 0
-            array[array > 255] = 255
-
-        img = Image.fromarray(array, mode="RGBA")
+        array = 255 - array
+        img = Image.frombuffer("RGB", (image.width, image.height), array)
         embed = fmte(ctx, t="Image Successfully Inverted")
         embed, file = await PILFN.spawnItems(embed, img)
         await ctx.send(embed=embed, file=file)

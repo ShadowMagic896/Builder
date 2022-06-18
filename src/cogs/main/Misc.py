@@ -61,7 +61,6 @@ class Misc(commands.Cog):
             url: str = Const.URLs.ADVICE_API + f"/{id}"
         else:
             url: str = Const.URLs.ADVICE_API
-        print(url)
         response = await self.bot.session.get(url, ssl=False)
 
         json: dict = js.loads(await response.text())
