@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple
 from src.utils.constants import Const
 
 

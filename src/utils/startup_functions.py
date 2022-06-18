@@ -1,9 +1,12 @@
+import os
+from pathlib import Path
 from typing import Any, Callable, Literal, Optional
 from urllib.parse import quote_plus
 import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
+import selenium
 from data.environ import DB_PASSWORD, DB_USERNAME
 
 from selenium import webdriver
@@ -41,7 +44,8 @@ async def aquire_driver() -> webdriver.Chrome:
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.headless = True
-    driver: webdriver.Chrome = await run(webdriver.Chrome, options=options)
+    executable_path = Path("data/assets/drivers/chromedriver").absolute()
+    driver: webdriver.Chrome = await run(webdriver.Chrome, executable_path=executable_path, options=options)
     driver.set_window_size(1920, 1080)
     return driver
 
@@ -54,7 +58,6 @@ async def do_prep(bot: commands.Bot) -> aiohttp.ClientSession:
         await load_extensions(
             bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=False
         )
-
 
     if START_DOCKER_ON_STARTUP:
         await snekbox_exec()

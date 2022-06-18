@@ -84,14 +84,19 @@ class BuilderTree(discord.app_commands.CommandTree):
         super().__init__(client, fallback_to_global=True)
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        if not interaction.message: # Modals and whatnot
+            return True
         default: Mapping[str, bool] = {"defer": True, "thinking": True, "ephemeral": False}
         settings: Mapping[str, bool] = getattr(
             interaction.command.callback, "defer", default
         )
         if settings["defer"]:
-            await interaction.response.defer(
-                thinking=settings["thinking"], ephemeral=settings["ephemeral"]
-            )
+            try:
+                await interaction.response.defer(
+                    thinking=settings["thinking"], ephemeral=settings["ephemeral"]
+                )
+            except discord.NotFound:
+                pass
         return True
 
 
