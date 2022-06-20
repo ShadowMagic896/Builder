@@ -3,17 +3,10 @@ import traceback
 from typing import Any, Union
 import discord
 from discord.ext import commands
-from discord.ext.commands.errors import *
 from discord.errors import *
+from discord.ext.commands.errors import *
+from src.utils.errors import *
 
-from src.utils.errors import (
-    InternalError,
-    MissingArguments,
-    MissingFunds,
-    MissingShopEntry,
-    SelfAction,
-    Unowned,
-)
 from data.settings import (
     CATCH_ERRORS,
     MODERATE_JISHAKU_COMMANDS,

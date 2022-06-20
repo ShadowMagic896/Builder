@@ -1,3 +1,4 @@
+from genericpath import exists, isdir
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional
 from urllib.parse import quote_plus
@@ -9,6 +10,7 @@ from data.environ import DB_PASSWORD, DB_USERNAME
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 from data.settings import (
     COG_DIRECTORIES,
@@ -39,12 +41,21 @@ def get_activity(bot: commands.Bot):
 
 
 async def aquire_driver() -> webdriver.Chrome:
+    executable_path = Path("data/assets/drivers/chromedriver.exe").absolute()
+    binary_location: str ="C:\\Program Files\\Google\\Chrome Beta\\Application\\chrome.exe"
+
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.headless = True
-    executable_path = Path("data/assets/drivers/chromedriver.exe").absolute()
-    print(executable_path)
-    driver: webdriver.Chrome = await run(webdriver.Chrome, executable_path=executable_path, options=options)
+
+    if not exists(binary_location):
+        raise Exception("Google Chrome >= 103.x must be installed. Please see https://www.google.com/chrome/beta/")
+    options.binary_location = binary_location
+    
+    service = Service()
+    service.path = executable_path
+
+    driver: webdriver.Chrome = await run(webdriver.Chrome, options=options, service=service)
     driver.set_window_size(1920, 1080)
     return driver
 
