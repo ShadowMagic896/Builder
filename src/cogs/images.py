@@ -457,7 +457,7 @@ class Images(commands.Cog):
         sort = [value[1] for value in sort]
         values = (await filter_similar(sort, 0, 10))[:target_colors]
 
-        fp = ".\\data\\assets\\PIL\\basePaintTemplate.png"
+        fp = ".\\assets\\PIL\\basePaintTemplate.png"
         template = Image.open(fp)
         template = template.convert("RGBA")
 
