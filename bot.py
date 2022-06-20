@@ -84,6 +84,9 @@ class BuilderTree(discord.app_commands.CommandTree):
         super().__init__(client, fallback_to_global=True)
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        if interaction.type != discord.InteractionType.application_command:
+            return True
+
         default: Mapping[str, bool] = {"defer": True, "thinking": True, "ephemeral": False}
         settings: Mapping[str, bool] = getattr(
             interaction.command.callback, "defer", default
@@ -94,7 +97,12 @@ class BuilderTree(discord.app_commands.CommandTree):
                     thinking=settings["thinking"], ephemeral=settings["ephemeral"]
                 )
             except discord.NotFound:
-                print("Cannot find interaction")
+                pass
+        for name, param in interaction.command._params.items():
+            if param.type == discord.AppCommandOptionType.attachment:
+                obj: discord.Attachment = getattr(interaction.namespace, name)
+                if obj.size > 2 ** 22: # ~4MB
+                    raise commands.errors.BadArgument("Image is too large.")
         return True
 
 

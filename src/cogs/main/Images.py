@@ -371,8 +371,6 @@ class Images(commands.Cog):
         """
         Inverts an image's colors
         """
-        if image.size > 2 ** 22:
-            raise commands.errors.BadArgument(f"Image is too big: {image.size}")
         img: Image.Image = await PILFN.toimg(image)
         array = np.array(img)
         array = 255 - array
