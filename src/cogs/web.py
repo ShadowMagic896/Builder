@@ -8,10 +8,7 @@ from discord import app_commands
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from urllib import parse
-
 from urllib import parse as uparse
 
 from src.utils.converters import UrlGet, UrlFind

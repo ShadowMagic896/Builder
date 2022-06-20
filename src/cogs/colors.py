@@ -5,7 +5,7 @@ from discord.app_commands import Range, describe
 
 from src.utils.colors import channels_to_names, merge
 from src.utils.embeds import fmte
-from src.cogs.main.images import PILFN
+from src.cogs.images import PILFN
 from src.utils.static.parameters import COLOR_CHANNEL_ALPHA
 from src.utils.converters import RGB
 

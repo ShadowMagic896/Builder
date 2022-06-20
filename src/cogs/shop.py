@@ -8,8 +8,8 @@ from data.item_maps import Chemistry, get_atomic_name
 
 from src.utils.converters import Atom
 from src.utils.embeds import fmte
-from src.cogs.economy.atoms import AtomsDatabase
-from src.cogs.economy.currency import BalanceDatabase
+from src.cogs.atoms import AtomsDatabase
+from src.cogs.currency import BalanceDatabase
 from src.utils.subclass import BaseView, Paginator
 from src.utils.constants import Const
 from bot import BuilderContext

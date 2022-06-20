@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional
 from urllib.parse import quote_plus
@@ -6,7 +5,6 @@ import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
-import selenium
 from data.environ import DB_PASSWORD, DB_USERNAME
 
 from selenium import webdriver
@@ -44,7 +42,8 @@ async def aquire_driver() -> webdriver.Chrome:
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.headless = True
-    executable_path = Path("data/assets/drivers/chromedriver").absolute()
+    executable_path = Path("data/assets/drivers/chromedriver.exe").absolute()
+    print(executable_path)
     driver: webdriver.Chrome = await run(webdriver.Chrome, executable_path=executable_path, options=options)
     driver.set_window_size(1920, 1080)
     return driver
