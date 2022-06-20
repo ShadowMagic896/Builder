@@ -1,8 +1,4 @@
-import asyncio
-from asyncio.subprocess import Process
 import datetime
-import os
-import time
 import aiofiles
 import io
 import discord

@@ -13,7 +13,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 
 from data.settings import (
-    COG_DIRECTORIES,
+    EXT_DIRECTORIES,
     GLOBAL_CHECKS,
     IGNORED_GLOBALLY_CHECKED_COMMANDS,
     IGNORED_INHERITED_GROUP_CHECKS,
@@ -66,7 +66,7 @@ async def do_prep(bot: commands.Bot) -> aiohttp.ClientSession:
 
     if LOAD_COGS_ON_STARTUP:
         await load_extensions(
-            bot, COG_DIRECTORIES, spaces=20, ignore_errors=False, print_log=False
+            bot, EXT_DIRECTORIES, spaces=20, ignore_errors=False, print_log=False
         )
 
     if START_DOCKER_ON_STARTUP:

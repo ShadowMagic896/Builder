@@ -1,4 +1,3 @@
-from os import stat
 from random import random
 import discord
 from discord.app_commands import Range, describe

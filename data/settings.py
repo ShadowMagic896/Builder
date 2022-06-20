@@ -4,7 +4,7 @@ from typing import Any, Callable, List, Set, Tuple
 from src.utils.checks import inter_choke
 
 # Directories to look for cogs in
-COG_DIRECTORIES: List[PathLike] = [
+EXT_DIRECTORIES: List[PathLike] = [
     "./src/cogs"
 ]
 

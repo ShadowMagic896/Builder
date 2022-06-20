@@ -14,7 +14,6 @@ from src.utils.types import NHSearchData, PHSearchData
 from data.environ import NSFW_PATH
 
 from src.utils.subclass import Paginator
-from src.utils.parsers import Parser
 from src.utils.embeds import fmte, fmte_i
 from bot import Builder, BuilderContext
 from src.utils.constants import Const

@@ -1,19 +1,17 @@
-import importlib
 import io
-import os
 from subprocess import Popen
 from discord import app_commands
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-from typing import List
-from data.settings import COG_DIRECTORIES, DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
+from data.settings import DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
 
 from src.utils.embeds import fmte
 from src.utils.functions import explode
 from bot import BuilderContext
 from src.utils.stats import Stats
+from src.utils.extensions import full_reload
 
 
 class Dev(commands.Cog):
@@ -55,21 +53,7 @@ class Dev(commands.Cog):
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     async def reload(self, ctx: BuilderContext):
-        log: str = ""
-        to_reload = ["./src/utils"]
-        to_reload.extend(COG_DIRECTORIES)
-        for directory in to_reload:
-            for file in os.listdir(directory):
-                if os.path.isdir(f"{directory}/{file}"):  # Probably just pycaches
-                    continue
-                fp = f"{directory[2:].replace('/','.')}.{file[:-3]}"
-                if fp in ctx.bot.extensions.keys():
-                    log += f"**[EXT] {fp}**\n"
-                    await ctx.bot.reload_extension(fp)
-                else:
-                    imp = importlib.import_module(fp)
-                    importlib.reload(imp)
-                    log += f"*{fp}* \n"
+        log: str = await full_reload(self.bot)
 
         embed = fmte(ctx, t="All Files Reloaded.", d=log)
 

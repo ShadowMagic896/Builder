@@ -1,7 +1,6 @@
 from typing import Callable, Optional
 import discord
-from discord import app_commands
-from discord.app_commands import describe, Range
+from discord.app_commands import describe
 from discord.ext import commands
 from unidecode import unidecode_expect_nonascii
 import json as js

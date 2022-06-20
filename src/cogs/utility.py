@@ -1,5 +1,3 @@
-import asyncio
-from urllib.parse import quote_plus
 import aiohttp
 from datetime import datetime
 import io
@@ -14,7 +12,6 @@ from discord.ext import commands
 
 from typing import Any, List, Optional, Tuple
 from data import environ
-import bs4
 import requests
 import warnings
 from src.utils.embeds import fmte
