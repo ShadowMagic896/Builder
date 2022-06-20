@@ -9,15 +9,16 @@ from pyfiglet import Figlet
 from typing import List
 
 from src.utils.embeds import fmte, Desc
-from bot import BuilderContext
+from src.utils.subclass import BaseCog
+from bot import Builder, BuilderContext
 
 
-class Fun(commands.Cog):
+class Fun(BaseCog):
     """
     If you wanna have a good time...
     """
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: Builder) -> None:
         self.bot = bot
         self.emoji_check = "\N{WHITE HEAVY CHECK MARK}"
         self.emoji_cross = "\N{CROSS MARK}"

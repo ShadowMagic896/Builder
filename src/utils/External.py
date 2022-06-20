@@ -6,7 +6,7 @@ import ctypes
 
 import psutil
 
-from data.settings import DOCKER_DESKTOP_LOCATION
+from settings import DOCKER_DESKTOP_LOCATION
 
 
 async def snekbox_exec():

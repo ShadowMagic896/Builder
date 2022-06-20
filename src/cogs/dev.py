@@ -5,18 +5,16 @@ import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-from data.settings import DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
+from settings import DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
 
 from src.utils.embeds import fmte
 from src.utils.functions import explode
-from bot import BuilderContext
+from bot import Builder, BuilderContext
 from src.utils.stats import Stats
-from src.utils.extensions import full_reload
+from src.utils.subclass import BaseCog
 
 
-class Dev(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
-        self.bot: commands.Bot = bot
+class Dev(BaseCog):
 
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
@@ -53,7 +51,7 @@ class Dev(commands.Cog):
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     async def reload(self, ctx: BuilderContext):
-        log: str = await full_reload(self.bot)
+        log: str = await self.bot.reload_source()
 
         embed = fmte(ctx, t="All Files Reloaded.", d=log)
 

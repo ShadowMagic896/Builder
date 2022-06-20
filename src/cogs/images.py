@@ -30,11 +30,11 @@ from src.utils.coro import run
 
 from wand import image as wimage
 
-from data import environ
+import environ
 
 from src.utils.embeds import fmte, Desc
 from src.utils import constants
-from bot import BuilderContext
+from bot import Builder, BuilderContext
 from src.utils.static import parameters
 
 
@@ -42,10 +42,6 @@ class Images(commands.Cog):
     """
     Commands to manipulate and format images
     """
-
-    def __init__(self, bot: commands.Bot) -> None:
-        self.bot = bot
-        self.loop = self.bot.loop
 
     def ge(self):
         return "\N{FRAME WITH PICTURE}\N{VARIATION SELECTOR-16}"
@@ -796,7 +792,6 @@ class ImageManipulateView(BaseView):
         self.img = wimage.Image(blob=self.initial)
         self.last = None
         self.filters = []
-        self.loop = asyncio.get_event_loop()
 
         self._protected_buttons = ["back", "rev", "finish"]
         super().__init__(ctx, timeout)
@@ -807,7 +802,7 @@ class ImageManipulateView(BaseView):
     async def apply(self, func, *args, **kwargs):
         self.last = self.img.clone()
         part = functools.partial(func, *args, **kwargs)
-        await self.loop.run_in_executor(None, part)
+        await self.ctx.bot.loop.run_in_executor(None, part)
 
     async def update(self, inter: discord.Interaction, button: discord.ui.Button):
         if button.custom_id != "back":
@@ -1125,7 +1120,7 @@ class ImageManipulateView(BaseView):
         if not message.reference:
             return await ImageManipulateView._getAttachmentFrom(ctx, message)
         else:
-            ctx.bot: commands.Bot = ctx.bot
+            ctx.bot: Builder = ctx.bot
             message = await ctx.channel.fetch_message(message.reference.message_id)
             return await ImageManipulateView._getAttachmentFrom(ctx, message)
 
@@ -1166,5 +1161,5 @@ class ImageManipulateView(BaseView):
                 raise ValueError("Could not load attachment into image.")
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Builder):
     await bot.add_cog(Images(bot))

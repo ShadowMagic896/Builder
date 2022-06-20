@@ -7,34 +7,18 @@ from discord.ext.commands import parameter
 
 import random
 from typing import Any, List, Optional
-from data import environ
+import environ
 
 from src.utils.embeds import fmte, fmte_i
 from src.utils.constants import Const
-from src.utils.subclass import BaseModal, BaseView, Paginator
-from bot import BuilderContext
+from src.utils.subclass import BaseCog, BaseModal, BaseView, Paginator
+from bot import Builder, BuilderContext
 
 
-class Currency(commands.Cog):
+class Currency(BaseCog):
     """
     Get bank
     """
-
-    def __init__(self, bot: commands.Bot, add_commands: bool = False):
-        self.bot = bot
-        self.coin = Const.Emojis().COIN_ID
-        if add_commands:
-            self.bot.tree.add_command(
-                app_commands.ContextMenu(
-                    name="\N{MONEY BAG} Give Money", callback=self.giveMenu
-                )
-            )
-            self.bot.tree.add_command(
-                app_commands.ContextMenu(
-                    name="\N{MONEY BAG} Request Money", callback=self.requestMenu
-                )
-            )
-
     def ge(self):
         return "\N{MONEY BAG}"
 
@@ -706,7 +690,7 @@ class QuizClose(discord.ui.Button):
 
 class BalanceDatabase:
     def __init__(self, ctx: BuilderContext):
-        self.bot: commands.Bot = ctx.bot
+        self.bot: Builder = ctx.bot
         self.apg: asyncpg.Connection = ctx.bot.apg
 
     async def register_user(self, user: discord.User) -> asyncpg.Record:
@@ -771,4 +755,4 @@ class BalanceDatabase:
 
 
 async def setup(bot):
-    await bot.add_cog(Currency(bot, True))
+    await bot.add_cog(Currency(bot))

@@ -5,7 +5,7 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import Any, List, Optional, Union
-from data.settings import INVISIBLE_COGS
+from settings import INVISIBLE_COGS
 from src.utils.converters import Cog, Command, Group
 from src.utils.user_io import (
     cog_autocomplete,
@@ -15,13 +15,11 @@ from src.utils.user_io import (
 
 from src.utils.embeds import fmte, fmte_i
 from src.utils.functions import explode
-from src.utils.subclass import BaseView, Paginator
+from src.utils.subclass import BaseCog, BaseView, Paginator
 from bot import Builder, BuilderContext
 
 
-class Help(commands.Cog):
-    def __init__(self, bot: Builder):
-        self.bot = bot
+class Help(BaseCog):
 
     @commands.hybrid_command()
     @describe(
@@ -106,7 +104,7 @@ class Help(commands.Cog):
     ) -> List[discord.app_commands.Choice[str]]:
         return await command_autocomplete(self.bot, inter, current)
 
-    async def main_embed(self, ctx: BuilderContext, bot: commands.Bot):
+    async def main_embed(self, ctx: BuilderContext, bot: Builder):
         return fmte(
             ctx,
             t="Help",

@@ -14,18 +14,15 @@ from urllib import parse as uparse
 from src.utils.converters import UrlGet, UrlFind
 from src.utils.embeds import fmte
 from bot import Builder, BuilderContext
-from src.utils.subclass import Paginator
+from src.utils.subclass import BaseCog, Paginator
 from src.utils.types import DDGImageData, FeatureType, DDGSearchData
 from src.utils.coro import run
 
 
-class Web(commands.Cog):
+class Web(BaseCog):
     """
     The wonders of the interwebs!
     """
-
-    def __init__(self, bot: Builder) -> None:
-        self.bot = bot
 
     def ge(self):
         return "\N{GLOBE WITH MERIDIANS}"
@@ -280,5 +277,5 @@ class DDGImageView(Paginator):
         )
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Builder):
     await bot.add_cog(Web(bot))

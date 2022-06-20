@@ -3,7 +3,7 @@ from datetime import datetime
 import io
 from textwrap import indent
 import pytz
-from data.settings import EVALUATION_TRUNCATION_THRESHOLD
+from settings import EVALUATION_TRUNCATION_THRESHOLD
 import time
 
 import discord
@@ -11,11 +11,11 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from typing import Any, List, Optional, Tuple
-from data import environ
+import environ
 import requests
 import warnings
 from src.utils.embeds import fmte
-from src.utils.subclass import BaseModal, BaseView
+from src.utils.subclass import BaseCog, BaseModal, BaseView
 from src.utils.converters import TimeConvert
 from src.utils.errors import *
 from bot import Builder, BuilderContext
@@ -23,16 +23,14 @@ from bot import Builder, BuilderContext
 warnings.filterwarnings("error")
 
 
-class Utility(commands.Cog):
+class Utility(BaseCog):
     """
     Helpful stuff
     """
 
     def __init__(self, bot: Builder) -> None:
         self.bot: Builder = bot
-        self.container_users: List[int] = []
         self.jobs: List[int] = []
-        pass
 
     def ge(self):
         return "\N{INPUT SYMBOL FOR NUMBERS}"

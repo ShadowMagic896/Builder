@@ -11,7 +11,7 @@ import psutil
 from typing import List, Optional
 
 from src.utils.converters import Cog, Command, Group
-from src.utils.subclass import BaseModal, BaseView
+from src.utils.subclass import BaseCog, BaseModal, BaseView
 from src.utils.user_io import (
     cog_autocomplete,
     group_autocomplete,
@@ -19,16 +19,16 @@ from src.utils.user_io import (
 )
 from src.utils.embeds import fmte, fmte_i
 from src.utils.functions import explode
-from bot import BuilderContext
+from bot import Builder, BuilderContext
 from src.utils.constants import Const
 
 
-class Client(commands.Cog):
+class Client(BaseCog):
     """
     Commands that manage the bot / how it works
     """
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Builder) -> None:
         self.bot = bot
 
     def ge(self):
@@ -340,5 +340,5 @@ class InviteView(discord.ui.View):
         await inter.response.send_message(self.url, ephemeral=True)
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Builder):
     await bot.add_cog(Client(bot))

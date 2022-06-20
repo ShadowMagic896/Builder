@@ -11,17 +11,14 @@ from src.utils.converters import RGB
 
 from PIL import Image
 
-from bot import BuilderContext
+from bot import Builder, BuilderContext
+from src.utils.subclass import BaseCog
 
 
-class Colors(commands.Cog):
+class Colors(BaseCog):
     """
     Manipulate RGB colors
     """
-
-    def __init__(self, bot: commands.Bot) -> None:
-        self.bot = bot
-        super().__init__()
 
     def ge(self):
         return "\N{Artist Palette}"
@@ -108,5 +105,5 @@ class Colors(commands.Cog):
         await ctx.send(embed=embed, file=file)
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Builder):
     await bot.add_cog(Colors(bot))

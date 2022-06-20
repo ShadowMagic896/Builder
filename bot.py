@@ -16,15 +16,16 @@ from src.utils.startup_functions import (
     do_prep,
     startup_print,
 )
-from data.environ import APPLICATION_ID, BOT_KEY, OPENAI_KEY
+from environ import APPLICATION_ID, BOT_KEY, OPENAI_KEY
+from settings import PREFIXES
 from src.utils.types import Caches
-from data.settings import PREFIXES
+from src.utils.extensions import full_reload
 
 # Logging ---------------------------------------------------
 logger: logging.Logger = logging.getLogger("discord")
 logger.setLevel(logging.ERROR)
 
-filename: str = "data\\logs\\_discord.log"
+filename: str = "logs\\discord.log"
 encoding: str = "UTF-8"
 mode: str = "w"
 
@@ -68,6 +69,9 @@ class Builder(commands.Bot):
         self.driver: Chrome
         self.session: aiohttp.ClientSession
         self.tree: BuilderTree
+    
+    async def reload_source(self) -> str:
+        return await full_reload(self)
 
     async def setup_hook(self) -> None:
         await startup_print(self)

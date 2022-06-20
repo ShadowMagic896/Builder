@@ -7,14 +7,13 @@ from discord.ext import commands
 
 from bot import Builder, BuilderContext
 from src.utils.constants import Const
-from data.environ import LIBRARY_KEY
+from environ import LIBRARY_KEY
 from src.utils.embeds import fmte
 
 class GitHub(commands.Cog):
     def __init__(self, bot: Builder) -> None:
         self.bot=bot
         self.last_updated_log = 0
-        super().__init__()
     
     def ge(self):
         return "\N{VideoCassette}"

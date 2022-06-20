@@ -4,24 +4,21 @@ import discord
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from src.utils.errors import MissingShopEntry, MissingFunds, SelfAction, Unowned
-from data.item_maps import Chemistry, get_atomic_name
+from src.utils.item_maps import Chemistry, get_atomic_name
 
 from src.utils.converters import Atom
 from src.utils.embeds import fmte
 from src.cogs.atoms import AtomsDatabase
 from src.cogs.currency import BalanceDatabase
-from src.utils.subclass import BaseView, Paginator
+from src.utils.subclass import BaseCog, BaseView, Paginator
 from src.utils.constants import Const
 from bot import BuilderContext
 
 
-class Shop(commands.Cog):
+class Shop(BaseCog):
     """
     Manipulate the stock market
     """
-
-    def __init__(self, bot: commands.Bot) -> None:
-        self.bot: commands.Bot = bot
 
     def ge(self):
         return "\N{Convenience Store}"

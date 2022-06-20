@@ -13,16 +13,14 @@ import numpy as np
 from typing import Callable, Literal, Optional, Union
 from matplotlib import pyplot as plt
 
-from bot import BuilderContext
+from bot import Builder, BuilderContext
+from src.utils.subclass import BaseCog
 
 
-class Graphing(commands.Cog):
+class Graphing(BaseCog):
     """
     Commands for visualizing data and functions
     """
-
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
 
     def ge(self):
         return "\U0001f4ca"

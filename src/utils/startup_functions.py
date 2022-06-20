@@ -6,13 +6,13 @@ import aiohttp
 import asyncpg
 import discord
 from discord.ext import commands
-from data.environ import DB_PASSWORD, DB_USERNAME
+from environ import DB_PASSWORD, DB_USERNAME
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 
-from data.settings import (
+from settings import (
     EXT_DIRECTORIES,
     GLOBAL_CHECKS,
     IGNORED_GLOBALLY_CHECKED_COMMANDS,
@@ -30,7 +30,6 @@ from src.utils.stats import Stats
 from src.utils.coro import run
 from src.utils.types import Caches
 
-
 def get_activity(bot: commands.Bot):
 
     activity: discord.Activity = discord.Activity(
@@ -41,7 +40,7 @@ def get_activity(bot: commands.Bot):
 
 
 async def aquire_driver() -> webdriver.Chrome:
-    executable_path = Path("data/assets/drivers/chromedriver.exe").absolute()
+    executable_path = Path("assets/drivers/chromedriver.exe").absolute()
     binary_location: str ="C:\\Program Files\\Google\\Chrome Beta\\Application\\chrome.exe"
 
     options = Options()

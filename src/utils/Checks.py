@@ -1,5 +1,4 @@
-import asyncio
-from typing import Any, Callable, Coroutine, Mapping
+from typing import Callable
 from discord.ext import commands
 
 

@@ -9,16 +9,13 @@ from bot import Builder, BuilderContext
 from src.utils.embeds import fmte
 from src.utils.constants import Const
 from src.utils import errors
-from src.utils.subclass import BaseView
+from src.utils.subclass import BaseCog, BaseView
 
 
-class Misc(commands.Cog):
+class Misc(BaseCog):
     """
     Commands that don't fit into any one category
     """
-
-    def __init__(self, bot: Builder) -> None:
-        self.bot = bot
 
     def ge(self):
         return "\N{BLACK QUESTION MARK ORNAMENT}"

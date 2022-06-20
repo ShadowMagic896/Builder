@@ -3,10 +3,10 @@ import importlib
 import os
 from discord.ext import commands
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, List, Mapping, Any
+from typing import Iterable, Optional, Mapping, Any
 import discord
 
-from data.settings import EXT_DIRECTORIES, NOLOAD_EXTS
+from settings import EXT_DIRECTORIES, NOLOAD_EXTS
 
 
 def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):
@@ -40,7 +40,6 @@ async def load_extensions(bot: Any, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, 
 
 
 def extend_exts(path: str):
-    print(extend_dir(path))
     def format_path(path: str):
         return (path.replace(os.getcwd(), ".") + "\\").replace("\\", ".").strip(".").removesuffix(".py")
     path = Path(path).absolute()

@@ -11,21 +11,18 @@ import os
 import random
 from bs4 import BeautifulSoup, ResultSet, Tag
 from src.utils.types import NHSearchData, PHSearchData
-from data.environ import NSFW_PATH
+from environ import NSFW_PATH
 
-from src.utils.subclass import Paginator
+from src.utils.subclass import BaseCog, Paginator
 from src.utils.embeds import fmte, fmte_i
 from bot import Builder, BuilderContext
 from src.utils.constants import Const
 
 
-class NSFW(commands.Cog):
+class NSFW(BaseCog):
     """
     For the horny ones
     """
-
-    def __init__(self, bot) -> None:
-        self.bot: Builder = bot
 
     def ge(self):
         return "\N{NO ONE UNDER EIGHTEEN SYMBOL}"

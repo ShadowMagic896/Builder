@@ -10,21 +10,17 @@ from chempy.util import periodic
 from src.utils.converters import Atom
 
 from src.utils.embeds import fmte
-from src.utils.subclass import Paginator
-from data.item_maps import get_atomic_name, Chemistry
-from bot import BuilderContext
+from src.utils.subclass import BaseCog, Paginator
+from src.utils.item_maps import get_atomic_name, Chemistry
+from bot import Builder, BuilderContext
 
 chem = Chemistry()
 
 
-class Atoms(commands.Cog):
+class Atoms(BaseCog):
     """
     Gather random atoms!
     """
-
-    def __init__(self, bot: commands.Bot):
-        self.bot: commands.Bot = bot
-
     def ge(self):
         return "\N{ATOM SYMBOL}"
 
@@ -114,7 +110,7 @@ class Atoms(commands.Cog):
 
 class AtomsDatabase:
     def __init__(self, ctx: BuilderContext):
-        self.bot: commands.Bot = ctx.bot
+        self.bot: Builder = ctx.bot
         self.apg: Connection = self.bot.apg
 
     async def get_atoms(

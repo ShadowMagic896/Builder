@@ -7,7 +7,7 @@ from discord.ext.commands import Context
 import numpy as np
 from src.utils.functions import find_url
 from src.utils.constants import Const
-from data.item_maps import Chemistry, get_atomic_name
+from src.utils.item_maps import Chemistry, get_atomic_name
 import re
 
 from src.utils.errors import ForbiddenData, MissingCog, MissingCommand, ScopeError

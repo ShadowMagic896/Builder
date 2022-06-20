@@ -2,8 +2,7 @@ import asyncio
 from copy import copy
 import functools
 import time
-from typing import List, Mapping, Optional
-from webbrowser import Chrome
+from typing import List, Optional
 import aiohttp
 from selenium import webdriver
 from urllib.parse import quote_plus
@@ -15,21 +14,17 @@ from discord.ext import commands
 from bot import Builder, BuilderContext
 from src.utils.api import evaulate_response
 from src.utils.embeds import fmte
-from src.utils.subclass import Paginator
+from src.utils.subclass import BaseCog, Paginator
 from src.utils.errors import NoDocumentsFound
 from src.utils.constants import Const
 from src.utils.coro import run
 from src.utils.types import RTFMCache
 
 
-class API(commands.Cog):
+class API(BaseCog):
     """
     Using external APIs! Suggestion one with /suggest
     """
-
-    def __init__(self, bot: Builder) -> None:
-        self.bot = bot
-        super().__init__()
 
     def ge(self):
         return "\N{Clockwise Rightwards and Leftwards Open Circle Arrows}"  # Bruh

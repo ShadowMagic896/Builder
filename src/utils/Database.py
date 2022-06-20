@@ -2,7 +2,7 @@ from chempy.util import periodic
 from discord.ext import commands
 from typing import List, Mapping, Tuple
 
-from data.settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
+from settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
 from src.utils.functions import explode
 
 

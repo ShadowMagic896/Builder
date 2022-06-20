@@ -1,14 +1,24 @@
 import discord
+from discord.ext import commands
 from discord.app_commands import errors as app_errors
 
 import math
 from typing import Any, Optional
 
-from src.cogs.error_handling import ErrorHandling
 from src.utils.embeds import fmte_i
 from src.utils.constants import Const
-from bot import BuilderContext
+from src.utils.error_funcs import (
+    _interaction_error_handler,
+    handle_modal_error
+)
 
+class BaseCog(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot: commands.Bot = bot
+        super().__init__()
+    
+    def ge(self):
+        return "\N{Black Question Mark Ornament}"
 
 class BaseView(discord.ui.View):
     """
@@ -18,7 +28,7 @@ class BaseView(discord.ui.View):
 
     def __init__(
         self,
-        ctx: BuilderContext,
+        ctx: commands.Context,
         timeout: Optional[float] = 300,
     ):
         self.message: discord.Message = None
@@ -41,7 +51,7 @@ class BaseView(discord.ui.View):
             return await interaction.response.send_message(
                 f"This isn't your message!\nYou can create your own with `{interaction.command}`"
             )
-        return await ErrorHandling(self.ctx.bot)._interaction_error_handler(
+        return await _interaction_error_handler(
             interaction, error
         )
 
@@ -57,7 +67,7 @@ class BaseView(discord.ui.View):
 class Paginator(BaseView):
     def __init__(
         self,
-        ctx: BuilderContext,
+        ctx: commands.Context,
         values,
         pagesize: int,
         *,
@@ -207,4 +217,4 @@ class BaseModal(discord.ui.Modal):
         interaction: discord.Interaction,
         error: Exception,
     ) -> None:
-        return await ErrorHandling.handle_modal_error(interaction, error)
+        return await handle_modal_error(interaction, error)
