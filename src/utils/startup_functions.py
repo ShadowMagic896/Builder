@@ -1,4 +1,4 @@
-from genericpath import exists, isdir
+import os
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional
 from urllib.parse import quote_plus
@@ -47,7 +47,7 @@ async def aquire_driver() -> webdriver.Chrome:
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.headless = True
 
-    if not exists(binary_location):
+    if not os.path.exists(binary_location):
         raise Exception("Google Chrome >= 103.x must be installed. Please see https://www.google.com/chrome/beta/")
     options.binary_location = binary_location
     

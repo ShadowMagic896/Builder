@@ -27,7 +27,7 @@ async def load_extensions(bot: Any, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, 
             continue
         if path.startswith("_"):
             continue
-        print(path, end=" | ")
+        print(path, end=" ")
         try:
             await bot.load_extension(path)
 

@@ -123,4 +123,11 @@ async def main():
 
 if __name__ == "__main__":
     freeze_support()
-    asyncio.run(main())
+    inital: bool = True
+    while inital or input("\nENDED WITH KEYBOARD INTERRUPT\nRestart bot? (Y/N)\n  | ").lower() == "y":
+        if inital:
+            inital = not inital
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            continue

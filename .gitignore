@@ -1,6 +1,6 @@
 **/__pycache__/
 docker/containers/*
-logs
+logs/*
 .dccache
 
 environ.py
