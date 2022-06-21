@@ -1,6 +1,6 @@
 from settings import CATCH_ERRORS
 from src.utils.subclass import BaseCog
-from bot import Builder
+from src.utils.bot_types import Builder
 
 from src.utils.error_funcs import (
     on_error,

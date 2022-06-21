@@ -9,9 +9,10 @@ from settings import DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
 
 from src.utils.embeds import fmte
 from src.utils.functions import explode
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.stats import Stats
 from src.utils.subclass import BaseCog
+from src.utils.extensions import extend_dir
 
 
 class Dev(BaseCog):
@@ -20,7 +21,7 @@ class Dev(BaseCog):
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     @commands.is_owner()
     @describe(params="The arguments to pass to Popen & autopep8")
-    async def fmtcode(self, ctx, params: str = "-aaair"):
+    async def fmtcode(self, ctx: BuilderContext, params: str = "-aaair"):
         """
         Formats the bot's code using autopep8
         """
@@ -57,7 +58,7 @@ class Dev(BaseCog):
 
         activity: discord.Activity = discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES, {len(explode(self.bot.commands))} COMMANDS",
+            name=f"{Stats.line_count(extend_dir(SOURCE_CODE_PATHS))} LINES, {len(explode(self.bot.commands))} COMMANDS",
         )
         await self.bot.change_presence(activity=activity, status="idle")
         await ctx.send(embed=embed)

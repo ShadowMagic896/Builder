@@ -5,7 +5,7 @@ import time
 import discord
 from discord.ext import commands
 
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import Const
 from environ import LIBRARY_KEY
 from src.utils.embeds import fmte

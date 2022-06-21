@@ -12,7 +12,7 @@ from src.cogs.atoms import AtomsDatabase
 from src.cogs.currency import BalanceDatabase
 from src.utils.subclass import BaseCog, BaseView, Paginator
 from src.utils.constants import Const
-from bot import BuilderContext
+from src.utils.bot_types import BuilderContext
 
 
 class Shop(BaseCog):

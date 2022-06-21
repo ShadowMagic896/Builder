@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Mapping, NamedTuple
 from src.utils.constants import Const
+from PIL import ImageFont
 
 
 class DDGSearchData(NamedTuple):
@@ -35,8 +36,13 @@ class PHSearchData(NamedTuple):
     duration: str
 
 
-class Caches(NamedTuple):
+class Cache(NamedTuple):
     RTFM: Mapping["RTFMCache", "RTFMMeta"] # type: ignore
+    fonts: "Fonts"
+
+
+class Fonts(NamedTuple):
+    bookosbi: ImageFont.FreeTypeFont
 
 
 class RTFMCache(NamedTuple):

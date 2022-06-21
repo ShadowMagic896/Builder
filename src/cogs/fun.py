@@ -10,7 +10,7 @@ from typing import List
 
 from src.utils.embeds import fmte, Desc
 from src.utils.subclass import BaseCog
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 
 
 class Fun(BaseCog):

@@ -10,10 +10,7 @@ if float(f"{ver.major}.{ver.minor}") < 3.10:
 cpath: str = str(os.getcwd()).lower().strip("/\\")
 command: str = ""
 if not cpath.endswith("builder"):
-    if cpath.endswith("reqs"):
-        command += "cd ../ && "
-    else:
-        raise IOError("Working directory must builder")
+    raise IOError("Working directory must builder")
 if input("Install Required Modules? (Required for first-time use) (Y/N)\n  | ").lower() == "y":
     command += "py reqs/requirements.py && py -m pip install -Ur reqs/requirements.txt"
     os.system(command)

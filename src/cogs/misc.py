@@ -5,7 +5,7 @@ from discord.ext import commands
 from unidecode import unidecode_expect_nonascii
 import json as js
 
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.embeds import fmte
 from src.utils.constants import Const
 from src.utils import errors

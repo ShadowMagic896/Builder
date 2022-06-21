@@ -24,7 +24,7 @@ import numpy as np
 from src.utils.functions import filter_similar
 from src.utils.colors import to_hex
 from src.utils.converters import RGB
-from src.utils.subclass import BaseView
+from src.utils.subclass import BaseCog, BaseView
 from src.utils.static import typehints
 from src.utils.coro import run
 
@@ -34,11 +34,11 @@ import environ
 
 from src.utils.embeds import fmte, Desc
 from src.utils import constants
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.static import parameters
 
 
-class Images(commands.Cog):
+class Images(BaseCog):
     """
     Commands to manipulate and format images
     """
@@ -116,67 +116,6 @@ class Images(commands.Cog):
             % ("<:{}:{}>".format(e.name, e.id), e.name, reason),
         )
         await ctx.send(embed=embed)
-
-    @image.command()
-    @commands.cooldown(10, 60 * 60, commands.BucketType.user)
-    @describe(
-        text="The text to add.",
-        image="The image to add the text to.",
-        xpos="The X-Position for the top-left corner of the text.",
-        ypos="The Y-Position for the top-left corner of the text.",
-        font="The font to use.",
-        strokeweight="The width of the font, in pixels.",
-        r="The RED component of the text color.",
-        g="The GREEN component of the text color.",
-        b="The BLUE component of the text color.",
-    )
-    async def text(
-        self,
-        ctx: BuilderContext,
-        image: discord.Attachment,
-        text: str,
-        xpos: int,
-        ypos: int,
-        font: str = "pertili",
-        strokeweight: Range[int, 1, 200] = 5,
-        r: Range[int, 0, 255] = 255,
-        g: Range[int, 0, 255] = 255,
-        b: Range[int, 0, 255] = 255,
-    ):
-        """
-        Adds text to an image.
-        """
-        font = font.lower()
-        if font not in [p.lower() for p in os.listdir(environ.FONT_PATH)]:
-            raise ValueError("Not a valid font. Please use the autocomplete.")
-        try:
-            font = ImageFont.FreeTypeFont(environ.FONT_PATH + font, strokeweight)
-        except BaseException as e:
-            print(e)
-        img = await PILFN.toimg(image)
-
-        await run(
-            lambda i: i.text(xy=(xpos, ypos), text=text, fill=(r, g, b), font=font),
-            ImageDraw.ImageDraw(img),
-        )
-
-        buffer: BytesIO = BytesIO()
-        img.save(buffer, "png")
-        buffer.seek(0)
-
-        file = discord.File(buffer, filename="text.%s" % image.filename)
-
-        embed = fmte(ctx, t="File Successfully Edited!")
-        await ctx.send(embed=embed, file=file)
-
-    @text.autocomplete(name="font")
-    async def textfont_autocomplete(self, inter: discord.Interaction, current: str):
-        return [
-            discord.app_commands.Choice(name=p[:-4], value=p)
-            for p in os.listdir(environ.FONT_PATH)
-            if (p.lower() in current.lower() or current.lower() in p.lower())
-            and p.lower().endswith(".ttf")
-        ][:25]
 
     @image.command()
     @describe(
@@ -468,7 +407,7 @@ class Images(commands.Cog):
 
             draw = ImageDraw.ImageDraw(result, mode="RGBA")
             as_hex = to_hex(color[:-1])
-            font = ImageFont.FreeTypeFont(environ.FONT_PATH + "BOOKOSBI.TTF", size=20)
+            font = self.bot.caches.fonts.bookosbi
             inverse = 255 - np.array(color)
             draw.text(
                 (round(result.width / 4), round(result.height / 2)),

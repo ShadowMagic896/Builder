@@ -11,7 +11,7 @@ from src.utils.converters import RGB
 
 from PIL import Image
 
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.subclass import BaseCog
 
 

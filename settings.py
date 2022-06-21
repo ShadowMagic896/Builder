@@ -1,3 +1,4 @@
+import logging
 from os import PathLike
 from typing import Any, Callable, List, Set
 
@@ -12,7 +13,7 @@ EXT_DIRECTORIES: List[PathLike] = [
 NOLOAD_EXTS: List[str] = []
 
 # ALl cogs to load on startup
-SOURCE_CODE_PATHS: List[PathLike] = ["./data", "./src"]
+SOURCE_CODE_PATHS: List[PathLike] = ["."]
 
 # All command prefixes that the bot should respond to
 PREFIXES: Set[str] = {">>"}
@@ -80,3 +81,9 @@ DEVELOPMENT_GUILD_IDS: List[int] = [
     871913539936329768,
     816348537800753182,
 ]
+
+BLACKLIST_USERS: List[int] = [
+
+]
+
+LOGGING_LEVEL: int = logging.DEBUG

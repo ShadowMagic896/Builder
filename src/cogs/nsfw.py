@@ -11,11 +11,10 @@ import os
 import random
 from bs4 import BeautifulSoup, ResultSet, Tag
 from src.utils.types import NHSearchData, PHSearchData
-from environ import NSFW_PATH
 
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.embeds import fmte, fmte_i
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import Const
 
 
@@ -105,41 +104,6 @@ class NSFW(BaseCog):
             )
             embed.set_image(url=l)
             await ctx.author.send(embed=embed)
-
-    @nsfw.command()
-    @describe(
-        amount="The amount of images to send.",
-    )
-    async def nekolewd(
-        self,
-        ctx: BuilderContext,
-        amount: Range[int, 1, 20] = 1,
-    ):
-        """
-        Gets an image response from [nekos.life/lewd](https://nekos.life/lewd) and sends it to you.
-        """
-        mdir = NSFW_PATH + "Nekos/"
-        data = []
-
-        for co in range(amount):
-            data.append(
-                discord.File(mdir + random.choice(os.listdir(mdir)), "Neko.jpg")
-            )
-
-        embed = fmte(
-            ctx,
-            t="Fetched Images",
-            d="Sending...",
-        )
-
-        await ctx.send(embed=embed)
-
-        for l in data:
-            embed = fmte(
-                ctx,
-            )
-            await ctx.author.send(embed=embed, file=l)
-            await asyncio.sleep(1)
 
     @nsfw.group()
     async def nhentai(self, ctx: BuilderContext):

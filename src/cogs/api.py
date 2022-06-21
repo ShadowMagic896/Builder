@@ -11,7 +11,7 @@ import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.api import evaulate_response
 from src.utils.embeds import fmte
 from src.utils.subclass import BaseCog, Paginator

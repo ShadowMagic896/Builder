@@ -4,6 +4,7 @@ from discord.app_commands import errors as app_errors
 
 import math
 from typing import Any, Optional
+from src.utils.bot_types import Builder
 
 from src.utils.embeds import fmte_i
 from src.utils.constants import Const
@@ -13,8 +14,8 @@ from src.utils.error_funcs import (
 )
 
 class BaseCog(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
-        self.bot: commands.Bot = bot
+    def __init__(self, bot: Builder) -> None:
+        self.bot: Builder = bot
         super().__init__()
     
     def ge(self):

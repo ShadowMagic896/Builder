@@ -5,7 +5,7 @@ import re
 
 from src.utils.functions import explode
 from src.utils.constants import Const
-from bot import BuilderContext
+from src.utils.bot_types import BuilderContext
 
 
 def iototime(userinput: str):

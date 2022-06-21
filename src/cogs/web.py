@@ -13,7 +13,7 @@ from urllib import parse as uparse
 
 from src.utils.converters import UrlGet, UrlFind
 from src.utils.embeds import fmte
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.types import DDGImageData, FeatureType, DDGSearchData
 from src.utils.coro import run

@@ -12,7 +12,7 @@ from src.utils.converters import Atom
 from src.utils.embeds import fmte
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.item_maps import get_atomic_name, Chemistry
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 
 chem = Chemistry()
 

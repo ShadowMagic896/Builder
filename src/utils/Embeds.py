@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
-from bot import BuilderContext
+from src.utils.bot_types import BuilderContext
 
 
 async def getv(inter) -> Union[BuilderContext, None]:

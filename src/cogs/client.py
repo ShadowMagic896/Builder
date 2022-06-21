@@ -19,7 +19,7 @@ from src.utils.user_io import (
 )
 from src.utils.embeds import fmte, fmte_i
 from src.utils.functions import explode
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import Const
 
 

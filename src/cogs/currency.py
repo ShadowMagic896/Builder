@@ -12,7 +12,7 @@ import environ
 from src.utils.embeds import fmte, fmte_i
 from src.utils.constants import Const
 from src.utils.subclass import BaseCog, BaseModal, BaseView, Paginator
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 
 
 class Currency(BaseCog):
@@ -156,7 +156,7 @@ class Currency(BaseCog):
         Attempts to steal money from a user. You may gain some, but you may also lose some!
         """
         if user.bot:
-            raise TypeError("Cannot steal from bots!")
+            raise TypeError("Cannot steal from src.utils.bot_typess!")
         if user == ctx.author:
             raise ValueError("Cannot steal from yourself!")
 

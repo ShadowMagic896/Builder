@@ -13,7 +13,7 @@ import numpy as np
 from typing import Callable, Literal, Optional, Union
 from matplotlib import pyplot as plt
 
-from bot import Builder, BuilderContext
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.subclass import BaseCog
 
 
