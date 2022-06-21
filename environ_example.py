@@ -1,5 +1,6 @@
 # Create a file in the same directory as this called "environ.py"
 # Copy all variables from here to that file, with their actual values.
+# Do not actually put any values in here, or they will be uploaded to github
 
 APPLICATION_ID: str = "" # https://discord.com/developers/applications
 BOT_KEY: str = "" # https://discord.com/developers/applications/APPLICATION_ID/bot
