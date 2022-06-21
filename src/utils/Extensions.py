@@ -1,5 +1,6 @@
 from glob import glob, iglob
 import importlib
+import logging
 import os
 from discord.ext import commands
 from pathlib import Path
@@ -27,7 +28,7 @@ async def load_extensions(bot: Any, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, 
             continue
         if path.startswith("_"):
             continue
-        print(path, end=" ")
+        logging.debug(f"Cog Loaded: {path}")
         try:
             await bot.load_extension(path)
 

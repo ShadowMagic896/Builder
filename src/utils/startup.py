@@ -85,7 +85,7 @@ async def aquire_caches() -> Cache:
         fonts=await aquire_fonts()
     )
 
-def aquire_connection() -> aiohttp.ClientSession:
+async def aquire_connection() -> aiohttp.ClientSession:
     return aiohttp.ClientSession(
         headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0"
@@ -169,7 +169,8 @@ async def prepare(bot: commands.Bot) -> commands.Bot:
     logging.info("Web Driver Aquired")
     bot.caches = await aquire_caches()
     logging.info("Cahces Aquired")
-
+    bot.session = await aquire_connection()
+    logging.info("Session Aquired")
     return bot
 
 

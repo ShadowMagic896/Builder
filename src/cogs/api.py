@@ -115,7 +115,7 @@ class API(BaseCog):
                 name="--- Please enter a project first ---", value="en"
             )
         proj = proj.replace(".", "")
-        url: str = Const.URLs.RTD + f"projects/{proj}/"
+        url: str = Const.URLs.RTD + f"/projects/{proj}/"
         response: aiohttp.ClientResponse = await self.bot.session.get(url)
         text: str = await response.text()
 
