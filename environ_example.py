@@ -1,3 +1,6 @@
+# Create a file in the same directory as this called "environ.py"
+# Copy all variables from here to that file, with their actual values.
+
 APPLICATION_ID: str = "" # https://discord.com/developers/applications
 BOT_KEY: str = "" # https://discord.com/developers/applications/APPLICATION_ID/bot
 QUIZAPI_KEY: str = "" # https://quizapi.io/docs/1.0/authentication
