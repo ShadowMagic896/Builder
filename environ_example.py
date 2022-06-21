@@ -10,8 +10,6 @@ X_RAPID_API_KEY: str = "" # https://rapidapi.com/
 OPENAI_KEY: str = "" # https://openai.com/api/
 LIBRARY_KEY: str = "" # https://libraries.io/api
 
-NSFW_PATH: str = "" # ...
-
 # POSTGRES
 # https://www.postgresql.org/download/
 # Username is most likely "postgres"
