@@ -201,8 +201,8 @@ class Paginator(BaseView):
     def position_absoloute(self) -> int:
         return self.position * self.pagesize
 
-    def format_absoloute(self, count: int = 0) -> str:
-        return str(self.position_absoloute + count + 1).rjust(3, "0")
+    def format_absoloute(self, offset: int) -> str:
+        return str(self.position_absoloute + offset + 1).rjust(3, "0")
 
 
 class BaseModal(discord.ui.Modal):
