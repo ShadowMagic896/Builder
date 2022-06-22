@@ -375,7 +375,7 @@ class RTFMPaginator(Paginator):
             link = value.select_one("a")["href"]
 
             embed.description += (
-                f"**`{self.fmt_abs_pos(co)}`:** [`{name}`]({self.meta.ref + link})\n"
+                f"**`{self.format_absoloute(co)}`:** [`{name}`]({self.meta.ref + link})\n"
             )
         
         if self.was_cached:

@@ -208,11 +208,11 @@ class DDGSearchView(Paginator):
     async def adjust(self, embed: discord.Embed):
         for co, data in enumerate(self.value_range):
             if data.feature_type == FeatureType.result:
-                embed.description += f"\n**`{self.fmt_abs_pos(co)}`: [{data.title}]({data.url})**\n*{data.body}*"
+                embed.description += f"\n**`{self.format_absoloute(co)}`: [{data.title}]({data.url})**\n*{data.body}*"
             elif data.feature_type == FeatureType.video:
-                embed.description += f"\n**`{self.fmt_abs_pos(co)}`: VIDEO: [{data.title}]({data.url})**\n*{data.body}*"
+                embed.description += f"\n**`{self.format_absoloute(co)}`: VIDEO: [{data.title}]({data.url})**\n*{data.body}*"
             elif data.feature_type == FeatureType.image:
-                embed.description += f"\n**`{self.fmt_abs_pos(co)}`: IMAGES: [{data.title}]({data.url})**\n*{data.body}*"
+                embed.description += f"\n**`{self.format_absoloute(co)}`: IMAGES: [{data.title}]({data.url})**\n*{data.body}*"
             else:
                 print(data.feature_type)
         return embed
