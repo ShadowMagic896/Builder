@@ -1,9 +1,11 @@
 import asyncio
 import logging
+import warnings
 from multiprocessing import freeze_support
 import os
 from pathlib import Path
-from typing import Any, Callable, Literal, Mapping, Optional
+import sys
+from typing import Any, Callable, Literal, Optional
 from urllib.parse import quote_plus
 import aiohttp
 import asyncpg
@@ -35,7 +37,9 @@ from src.utils.stats import Stats
 from src.utils.coro import run
 from src.utils.types import Cache, Fonts
 from src.utils.bot_types import Builder
+from src.utils.errors import Fatal
 
+warnings.filterwarnings("error")
 async def aquire_fonts() -> Fonts:
     return Fonts(
         bookosbi = ImageFont.FreeTypeFont(f"assets/fonts/bookosbi.ttf", size=20)
@@ -178,14 +182,16 @@ def start(main: Callable) -> None:
     freeze_support()
     setup_logging()
     inital: bool = True
-    while inital or input("\nENDED WITH KEYBOARD INTERRUPT\nRestart bot? (Y/N)\n  | ").lower() == "y":
+    while inital or input("\nENDED WITH FATAL ERROR\nRestart bot? (Y/N)\n  | ").lower() == "y":
         if inital:
             inital = not inital
         try:
             asyncio.run(main())
-        except KeyboardInterrupt:
+        except Fatal:
+            logging.fatal("--- quitting ---")
+            sys.exit()
+        except:
             continue
-
 def setup_logging() -> None:
     format: str = "%(name)s @ %(asctime)s !%(levelno)s: %(message)s"
     logging.basicConfig(level=LOGGING_LEVEL, format=format)
@@ -214,5 +220,13 @@ def boot() -> None:
     async def main():
         bot: Builder = Builder()
         bot: Builder = await prepare(bot)
-        await bot.start(BOT_KEY)
-    start(main)
+        try:
+            await bot.start(BOT_KEY)
+        except aiohttp.ClientConnectionError as err:
+            logging.fatal("Could not locate host")
+            await bot.session.close()
+            raise Fatal("Cannot locate host") from err
+    try:
+        start(main)
+    except ResourceWarning:
+        print("OMDEMDOmdomODM")
