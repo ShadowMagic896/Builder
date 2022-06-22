@@ -40,7 +40,7 @@ class URLs:
     CAT_API: str = "https://cataas.com"
     FOX_API: str = "https://randomfox.ca/floof"
     DUCK_API: str = "https://random-d.uk/api/random"  
-    QUIZ_API: str = "https://quizapi.io/api/v1"
+    QUIZ_API: str = "https://quizapi.io/api/v1/questions"
     LIBRARY_API: str = "https://libraries.io/api"
     RTD: str = "https://readthedocs.org"
 

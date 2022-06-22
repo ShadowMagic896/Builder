@@ -1,6 +1,7 @@
+import aiohttp
 import asyncpg
 import discord
-from discord import Interaction, app_commands
+from discord import Interaction
 from discord.app_commands import describe, Range
 from discord.ext import commands
 from discord.ext.commands import parameter
@@ -10,7 +11,7 @@ from typing import Any, List, Optional
 import environ
 
 from src.utils.embeds import fmte, fmte_i
-from src.utils.constants import Rates, Emojis
+from src.utils.constants import Rates, Emojis, URLs
 from src.utils.subclass import BaseCog, BaseModal, BaseView, Paginator
 from src.utils.bot_types import Builder, BuilderContext
 
@@ -478,7 +479,7 @@ class StartQuizView(BaseView):
             discord.SelectOption(label=x, value=x) for x in ["Easy", "Medium", "Hard"]
         ],
     )
-    async def dif(self, inter: discord.Interaction, _: Any):
+    async def difficulty(self, inter: discord.Interaction, _: Any):
         self.dif = inter.data["values"][0]
         await self.sil(inter)
 
@@ -489,7 +490,7 @@ class StartQuizView(BaseView):
             for x in ["Linux", "Bash", "Docker", "SQL", "CMS", "Code", "DevOps"]
         ],
     )
-    async def cat(self, inter: discord.Interaction, _: Any):
+    async def category(self, inter: discord.Interaction, _: Any):
         self.cat = inter.data["values"][0]
         await self.sil(inter)
 
@@ -500,12 +501,11 @@ class StartQuizView(BaseView):
     )
     async def start(self, inter: discord.Interaction, _: Any):
         if self.dif is not None and self.cat is not None:
-            key = environ.QUIZAPI_KEY
-            url = (
-                environ.QUIZAPI_KEY
-                + f"questions?apiKey={key}&category={self.cat}&difficulty={self.dif}&limit=5"
-            )
-            self.questions = await (await self.ctx.bot.session.get(url)).json()
+            url = URLs.QUIZ_API
+            url += f"?apiKey={environ.QUIZAPI_KEY}&category={self.cat}&difficulty={self.dif}&limit=5"
+
+            response: aiohttp.ClientResponse = await self.ctx.bot.session.get(url)
+            self.questions = await response.json()
             view = MainQuizView(self.questions, self.cat, self.dif, self.ctx)
             s = QuizAnsSelect(self.questions[0], self.ctx)
             view.add_item(s)
@@ -556,7 +556,7 @@ class MainQuizView(BaseView):
 
     def embed(self, ctx_or_inter):
         q = self.questions[self.pos - 1]
-        if isinstance(ctx_or_inter, BuilderContext):
+        if isinstance(ctx_or_inter, commands.Context):
             return fmte(
                 ctx_or_inter,
                 t=f"Question `{self.pos}`:\n{q['question']}",
@@ -680,7 +680,7 @@ class QuizClose(discord.ui.Button):
         super().__init__(style=discord.ButtonStyle.danger, emoji="\N{CROSS MARK}")
 
     async def callback(self, interaction: discord.Interaction) -> Any:
-        for c in self.children:
+        for c in self.view.children:
             c.disabled = True
         try:
             await interaction.response.edit_message(view=self)
