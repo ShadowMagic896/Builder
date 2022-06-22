@@ -7,7 +7,7 @@ from typing import Any, Optional
 from src.utils.bot_types import Builder
 
 from src.utils.embeds import fmte_i
-from src.utils.constants import Const
+from src.utils.constants import Emojis
 from src.utils.error_funcs import (
     _interaction_error_handler,
     handle_modal_error
@@ -87,7 +87,7 @@ class Paginator(BaseView):
 
         super().__init__(ctx, timeout=timeout)
 
-    @discord.ui.button(emoji=Const.Emojis().BBARROW_ID, custom_id="bb")
+    @discord.ui.button(emoji=Emojis.BBARROW_ID, custom_id="bb")
     async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = 0
         await self.check_buttons(button)
@@ -95,7 +95,7 @@ class Paginator(BaseView):
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=Const.Emojis().BARROW_ID, custom_id="b")
+    @discord.ui.button(emoji=Emojis.BARROW_ID, custom_id="b")
     async def back(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position -= 1
         await self.check_buttons(button)
@@ -114,7 +114,7 @@ class Paginator(BaseView):
         except (discord.NotFound, AttributeError):
             pass
 
-    @discord.ui.button(emoji=Const.Emojis().FARROW_ID, custom_id="f")
+    @discord.ui.button(emoji=Emojis.FARROW_ID, custom_id="f")
     async def next(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position += 1
         await self.check_buttons(button)
@@ -122,7 +122,7 @@ class Paginator(BaseView):
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=Const.Emojis().FFARROW_ID, custom_id="ff")
+    @discord.ui.button(emoji=Emojis.FFARROW_ID, custom_id="ff")
     async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
         self.position = self.maxpos
         await self.check_buttons(button)

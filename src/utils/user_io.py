@@ -4,7 +4,7 @@ from discord.ext import commands
 import re
 
 from src.utils.functions import explode
-from src.utils.constants import Const
+from src.utils.constants import Cogs
 from src.utils.bot_types import BuilderContext
 
 
@@ -88,7 +88,7 @@ async def cog_autocomplete(
             discord.app_commands.Choice(name=c, value=c)
             for c in list(bot.cogs.keys())
             if ((current.lower() in c.lower() or (c.lower()) in current.lower()))
-            and c not in Const.Cogs.FORBIDDEN_COGS
+            and c not in Cogs.FORBIDDEN_COGS
         ][:25],
         key=lambda c: c.name,
     )
@@ -149,7 +149,7 @@ async def command_autocomplete(
                 else explode(
                     bot.get_cog(inter.namespace.cog).get_commands()
                     if (bot.get_cog(inter.namespace.cog)) is not None
-                    or inter.namespace.cog in Const.Cogs.FORBIDDEN_COGS
+                    or inter.namespace.cog in Cogs.FORBIDDEN_COGS
                     else []
                 )
                 if inter.namespace.cog in [c for c, _ in bot.cogs.items()]
@@ -159,7 +159,7 @@ async def command_autocomplete(
                 (current.lower() in c.qualified_name.lower())
                 or (c.qualified_name.lower() in current.lower())
             )
-            and c.cog_name not in Const.Cogs.FORBIDDEN_COGS
+            and c.cog_name not in Cogs.FORBIDDEN_COGS
         ][:25],
         key=lambda c: c.name[c.name.index("]") + 1 :],
     )

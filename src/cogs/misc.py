@@ -7,7 +7,7 @@ import json as js
 
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.embeds import fmte
-from src.utils.constants import Const
+from src.utils.constants import URLs
 from src.utils import errors
 from src.utils.subclass import BaseCog, BaseView
 
@@ -37,7 +37,7 @@ class Misc(BaseCog):
         """
         You are a good person
         """
-        url: str = Const.URLs.AFFIRMATION_API
+        url: str = URLs.AFFIRMATION_API
         response = await self.bot.session.get(url, ssl=False)
         json: dict = await response.json()
         quote: str = json["affirmation"]
@@ -54,9 +54,9 @@ class Misc(BaseCog):
         Gives you life advice
         """
         if id is not None:
-            url: str = Const.URLs.ADVICE_API + f"/{id}"
+            url: str = URLs.ADVICE_API + f"/{id}"
         else:
-            url: str = Const.URLs.ADVICE_API
+            url: str = URLs.ADVICE_API
         response = await self.bot.session.get(url, ssl=False)
 
         json: dict = js.loads(await response.text())
@@ -73,7 +73,7 @@ class Misc(BaseCog):
         """
         Gets a random picture of a doggo
         """
-        url = Const.URLs.DOG_API
+        url = URLs.DOG_API
         response = await self.bot.session.get(url)
         json = await response.json()
         if json["status"] != "success":
@@ -89,13 +89,13 @@ class Misc(BaseCog):
         """
         Gets a random picture of a catto
         """
-        url: str = f"{Const.URLs.CAT_API}/cat?json=true"
+        url: str = f"{URLs.CAT_API}/cat?json=true"
         response = await self.bot.session.get(url, ssl=False)
         json = await response.json()
 
-        view = NewImgView(ctx, url, lambda x: f"{Const.URLs.CAT_API}/{x['url']}")
+        view = NewImgView(ctx, url, lambda x: f"{URLs.CAT_API}/{x['url']}")
         embed = fmte(ctx)
-        embed.set_image(url=f"{Const.URLs.CAT_API}/{json['url']}")
+        embed.set_image(url=f"{URLs.CAT_API}/{json['url']}")
 
         view.message = await ctx.send(embed=embed, view=view)
 
@@ -104,7 +104,7 @@ class Misc(BaseCog):
         """
         Get a random picute of a foxxo
         """
-        url: str = Const.URLs.FOX_API
+        url: str = URLs.FOX_API
         response = await self.bot.session.get(url, ssl=False)
         json = await response.json()
         view = NewImgView(ctx, url, lambda x: x["image"])
@@ -118,7 +118,7 @@ class Misc(BaseCog):
         """
         Get a random picture of a ducky
         """
-        url: str = Const.URLs.DUCK_API
+        url: str = URLs.DUCK_API
         response = await self.bot.session.get(url, ssl=False)
         json = await response.json()
         view = NewImgView(ctx, url, lambda x: x["url"])

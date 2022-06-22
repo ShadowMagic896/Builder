@@ -20,7 +20,7 @@ from src.utils.user_io import (
 from src.utils.embeds import fmte, fmte_i
 from src.utils.functions import explode
 from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import Const
+from src.utils.constants import URLs
 
 
 class Client(BaseCog):
@@ -97,7 +97,7 @@ class Client(BaseCog):
             embed = fmte(
                 ctx,
                 t="Source Code!",
-                d=f"[View on GitHub]({Const.URLs.REPO})",
+                d=f"[View on GitHub]({URLs.REPO})",
             )
             await ctx.send(embed=embed)
         if command:

@@ -946,7 +946,7 @@ class ImageManipulateView(BaseView):
         await self.update(inter, button)
 
     @discord.ui.button(
-        emoji=constants.Const.Emojis().BBARROW_ID,
+        emoji=constants.Emojis.BBARROW_ID,
         label="Revert",
         style=discord.ButtonStyle.red,
         row=4,
@@ -960,7 +960,7 @@ class ImageManipulateView(BaseView):
         await self.update(inter, button)
 
     @discord.ui.button(
-        emoji=constants.Const.Emojis().BARROW_ID,
+        emoji=constants.Emojis.BARROW_ID,
         label="Back",
         style=discord.ButtonStyle.gray,
         row=4,

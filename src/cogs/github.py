@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import Const
+from src.utils.constants import URLs
 from environ import LIBRARY_KEY
 from src.utils.embeds import fmte
 
@@ -25,7 +25,7 @@ class GitHub(commands.Cog):
 
     @github.command()
     async def user(self, ctx: BuilderContext, query: str):
-        url: str = f"{Const.URLs.LIBRARY_API}/github/{query}"
+        url: str = f"{URLs.LIBRARY_API}/github/{query}"
         params = {"api_key": LIBRARY_KEY}
         response = await self.bot.session.get(url, params=params)
         json: dict = await response.json()

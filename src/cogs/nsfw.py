@@ -15,7 +15,7 @@ from src.utils.types import NHSearchData, PHSearchData
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.embeds import fmte, fmte_i
 from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import Const
+from src.utils.constants import URLs
 
 
 class NSFW(BaseCog):
@@ -42,7 +42,7 @@ class NSFW(BaseCog):
         query = query.replace(" ", "+")
         res = await (
             await self.bot.session.get(
-                Const.URLs.RULE_34 + f"index.php?page=post&s=list&tags=%s)" % query
+                URLs.RULE_34 + f"index.php?page=post&s=list&tags=%s)" % query
             )
         ).text()
         soup = BeautifulSoup(res, "html.parser")
@@ -86,7 +86,7 @@ class NSFW(BaseCog):
         data = []
 
         for co in range(amount):
-            res = await (await self.bot.session.get(Const.URLs.NEKO_LIFE)).text()
+            res = await (await self.bot.session.get(URLs.NEKO_LIFE)).text()
             soup = BeautifulSoup(res, "html.parser")
             img = soup.find_all("img")
             data.append(img[0]["src"])
@@ -169,7 +169,7 @@ class NHSearchMeta:
             "all-time": "",
         }
         sort = fmt_dict.get(query, "")
-        url = Const.URLs.NHENTAI + f"search/?q={query}{sort}"
+        url = URLs.NHENTAI + f"search/?q={query}{sort}"
         res: aiohttp.ClientResponse = await ctx.bot.session.session.get(url)
         res.raise_for_status()
         parse: BeautifulSoup = BeautifulSoup(await res.text(), "html.parser")
@@ -203,7 +203,7 @@ class NHSearchView(Paginator):
 
     async def adjust(self, embed: discord.Embed):
         value: NHSearchData = self.meta.data[self.position]
-        url = f"[Visit URL]({Const.URls.NHENTAI}g/{value.code})"
+        url = f"[Visit URL]({URLs.NHENTAI}g/{value.code})"
         embed.add_field(name="Name:", value=value.title, inline=False)
         embed.add_field(name="URL:", value=url, inline=False)
         embed.add_field(name="HNentai Code:", value=value.code, inline=False)
@@ -235,7 +235,7 @@ class NHGetMeta:
         Get the base metadata for a page
         """
         result: aiohttp.ClientResponse = await ctx.bot.session.get(
-            f"{Const.URls.NHENTAI}g/{code}/1"
+            f"{URLs.NHENTAI}g/{code}/1"
         )
         if result.status != 200:
             raise ValueError(
@@ -258,7 +258,7 @@ class NHGetMeta:
         codestart = str(__pages)[:-1].index(substring) + len(substring)
         pages = int(__pages[codestart:-1])
 
-        baseurl = Const.URLs.NHENTAI_CDN + f"g/{datacode}/"
+        baseurl = URLs.NHENTAI_CDN + f"g/{datacode}/"
 
         cls.ctx: BuilderContext = ctx
 
@@ -298,7 +298,7 @@ class NHGetView(Paginator):
 class PHSeachMeta:
     @classmethod
     async def create(cls, ctx: BuilderContext, query: str):
-        url: str = Const.URLs.PORNHUB + f"video/search?search={quote_plus(query)}"
+        url: str = URLs.PORNHUB + f"video/search?search={quote_plus(query)}"
         res: aiohttp.ClientResponse = await ctx.bot.session.get(url)
         text = await res.text()
         select = "div.wrapper > div.container > div.gridWrapper > div.nf-videos > div.sectionWrapper > ul#videoSearchResult.videos.search-video-thumbs > li"
@@ -316,7 +316,7 @@ class PHSeachMeta:
             except KeyError:
                 name: str = meta["title"]
             thumbnail: str = meta.select_one("img")["data-mediumthumb"]
-            link: str = Const.URLs.PORNHUB + meta["href"][1:]
+            link: str = URLs.PORNHUB + meta["href"][1:]
             duration: str = meta.select_one("div > var.duration").text
 
             cls.data.append(PHSearchData(name, thumbnail, link, duration))

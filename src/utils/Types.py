@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Any, Mapping, NamedTuple
-from src.utils.constants import Const
+from src.utils.constants import Timers
 from PIL import ImageFont
 
 
@@ -68,7 +68,7 @@ class RTFMCache(NamedTuple):
         """
         Returns the timestamp of the object to the nearest multiple of 120
         """
-        return round(timestamp / Const.Timers.RTFM_CACHE_CLEAR) * Const.Timers.RTFM_CACHE_CLEAR
+        return round(timestamp / Timers.RTFM_CACHE_CLEAR) * Timers.RTFM_CACHE_CLEAR
 
     def __hash__(self) -> int:
         return hash(

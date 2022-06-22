@@ -17,7 +17,6 @@ import warnings
 from src.utils.embeds import fmte
 from src.utils.subclass import BaseCog, BaseModal, BaseView
 from src.utils.converters import TimeConvert
-from src.utils.errors import *
 from src.utils.bot_types import Builder, BuilderContext
 
 warnings.filterwarnings("error")

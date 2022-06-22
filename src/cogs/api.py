@@ -16,7 +16,7 @@ from src.utils.api import evaulate_response
 from src.utils.embeds import fmte
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.errors import NoDocumentsFound
-from src.utils.constants import Const
+from src.utils.constants import Timers, URLs
 from src.utils.coro import run
 from src.utils.types import RTFMCache
 
@@ -61,7 +61,7 @@ class API(BaseCog):
         if (lang := getattr(inter.namespace, "lang", None)) is not None:
             params["language"] = lang
         params["q"] = query
-        url: str = f"{Const.URLs.RTD}/search"
+        url: str = f"{URLs.RTD}/search"
         response: aiohttp.ClientResponse = await self.bot.session.get(
             url, params=params
         )
@@ -115,7 +115,7 @@ class API(BaseCog):
                 name="--- Please enter a project first ---", value="en"
             )
         proj = proj.replace(".", "")
-        url: str = Const.URLs.RTD + f"/projects/{proj}/"
+        url: str = URLs.RTD + f"/projects/{proj}/"
         response: aiohttp.ClientResponse = await self.bot.session.get(url)
         text: str = await response.text()
 
@@ -379,7 +379,7 @@ class RTFMPaginator(Paginator):
             )
         
         if self.was_cached:
-            embed.description += f"This result was cached. It will in decache in {Const.Timers.RTFM_CACHE_CLEAR - round(time.time() % Const.Timers.RTFM_CACHE_CLEAR)} seconds"
+            embed.description += f"This result was cached. It will in decache in {Timers.RTFM_CACHE_CLEAR - round(time.time() % Timers.RTFM_CACHE_CLEAR)} seconds"
         return embed
 
 
