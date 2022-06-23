@@ -3,6 +3,7 @@ Runs a small script to install all requirements
 """
 import os
 import sys
+ask_for_install: bool = False
 ver = sys.version_info
 print(f"Running with Python: {sys.version} ")
 if float(f"{ver.major}.{ver.minor}") < 3.10:
@@ -11,7 +12,7 @@ cpath: str = str(os.getcwd()).lower().strip("/\\")
 command: str = ""
 if not cpath.endswith("builder"):
     raise IOError("Working directory must builder")
-if input("Install Required Modules? (Required for first-time use) (Y/N)\n  | ").lower() == "y":
+if ask_for_install and input("Install Required Modules? (Required for first-time use) (Y/N)\n  | ").lower() == "y":
     command += "py reqs/requirements.py && py -m pip install -Ur reqs/requirements.txt"
     os.system(command)
     response = input("\nINSTALLATIONS COMPLETE\nContinue and run bot? (Y/N)\n  | ").lower()

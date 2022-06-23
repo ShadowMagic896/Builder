@@ -4,23 +4,12 @@ import discord
 
 
 class Stats:
-    def __iter_lines(directory: os.PathLike) -> Iterator:
-        for file in os.listdir(directory):
+    def _get_lines(path: os.PathLike) -> Iterator:
+        with open(path) as file:
+            return len(file.readlines())
 
-            path = f"{directory}/{file}"
-            if file[0] in [".", "_"]:
-                continue
-
-            if os.path.isdir(path):
-                yield from Stats.__iter_lines(path)
-            else:
-                if not path.endswith(".py"):
-                    continue
-                with open(path) as f:
-                    yield len(f.readlines())
-
-    def line_count(directories: List[os.PathLike]):
-        return sum([sum(Stats.__iter_lines(directory)) for directory in directories])
+    def line_count(files: List[os.PathLike]):
+        return sum([Stats._get_lines(file) for file in files])
 
     def invite_link(clientID: int, perms: int = 0):
         return discord.utils.oauth_url(clientID)

@@ -1,6 +1,7 @@
 import asyncio
 from copy import copy
 from io import BytesIO
+import logging
 from typing import List, Optional
 from bs4 import BeautifulSoup, ResultSet, Tag
 import discord
@@ -8,8 +9,7 @@ from discord import app_commands
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
-from urllib import parse
-from urllib import parse as uparse
+from urllib import parse as libparse
 
 from src.utils.converters import UrlGet, UrlFind
 from src.utils.embeds import fmte
@@ -17,6 +17,8 @@ from src.utils.bot_types import Builder, BuilderContext
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.types import DDGImageData, FeatureType, DDGSearchData
 from src.utils.coro import run
+
+from src.utils import parse as utparse
 
 
 class Web(BaseCog):
@@ -37,7 +39,7 @@ class Web(BaseCog):
         """
         Gathers data about a URL. Does not actually get any data from the server.
         """
-        data = parse.urlsplit(url[0])
+        data = libparse.urlsplit(url[0])
 
         embed = fmte(ctx, t="URL Information")
         embed.add_field(name="Scheme", value=f"`{data.scheme or None}`")
@@ -66,7 +68,7 @@ class Web(BaseCog):
         """
         url = str(response.url)
         if fmt == "Auto":
-            path = parse.urlsplit(url).path
+            path = libparse.urlsplit(url).path
             rev: str = str(path)[::-1]
 
             if "." not in rev or rev.index("/") < rev.index("."):  # No format attached
@@ -108,8 +110,6 @@ class Web(BaseCog):
         """
         Searches duckduckgo.com for a query
         """
-        if ctx.interaction:
-            await ctx.interaction.response.defer()
         meta = await DDGSearchMeta.create(ctx, query)
         view = DDGSearchView(meta)
         embed = await view.page_zero(ctx.interaction)
@@ -132,7 +132,7 @@ class Web(BaseCog):
 class DDGSearchMeta:
     @classmethod
     async def create(cls, ctx: BuilderContext, query: str):
-        url: str = f"https://duckduckgo.com/?q={uparse.quote_plus(query)}&kp=-2"
+        url: str = f"https://duckduckgo.com/?q={utparse.quote(query)}&kp=-2"
         original = copy(url)
         await run(ctx.bot.driver.get, url)
         text = await run(
@@ -141,7 +141,6 @@ class DDGSearchMeta:
         parse: BeautifulSoup = BeautifulSoup(text, "html.parser")
         selector: str = "div.results--main > div#links > div"
         items: ResultSet[Tag] = await run(parse.select, selector)
-
         cls.data: List[DDGSearchData] = []
         for item in items:
             try:
@@ -186,8 +185,8 @@ class DDGSearchMeta:
                     feature_type: FeatureType = FeatureType.result
 
                     cls.data.append(DDGSearchData(title, url, body, feature_type))
-            except:
-                break
+            except Exception as e:
+                continue
 
         cls.ctx = ctx
         cls.query = query
@@ -214,7 +213,7 @@ class DDGSearchView(Paginator):
             elif data.feature_type == FeatureType.image:
                 embed.description += f"\n**`{self.format_absoloute(co)}`: IMAGES: [{data.title}]({data.url})**\n*{data.body}*"
             else:
-                print(data.feature_type)
+                logging.error(f"Unknown data type in DDG Seach: {data.feature_type}")
         return embed
 
     async def embed(self, inter: discord.Interaction):
@@ -227,7 +226,7 @@ class DDGSearchView(Paginator):
 class DDGImageMeta:
     @classmethod
     async def create(cls, ctx: BuilderContext, query: str):
-        url: str = f"https://duckduckgo.com/?t=ffab&q={uparse.quote_plus(query)}&iar=images&iax=images&ia=images&kp=-2"
+        url: str = f"https://duckduckgo.com/?t=ffab&q={utparse.quote(query)}&iar=images&iax=images&ia=images&kp=-2"
         await run(ctx.bot.driver.get, url)
         await asyncio.sleep(1)
         text = await run(

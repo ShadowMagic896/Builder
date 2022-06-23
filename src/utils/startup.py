@@ -122,31 +122,6 @@ async def apply_global_checks(bot: commands.Bot) -> None:
         await apply_to_global(bot, check)
 
 
-async def startup_print(bot: commands.Bot) -> None:
-    _fmt: Callable[[str, Optional[int], Optional[Literal["before", "after"]]]] = (
-        lambda value, size=25, style="before": str(value)
-        + " " * (size - len(str(value)))
-        if style == "after"
-        else " " * (size - len(str(value))) + str(value)
-    )
-    fmt: Callable[
-        [str, str, Optional[int], Optional[int]]
-    ] = lambda name, value, buf1=10, buf2=22: "%s: %s|" % (
-        _fmt(name, buf1, "after"),
-        _fmt(value, buf2, "after"),
-    )
-
-    client: str = fmt("Client", bot.user)
-    userid: str = fmt("User ID", bot.user.id)
-    dpyver: str = fmt("Version", discord.__version__)
-
-    bdr = "\n+-----------------------------------+\n"
-
-    print(
-        f"\n\t\N{WHITE HEAVY CHECK MARK} ONLINE{bdr}| {client}{bdr}| {userid}{bdr}| {dpyver}{bdr}"
-    )
-
-
 async def prepare(bot: commands.Bot) -> commands.Bot:
     if LOAD_JISHAKU:
         await bot.load_extension("jishaku")
@@ -172,7 +147,7 @@ async def prepare(bot: commands.Bot) -> commands.Bot:
     bot.driver = await aquire_driver()
     logging.info("Web Driver Aquired")
     bot.caches = await aquire_caches()
-    logging.info("Cahces Aquired")
+    logging.info("Caches Aquired")
     bot.session = await aquire_connection()
     logging.info("Session Aquired")
     return bot
@@ -182,7 +157,8 @@ def start(main: Callable) -> None:
     freeze_support()
     setup_logging()
     inital: bool = True
-    while inital or input("\nENDED WITH FATAL ERROR\nRestart bot? (Y/N)\n  | ").lower() == "y":
+    last_error: Exception = ...
+    while inital or input(f"\nENDED WITH FATAL ERROR: {last_error}\nRestart bot? (Y/N)\n  | ").lower() == "y":
         if inital:
             inital = not inital
         try:
@@ -190,8 +166,8 @@ def start(main: Callable) -> None:
         except Fatal:
             logging.fatal("--- quitting ---")
             sys.exit()
-        except:
-            continue
+        except Exception as err:
+            last_error = err
 def setup_logging() -> None:
     format: str = "%(name)s @ %(asctime)s !%(levelno)s: %(message)s"
     logging.basicConfig(level=LOGGING_LEVEL, format=format)
@@ -226,7 +202,4 @@ def boot() -> None:
             logging.fatal("Could not locate host")
             await bot.session.close()
             raise Fatal("Cannot locate host") from err
-    try:
-        start(main)
-    except ResourceWarning:
-        print("OMDEMDOmdomODM")
+    start(main)

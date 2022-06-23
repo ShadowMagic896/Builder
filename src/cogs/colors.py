@@ -45,7 +45,7 @@ class Colors(BaseCog):
         """
         image = Image.new("RGBA", color=tuple(color), size=(sizex, sizey))
         embed = fmte(ctx, t=f"Showing Color: {color}")
-        embed, file = await PILFN.spawnItems(embed, image)
+        embed, file = await PILFN.local_embed(embed, image)
         await ctx.send(embed=embed, file=file)
 
     @color.command()
@@ -73,7 +73,7 @@ class Colors(BaseCog):
         embed = fmte(ctx, t=f"Showing Merged Colors: {color1} & {color2}")
         embed.add_field(name="Channels:", value=channels_to_names(channel))
         embed.add_field(name="Merging Result:", value=result)
-        embed, file = await PILFN.spawnItems(embed, image)
+        embed, file = await PILFN.local_embed(embed, image)
         await ctx.send(embed=embed, file=file)
 
     @color.command()
@@ -101,7 +101,7 @@ class Colors(BaseCog):
         embed = fmte(ctx, t=f"Showing Inverted Color: {original}")
         embed.add_field(name="Channels:", value=channels_to_names(channel))
         embed.add_field(name="Inverting Result:", value=color)
-        embed, file = await PILFN.spawnItems(embed, image)
+        embed, file = await PILFN.local_embed(embed, image)
         await ctx.send(embed=embed, file=file)
 
 

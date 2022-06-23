@@ -73,7 +73,7 @@ class Images(BaseCog):
         ogsize = (image.width, image.height)
 
         buffer: io.BytesIO = await run(
-            PILFN.callOnImage, await PILFN.tobuf(image), "resize", (width, height)
+            await PILFN.apply, await PILFN.buffer(image), "resize", (width, height)
         )
 
         embed = fmte(
@@ -104,7 +104,7 @@ class Images(BaseCog):
         """
 
         buffer: io.BytesIO = await run(
-            PILFN.callOnImage, await PILFN.tobuf(image), "resize", (128, 128)
+            await PILFN.apply, await PILFN.buffer(image), "resize", (128, 128)
         )
         e: discord.Emoji = await ctx.guild.create_custom_emoji(
             name=name, image=buffer.read(), reason=reason
@@ -138,8 +138,8 @@ class Images(BaseCog):
         Crops an image to the given dimensions
         """
         buffer: BytesIO = await run(
-            PILFN.callOnImage,
-            await PILFN.tobuf(image),
+            await PILFN.apply,
+            await PILFN.buffer(image),
             "crop",
             (left, upper, right, lower),
         )
@@ -169,7 +169,7 @@ class Images(BaseCog):
         embed.add_field(
             name="File Type", value="`%s`" % image.content_type, inline=False
         )
-        file = discord.File(await PILFN.tobuf(image), filename=image.filename)
+        file = discord.File(await PILFN.buffer(image), filename=image.filename)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -193,8 +193,8 @@ class Images(BaseCog):
         Rotates an image by a given amount of degrees
         """
         buffer: BytesIO = await run(
-            PILFN.callOnImage,
-            await PILFN.tobuf(image),
+            await PILFN.apply,
+            await PILFN.buffer(image),
             "rotate",
             degrees,
             center=(
@@ -233,7 +233,7 @@ class Images(BaseCog):
 
         filter: ImageFilter = getattr(ImageFilter, filter)
         buffer: BytesIO = await run(
-            PILFN.callOnImage, await PILFN.tobuf(image), "filter", filter
+            await PILFN.apply, await PILFN.buffer(image), "filter", filter
         )
 
         embed = fmte(ctx, t="Image Filter Applied")
@@ -257,7 +257,7 @@ class Images(BaseCog):
         Convert an image to a grey-scale color scheme
         """
         buffer: BytesIO = await run(
-            PILFN.callOnImage, await PILFN.tobuf(image), "convert", "L"
+            await PILFN.apply, await PILFN.buffer(image), "convert", "L"
         )
 
         embed = fmte(ctx, t="Conversion Complete")
@@ -288,7 +288,7 @@ class Images(BaseCog):
         """
         Attempts to convert the image into the specified mode.
         """
-        buffer = await run(PILFN.callOnImage, await PILFN.tobuf(image), "convert", mode)
+        buffer = await run(await PILFN.apply, await PILFN.buffer(image), "convert", mode)
 
         embed = fmte(ctx, t="Image Successfully Converted")
         file = discord.File(buffer, "conv.%s" % image.filename)
@@ -306,12 +306,12 @@ class Images(BaseCog):
         """
         Inverts an image's colors
         """
-        img: Image.Image = await PILFN.toimg(image)
+        img: Image.Image = await PILFN.image(image)
         array = np.array(img)
         array = 255 - array
         img = Image.frombuffer("RGB", (image.width, image.height), array)
         embed = fmte(ctx, t="Image Successfully Inverted")
-        embed, file = await PILFN.spawnItems(embed, img)
+        embed, file = await PILFN.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -328,7 +328,7 @@ class Images(BaseCog):
         embed = fmte(
             ctx, t="Image Enciphered", d=f"Passphrase to decipher: ||{phrase}||"
         )
-        embed, file = await WandImageFunctions.spawnItems(embed, img)
+        embed, file = await WandImageFunctions.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -347,7 +347,7 @@ class Images(BaseCog):
             t="Image Deciphered",
             d=f"Passphrase used to decipher: ||{phrase}||\nIf it didn't come out correctly, remember to save, not copy, the image to decipher and that the passphase is case-sensitive.",
         )
-        embed, file = await WandImageFunctions.spawnItems(embed, img)
+        embed, file = await WandImageFunctions.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
 
     @image.command()
@@ -356,7 +356,7 @@ class Images(BaseCog):
         """
         Opens up a large menu to transform and edit an image in many ways.
         """
-        buffer: BytesIO = await PILFN.tobuf(image)
+        buffer: BytesIO = await PILFN.buffer(image)
 
         view = ImageManipulateView(ctx, buffer)
         embed = fmte(ctx, t="Currently Applied Filters")
@@ -433,7 +433,7 @@ class Images(BaseCog):
             await run(base.paste, im=im, box=box)
 
         embed = fmte(ctx, t="Colors Retrieved")
-        embed, file = await PILFN.spawnItems(embed, base)
+        embed, file = await PILFN.local_embed(embed, base)
         embed.set_thumbnail(url=image.url)
 
         await ctx.send(embed=embed, file=file)
@@ -455,7 +455,7 @@ class Images(BaseCog):
         """
         Replaces any color with another, with some leniency. Colors an also contain an Alpha value.
         """
-        img: Image.Image = await PILFN.toimg(image)
+        img: Image.Image = await PILFN.image(image)
         array = np.array(img)
         array[...] = array
         img = Image.fromarray(array, mode="RGBA")
@@ -463,7 +463,7 @@ class Images(BaseCog):
         embed = fmte(ctx, t="Colors Swapped")
         embed.add_field(name="From:", value=fromcolor)
         embed.add_field(name="To:", value=tocolor)
-        embed, file = await PILFN.spawnItems(embed, img)
+        embed, file = await PILFN.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
 
     @image.group()
@@ -484,8 +484,8 @@ class Images(BaseCog):
         """
         Adjusts the contrast of an image.
         """
-        buffer: BytesIO = PILFN.callForEnhance(
-            await PILFN.tobuf(image), "Contrast", factor
+        buffer: BytesIO = PILFN.enhance(
+            await PILFN.buffer(image), "Contrast", factor
         )
 
         embed = fmte(ctx, t="Image Successfully Edited")
@@ -506,8 +506,8 @@ class Images(BaseCog):
         """
         Adjusts the brightness of an image.
         """
-        buffer: BytesIO = PILFN.callForEnhance(
-            await PILFN.tobuf(image), "Brightness", factor
+        buffer: BytesIO = PILFN.enhance(
+            await PILFN.buffer(image), "Brightness", factor
         )
 
         embed = fmte(ctx, t="Image Successfully Edited")
@@ -528,8 +528,8 @@ class Images(BaseCog):
         """
         Adjusts the color of an image.
         """
-        buffer: BytesIO = PILFN.callForEnhance(
-            await PILFN.tobuf(image), "Color", factor
+        buffer: BytesIO = PILFN.enhance(
+            await PILFN.buffer(image), "Color", factor
         )
 
         embed = fmte(ctx, t="Image Successfully Edited")
@@ -550,8 +550,8 @@ class Images(BaseCog):
         """
         Adjusts the sharpess of an image.
         """
-        buffer: BytesIO = PILFN.callForEnhance(
-            await PILFN.tobuf(image), "Sharpness", factor
+        buffer: BytesIO = PILFN.enhance(
+            await PILFN.buffer(image), "Sharpness", factor
         )
 
         embed = fmte(ctx, t="Image Successfully Edited")
@@ -630,18 +630,18 @@ class Images(BaseCog):
 
 
 class PILFN:
-    def callOnImage(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
-        ri = kwargs.pop("ri")
-        img = Image.open(buffer)
+    async def apply(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
+        ri = kwargs.pop("ri", False)
+        img = await run(Image.open(buffer))
         img: Image.Image = getattr(img, function)(*args, **kwargs)
         if ri:
             return img
         buffer: io.BytesIO = io.BytesIO()
-        img.save(buffer, "png")
+        await run(img.save,buffer, "png")
         buffer.seek(0)
         return buffer
 
-    def callForEnhance(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
+    def enhance(buffer: BytesIO, function: str, *args, **kwargs) -> Any:
         img = Image.open(buffer)
         img: Image.Image = getattr(ImageEnhance, function)(img).enhance(*args, **kwargs)
         buffer: io.BytesIO = io.BytesIO()
@@ -649,7 +649,7 @@ class PILFN:
         buffer.seek(0)
         return buffer
 
-    async def tobuf(image: discord.Attachment, check: bool = True) -> io.BytesIO:
+    async def buffer(image: discord.Attachment, check: bool = True) -> io.BytesIO:
         if check:
             pass
             # self.checkAttachment(image)
@@ -659,8 +659,8 @@ class PILFN:
         buffer.seek(0)
         return buffer
 
-    async def toimg(image: discord.Attachment, check: bool = True) -> Image.Image:
-        return Image.open(await PILFN.tobuf(image, check))
+    async def image(image: discord.Attachment, check: bool = True) -> Image.Image:
+        return Image.open(await PILFN.buffer(image, check))
 
     def replaceColor(
         img: Image.Image,
@@ -681,14 +681,11 @@ class PILFN:
         data[(abs(data - fromcolor) <= leniency).all(axis=-1)] = tocolor
         return Image.fromarray(data, mode="RGBA")
 
-    def conformToArray(ar1: List[int], ar2: List[int], leaniency: float = 2):
-        return all([abs(ar1[x] - ar2[x]) <= leaniency for x in range(len(ar2))])
-
-    async def spawnItems(
+    async def local_embed(
         embed: discord.Embed, image: Image.Image
     ) -> Tuple[discord.Embed, discord.File]:
         buffer = BytesIO()
-        image.save(buffer, "PNG")
+        await run(image.save, buffer, "PNG")
         buffer.seek(0)
 
         file = discord.File(fp=buffer, filename="image.png")
@@ -706,11 +703,11 @@ class WandImageFunctions:
         img: wimage.Image = wimage.Image(blob=buffer)
         return img
 
-    async def spawnItems(
+    async def local_embed(
         embed: discord.Embed, image: wimage.Image
     ) -> Tuple[discord.Embed, discord.File]:
         buffer = BytesIO()
-        image.save(buffer)
+        await run(image.save, buffer)
         buffer.seek(0)
 
         file = discord.File(fp=buffer, filename="image.png")
