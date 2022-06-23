@@ -144,7 +144,7 @@ async def command_autocomplete(
                 value=c.qualified_name,
             )
             for c in (
-                explode([c for c in bot.commands])
+                explode(bot.commands)
                 if not getattr(inter.namespace, "cog")
                 else explode(
                     bot.get_cog(inter.namespace.cog).get_commands()

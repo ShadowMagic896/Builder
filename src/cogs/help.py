@@ -111,7 +111,7 @@ class Help(BaseCog):
             d="Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
                 (await self.bot.application_info()).description,
                 len(self.bot.cogs),
-                len(explode(self.bot.commands)),
+                len([v for v in explode(self.bot.commands)]),
             ),
         )
 
@@ -222,7 +222,7 @@ class GroupView(Paginator):
         for command in self.value_range:
             embed.add_field(
                 name=f"/{command.qualified_name}",
-                value=f"*{command.short_doc}*\n**Parameters:** {len(command.params)}",
+                value=f"*{command.short_doc or '{No Description...}'}*\n**Parameters:** {len(command.params)}",
                 inline=False,
             )
         return embed

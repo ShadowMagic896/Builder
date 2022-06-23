@@ -98,13 +98,12 @@ async def ensure_db(
         """
         await bot.apg.executemany(basecommand, arguments)
     if STARTUP_UPDATE_COMMANDS:
-        bot_commands = explode(bot.commands)
         arguments = [
             (
                 command.qualified_name,
                 [parent.qualified_name for parent in command.parents],
             )
-            for command in bot_commands
+            for command in explode(bot.commands)
         ]
         command = """
             DELETE FROM commands;

@@ -12,6 +12,7 @@ from webbrowser import Chrome
 
 from src.utils.types import Cache
 from src.utils.extensions import full_reload
+from src.utils.functions import explode
 
 class Builder(commands.Bot):
     def __init__(self):
@@ -47,6 +48,7 @@ class Builder(commands.Bot):
         return await full_reload(self)
 
     async def setup_hook(self) -> None:
+        self.commands = explode(self.commands)
         print("--- online ---")
 
 

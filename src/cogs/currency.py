@@ -243,7 +243,7 @@ class Currency(BaseCog):
     @commands.cooldown(1, 3600 * 24 * 7, commands.BucketType.user)
     async def weekly(self, ctx: BuilderContext):
         """
-        Claim your daily Coins!
+        Claim your weekly Coins!
         """
         rate = Rates.WEEKLY
 

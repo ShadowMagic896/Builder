@@ -49,7 +49,7 @@ async def aquire_activity(bot: commands.Bot) -> discord.Activity:
 
     activity: discord.Activity = discord.Activity(
         type=discord.ActivityType.watching,
-        name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES, {len(explode(bot.commands))} COMMANDS",
+        name=f"{Stats.line_count(SOURCE_CODE_PATHS)} LINES, {len([v for v in explode(bot.commands)])} COMMANDS",
     )
     return activity
 

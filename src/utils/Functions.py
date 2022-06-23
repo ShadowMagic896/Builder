@@ -12,16 +12,14 @@ from importlib import import_module
 
 
 def explode(l: List[commands.HybridCommand]) -> List[commands.HybridCommand]:
-    l = list(l)
-    nl = []
-    for c in l:
+    for c in list(l):
         if hasattr(c, "commands"):
-            nl.extend(explode(c.commands))
+            for v in explode(c.commands):
+                yield v
         else:
             # if isinstance(c, commands.):
             #     continue # ignore text commands, just dev stuff
-            nl.append(c)
-    return nl
+            yield c
 
 
 def fmtDict(d: dict):

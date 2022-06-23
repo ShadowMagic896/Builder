@@ -173,7 +173,7 @@ class Client(BaseCog):
             d=f"*{(await ctx.bot.application_info()).description}*",
         )
         exp_com = explode(ctx.bot.commands)
-        embed.add_field(name="Commands", value=len(exp_com))
+        embed.add_field(name="Commands", value=len([v for v in exp_com]))
         embed.add_field(
             name="Groups",
             value=(

@@ -58,11 +58,11 @@ class Dev(BaseCog):
 
         activity: discord.Activity = discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{Stats.line_count(extend_dir('./src'))} LINES, {len(explode(self.bot.commands))} COMMANDS",
+            name=f"{Stats.line_count(extend_dir('./src'))} LINES, {len([v for v in explode(self.bot.commands)])} COMMANDS",
         )
         await self.bot.change_presence(activity=activity, status="idle")
         await ctx.send(embed=embed)
-        print("----------RELOADED----------")
+        print("--- reload ---")
 
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
