@@ -151,7 +151,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.detect(message, 1)
         response: dict = await run(
-            self.bot.loop, self.bot.openai.Completion.create, **preset
+            self.bot.openai.Completion.create, **preset
         )
         code: int = int(evaulate_response(response))
         if code == 0:
@@ -189,7 +189,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.complete(message, stochasticism)
         response: dict = await run(
-            self.bot.loop, self.bot.openai.Completion.create, **preset
+            self.bot.openai.Completion.create, **preset
         )
         embed = fmte(ctx, t="Completion Finished")
         for choice in response["choices"]:
@@ -212,7 +212,7 @@ class API(BaseCog):
         Fixes grammar in a statement
         """
         preset = APIPresets.OpenAI.grammar(message, edits, stochasticism)
-        response: dict = await run(self.bot.loop, self.bot.openai.Edit.create, **preset)
+        response: dict = await run(self.bot.openai.Edit.create, **preset)
         embed = fmte(ctx, t="Checking Completed")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
@@ -237,15 +237,11 @@ class API(BaseCog):
         Attempts to edit a message based upon instructions
         """
         preset = APIPresets.OpenAI.gen_edit(message, instructions, edits, stochasticism)
-        response: dict = await run(self.bot.loop, self.bot.openai.Edit.create, **preset)
+        response: dict = await run(self.bot.openai.Edit.create, **preset)
         embed = fmte(ctx, t="Editing Completed")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
-
-    async def run(loop: asyncio.BaseEventLoop, func, *args, **kwargs):
-        part = functools.partial(func, *args, **kwargs)
-        return await loop.run_in_executor(None, part)
 
 
 class APIPresets:

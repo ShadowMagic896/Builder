@@ -48,7 +48,6 @@ class Builder(commands.Bot):
         return await full_reload(self)
 
     async def setup_hook(self) -> None:
-        self.commands = explode(self.commands)
         print("--- online ---")
 
 
