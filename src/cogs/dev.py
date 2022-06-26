@@ -1,5 +1,6 @@
 import io
 from subprocess import Popen
+from typing import List
 from discord import app_commands
 import discord
 from discord.app_commands import describe
@@ -48,6 +49,7 @@ class Dev(BaseCog):
                 log += f"**~ GUILD {guild}:** {len(cmds)} BASE"
         embed = fmte(ctx, t=f"Synced Commands {type_}", d=log or discord.utils.MISSING)
         await ctx.send(embed=embed)
+        print(f"--- {'g' if glob else 'l'}_sync ---")
 
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)

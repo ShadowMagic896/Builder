@@ -191,7 +191,7 @@ def setup_logging() -> None:
     logger: logging.Logger = logging.getLogger("selenium")
     logger.setLevel(logging.INFO)
     logging.info("Discord Logging Set Up")
-
+    
 def boot() -> None:
     async def main():
         bot: Builder = Builder()
