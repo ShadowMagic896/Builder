@@ -288,7 +288,9 @@ class Images(BaseCog):
         """
         Attempts to convert the image into the specified mode.
         """
-        buffer = await run(await PILFN.apply, await PILFN.buffer(image), "convert", mode)
+        buffer = await run(
+            await PILFN.apply, await PILFN.buffer(image), "convert", mode
+        )
 
         embed = fmte(ctx, t="Image Successfully Converted")
         file = discord.File(buffer, "conv.%s" % image.filename)
@@ -484,9 +486,7 @@ class Images(BaseCog):
         """
         Adjusts the contrast of an image.
         """
-        buffer: BytesIO = PILFN.enhance(
-            await PILFN.buffer(image), "Contrast", factor
-        )
+        buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Contrast", factor)
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "cntr.%s" % image.filename)
@@ -506,9 +506,7 @@ class Images(BaseCog):
         """
         Adjusts the brightness of an image.
         """
-        buffer: BytesIO = PILFN.enhance(
-            await PILFN.buffer(image), "Brightness", factor
-        )
+        buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Brightness", factor)
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
@@ -528,9 +526,7 @@ class Images(BaseCog):
         """
         Adjusts the color of an image.
         """
-        buffer: BytesIO = PILFN.enhance(
-            await PILFN.buffer(image), "Color", factor
-        )
+        buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Color", factor)
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
@@ -550,9 +546,7 @@ class Images(BaseCog):
         """
         Adjusts the sharpess of an image.
         """
-        buffer: BytesIO = PILFN.enhance(
-            await PILFN.buffer(image), "Sharpness", factor
-        )
+        buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Sharpness", factor)
 
         embed = fmte(ctx, t="Image Successfully Edited")
         file = discord.File(buffer, "shrp.%s" % image.filename)
@@ -637,7 +631,7 @@ class PILFN:
         if ri:
             return img
         buffer: io.BytesIO = io.BytesIO()
-        await run(img.save,buffer, "png")
+        await run(img.save, buffer, "png")
         buffer.seek(0)
         return buffer
 

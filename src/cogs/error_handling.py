@@ -2,11 +2,7 @@ from settings import CATCH_ERRORS
 from src.utils.subclass import BaseCog
 from src.utils.bot_types import Builder
 
-from src.utils.error_funcs import (
-    on_error,
-    on_command_error,
-    on_tree_error
-)
+from src.utils.error_funcs import on_error, on_command_error, on_tree_error
 
 
 class ErrorHandling(BaseCog):
@@ -16,7 +12,6 @@ class ErrorHandling(BaseCog):
             self.bot.on_error = on_error
             self.bot.on_command_error = on_command_error
             self.bot.tree.on_error = on_tree_error
-
 
 
 async def setup(bot):

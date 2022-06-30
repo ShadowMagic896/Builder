@@ -14,6 +14,7 @@ from src.utils.types import Cache
 from src.utils.extensions import full_reload
 from src.utils.functions import explode
 
+
 class Builder(commands.Bot):
     def __init__(self):
         command_prefix: Iterable[str] = PREFIXES
@@ -43,7 +44,7 @@ class Builder(commands.Bot):
         self.driver: Chrome
         self.session: aiohttp.ClientSession
         self.tree: BuilderTree
-    
+
     async def reload_source(self) -> str:
         return await full_reload(self)
 
@@ -63,7 +64,11 @@ class BuilderTree(discord.app_commands.CommandTree):
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
         if interaction.type == discord.InteractionType.application_command:
-            default: Mapping[str, bool] = {"defer": True, "thinking": True, "ephemeral": False}
+            default: Mapping[str, bool] = {
+                "defer": True,
+                "thinking": True,
+                "ephemeral": False,
+            }
             settings: Mapping[str, bool] = getattr(
                 interaction.command.callback, "defer", default
             )
@@ -77,6 +82,6 @@ class BuilderTree(discord.app_commands.CommandTree):
             for name, param in interaction.command._params.items():
                 if param.type == discord.AppCommandOptionType.attachment:
                     obj: discord.Attachment = getattr(interaction.namespace, name)
-                    if obj.size > 2 ** 22: # ~4MB
+                    if obj.size > 2**22:  # ~4MB
                         raise commands.errors.BadArgument("Image is too large.")
         return interaction.user not in BLACKLIST_USERS

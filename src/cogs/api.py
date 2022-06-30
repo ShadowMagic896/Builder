@@ -48,7 +48,9 @@ class API(BaseCog):
         Read the F*cking Manual: Seach readthedocs.io
         """
 
-        meta = await RTFMMeta.create(ctx, self.bot.driver, project, query, version, lang)
+        meta = await RTFMMeta.create(
+            ctx, self.bot.driver, project, query, version, lang
+        )
         view = RTFMPaginator(meta, 10)
         embed = await view.page_zero(ctx.interaction)
         await view.check_buttons()
@@ -150,9 +152,7 @@ class API(BaseCog):
         Detects the estimated unsafe content coming from a message. Errs on the side of caution
         """
         preset = APIPresets.OpenAI.detect(message, 1)
-        response: dict = await run(
-            self.bot.openai.Completion.create, **preset
-        )
+        response: dict = await run(self.bot.openai.Completion.create, **preset)
         code: int = int(evaulate_response(response))
         if code == 0:
             embed = fmte(
@@ -188,9 +188,7 @@ class API(BaseCog):
         Autocompltetes a sentence or responds to a question
         """
         preset = APIPresets.OpenAI.complete(message, stochasticism)
-        response: dict = await run(
-            self.bot.openai.Completion.create, **preset
-        )
+        response: dict = await run(self.bot.openai.Completion.create, **preset)
         embed = fmte(ctx, t="Completion Finished")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
@@ -300,9 +298,7 @@ class RTFMMeta:
             c_query = copy(query)
             query: str = quote_plus(query)
             reference_url: str = f"https://{project}.readthedocs.io/{lang}/{version}/"
-            url: str = (
-                f"https://{project}.readthedocs.io/{lang}/{version}/search.html?q={query}"
-            )
+            url: str = f"https://{project}.readthedocs.io/{lang}/{version}/search.html?q={query}"
 
             await run(driver.get, url)
             text = await run(
@@ -329,24 +325,23 @@ class RTFMMeta:
             cls.values = results
 
             return cls
+
         searcher = RTFMCache(
             project.lower().replace(".", ""),
             query.lower(),
             version.lower(),
             lang.lower(),
-            RTFMCache.round_to_track(time.time())
+            RTFMCache.round_to_track(time.time()),
         )
-    
-        if (cache := ctx.bot.caches.RTFM.get(
-            searcher, None
-        )) is None:
+
+        if (cache := ctx.bot.caches.RTFM.get(searcher, None)) is None:
             results = await retrieve(project, query, version, lang)
             searcher = RTFMCache(
-                results.project.lower().replace(".",""),
+                results.project.lower().replace(".", ""),
                 results.query.lower(),
                 results.version.lower(),
                 results.lang.lower(),
-                RTFMCache.round_to_track(time.time())
+                RTFMCache.round_to_track(time.time()),
             )
             ctx.bot.caches.RTFM[searcher] = results
             return results, 1
@@ -370,10 +365,8 @@ class RTFMPaginator(Paginator):
             name = value.select_one("a").text
             link = value.select_one("a")["href"]
 
-            embed.description += (
-                f"**`{self.format_absoloute(co)}`:** [`{name}`]({self.meta.ref + link})\n"
-            )
-        
+            embed.description += f"**`{self.format_absoloute(co)}`:** [`{name}`]({self.meta.ref + link})\n"
+
         if self.was_cached:
             embed.description += f"This result was cached. It will in decache in {Timers.RTFM_CACHE_CLEAR - round(time.time() % Timers.RTFM_CACHE_CLEAR)} seconds"
         return embed

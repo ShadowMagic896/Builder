@@ -32,11 +32,13 @@ from src.utils.embeds import fmte_i
 from simpleeval import NumberTooHigh
 from typing import Any, Union
 
+
 async def on_error(event_method: str, /, *args: Any, **kwargs: Any) -> None:
     print("on_error")
     if PRINT_EVENT_ERROR_TRACEACK:
         sys.stderr.write(f"[EVENT ERROR]\n{event_method} with {args}, {kwargs}")
         traceback.print_exc(file=sys.stderr)
+
 
 async def on_command_error(ctx: commands.Context, error: Exception):
     print("on_command_error")
@@ -47,9 +49,11 @@ async def on_command_error(ctx: commands.Context, error: Exception):
         traceback.print_tb(error.__traceback__, file=sys.stderr)
     return await _interaction_error_handler(ctx.interaction, error)
 
+
 async def on_tree_error(interaction: discord.Interaction, error: Exception):
     print("on_tree_error")
     return await _interaction_error_handler(interaction, error)
+
 
 async def _interaction_error_handler(
     inter: discord.Interaction, error: Exception = None
@@ -95,9 +99,7 @@ async def _interaction_error_handler(
         TooManyArguments: "You gave too many arguments.",
     }
 
-    default: str = (
-        "An unknown error has occurred. Please use `/bug` to report this."
-    )
+    default: str = "An unknown error has occurred. Please use `/bug` to report this."
     hint: str = errorDir.get(type(error), default)
 
     embed = fmte_i(
@@ -110,6 +112,7 @@ async def _interaction_error_handler(
         await inter.response.send_message(embed=embed, ephemeral=True)
     except discord.InteractionResponded:
         await inter.followup.send(embed=embed, ephemeral=True)
+
 
 async def handle_modal_error(interaction: discord.Interaction, error: Exception):
     return await _interaction_error_handler(interaction, error)

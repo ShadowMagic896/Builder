@@ -249,7 +249,7 @@ class DDGImageMeta:
                 url: str = item.select_one("a > span.tile--img__domain")["title"]
                 data: DDGSearchData = DDGImageData(title, thumbnail, url)
                 cls.data.append(data)
-            except:  # Incomplete image, stop looking
+            except BaseException:  # Incomplete image, stop looking
                 break
 
         cls.ctx = ctx

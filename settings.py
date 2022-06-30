@@ -5,9 +5,7 @@ from typing import Any, Callable, List, Set
 from src.utils.checks import inter_choke
 
 # Directories to look for cogs in
-EXT_DIRECTORIES: List[PathLike] = [
-    "./src/cogs"
-]
+EXT_DIRECTORIES: List[PathLike] = ["./src/cogs"]
 
 # Cogs to not load on startup
 NOLOAD_EXTS: List[str] = []
@@ -82,8 +80,6 @@ DEVELOPMENT_GUILD_IDS: List[int] = [
     816348537800753182,
 ]
 
-BLACKLIST_USERS: List[int] = [
-
-]
+BLACKLIST_USERS: List[int] = []
 
 LOGGING_LEVEL: int = logging.DEBUG

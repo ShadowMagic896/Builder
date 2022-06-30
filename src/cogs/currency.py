@@ -20,6 +20,7 @@ class Currency(BaseCog):
     """
     Get bank
     """
+
     def ge(self):
         return "\N{MONEY BAG}"
 

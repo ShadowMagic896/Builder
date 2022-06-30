@@ -37,7 +37,7 @@ class PHSearchData(NamedTuple):
 
 
 class Cache(NamedTuple):
-    RTFM: Mapping["RTFMCache", "RTFMMeta"] # type: ignore
+    RTFM: Mapping["RTFMCache", "RTFMMeta"]  # type: ignore
     fonts: "Fonts"
 
 
@@ -57,13 +57,15 @@ class RTFMCache(NamedTuple):
             return NotImplemented
         else:
             return all(
-                (self.project == __o.project,
-                self.query == __o.query,
-                self.version == __o.version,
-                self.lang == __o.lang,
-                self.timestamp == __o.timestamp)
+                (
+                    self.project == __o.project,
+                    self.query == __o.query,
+                    self.version == __o.version,
+                    self.lang == __o.lang,
+                    self.timestamp == __o.timestamp,
+                )
             )
-    
+
     def round_to_track(timestamp: float) -> int:
         """
         Returns the timestamp of the object to the nearest multiple of 120
@@ -71,12 +73,4 @@ class RTFMCache(NamedTuple):
         return round(timestamp / Timers.RTFM_CACHE_CLEAR) * Timers.RTFM_CACHE_CLEAR
 
     def __hash__(self) -> int:
-        return hash(
-            (
-                self.project,
-                self.query,
-                self.version,
-                self.lang,
-                self.timestamp
-            )
-        )
+        return hash((self.project, self.query, self.version, self.lang, self.timestamp))

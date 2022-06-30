@@ -17,7 +17,6 @@ from src.utils.extensions import extend_dir
 
 
 class Dev(BaseCog):
-
     @commands.hybrid_command()
     @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
     @commands.is_owner()

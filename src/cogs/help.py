@@ -20,7 +20,6 @@ from src.utils.bot_types import Builder, BuilderContext
 
 
 class Help(BaseCog):
-
     @commands.hybrid_command()
     @describe(
         cog="The cog to view",

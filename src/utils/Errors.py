@@ -126,6 +126,7 @@ class NoDocumentsFound(BaseException):
     def __init__(self, error: Any, *args: object) -> None:
         super().__init__(error, *args)
 
+
 class Fatal(BaseException):
     """
     Raised when a fatal internal exception occurs
@@ -133,4 +134,3 @@ class Fatal(BaseException):
 
     def __init__(self, error: Any, *args: object) -> None:
         super().__init__(error, *args)
-

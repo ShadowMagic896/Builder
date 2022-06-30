@@ -40,10 +40,11 @@ from src.utils.bot_types import Builder
 from src.utils.errors import Fatal
 
 warnings.filterwarnings("error")
+
+
 async def aquire_fonts() -> Fonts:
-    return Fonts(
-        bookosbi = ImageFont.FreeTypeFont(f"assets/fonts/bookosbi.ttf", size=20)
-    )
+    return Fonts(bookosbi=ImageFont.FreeTypeFont(f"assets/fonts/bookosbi.ttf", size=20))
+
 
 async def aquire_activity(bot: commands.Bot) -> discord.Activity:
 
@@ -56,20 +57,26 @@ async def aquire_activity(bot: commands.Bot) -> discord.Activity:
 
 async def aquire_driver() -> webdriver.Chrome:
     executable_path = Path("assets/drivers/chromedriver.exe").absolute()
-    binary_location: str ="C:\\Program Files\\Google\\Chrome Beta\\Application\\chrome.exe"
+    binary_location: str = (
+        "C:\\Program Files\\Google\\Chrome Beta\\Application\\chrome.exe"
+    )
 
     options = Options()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.headless = True
 
     if not os.path.exists(binary_location):
-        raise Exception("Google Chrome >= 103.x must be installed. Please see https://www.google.com/chrome/beta/")
+        raise Exception(
+            "Google Chrome >= 103.x must be installed. Please see https://www.google.com/chrome/beta/"
+        )
     options.binary_location = binary_location
-    
+
     service = Service()
     service.path = executable_path
 
-    driver: webdriver.Chrome = await run(webdriver.Chrome, options=options, service=service)
+    driver: webdriver.Chrome = await run(
+        webdriver.Chrome, options=options, service=service
+    )
     driver.set_window_size(1920, 1080)
     return driver
 
@@ -84,10 +91,8 @@ async def aquire_db() -> asyncpg.Connection:
 
 
 async def aquire_caches() -> Cache:
-    return Cache(
-        RTFM={},
-        fonts=await aquire_fonts()
-    )
+    return Cache(RTFM={}, fonts=await aquire_fonts())
+
 
 async def aquire_connection() -> aiohttp.ClientSession:
     return aiohttp.ClientSession(
@@ -158,7 +163,13 @@ def start(main: Callable) -> None:
     setup_logging()
     inital: bool = True
     last_error: Exception = ...
-    while inital or input(f"\nENDED WITH FATAL ERROR: {last_error}\nRestart bot? (Y/N)\n  | ").lower() == "y":
+    while (
+        inital
+        or input(
+            f"\nENDED WITH FATAL ERROR: {last_error}\nRestart bot? (Y/N)\n  | "
+        ).lower()
+        == "y"
+    ):
         if inital:
             inital = not inital
         try:
@@ -168,6 +179,8 @@ def start(main: Callable) -> None:
             sys.exit()
         except Exception as err:
             last_error = err
+
+
 def setup_logging() -> None:
     format: str = "%(name)s @ %(asctime)s !%(levelno)s: %(message)s"
     logging.basicConfig(level=LOGGING_LEVEL, format=format)
@@ -191,15 +204,3 @@ def setup_logging() -> None:
     logger: logging.Logger = logging.getLogger("selenium")
     logger.setLevel(logging.INFO)
     logging.info("Discord Logging Set Up")
-    
-def boot() -> None:
-    async def main():
-        bot: Builder = Builder()
-        bot: Builder = await prepare(bot)
-        try:
-            await bot.start(BOT_KEY)
-        except aiohttp.ClientConnectionError as err:
-            logging.fatal("Could not locate host")
-            await bot.session.close()
-            raise Fatal("Cannot locate host") from err
-    start(main)

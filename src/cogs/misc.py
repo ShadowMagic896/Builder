@@ -46,9 +46,7 @@ class Misc(BaseCog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    @describe(
-        id="The specific advice ID to get"
-    )
+    @describe(id="The specific advice ID to get")
     async def advice(self, ctx: BuilderContext, id: Optional[int] = None):
         """
         Gives you life advice

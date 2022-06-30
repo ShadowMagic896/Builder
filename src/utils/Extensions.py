@@ -13,10 +13,19 @@ from settings import EXT_DIRECTORIES, NOLOAD_EXTS
 def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):
     return d[k] if k in d else default
 
-def format_path(path: str):
-    return (path.replace(os.getcwd(), ".") + "\\").replace("\\", ".").strip(".").removesuffix(".py")
 
-async def load_extensions(bot: Any, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, **opts) -> str:
+def format_path(path: str):
+    return (
+        (path.replace(os.getcwd(), ".") + "\\")
+        .replace("\\", ".")
+        .strip(".")
+        .removesuffix(".py")
+    )
+
+
+async def load_extensions(
+    bot: Any, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, **opts
+) -> str:
     ignore: bool = opts.get("ignore_errors", True)
 
     files = []
@@ -42,11 +51,16 @@ async def load_extensions(bot: Any, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, 
 
 def extend_exts(path: str):
     def format_path(path: str):
-        return (path.replace(os.getcwd(), ".") + "\\").replace("\\", ".").strip(".").removesuffix(".py")
+        return (
+            (path.replace(os.getcwd(), ".") + "\\")
+            .replace("\\", ".")
+            .strip(".")
+            .removesuffix(".py")
+        )
+
     path = Path(path).absolute()
-    return [
-        format_path(p) for p in iglob(f"{path}/**/*.py", recursive=True)
-    ]
+    return [format_path(p) for p in iglob(f"{path}/**/*.py", recursive=True)]
+
 
 def extend_dir(path: str):
     path = Path(path).absolute()
@@ -56,9 +70,11 @@ def extend_dir(path: str):
 async def full_reload(bot: commands.Bot):
     log: str = ""
     for file in extend_dir("./src"):
+
         def format_file(fn: str):
-            _imp = fn.strip("./")[fn.index("src"):].replace("\\", ".")
+            _imp = fn.strip("./")[fn.index("src") :].replace("\\", ".")
             return _imp[:-3]
+
         as_import = format_file(file)
         if as_import in bot.extensions:
             log += f"\n**[EXT] {as_import}**"

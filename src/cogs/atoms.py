@@ -21,6 +21,7 @@ class Atoms(BaseCog):
     """
     Gather random atoms!
     """
+
     def ge(self):
         return "\N{ATOM SYMBOL}"
 
