@@ -25,6 +25,6 @@ At the moment, I do know that the following categories will **not** be worked on
 - Games
 
 ## Can I Try It?
-If you want, sure. Feel free do add me and send a DM on [Discord](https://discord.com) @ [Cookie?#2790](https://discord.com/users/724811595976409119), with the server that you 
+If you want, sure. Feel free do add me and send a DM on [Discord](https://discord.com) @ [Cookie?#1256](https://discord.com/users/724811595976409119), with the server that you 
 want to invite it to. I would just post the link here, but I'm sure there's some trolls out there who will try to get this
 bot flagged by Discord.
