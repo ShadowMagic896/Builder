@@ -13,7 +13,7 @@ from discord.ext import commands
 
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.api import evaulate_response
-from src.utils.embeds import fmte
+from src.utils.embeds import format
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.errors import NoDocumentsFound
 from src.utils.constants import Timers, URLs
@@ -45,7 +45,7 @@ class API(BaseCog):
         lang="en",
     ):
         """
-        Read the F*cking Manual: Seach readthedocs.io
+        Read the F%cking Manual: Seach readthedocs.io
         """
 
         meta = await RTFMMeta.create(
@@ -155,24 +155,24 @@ class API(BaseCog):
         response: dict = await run(self.bot.openai.Completion.create, **preset)
         code: int = int(evaulate_response(response))
         if code == 0:
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="This Text is Safe",
-                c=discord.Color.teal(),
+                title="This Text is Safe",
+                color=discord.Color.teal(),
             )
         elif code == 1:
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="This text is sensitive.",
-                d="This means that the text could be talking about a sensitive topic, something political, religious, or talking about a protected class such as race or nationality.",
-                c=discord.Color.yellow(),
+                title="This text is sensitive.",
+                desc="This means that the text could be talking about a sensitive topic, something political, religious, or talking about a protected class such as race or nationality.",
+                color=discord.Color.yellow(),
             )
         else:
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="This text is unsafe.",
-                d="This means that the text contains profane language, prejudiced or hateful language, something that could be NSFW, or text that portrays certain groups/people in a harmful manner.",
-                c=discord.Color.red(),
+                title="This text is unsafe.",
+                desc="This means that the text contains profane language, prejudiced or hateful language, something that could be NSFW, or text that portrays certain groups/people in a harmful manner.",
+                color=discord.Color.red(),
             )
         await ctx.send(embed=embed)
 
@@ -189,7 +189,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.complete(message, stochasticism)
         response: dict = await run(self.bot.openai.Completion.create, **preset)
-        embed = fmte(ctx, t="Completion Finished")
+        embed = await format(ctx, title="Completion Finished")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
@@ -211,7 +211,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.grammar(message, edits, stochasticism)
         response: dict = await run(self.bot.openai.Edit.create, **preset)
-        embed = fmte(ctx, t="Checking Completed")
+        embed = await format(ctx, title="Checking Completed")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
@@ -236,7 +236,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.gen_edit(message, instructions, edits, stochasticism)
         response: dict = await run(self.bot.openai.Edit.create, **preset)
-        embed = fmte(ctx, t="Editing Completed")
+        embed = await format(ctx, title="Editing Completed")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
@@ -355,9 +355,9 @@ class RTFMPaginator(Paginator):
         super().__init__(self.meta.ctx, self.meta.values, pagesize, timeout=timeout)
 
     async def embed(self, inter: discord.Interaction):
-        return fmte(
+        return await format(
             self.ctx,
-            t=f"`{self.meta.project}`/`{self.meta.version}`: `{self.meta.query_raw}`\nPage `{self.position+1}` of `{self.maxpos+1}` [`{len(self.meta.values)}` Results]",
+            title=f"`{self.meta.project}`/`{self.meta.version}`: `{self.meta.query_raw}`\nPage `{self.position+1}` of `{self.maxpos+1}` [`{len(self.meta.values)}` Results]",
         )
 
     async def adjust(self, embed: discord.Embed):

@@ -7,7 +7,7 @@ import math
 from typing import Any, Coroutine, Generic, Optional, Sequence, TypeVar
 from src.utils.bot_types import Builder, BuilderContext
 
-from src.utils.embeds import fmte_i
+from src.utils.embeds import format
 from src.utils.constants import Emojis
 from src.utils.error_funcs import _interaction_error_handler, handle_modal_error
 
@@ -150,7 +150,7 @@ class Paginator(BaseView, Generic[SequenceT]):
         """
         Should be overwritten to provide custom labeling
         """
-        return fmte_i(inter, t=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`")
+        return await format(self.ctx, title=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`")
 
     async def adjust(self, embed: discord.Embed):
         return embed
@@ -225,11 +225,11 @@ class Paginator(BaseView, Generic[SequenceT]):
 
 class BaseModal(discord.ui.Modal):
     def __init__(
-        self, *, title: str, timeout: Optional[float] = None, custom_id: str = None
+        self, *, title: str = discord.utils.MISSING, timeout: Optional[float] = None, custom_id: str = discord.utils.MISSING
     ) -> None:
         super().__init__(
             title=title, timeout=timeout, custom_id=custom_id
-        ) if custom_id else super().__init__(title=title, timeout=timeout)
+        )
 
     async def on_error(
         self,

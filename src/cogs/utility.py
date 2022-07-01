@@ -11,11 +11,11 @@ import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Mapping, Optional, Tuple
 import environ
 import requests
 import warnings
-from src.utils.embeds import fmte
+from src.utils.embeds import format
 from src.utils.subclass import BaseCog, BaseModal, BaseView
 from src.utils.converters import TimeConvert
 from src.utils.bot_types import Builder, BuilderContext
@@ -84,7 +84,7 @@ class Utility(BaseCog):
         )
 
         # print(results)
-        embed = fmte(ctx, t="\N{Table Tennis Paddle and Ball} Pong!")
+        embed = await format(ctx, title="\N{Table Tennis Paddle and Ball} Pong!")
         for c, res in enumerate(results):
             embed.add_field(
                 name=f"**{res[0]}**",
@@ -105,7 +105,7 @@ class Utility(BaseCog):
         bb = "\n{s}{s}{s}".format(s="ㅤ")
 
         user = user if user else ctx.author
-        embed = fmte(ctx, t="Information on {}".format(user))
+        embed = await format(ctx, title="Information on {}".format(user))
         made = (
             round(user.created_at.timestamp())
             if user.created_at is not None
@@ -142,9 +142,9 @@ class Utility(BaseCog):
         """
         b = "\nㅤㅤ"
         bb = "\nㅤㅤㅤ"
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Hello! I'm {}.".format(self.bot.user.name),
+            title="Hello! I'm {}.".format(self.bot.user.name),
         )
         embed.add_field(
             name="**__Statistics__**",
@@ -190,9 +190,9 @@ class Utility(BaseCog):
             if isinstance(found, discord.PartialMessage):
                 name = found.jump_url
 
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="Object Found!",
+                title="Object Found!",
             )
             embed.add_field(
                 name="NAME",
@@ -224,9 +224,9 @@ class Utility(BaseCog):
 
         response = requests.request("GET", url, headers=headers, params=params)
         res = response.json()["list"]
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="`{}`: {} Definitions {}".format(
+            title="`{}`: {} Definitions {}".format(
                 term, len(res), "[Showing 5]" if len(res) > 5 else ""
             ),
         )
@@ -275,7 +275,7 @@ class Utility(BaseCog):
             dates.append(defi.get("date", "Unknown"))
             types.append(defi.get("fl", "Unknown"))
 
-        embed = fmte(
+        embed = await format(
             ctx,
         )
         if len(defs) < 1:
@@ -308,10 +308,10 @@ class Utility(BaseCog):
             raise commands.errors.BadArgument(zone)
         else:
             time = pytz.timezone(zone)
-            embed = fmte(
+            embed = await format(
                 ctx=ctx,
-                t="Current datetime in zone {}:".format(time.zone),
-                d="```{}```".format(datetime.now(pytz.timezone(zone))),
+                title="Current datetime in zone {}:".format(time.zone),
+                desc="```{}```".format(datetime.now(pytz.timezone(zone))),
             )
             await ctx.send(embed=embed)
 
@@ -347,7 +347,7 @@ class Utility(BaseCog):
         """
         Customize and send an embed. Not just for bots!
         """
-        embed: discord.Embed = fmte(ctx, t="Untitled")
+        embed: discord.Embed = await format(ctx, title="Untitled")
         embed.remove_footer()
         view = EmbedView(ctx, embed)
         view.message = await ctx.send(embed=embed, view=view, ephemeral=True)
@@ -390,11 +390,11 @@ else:
         buffer.write(bytes(data["stdout"][:EVALUATION_TRUNCATION_THRESHOLD], "UTF-8"))
         buffer.seek(0)
         file: discord.File = discord.File(buffer, filename="result.py")
-        embed = fmte(
+        embed = await format(
             self.ctx,
-            t="Successful!" if data["returncode"] == 0 else "Error!",
-            d=f"```py\n{self.code.value}\n```",
-            c=color,
+            title="Successful!" if data["returncode"] == 0 else "Error!",
+            desc=f"```py\n{self.code.value}\n```",
+            color=color,
         )
         if data["returncode"] == 143:
             embed.title = "Signal Terminated"
@@ -408,7 +408,6 @@ class EmbedView(BaseView):
     def __init__(
         self, ctx: BuilderContext, embed: discord.Embed, timeout: Optional[float] = 300
     ):
-        self.tinter: Optional[discord.Interaction] = None
         self.embed = embed
         self.view: discord.ui.View = discord.ui.View()
         super().__init__(ctx, timeout)
@@ -612,11 +611,10 @@ class EmbedView(BaseView):
                 placeholder="Optional",
                 required=False,
             )
-
             emoji = discord.ui.TextInput(
-                label="Please Input Button Emoji ID",
+                label="Please Input Button Emoji Name or ID",
                 max_length=50,
-                placeholder="Please give the ID of the emoji",
+                placeholder="It can also be the UNICODE name",
                 required=False,
             )
 
@@ -653,18 +651,11 @@ class EmbedView(BaseView):
                 if not (self_.emoji or self_.label):
                     raise ValueError("Must include either name or emoji")
 
-                if self_.type_.values[0] == "Counter":
-                    label = f"{self_.label.value}: 0"
-                else:
-                    label = self_.label.value
+                label = self_.label.value
 
-                if v := self_.emoji.value:
-                    emoji = await get_emoji(self.ctx, v)
-
-                    if emoji is None:
+                if emoji := self_.emoji.value:
+                    if (emoji := await get_emoji(self.ctx, emoji)) is None:
                         raise ValueError("Could not find that emoji")
-
-                    emoji = f"<:{emoji.name}:{emoji.id}>"
                 else:
                     emoji = None
 
@@ -673,17 +664,22 @@ class EmbedView(BaseView):
                     label=label,
                     emoji=emoji,
                 )
-                instance = EmbedButtonCallbacks(self.view, new_button)
-                new_button.callback = {
-                    "Counter": instance.counter,
-                    "Role Adder": instance.role_adder,
-                    "Blank": instance.blank,
-                }.get(self_.type_.values[0])
+                if self_.type_.values[0] == "Counter":
+                    modal: discord.ui.Modal = Counter(self.ctx, self.embed, self.view, new_button)
+                else:
+                    ...
+                view = BaseView(self.ctx)
+                intermediary = discord.ui.Button(style=discord.ButtonStyle.blurple, label="PRESS ME")
+                async def send_modal(inter: discord.Interaction, button: discord.ui.Button):
+                    await inter.response.send_modal(modal)
+                intermediary.callback = send_modal
+                view.add_item(intermediary)
 
-                self.view.add_item(new_button)
-
-                embed = fmte(self.ctx, t=f"... and {len(self.view.children)} buttons")
-                await interaction.response.edit_message(embeds=[self.embed, embed])
+                embed = await format(
+                    self.ctx,
+                    
+                )
+                await interaction.response.send_message(view=view)
 
         await inter.response.send_modal(UpdateModal())
 
@@ -698,16 +694,15 @@ class EmbedView(BaseView):
 
 
 class EmbedButtonCallbacks:
-    def __init__(self, view: discord.ui.View, button: discord.ui.Button):
+    def __init__(self, view: discord.ui.View, button: discord.ui.Button, extra: Mapping[str, Any] = {}):
         self.view = view
         self.button = button
+        self.extra = extra
+        self.times: int = 0
 
     async def counter(self, inter: discord.Interaction):
-        label: str = self.button.label
-        split: int = len(label) - label[::-1].index(":")
-        cur_label = label[: split - 1]
-        cur_co = int(label[split + 1 :])
-        self.button.label = f"{cur_label}: {cur_co+1}"
+        self.times += 1
+        self.button.label = self.extra["formatting"].replace("COUNT", self.times)
         await inter.response.edit_message(view=self.view)
 
     async def role_adder(self, inter: discord.Interaction):
@@ -716,6 +711,25 @@ class EmbedButtonCallbacks:
     async def blank(self, inter: discord.Interaction):
         await inter.response.defer()
 
+class Counter(BaseModal):
+    def __init__(self, ctx: BuilderContext, embed: discord.Embed, view: discord.ui.View, button: discord.ui.Button):
+        self.ctx = ctx
+        self.embed = embed
+        self.view = view
+        self.button = button
+        super().__init__(title="Format Counter")
+    
+    # formatting = discord.ui.TextInput(
+    #     label="Use 'COUNT' to Format",
+    # )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        instance = EmbedButtonCallbacks(self.view, self.button, extra={"formatting": self.formatting.value})
+        self.button.callback = instance.counter
+        self.view.add_item(self.button)
+        
+        embed = await format(self.ctx, title=f"... and {len(self.view.children)} buttons")
+        await interaction.response.edit_message(embeds=[self.embed, embed])
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))

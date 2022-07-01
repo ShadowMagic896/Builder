@@ -12,7 +12,7 @@ from discord.ext import commands
 from urllib import parse as libparse
 
 from src.utils.converters import UrlGet, UrlFind
-from src.utils.embeds import fmte
+from src.utils.embeds import format
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.types import DDGImageData, FeatureType, DDGSearchData
@@ -41,7 +41,7 @@ class Web(BaseCog):
         """
         data = libparse.urlsplit(url[0])
 
-        embed = fmte(ctx, t="URL Information")
+        embed = await format(ctx, title="URL Information")
         embed.add_field(name="Scheme", value=f"`{data.scheme or None}`")
         embed.add_field(name="NetLoc", value=f"`{data.netloc or None}`")
         embed.add_field(name="Path", value=f"`{data.path or None}`")
@@ -77,7 +77,7 @@ class Web(BaseCog):
                 ext = path[(len(rev) - rev.index(".")) :]
         else:
             ext = fmt
-        embed = fmte(ctx, t="Request Sent, Response Recieved", d=url)
+        embed = await format(ctx, title="Request Sent, Response Recieved", desc=url)
         embed.add_field(name="Format Used:", value=ext)
         buffer: BytesIO = BytesIO(await response.read())
         file = discord.File(buffer, filename=f"response.{ext}")
@@ -98,7 +98,7 @@ class Web(BaseCog):
         await asyncio.sleep(wait)
         buffer: BytesIO = BytesIO(await run(self.bot.driver.get_screenshot_as_png))
         file = discord.File(buffer, filename="image.png")
-        embed = fmte(ctx, t="Screenshot Captured")
+        embed = await format(ctx, title="Screenshot Captured")
         embed.set_image(url="attachment://image.png")
         await ctx.send(embed=embed, file=file)
 
@@ -217,9 +217,9 @@ class DDGSearchView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        return fmte(
+        return await format(
             self.meta.ctx,
-            t=f"Results: {self.meta.query}\nPage `{self.position+1}` of `{self.maxpos+1}` [{len(self.values)} Results]",
+            title=f"Results: {self.meta.query}\nPage `{self.position+1}` of `{self.maxpos+1}` [{len(self.values)} Results]",
         )
 
 
@@ -270,9 +270,9 @@ class DDGImageView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        return fmte(
+        return await format(
             self.meta.ctx,
-            t=f"Image Results: `{self.meta.query}`\nPage `{self.position+1}` of `{self.maxpos+1}` [{len(self.values)} Results]",
+            title=f"Image Results: `{self.meta.query}`\nPage `{self.position+1}` of `{self.maxpos+1}` [{len(self.values)} Results]",
         )
 
 

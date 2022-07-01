@@ -7,10 +7,10 @@ from discord.ext import commands
 from discord.ext.commands import parameter
 
 import random
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 import environ
 
-from src.utils.embeds import fmte, fmte_i
+from src.utils.embeds import format
 from src.utils.constants import Rates, Emojis, URLs
 from src.utils.subclass import BaseCog, BaseModal, BaseView, Paginator
 from src.utils.bot_types import Builder, BuilderContext
@@ -47,7 +47,7 @@ class Currency(BaseCog):
         db = BalanceDatabase(ctx)
         rec = await db.get_balance(user)
 
-        embed = fmte(ctx, t=f"`{user}`'s Balance: `{rec:,}`{Emojis.COIN_ID}")
+        embed = await format(ctx, title=f"`{user}`'s Balance: `{rec:,}`{Emojis.COIN_ID}")
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -65,10 +65,10 @@ class Currency(BaseCog):
         if (cv := (await db.get_balance(ctx.author))) < amount:
             raise ValueError("You don't have that much money!")
 
-        embed = fmte(
+        embed = await format(
             ctx,
-            t=f"Are You Sure You Want to Give `{amount:,}`{Emojis.COIN_ID} to `{user}`?",
-            d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.",
+            title=f"Are You Sure You Want to Give `{amount:,}`{Emojis.COIN_ID} to `{user}`?",
+            desc=f"This is `{round((amount / cv) * 100, 2)}%` of your money.",
         )
         view = GiveView(ctx, amount, ctx.author, user)
         view.message = await ctx.send(embed=embed, view=view)
@@ -92,10 +92,10 @@ class Currency(BaseCog):
         if (cv := (await db.get_balance(user))) < amount:
             raise ValueError("They don't have that much money!")
 
-        embed = fmte(
+        embed = await format(
             ctx,
-            t=f"`{user}`, Do You Want to Give `{ctx.author}` `{amount}`{Emojis.COIN_ID}?",
-            d=f"This is `{round((amount / cv) * 100, 2)}%` of your money.",
+            title=f"`{user}`, Do You Want to Give `{ctx.author}` `{amount}`{Emojis.COIN_ID}?",
+            desc=f"This is `{round((amount / cv) * 100, 2)}%` of your money.",
         )
 
         view = RequestView(ctx, amount, ctx.author, user)
@@ -132,7 +132,7 @@ class Currency(BaseCog):
         await db.add_to_balance(ctx.author, amount)
 
         sign = "+" if amount >= 0 else ""
-        embed = fmte(ctx, t=f"`{sign}{amount:,}`{Emojis.COIN_ID}", d=k)
+        embed = await format(ctx, title=f"`{sign}{amount:,}`{Emojis.COIN_ID}", desc=k)
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -182,27 +182,27 @@ class Currency(BaseCog):
             na = (await db.add_to_balance(ctx.author, amount))["balance"]
             nu = (await db.add_to_balance(user, -amount))["balance"]
 
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t=f"Successful! You Stole `{amount:,}`{Emojis.COIN_ID}.",
-                d=f"**You Now Have:** `{na:,}`{Emojis.COIN_ID} [Before: `{auth_bal:,}`{Emojis.COIN_ID}]\n**{user.name} Now Has:** `{nu:,}`{Emojis.COIN_ID} [Before: `{user_bal:,}`{Emojis.COIN_ID}]",
+                title=f"Successful! You Stole `{amount:,}`{Emojis.COIN_ID}.",
+                desc=f"**You Now Have:** `{na:,}`{Emojis.COIN_ID} [Before: `{auth_bal:,}`{Emojis.COIN_ID}]\n**{user.name} Now Has:** `{nu:,}`{Emojis.COIN_ID} [Before: `{user_bal:,}`{Emojis.COIN_ID}]",
             )
             await ctx.send(embed=embed)
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t=f"`{amount:,}`{Emojis.COIN_ID} Were Stolen From You!",
-                d=f"**Guild:** `{ctx.guild}`\n**User:** `{ctx.author}`",
+                title=f"`{amount:,}`{Emojis.COIN_ID} Were Stolen From You!",
+                desc=f"**Guild:** `{ctx.guild}`\n**User:** `{ctx.author}`",
             )
             await user.send(embed=embed)
         else:
             na = (await db.add_to_balance(ctx.author, -amount))["balance"]
             nu = (await db.add_to_balance(user, amount))["balance"]
 
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t=f"Failure! You Lost `{amount:,}`{Emojis.COIN_ID}.",
-                d=f"**You Now Have:** `{na:,}`{Emojis.COIN_ID} [Before: `{auth_bal:,}`{Emojis.COIN_ID}]\n**{user.name} Now Has:** `{nu:,}`{Emojis.COIN_ID} [Before: `{user_bal:,}`{Emojis.COIN_ID}]",
-                c=discord.Color.red(),
+                title=f"Failure! You Lost `{amount:,}`{Emojis.COIN_ID}.",
+                desc=f"**You Now Have:** `{na:,}`{Emojis.COIN_ID} [Before: `{auth_bal:,}`{Emojis.COIN_ID}]\n**{user.name} Now Has:** `{nu:,}`{Emojis.COIN_ID} [Before: `{user_bal:,}`{Emojis.COIN_ID}]",
+                color=discord.Color.red(),
             )
             await ctx.send(embed=embed)
 
@@ -217,10 +217,10 @@ class Currency(BaseCog):
         db = BalanceDatabase(ctx)
         balance = (await db.add_to_balance(ctx.author, rate))["balance"]
 
-        embed = fmte(
+        embed = await format(
             ctx,
-            t=f"`{rate:,}`{Emojis.COIN_ID} Gained!",
-            d=f"You now have: `{balance:,}`{Emojis.COIN_ID}",
+            title=f"`{rate:,}`{Emojis.COIN_ID} Gained!",
+            desc=f"You now have: `{balance:,}`{Emojis.COIN_ID}",
         )
         await ctx.send(embed=embed)
 
@@ -235,10 +235,10 @@ class Currency(BaseCog):
         db = BalanceDatabase(ctx)
         balance = (await db.add_to_balance(ctx.author, rate))["balance"]
 
-        embed = fmte(
+        embed = await format(
             ctx,
-            t=f"`{rate:,}`{Emojis.COIN_ID} Gained!",
-            d=f"You now have: `{balance:,}`{Emojis.COIN_ID}",
+            title=f"`{rate:,}`{Emojis.COIN_ID} Gained!",
+            desc=f"You now have: `{balance:,}`{Emojis.COIN_ID}",
         )
         await ctx.send(embed=embed)
 
@@ -253,10 +253,10 @@ class Currency(BaseCog):
         db = BalanceDatabase(ctx)
         balance = (await db.add_to_balance(ctx.author, rate))["balance"]
 
-        embed = fmte(
+        embed = await format(
             ctx,
-            t=f"`{rate:,}`{Emojis.COIN_ID} Gained!",
-            d=f"You now have: `{balance:,}`{Emojis.COIN_ID}",
+            title=f"`{rate:,}`{Emojis.COIN_ID} Gained!",
+            desc=f"You now have: `{balance:,}`{Emojis.COIN_ID}",
         )
         await ctx.send(embed=embed)
 
@@ -265,7 +265,7 @@ class Currency(BaseCog):
         """
         Take a quiz to earn some coins!
         """
-        embed = fmte(ctx, t="Select Options", d="Once you are finished, press `Start`")
+        embed = await format(ctx, title="Select Options", desc="Once you are finished, press `Start`")
         view = StartQuizView(ctx)
         view.message = await ctx.send(embed=embed, view=view)
 
@@ -381,10 +381,10 @@ class GiveView(BaseView):
         usernew = (await db.add_to_balance(self.user, self.amount))["balance"]
         coin = Emojis.COIN_ID
 
-        embed = fmte(
+        embed = await format(
             self.ctx,
-            t=f"Transaction Completed\nTransferred `{self.amount:,}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
-            d=f"**`{self.auth}` balance:** `{authnew:,}`{coin}\n**`{self.user}` balance:** `{usernew:,}`{coin}",
+            title=f"Transaction Completed\nTransferred `{self.amount:,}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
+            desc=f"**`{self.auth}` balance:** `{authnew:,}`{coin}\n**`{self.user}` balance:** `{usernew:,}`{coin}",
         )
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
@@ -392,8 +392,8 @@ class GiveView(BaseView):
         label="Decline", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
     )
     async def dec(self, inter: discord.Interaction, button: discord.Button):
-        embed = fmte(
-            self.ctx, t="Transaction Declined", d="No currency has been transfered."
+        embed = await format(
+            self.ctx, title="Transaction Declined", desc="No currency has been transfered."
         )
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
@@ -421,10 +421,10 @@ class RequestView(BaseView):
         authnew = await db.add_to_balance(self.auth, self.amount)
         usernew = await db.add_to_balance(self.user, -self.amount)
         coin = Emojis.COIN_ID
-        embed = fmte(
+        embed = await format(
             self.ctx,
-            t=f"Transaction Completed\nTransferred `{self.amount:,}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
-            d=f"**`{self.auth}` balance:** `{authnew:,}`{coin}\n**`{self.user}` balance:** `{usernew:,}`{coin}",
+            title=f"Transaction Completed\nTransferred `{self.amount:,}`{coin} from `{self.auth.display_name}` to `{self.user.display_name}`",
+            desc=f"**`{self.auth}` balance:** `{authnew:,}`{coin}\n**`{self.user}` balance:** `{usernew:,}`{coin}",
         )
         await inter.response.edit_message(embed=embed, view=None)
 
@@ -432,8 +432,8 @@ class RequestView(BaseView):
         label="Decline", emoji="\N{CROSS MARK}", style=discord.ButtonStyle.danger
     )
     async def dec(self, inter: discord.Interaction, button: discord.Button):
-        embed = fmte(
-            self.ctx, t="Transaction Declined", d="No currency has been transfered."
+        embed = await format(
+            self.ctx, title="Transaction Declined", desc="No currency has been transfered."
         )
         await inter.response.edit_message(embed=embed, view=None)
 
@@ -443,8 +443,8 @@ class RequestView(BaseView):
 
 class LeaderboardView(Paginator):
     async def embed(self, inter: discord.Interaction):
-        return fmte_i(
-            inter, t=f"Leaderboard: Page `{self.position+1}` of `{self.maxpos+1}`"
+        return await format(
+            self.ctx, title=f"Leaderboard: Page `{self.position+1}` of `{self.maxpos+1}`"
         )
 
     async def adjust(self, embed: discord.Embed):
@@ -547,21 +547,13 @@ class MainQuizView(BaseView):
 
         super().__init__(ctx, timeout=timeout)
 
-    def embed(self, ctx_or_inter):
+    async def embed(self, ctx: BuilderContext):
         q = self.questions[self.pos - 1]
-        if isinstance(ctx_or_inter, commands.Context):
-            return fmte(
-                ctx_or_inter,
-                t=f"Question `{self.pos}`:\n{q['question']}",
-                d=f"Category: `{self.cat}`\nDifficulty: `{self.dif}`",
-            )
-        else:
-            return fmte_i(
-                ctx_or_inter,
-                t=f"Question `{self.pos}`:\n{q['question']}",
-                d=f"Category: `{self.cat}`\nDifficulty: `{self.dif}`",
-            )
-
+        return await format(
+            ctx,
+            title=f"Question `{self.pos}`:\n{q['question']}",
+            desc=f"Category: `{self.cat}`\nDifficulty: `{self.dif}`",
+        )
 
 class QuizAnsSelect(discord.ui.Select):
     def __init__(self, question: dict, ctx):
@@ -592,7 +584,7 @@ class QuizAnsSelect(discord.ui.Select):
 
 
 class QuizQuestionSubmit(discord.ui.Button):
-    def __init__(self, view: discord.ui.View, select: discord.ui.Select):
+    def __init__(self, view: MainQuizView, select: discord.ui.Select):
         self._view = view
         self.ctx: BuilderContext = self._view.ctx
         self.select = select
@@ -639,10 +631,10 @@ class QuizQuestionSubmit(discord.ui.Button):
             )
 
             coin = Emojis.COIN_ID
-            embed = fmte_i(
-                interaction,
-                t=f"Quiz Finished! You Earned `{perc:,}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
-                d=f"**Results:**\n{desc}{score}",
+            embed = await format(
+                self.ctx,
+                title=f"Quiz Finished! You Earned `{perc:,}`{coin}!\nCategory: `{self._view.cat}`\nDifficulty: `{self._view.dif}`",
+                desc=f"**Results:**\n{desc}{score}",
             )
 
             db = BalanceDatabase(self.ctx)
@@ -650,9 +642,8 @@ class QuizQuestionSubmit(discord.ui.Button):
 
             await interaction.response.edit_message(embed=embed, view=None)
         else:
-            # print(self._view.pos, self.select.values)
             question = self._view.questions[self._view.pos - 1]
-            embed = self._view.embed(interaction)
+            embed = await self._view.embed(self.ctx)
             view = MainQuizView(
                 self._view.questions, self._view.cat, self._view.dif, self._view.ctx
             )

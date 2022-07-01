@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 from chempy.util import periodic
 from src.utils.converters import Atom
 
-from src.utils.embeds import fmte
+from src.utils.embeds import format
 from src.utils.subclass import BaseCog, Paginator
 from src.utils.item_maps import get_atomic_name, Chemistry
 from src.utils.bot_types import Builder, BuilderContext
@@ -56,10 +56,10 @@ class Atoms(BaseCog):
             [v for v in old if v["atomid"] == atom][0]["count"] if len(old) != 0 else 0
         )
         await AtomsDatabase(ctx).give_atom(user, atom, amount)
-        embed = fmte(
+        embed = await format(
             ctx,
-            t=f"Resources Given to `{user}`",
-            d=f"**Resource Name:** `{atomname}`\n**Resource ID:** `{atom}`\n**Old Amount:** `{old_amount:,}`\n**New Amount:** `{max(old_amount+amount, 0):,}`",
+            title=f"Resources Given to `{user}`",
+            desc=f"**Resource Name:** `{atomname}`\n**Resource ID:** `{atom}`\n**Old Amount:** `{old_amount:,}`\n**New Amount:** `{max(old_amount+amount, 0):,}`",
         )
         await ctx.send(embed=embed)
 
@@ -242,8 +242,8 @@ class AtomsView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        embed = fmte(
-            self.ctx, t=f"{self.title}: Page `{self.position+1}` / `{self.maxpos+1}`"
+        embed = await format(
+            self.ctx, title=f"{self.title}: Page `{self.position+1}` / `{self.maxpos+1}`"
         )
         return embed
 

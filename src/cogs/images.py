@@ -32,7 +32,7 @@ from wand import image as wimage
 
 import environ
 
-from src.utils.embeds import fmte, Desc
+from src.utils.embeds import format, Desc
 from src.utils import constants
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.static import parameters
@@ -76,10 +76,10 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "resize", (width, height)
         )
 
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Image successfully resized!",
-            d="File of dimensions (%s, %s) converted to file of dimensions (%s, %s)"
+            title="Image successfully resized!",
+            desc="File of dimensions (%s, %s) converted to file of dimensions (%s, %s)"
             % (ogsize[0], ogsize[1], width, height),
         )
 
@@ -109,10 +109,10 @@ class Images(BaseCog):
         e: discord.Emoji = await ctx.guild.create_custom_emoji(
             name=name, image=buffer.read(), reason=reason
         )
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Emoji created!",
-            d="**Emoji:** %s\n**Name:** %s\n**Reason:** %s"
+            title="Emoji created!",
+            desc="**Emoji:** %s\n**Name:** %s\n**Reason:** %s"
             % ("<:{}:{}>".format(e.name, e.id), e.name, reason),
         )
         await ctx.send(embed=embed)
@@ -144,7 +144,7 @@ class Images(BaseCog):
             (left, upper, right, lower),
         )
 
-        embed = fmte(ctx, t="Image Cropped")
+        embed = await format(ctx, title="Image Cropped")
         file = discord.File(buffer, "crop.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -156,9 +156,9 @@ class Images(BaseCog):
         """
         Retrieves information about the image
         """
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Gathered Information",
+            title="Gathered Information",
         )
         embed.add_field(
             name="Dimensions",
@@ -205,7 +205,7 @@ class Images(BaseCog):
             expand=True,
         )
 
-        embed = fmte(ctx, t="Image Rotated")
+        embed = await format(ctx, title="Image Rotated")
         file = discord.File(buffer, "rotate.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -236,7 +236,7 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "filter", filter
         )
 
-        embed = fmte(ctx, t="Image Filter Applied")
+        embed = await format(ctx, title="Image Filter Applied")
         file = discord.File(buffer, "filter.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -260,7 +260,7 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "convert", "L"
         )
 
-        embed = fmte(ctx, t="Conversion Complete")
+        embed = await format(ctx, title="Conversion Complete")
         file = discord.File(buffer, "gs.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -292,7 +292,7 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "convert", mode
         )
 
-        embed = fmte(ctx, t="Image Successfully Converted")
+        embed = await format(ctx, title="Image Successfully Converted")
         file = discord.File(buffer, "conv.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -312,7 +312,7 @@ class Images(BaseCog):
         array = np.array(img)
         array = 255 - array
         img = Image.frombuffer("RGB", (image.width, image.height), array)
-        embed = fmte(ctx, t="Image Successfully Inverted")
+        embed = await format(ctx, title="Image Successfully Inverted")
         embed, file = await PILFN.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
 
@@ -327,8 +327,8 @@ class Images(BaseCog):
         """Enciphers an image using a passphrase, which can be deciphered later."""
         img = await WandImageFunctions.fromAttachment(image)
         await WandImageFunctions.apply(img.encipher, phrase)
-        embed = fmte(
-            ctx, t="Image Enciphered", d=f"Passphrase to decipher: ||{phrase}||"
+        embed = await format(
+            ctx, title="Image Enciphered", desc=f"Passphrase to decipher: ||{phrase}||"
         )
         embed, file = await WandImageFunctions.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
@@ -344,10 +344,10 @@ class Images(BaseCog):
         """Deciphers an image from a passphrase."""
         img = await WandImageFunctions.fromAttachment(image)
         await WandImageFunctions.apply(img.decipher, phrase)
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Image Deciphered",
-            d=f"Passphrase used to decipher: ||{phrase}||\nIf it didn't come out correctly, remember to save, not copy, the image to decipher and that the passphase is case-sensitive.",
+            title="Image Deciphered",
+            desc=f"Passphrase used to decipher: ||{phrase}||\nIf it didn't come out correctly, remember to save, not copy, the image to decipher and that the passphase is case-sensitive.",
         )
         embed, file = await WandImageFunctions.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
@@ -361,7 +361,7 @@ class Images(BaseCog):
         buffer: BytesIO = await PILFN.buffer(image)
 
         view = ImageManipulateView(ctx, buffer)
-        embed = fmte(ctx, t="Currently Applied Filters")
+        embed = await format(ctx, title="Currently Applied Filters")
         url = image.url or image.proxy_url or None
         if url is None:
             raise commands.errors.MessageNotFound("Cannot find image for message.")
@@ -434,7 +434,7 @@ class Images(BaseCog):
 
             await run(base.paste, im=im, box=box)
 
-        embed = fmte(ctx, t="Colors Retrieved")
+        embed = await format(ctx, title="Colors Retrieved")
         embed, file = await PILFN.local_embed(embed, base)
         embed.set_thumbnail(url=image.url)
 
@@ -462,7 +462,7 @@ class Images(BaseCog):
         array[...] = array
         img = Image.fromarray(array, mode="RGBA")
 
-        embed = fmte(ctx, t="Colors Swapped")
+        embed = await format(ctx, title="Colors Swapped")
         embed.add_field(name="From:", value=fromcolor)
         embed.add_field(name="To:", value=tocolor)
         embed, file = await PILFN.local_embed(embed, img)
@@ -488,7 +488,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Contrast", factor)
 
-        embed = fmte(ctx, t="Image Successfully Edited")
+        embed = await format(ctx, title="Image Successfully Edited")
         file = discord.File(buffer, "cntr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -508,7 +508,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Brightness", factor)
 
-        embed = fmte(ctx, t="Image Successfully Edited")
+        embed = await format(ctx, title="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -528,7 +528,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Color", factor)
 
-        embed = fmte(ctx, t="Image Successfully Edited")
+        embed = await format(ctx, title="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -548,7 +548,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Sharpness", factor)
 
-        embed = fmte(ctx, t="Image Successfully Edited")
+        embed = await format(ctx, title="Image Successfully Edited")
         file = discord.File(buffer, "shrp.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -561,10 +561,10 @@ class Images(BaseCog):
         Gets the avatar / profile picture of a member.
         """
         user = user if user else ctx.author
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="%s's Avatar" % user.display_name,
-            d="[View Link](%s)" % user.display_avatar.url,
+            title="%s's Avatar" % user.display_name,
+            desc="[View Link](%s)" % user.display_avatar.url,
         )
         embed.set_image(url=user.display_avatar.url)
 
@@ -576,10 +576,10 @@ class Images(BaseCog):
             async def get(self, inter: discord.Interaction, button: discord.ui.Button):
                 if inter.user.avatar is None:
                     inter.user.avatar = inter.user.default_avatar
-                embed = fmte(
+                embed = await format(
                     ctx,
-                    t="%s's Avatar" % user,
-                    d=f"[View Link]({(user.avatar or inter.user.default_avatar).url})",
+                    title="%s's Avatar" % user,
+                    desc=f"[View Link]({(user.avatar or inter.user.default_avatar).url})",
                 )
                 embed.set_image(url=(user.avatar or inter.user.default_avatar).url)
                 await inter.message.edit(embed=embed, view=_NView(ctx))
@@ -601,10 +601,10 @@ class Images(BaseCog):
             async def get(self, inter: discord.Interaction, button: discord.ui.Button):
                 if inter.user.avatar is None:
                     inter.user.avatar = inter.user.default_avatar
-                embed = fmte(
+                embed = await format(
                     ctx,
-                    t="%s's Avatar" % user,
-                    d=f"[View Link]({user.display_avatar.url})",
+                    title="%s's Avatar" % user,
+                    desc=f"[View Link]({user.display_avatar.url})",
                 )
                 embed.set_image(url=user.display_avatar.url)
                 await inter.message.edit(embed=embed, view=_GView(ctx))
@@ -742,8 +742,8 @@ class ImageManipulateView(BaseView):
         self.img.save(buffer)
         buffer.seek(0)
 
-        embed = fmte(
-            self.ctx, t="Effect Applied", d=f"Total Effects: {', '.join(self.filters)}"
+        embed = await format(
+            self.ctx, title="Effect Applied", desc=f"Total Effects: {', '.join(self.filters)}"
         )
         file = discord.File(fp=buffer, filename="image.png")
         embed.set_image(url="attachment://image.png")
@@ -814,7 +814,7 @@ class ImageManipulateView(BaseView):
         passphrase = (
             await self.getUserInput(
                 self.ctx,
-                ((), {"embed": fmte(self.ctx, prompt)}),
+                ((), {"embed": format(self.ctx, prompt)}),
             )
         ).content
         await self.apply(self.img.decipher, passphrase)
@@ -829,7 +829,7 @@ class ImageManipulateView(BaseView):
     async def encipher(self, inter: discord.Interaction, button: discord.ui.Button):
         prompt = "Please enter a **PASSPHRASE:**"
         passphrase = (
-            await self.getUserInput(self.ctx, ((), {"embed": fmte(self.ctx, prompt)}))
+            await self.getUserInput(self.ctx, ((), {"embed": format(self.ctx, prompt)}))
         ).content
         await self.apply(self.img.encipher, passphrase)
         await self.update(inter, button)
@@ -867,7 +867,7 @@ class ImageManipulateView(BaseView):
         )
         img: wimage.Image = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt, ext_data)}),
+            ((), {"embed": format(self.ctx, prompt, ext_data)}),
             post_process=ImageManipulateView.getImageFrom,
             post_process_arguments=([self.ctx], {}),
         )
@@ -878,7 +878,7 @@ class ImageManipulateView(BaseView):
         )
         op: str = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt, ext_data)}),
+            ((), {"embed": format(self.ctx, prompt, ext_data)}),
             post_process=lambda m: m.content.lower(),
         )
         if op not in wimage.COMPOSITE_OPERATORS:
@@ -887,7 +887,7 @@ class ImageManipulateView(BaseView):
         prompt = "Please send the **X VALUE** for where to paste, from the top-left corner of the image."
         x = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt)}),
+            ((), {"embed": format(self.ctx, prompt)}),
             post_process=self.uint_check,
         )
         if x > self.img.width:
@@ -896,7 +896,7 @@ class ImageManipulateView(BaseView):
         prompt = "Please send the **Y VALUE** for where to paste, from the top-left corner of the image."
         y = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt)}),
+            ((), {"embed": format(self.ctx, prompt)}),
             post_process=self.uint_check,
         )
         if y > self.img.height:
@@ -910,14 +910,14 @@ class ImageManipulateView(BaseView):
         prompt: str = "Please enter a new **WIDTH** value:"
         w = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt)}),
+            ((), {"embed": format(self.ctx, prompt)}),
             post_process=self.uint_check,
         )
 
         prompt: str = "Please enter a new **HEIGHT** value:"
         h = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt)}),
+            ((), {"embed": format(self.ctx, prompt)}),
             post_process=self.uint_check,
         )
 
@@ -929,7 +929,7 @@ class ImageManipulateView(BaseView):
         prompt: str = "Please enter a **DEGREES** value:"
         degs = await self.getUserInput(
             self.ctx,
-            ((), {"embed": fmte(self.ctx, prompt)}),
+            ((), {"embed": format(self.ctx, prompt)}),
             post_process=self.degs_check,
         )
 

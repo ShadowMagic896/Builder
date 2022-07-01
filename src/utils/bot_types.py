@@ -1,3 +1,4 @@
+import datetime
 import logging
 import aiohttp
 import discord
@@ -6,7 +7,7 @@ import time
 import asyncpg
 
 from discord.ext import commands
-from typing import Generic, Iterable, Mapping, TypeVar, Union
+from typing import Generic, Iterable, Mapping, TypeVar, Union, Optional
 from settings import PREFIXES, BLACKLIST_USERS
 from environ import APPLICATION_ID, OPENAI_KEY
 from webbrowser import Chrome
@@ -21,7 +22,7 @@ BotT = TypeVar("BotT", bound=_Bot, covariant=True)
 class Builder(commands.Bot):
     def __init__(self):
         command_prefix: Iterable[str] = PREFIXES
-        help_command: Union[commands.HelpCommand, None] = None
+        help_command: Optional[commands.HelpCommand] = None
         tree_cls: type = BuilderTree
         intents: discord.Intents = discord.Intents.default()
         intents.members = True

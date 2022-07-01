@@ -1,3 +1,4 @@
+from codecs import unicode_escape_encode
 from typing import List
 import unicodedata
 import discord
@@ -169,8 +170,11 @@ async def command_autocomplete(
 async def get_emoji(ctx: BuilderContext, emoji: str):
     if not emoji.isdigit():
         if (res := discord.utils.get(ctx.guild.emojis, name=emoji)) is not None:
-            return f"<:_:{res.id}>"
-        return None
+            return f"<:_:{res.id}>" # Guild cusstom emoji
+        try:
+            return unicodedata.lookup(emoji) # Default emoji
+        except KeyError:
+            return None
     if (res := ctx.bot.get_emoji(int(emoji))) is not None:
-        return f"<:_:{res.id}>"
+        return f"<:_:{res.id}>" # Global emoji
     return None

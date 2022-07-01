@@ -4,7 +4,7 @@ import discord
 from discord.app_commands import describe, Range
 from discord.ext import commands
 
-from src.utils.embeds import fmte
+from src.utils.embeds import format
 from src.utils.converters import ListConverter
 
 import io
@@ -148,7 +148,7 @@ class Graphing(BaseCog):
         plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = fmte(ctx, t="Data Loaded and Graphed")
+        embed = await format(ctx, title="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()
@@ -214,7 +214,7 @@ class Graphing(BaseCog):
         plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = fmte(ctx, t="Data Loaded and Graphed")
+        embed = await format(ctx, title="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()
@@ -320,7 +320,7 @@ class Graphing(BaseCog):
             plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = fmte(ctx, t="Data Loaded and Graphed")
+        embed = await format(ctx, title="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()

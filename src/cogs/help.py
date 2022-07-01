@@ -13,7 +13,7 @@ from src.utils.user_io import (
     command_autocomplete,
 )
 
-from src.utils.embeds import fmte, fmte_i
+from src.utils.embeds import format
 from src.utils.functions import explode
 from src.utils.subclass import BaseCog, BaseView, Paginator
 from src.utils.bot_types import Builder, BuilderContext
@@ -75,10 +75,10 @@ class Help(BaseCog):
             view.message = message
 
         else:
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="Help",
-                d="*%s*" % (await self.bot.application_info()).description,
+                title="Help",
+                desc="*%s*" % (await self.bot.application_info()).description,
             )
             view = BaseView(ctx)
             view.add_item(CogSelect(ctx))
@@ -104,10 +104,10 @@ class Help(BaseCog):
         return await command_autocomplete(self.bot, inter, current)
 
     async def main_embed(self, ctx: BuilderContext, bot: Builder):
-        return fmte(
+        return await format(
             ctx,
-            t="Help",
-            d="Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
+            title="Help",
+            desc="Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
                 (await self.bot.application_info()).description,
                 len(self.bot.cogs),
                 len([v for v in explode(self.bot.commands)]),
@@ -162,10 +162,10 @@ class Help(BaseCog):
         as_strings.sort(key=str.__len__)
 
         parents = ", ".join(as_strings) or None
-        embed = fmte(
+        embed = await format(
             ctx,
-            t=f"`{command.qualified_name}`\nCog: `{command.cog_name}`\nGroup[s]: `{parents}`",
-            d=f"`/{command.qualified_name} {command.signature}`\n*{command.short_doc}*",
+            title=f"`{command.qualified_name}`\nCog: `{command.cog_name}`\nGroup[s]: `{parents}`",
+            desc=f"`/{command.qualified_name} {command.signature}`\n*{command.short_doc}*",
         )
         if command.params:
             embed.add_field(
@@ -188,8 +188,8 @@ class CommandView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return fmte_i(
-            inter, t=f"Commands: Page `{self.position+1}` of `{self.maxpos+1}`"
+        return await format(
+            self.ctx, title=f"Commands: Page `{self.position+1}` of `{self.maxpos+1}`"
         )
 
     async def adjust(self, embed: discord.Embed):
@@ -212,9 +212,9 @@ class GroupView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return fmte_i(
-            inter,
-            t=f"`{self.group.name}`: Page `{self.position+1}` of `{self.maxpos+1}`",
+        return await format(
+            self.ctx,
+            title=f"`{self.group.name}`: Page `{self.position+1}` of `{self.maxpos+1}`",
         )
 
     async def adjust(self, embed: discord.Embed):

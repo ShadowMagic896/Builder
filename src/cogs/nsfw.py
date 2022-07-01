@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 from src.utils.types import NHSearchData, PHSearchData
 
 from src.utils.subclass import BaseCog, Paginator
-from src.utils.embeds import fmte, fmte_i
+from src.utils.embeds import format
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import URLs
 
@@ -53,7 +53,7 @@ class NSFW(BaseCog):
 
         urls = []
 
-        embed = fmte(ctx, t="Results found...", d="Sending to author.")
+        embed = await format(ctx, title="Results found...", desc="Sending to author.")
         await ctx.send(embed=embed)
 
         for tag in tags:
@@ -62,10 +62,10 @@ class NSFW(BaseCog):
             urls.append(url)
 
         for url in urls[:10]:
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="R34 Request For: `{}`".format(" ".join(query)),
-                d="[Source]({})".format(url),
+                title="R34 Request For: `{}`".format(" ".join(query)),
+                desc="[Source]({})".format(url),
             )
             embed.set_image(url=url)
             await ctx.author.send(embed=embed)
@@ -91,15 +91,15 @@ class NSFW(BaseCog):
             img = soup.find_all("img")
             data.append(img[0]["src"])
 
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Fetched Images",
-            d="Sending...",
+            title="Fetched Images",
+            desc="Sending...",
         )
         await ctx.send(embed=embed)
 
         for l in data:
-            embed = fmte(
+            embed = await format(
                 ctx,
             )
             embed.set_image(url=l)
@@ -212,7 +212,7 @@ class NHSearchView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        return fmte(
+        return await format(
             self.ctx,
             f"NHentai Search Results for `{self.meta.query}`: `{self.position+1}` / `{self.maxpos+1}`",
         )
@@ -289,9 +289,9 @@ class NHGetView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        return fmte_i(
-            inter,
-            t=f"NHentai `{self.meta.code}`: `{self.position+1}` / `{self.maxpos+1}`",
+        return await format(
+            self.ctx,
+            title=f"NHentai `{self.meta.code}`: `{self.position+1}` / `{self.maxpos+1}`",
         )
 
 
@@ -342,9 +342,9 @@ class PHSearchView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        return fmte(
+        return await format(
             self.ctx,
-            t=f"PornHub Results: `{self.meta.query}`\nResult `{self.position+1}` of `{self.maxpos +1}`",
+            title=f"PornHub Results: `{self.meta.query}`\nResult `{self.position+1}` of `{self.maxpos +1}`",
         )
 
 

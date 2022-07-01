@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.app_commands import Range, describe
 
 from src.utils.colors import channels_to_names, merge
-from src.utils.embeds import fmte
+from src.utils.embeds import format
 from src.cogs.images import PILFN
 from src.utils.static.parameters import COLOR_CHANNEL_ALPHA
 from src.utils.converters import RGB
@@ -44,7 +44,7 @@ class Colors(BaseCog):
         Fills in a blank image with one color
         """
         image = Image.new("RGBA", color=tuple(color), size=(sizex, sizey))
-        embed = fmte(ctx, t=f"Showing Color: {color}")
+        embed = await format(ctx, title=f"Showing Color: {color}")
         embed, file = await PILFN.local_embed(embed, image)
         await ctx.send(embed=embed, file=file)
 
@@ -70,7 +70,7 @@ class Colors(BaseCog):
         """
         result = merge(color1, color2, channel)
         image = Image.new("RGBA", color=tuple(result), size=(sizex, sizey))
-        embed = fmte(ctx, t=f"Showing Merged Colors: {color1} & {color2}")
+        embed = await format(ctx, title=f"Showing Merged Colors: {color1} & {color2}")
         embed.add_field(name="Channels:", value=channels_to_names(channel))
         embed.add_field(name="Merging Result:", value=result)
         embed, file = await PILFN.local_embed(embed, image)
@@ -98,7 +98,7 @@ class Colors(BaseCog):
         for chan in channel:
             color[chan] = 255 - color[chan]
         image = Image.new("RGBA", color=tuple(color), size=(sizex, sizey))
-        embed = fmte(ctx, t=f"Showing Inverted Color: {original}")
+        embed = await format(ctx, title=f"Showing Inverted Color: {original}")
         embed.add_field(name="Channels:", value=channels_to_names(channel))
         embed.add_field(name="Inverting Result:", value=color)
         embed, file = await PILFN.local_embed(embed, image)

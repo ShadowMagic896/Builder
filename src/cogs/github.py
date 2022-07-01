@@ -8,7 +8,7 @@ from discord.ext import commands
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import URLs
 from environ import LIBRARY_KEY
-from src.utils.embeds import fmte
+from src.utils.embeds import format
 
 
 class GitHub(commands.Cog):
@@ -31,7 +31,7 @@ class GitHub(commands.Cog):
         json: dict = await response.json()
         if json.pop("error", None) is not None:
             raise commands.errors.BadArgument("Cannot find user")
-        embed = fmte(ctx, t=f"Information on: {query}")
+        embed = await format(ctx, title=f"Information on: {query}")
 
         def at(x: str):
             parts = (
@@ -79,9 +79,9 @@ class GitHub(commands.Cog):
             filename="repo.diff",
             description="Builder's GitHub repository log",
         )
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Showing Git Log",
+            title="Showing Git Log",
         )
         await ctx.send(embed=embed, file=file)
         file.close()

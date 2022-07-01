@@ -1,6 +1,8 @@
 import aiohttp
 import logging
 
+import discord
+
 from environ import BOT_KEY
 from src.utils.bot_types import Builder
 from src.utils.errors import Fatal
@@ -20,3 +22,4 @@ if __name__ == "__main__":
             raise Fatal(msg) from err
 
     start(main)
+discord.Webhook.from_url()

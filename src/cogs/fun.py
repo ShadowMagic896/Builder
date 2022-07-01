@@ -8,7 +8,7 @@ import pyfiglet
 from pyfiglet import Figlet
 from typing import List
 
-from src.utils.embeds import fmte, Desc
+from src.utils.embeds import format, Desc
 from src.utils.subclass import BaseCog
 from src.utils.bot_types import Builder, BuilderContext
 
@@ -42,7 +42,7 @@ class Fun(BaseCog):
         """
         try:
             t = Figlet(font).renderText(text)
-            embed = fmte(ctx, t="Rendering Finished!")
+            embed = await format(ctx, title="Rendering Finished!")
             if len(t) > 1990:
                 embed.set_footer(
                     text="Requested by {}\n[Tuncated because of size]".format(
@@ -90,12 +90,12 @@ class Fun(BaseCog):
                 )
             else:
                 formatted += "`{}`".format(r)
-        embed = fmte(
+        embed = await format(
             ctx,
-            t="Rolling `{}`-sided die `{}` time{}...".format(
+            title="Rolling `{}`-sided die `{}` time{}...".format(
                 sides, times, "s" if times != 1 else ""
             ),
-            d=formatted,
+            desc=formatted,
         )
         await ctx.send(embed=embed)
 
@@ -109,10 +109,10 @@ class Fun(BaseCog):
             if user == ctx.author or user.bot or not user:
                 raise commands.errors.BadArgument(user)
 
-            embed = fmte(
+            embed = await format(
                 ctx=ctx,
-                t="Waiting for {} to respond...".format(user),
-                d="{}, please react below.".format(user),
+                title="Waiting for {} to respond...".format(user),
+                desc="{}, please react below.".format(user),
             )
 
             ms: discord.Message = await ctx.send(embed=embed)
@@ -127,23 +127,23 @@ class Fun(BaseCog):
                 timeout=30,
             )
             if (r.emoji) == self.emoji_check:
-                embed = Fun.getTTTEmbed(ctx, (ctx.author, user), ctx.author)
+                embed = await Fun.getTTTEmbed(ctx, (ctx.author, user), ctx.author)
                 await ms.edit(
                     embed=embed, view=TTT_GameView(ctx, (ctx.author, user), ctx.author)
                 )
             else:
-                embed = fmte(
+                embed = await format(
                     ctx,
-                    t="{} declined the match.".format(user),
-                    d="Sorry! Please choose someone else.",
+                    title="{} declined the match.".format(user),
+                    desc="Sorry! Please choose someone else.",
                 )
                 await ms.edit(embed=embed)
             await ms.clear_reactions()
         else:
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="Waiting for anyone to respond...",
-                d="React to this message to play Tic Tac Toe with {}!".format(
+                title="Waiting for anyone to respond...",
+                desc="React to this message to play Tic Tac Toe with {}!".format(
                     ctx.author
                 ),
             )
@@ -157,16 +157,16 @@ class Fun(BaseCog):
             )
 
             if str(r.emoji) == self.emoji_cross:
-                embed = fmte(
+                embed = await format(
                     ctx,
-                    t="{} has closed the game offering".format(ctx.author),
-                    d="Maybe ask them again?",
+                    title="{} has closed the game offering".format(ctx.author),
+                    desc="Maybe ask them again?",
                 )
                 await ms.edit(embed=embed)
                 await ms.clear_reactions()
                 return
             elif r.emoji == self.emoji_check:
-                embed = Fun.getTTTEmbed(ctx, (ctx.author, u), ctx.author)
+                embed = await Fun.getTTTEmbed(ctx, (ctx.author, u), ctx.author)
                 await ms.edit(
                     embed=embed, view=TTT_GameView(ctx, (ctx.author, u), ctx.author)
                 )
@@ -184,10 +184,10 @@ class Fun(BaseCog):
             if user == ctx.author or user.bot or not user:
                 raise commands.errors.BadArgument(user)
 
-            embed = fmte(
+            embed = await format(
                 ctx=ctx,
-                t="Waiting for {} to respond...".format(user),
-                d="{}, please react below.".format(user),
+                title="Waiting for {} to respond...".format(user),
+                desc="{}, please react below.".format(user),
             )
 
             ms: discord.Message = await ctx.send(embed=embed)
@@ -201,21 +201,21 @@ class Fun(BaseCog):
                 timeout=30,
             )
             if (r.emoji) == self.emoji_check:
-                embed = Fun.getRPSEmbed(ctx, (ctx.author, user), ctx.author)
+                embed = await Fun.getRPSEmbed(ctx, (ctx.author, user), ctx.author)
                 await ms.edit(embed=embed, view=RPS_View(ctx, ctx.author, user))
             else:
-                embed = fmte(
+                embed = await format(
                     ctx,
-                    t="{} declined the match.".format(user),
-                    d="Sorry! Please choose someone else.",
+                    title="{} declined the match.".format(user),
+                    desc="Sorry! Please choose someone else.",
                 )
                 await ms.edit(embed=embed)
             await ms.clear_reactions()
         else:
-            embed = fmte(
+            embed = await format(
                 ctx,
-                t="Waiting for anyone to respond...",
-                d="React to this message to play Rock Paper Scissors with {}!".format(
+                title="Waiting for anyone to respond...",
+                desc="React to this message to play Rock Paper Scissors with {}!".format(
                     ctx.author
                 ),
             )
@@ -232,33 +232,33 @@ class Fun(BaseCog):
             # author and if it was an X, it was not the author thanks to the
             # Check above
             if str(r.emoji) == self.emoji_cross:
-                embed = fmte(
+                embed = await format(
                     ctx,
-                    t="{} has closed the game offering".format(ctx.author),
-                    d="Maybe ask them again?",
+                    title="{} has closed the game offering".format(ctx.author),
+                    desc="Maybe ask them again?",
                 )
                 await ms.edit(embed=embed)
                 await ms.clear_reactions()
                 return
             elif r.emoji == self.emoji_check:
-                embed = Fun.getRPSEmbed(ctx, (ctx.author, u), ctx.author)
+                embed = await Fun.getRPSEmbed(ctx, (ctx.author, u), ctx.author)
                 await ms.edit(embed=embed, view=RPS_View(ctx, ctx.author, user))
                 await ms.clear_reactions()
                 return
 
-    def getTTTEmbed(ctx, players, current):
-        embed = fmte(
+    async def getTTTEmbed(ctx, players, current):
+        embed = await format(
             ctx,
-            t="{} is playing with {}".format(players[0], players[1]),
-            d="{}, it's your turn!".format(current),
+            title="{} is playing with {}".format(players[0], players[1]),
+            desc="{}, it's your turn!".format(current),
         )
         return embed
 
-    def getRPSEmbed(ctx, players, current):
-        embed = fmte(
+    async def getRPSEmbed(ctx, players, current):
+        embed = await format(
             ctx,
-            t="{} is playing with {}".format(players[0], players[1]),
-            d="Please choose your weapons...".format(current),
+            title="{} is playing with {}".format(players[0], players[1]),
+            desc="Please choose your weapons...".format(current),
         )
         return embed
 
@@ -392,29 +392,29 @@ class TTT_GameView(discord.ui.View):
         self.past = past
 
         if state == 0:  # Still playing
-            embed = fmte(
+            embed = await format(
                 ctx=self.ctx,
-                t="Playing game with {} and {}".format(
+                title="Playing game with {} and {}".format(
                     self.players[0], self.players[1]
                 ),
-                d="{}, it's your turn!".format(self.current),
+                desc="{}, it's your turn!".format(self.current),
             )
             await interaction.message.edit(embed=embed, view=self)
         elif state in [1, 2]:
             for b in self._children:
                 b.disabled = True
-            embed = fmte(
+            embed = await format(
                 ctx=self.ctx,
-                t="{} has won!".format(
+                title="{} has won!".format(
                     self.players[0] if state == 1 else self.players[1]
                 ),
-                d="Well played, both sides.",
+                desc="Well played, both sides.",
             )
             await interaction.message.edit(embed=embed, view=self)
         else:
             for b in self._children:
                 b.disabled = True
-            embed = fmte(ctx=self.ctx, t="It's a tie!", d="Well played, both sides.")
+            embed = await format(ctx=self.ctx, title="It's a tie!", desc="Well played, both sides.")
             await interaction.message.edit(embed=embed, view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=0, custom_id="0")
@@ -500,27 +500,27 @@ class RPS_View(discord.ui.View):
 
             if gamestate:
                 loser = self.p1 if self.p1 != gamestate else self.p2
-                embed = fmte(
+                embed = await format(
                     self.ctx,
-                    t="{} has won! {} beats {}.".format(
+                    title="{} has won! {} beats {}.".format(
                         gamestate.name, self.choices[gamestate], self.choices[loser]
                     ),
-                    d="Well guessed, both sides.",
+                    desc="Well guessed, both sides.",
                 )
                 await interaction.message.edit(embed=embed, view=None)
             else:
-                embed = fmte(
+                embed = await format(
                     self.ctx,
-                    t="It's a tie! Both users guessed {}".format(self.choices[self.p1]),
+                    title="It's a tie! Both users guessed {}".format(self.choices[self.p1]),
                 )
                 await interaction.message.edit(embed=embed, view=None)
         else:
             ready = self.p1 if self.p1 in users_decided else self.p2
             waiting_for = self.p1 if self.p1 not in users_decided else self.p2
-            embed = fmte(
+            embed = await format(
                 self.ctx,
-                t="{} has made a decision.".format(ready.name),
-                d="Waiting for {}...".format(waiting_for.name),
+                title="{} has made a decision.".format(ready.name),
+                desc="Waiting for {}...".format(waiting_for.name),
             )
             await interaction.message.edit(
                 embed=embed, view=RPS_View(self.ctx, self.p1, self.p2, self.choices)

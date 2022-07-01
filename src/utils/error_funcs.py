@@ -28,7 +28,7 @@ from src.utils.errors import (
     MissingArguments,
     TooManyArguments,
 )
-from src.utils.embeds import fmte_i
+from src.utils.embeds import format
 from simpleeval import NumberTooHigh
 from typing import Any, Union
 
@@ -74,7 +74,7 @@ async def _interaction_error_handler(
     ):
         error = error.original
 
-    errorDir = {
+    err_dir = {
         CommandNotFound: "I couldn't find that command. Try `/help`",
         ExtensionNotFound: "I couldn't find that cog. Try `/help`",
         NotFound: "I couldn't find that. Try `/help`, or check the error for more info.",
@@ -100,13 +100,13 @@ async def _interaction_error_handler(
     }
 
     default: str = "An unknown error has occurred. Please use `/bug` to report this."
-    hint: str = errorDir.get(type(error), default)
+    hint: str = err_dir.get(type(error), default)
 
-    embed = fmte_i(
-        inter,
-        t=hint,
-        d=f"**Error:**\n`{error}`",
-        c=discord.Color.red(),
+    embed = await format(
+        commands.Context.from_interaction(inter),
+        title=hint,
+        desc=f"**Error:**\n`{error}`",
+        color=discord.Color.red(),
     )
     try:
         await inter.response.send_message(embed=embed, ephemeral=True)
