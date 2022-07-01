@@ -663,33 +663,58 @@ class EmbedView(BaseView):
                     label=label,
                     emoji=emoji,
                 )
-                if self_.type_.values[0] == "Counter":
-                    modal: discord.ui.Modal = Counter(
+
+                modal_type: type
+                type_ = self_.type_.values[0]
+
+                if type_ == "Counter":
+                    modal_type = Counter
+                elif type_ == "Role Adder":
+                    modal_type = RoleAdder
+                elif type_ == "Blank":
+                    modal_type = None
+                if modal_type is not None: # Speical behaviour for blank button
+                    modal: discord.ui.Modal = modal_type(
                         self.ctx,
                         self.embed,
                         self.view,
                         new_button,
-                        message=await inter.original_message(),
+                        await inter.original_message()
                     )
+
+                    # TODO Make this a "paged modal" (?) whenever it comes out
+                    # Currently is just a workaround for not being able to send consecutive modals, so another interaction is required
+                    view = BaseView(self.ctx)
+                    intermediary = discord.ui.Button(
+                        style=discord.ButtonStyle.blurple, label="PRESS ME"
+                    )
+
+                    async def send_modal(inter: discord.Interaction):
+                        await inter.message.delete()
+                        await inter.response.send_modal(modal)
+
+                    intermediary.callback = send_modal
+                    view.add_item(intermediary)
+
+                    embed = await format(self.ctx, title="UwU click me zaddy :pleading:")
+                    await interaction.response.send_message(embed=embed, view=view)
                 else:
-                    ...
+                    instance = EmbedButtonCallbacks(
+                        self.ctx,
+                        self.view,
+                        self.embed,
+                        {}
+                    )
+                    new_button.callback = instance.blank
+                    self.view.add_item(
+                        new_button
+                    )
 
-                # TODO Make this a "paged modal" (?) whenever it comes out
-                # Currently is just a workaround for not being able to send consecutive modals, so another interaction is required
-                view = BaseView(self.ctx)
-                intermediary = discord.ui.Button(
-                    style=discord.ButtonStyle.blurple, label="PRESS ME"
-                )
+                    embed = await format(
+                        self.ctx, title=f"... and {len(self.view.children)} buttons"
+                    )
+                    await interaction.response.edit_message(embeds=[self.embed, embed])
 
-                async def send_modal(inter: discord.Interaction):
-                    await inter.message.delete()
-                    await inter.response.send_modal(modal)
-
-                intermediary.callback = send_modal
-                view.add_item(intermediary)
-
-                embed = await format(self.ctx, title="UwU click me zaddy :pleading:")
-                await interaction.response.send_message(embed=embed, view=view)
 
         await inter.response.send_modal(UpdateModal())
 
@@ -706,10 +731,12 @@ class EmbedView(BaseView):
 class EmbedButtonCallbacks:
     def __init__(
         self,
+        ctx: BuilderContext,
         view: discord.ui.View,
         button: discord.ui.Button,
         extra: Mapping[str, Any] = {},
     ):
+        self.ctx = ctx
         self.view = view
         self.button = button
         self.extra = extra
@@ -721,8 +748,14 @@ class EmbedButtonCallbacks:
         await inter.response.edit_message(view=self.view)
 
     async def role_adder(self, inter: discord.Interaction):
-        pass
-
+        await inter.user.add_roles(self.extra["role"], reason=f"Poll Button by {self.extra['author']}")
+        embed = await format(
+            self.ctx,
+            title="Role Added",
+            desc=f"+ {self.extra['role'].name}"
+        )
+        await inter.response.send_message(embed=embed, ephemeral=True)
+    
     async def blank(self, inter: discord.Interaction):
         await inter.response.defer()
 
@@ -738,7 +771,7 @@ class Counter(BaseModal):
     ):
         self.ctx = ctx
         self.embed = embed
-        self.view = view
+        self.view = view 
         self.button = button
         self.message = message
         super().__init__(title="Format Counter")
@@ -747,20 +780,67 @@ class Counter(BaseModal):
         label="Use 'COUNT' to Format",
     )
 
-    async def on_submit(self, interaction: discord.Interaction) -> None:
+    async def on_submit(self, inter: discord.Interaction) -> None:
         instance = EmbedButtonCallbacks(
-            self.view, self.button, extra={"formatting": self.formatting.value}
+            self.ctx,
+            self.view, 
+            self.button, 
+            extra={"formatting": self.formatting.value}
         )
         self.button.callback = instance.counter
+        self.button.label = self.formatting.value.replace("COUNT", "0")
         self.view.add_item(self.button)
 
         embed = await format(
             self.ctx, title=f"... and {len(self.view.children)} buttons"
         )
         # TODO Fix this when code is updated to paginator
-        await interaction.response.defer()
+        await inter.response.defer()
         await self.message.edit(embeds=[self.embed, embed])
 
+
+class RoleAdder(BaseModal):
+    def __init__(
+        self,
+        ctx: BuilderContext,
+        embed: discord.Embed,
+        view: discord.ui.View,
+        button: discord.ui.Button,
+        message: discord.Message,
+    ) -> None:
+        self.ctx = ctx
+        self.embed = embed
+        self.view = view
+        self.button = button
+        self.message = message
+        super().__init__(title="Role Adder")
+    
+    role_name = discord.ui.TextInput(
+        label="Please Input the EXACT Role Name",
+        placeholder="You may close this modal to check the name again"
+    )
+
+    async def on_submit(self, inter: discord.Interaction) -> None:
+        role: Optional[discord.Role] = discord.utils.find(lambda m: m.name.casefold() == self.role_name.value, inter.guild.roles)
+        if role is None:
+            raise commands.BadArgument("Could not find that role...")
+        if role >= inter.user.top_role:
+            raise commands.BadArgument("You cannot give this role!")
+        instance = EmbedButtonCallbacks(
+            self.ctx,
+            self.view, 
+            self.button, 
+            extra={"role": role, "author": inter.user}
+        )
+        self.button.callback = instance.role_adder
+        self.view.add_item(self.button)
+
+        embed = await format(
+            self.ctx, title=f"... and {len(self.view.children)} buttons"
+        )
+        # TODO Fix this when code is updated to paginator
+        await inter.response.defer()
+        await self.message.edit(embeds=[self.embed, embed])
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))
