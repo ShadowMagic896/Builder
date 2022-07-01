@@ -37,7 +37,6 @@ async def load_extensions(
             continue
         if path.startswith("_"):
             continue
-        logging.debug(f"Cog Loaded: {path}")
         try:
             await bot.load_extension(path)
 

@@ -3,7 +3,7 @@ logs/*
 .dccache
 
 environ.py
-programTests.py
+pg_tests.py
 pipdeptree.py
 
 desktop.ini

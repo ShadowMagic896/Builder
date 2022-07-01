@@ -146,6 +146,8 @@ class Currency(BaseCog):
             {ctx.guild.get_member(entry["userid"]): entry["balance"]} for entry in data
         ]
         view = LeaderboardView(ctx, values, 5)
+        view.value_range
+        view.values
         embed = await view.page_zero(ctx.interaction)
         await view.check_buttons()
         view.message = await ctx.send(embed=embed, view=view)
@@ -440,16 +442,6 @@ class RequestView(BaseView):
 
 
 class LeaderboardView(Paginator):
-    def __init__(
-        self,
-        ctx: BuilderContext,
-        values: List[asyncpg.Record],
-        pagesize: int,
-        *,
-        timeout: Optional[float] = 180,
-    ):
-        super().__init__(ctx, values, pagesize, timeout=timeout)
-
     async def embed(self, inter: discord.Interaction):
         return fmte_i(
             inter, t=f"Leaderboard: Page `{self.position+1}` of `{self.maxpos+1}`"

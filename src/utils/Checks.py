@@ -1,5 +1,6 @@
 from typing import Callable
 from discord.ext import commands
+import re
 
 
 def inter_choke(ctx: commands.Context):
@@ -24,3 +25,10 @@ def control_defer(defer: bool = True, thinking: bool = True, ephemeral: bool = F
         return func
 
     return deco
+
+
+def is_valid_url(s: str):
+    regex = re.compile(
+        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+    )
+    return regex.match(s) is not None

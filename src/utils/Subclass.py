@@ -1,14 +1,18 @@
+import logging
 import discord
 from discord.ext import commands
 from discord.app_commands import errors as app_errors
 
 import math
-from typing import Any, Optional
-from src.utils.bot_types import Builder
+from typing import Any, Coroutine, Generic, Optional, Sequence, TypeVar
+from src.utils.bot_types import Builder, BuilderContext
 
 from src.utils.embeds import fmte_i
 from src.utils.constants import Emojis
 from src.utils.error_funcs import _interaction_error_handler, handle_modal_error
+
+
+SequenceT = TypeVar("SequenceT", bound=Sequence)
 
 
 class BaseCog(commands.Cog):
@@ -16,20 +20,29 @@ class BaseCog(commands.Cog):
         self.bot: Builder = bot
         super().__init__()
 
-    def ge(self):
+    def ge(self) -> str:
         return "\N{Black Question Mark Ornament}"
+
+    async def cog_load(self) -> None:
+        logging.debug(f"Cog Loaded: {self.__class__.__module__}")
+
+    async def cog_unload(self) -> None:
+        pass
+
+    async def cog_command_error(
+        self, ctx: BuilderContext[Builder], error: Exception
+    ) -> None:
+        return await _interaction_error_handler(ctx.interaction, error)
+
+    async def cog_check(self, ctx: BuilderContext[Builder]) -> bool:
+        return 1
 
 
 class BaseView(discord.ui.View):
-    """
-    This is the base view that automatically implements `interaction_check`, `on_error`, & `on_timeout` with
-    basic solutions. Designed to help not repeat code. All views should inherit from this.
-    """
-
     def __init__(
         self,
-        ctx: commands.Context,
-        timeout: Optional[float] = 300,
+        ctx: BuilderContext,
+        timeout: Optional[float] = 900,
     ):
         self.message: discord.Message = None
         self.ctx = ctx
@@ -62,11 +75,11 @@ class BaseView(discord.ui.View):
             pass
 
 
-class Paginator(BaseView):
+class Paginator(BaseView, Generic[SequenceT]):
     def __init__(
         self,
         ctx: commands.Context,
-        values,
+        values: SequenceT,
         pagesize: int,
         *,
         timeout: Optional[float] = 45,
@@ -76,7 +89,7 @@ class Paginator(BaseView):
 
         self.position = 0
 
-        self.values = values
+        self.values: SequenceT = values
         self.message: Optional[discord.Message] = None
 
         self.maxpos = math.ceil((len(self.values) / pagesize)) - 1
@@ -85,7 +98,9 @@ class Paginator(BaseView):
         super().__init__(ctx, timeout=timeout)
 
     @discord.ui.button(emoji=Emojis.BBARROW_ID, custom_id="bb")
-    async def fullback(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def fullback(
+        self, inter: discord.Interaction, button: discord.ui.Button
+    ) -> None:
         self.position = 0
         await self.check_buttons(button)
 
@@ -93,7 +108,7 @@ class Paginator(BaseView):
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(emoji=Emojis.BARROW_ID, custom_id="b")
-    async def back(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def back(self, inter: discord.Interaction, button: discord.ui.Button) -> None:
         self.position -= 1
         await self.check_buttons(button)
 
@@ -103,7 +118,9 @@ class Paginator(BaseView):
     @discord.ui.button(
         emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
     )
-    async def close(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def close(
+        self, inter: discord.Interaction, button: discord.ui.Button
+    ) -> None:
         for c in self.children:
             c.disabled = True
         try:
@@ -112,7 +129,7 @@ class Paginator(BaseView):
             pass
 
     @discord.ui.button(emoji=Emojis.FARROW_ID, custom_id="f")
-    async def next(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def next(self, inter: discord.Interaction, button: discord.ui.Button) -> None:
         self.position += 1
         await self.check_buttons(button)
 
@@ -120,7 +137,9 @@ class Paginator(BaseView):
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(emoji=Emojis.FFARROW_ID, custom_id="ff")
-    async def fullnext(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def fullnext(
+        self, inter: discord.Interaction, button: discord.ui.Button
+    ) -> None:
         self.position = self.maxpos
         await self.check_buttons(button)
 
@@ -136,11 +155,13 @@ class Paginator(BaseView):
     async def adjust(self, embed: discord.Embed):
         return embed
 
-    async def page_zero(self, interaction: discord.Interaction):
+    async def page_zero(
+        self, interaction: discord.Interaction
+    ) -> Coroutine[Any, Any, discord.Embed]:
         self.position = 0
         return await self.adjust(await self.embed(interaction))
 
-    async def check_buttons(self, button: discord.Button = None):
+    async def check_buttons(self, button: discord.Button = None) -> None:
         """
         Can be overwritten if necessary.
         """
@@ -191,7 +212,7 @@ class Paginator(BaseView):
         return self.pagesize * (self.position + 1)
 
     @property
-    def value_range(self):
+    def value_range(self) -> SequenceT:
         return self.values[self.value_start : self.value_stop]
 
     @property

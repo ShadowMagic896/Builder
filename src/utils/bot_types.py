@@ -1,3 +1,4 @@
+import logging
 import aiohttp
 import discord
 import openai
@@ -5,14 +6,16 @@ import time
 import asyncpg
 
 from discord.ext import commands
-from typing import Iterable, Mapping, Union
+from typing import Generic, Iterable, Mapping, TypeVar, Union
 from settings import PREFIXES, BLACKLIST_USERS
 from environ import APPLICATION_ID, OPENAI_KEY
 from webbrowser import Chrome
 
 from src.utils.types import Cache
 from src.utils.extensions import full_reload
-from src.utils.functions import explode
+
+_Bot = Union[commands.Bot, commands.AutoShardedBot]
+BotT = TypeVar("BotT", bound=_Bot, covariant=True)
 
 
 class Builder(commands.Bot):
@@ -52,7 +55,7 @@ class Builder(commands.Bot):
         print("--- online ---")
 
 
-class BuilderContext(commands.Context):
+class BuilderContext(commands.Context, Generic[BotT]):
     def __init__(self, **data):
         self.bot: Builder = data["bot"]
         super().__init__(**data)
@@ -77,8 +80,8 @@ class BuilderTree(discord.app_commands.CommandTree):
                     await interaction.response.defer(
                         thinking=settings["thinking"], ephemeral=settings["ephemeral"]
                     )
-                except discord.NotFound:
-                    pass
+                except (discord.NotFound, discord.InteractionResponded):
+                    logging.error("Message not found for deferring")
             for name, param in interaction.command._params.items():
                 if param.type == discord.AppCommandOptionType.attachment:
                     obj: discord.Attachment = getattr(interaction.namespace, name)

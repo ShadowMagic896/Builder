@@ -1,4 +1,5 @@
 from typing import List
+import unicodedata
 import discord
 from discord.ext import commands
 import re
@@ -163,3 +164,13 @@ async def command_autocomplete(
         ][:25],
         key=lambda c: c.name[c.name.index("]") + 1 :],
     )
+
+
+async def get_emoji(ctx: BuilderContext, emoji: str):
+    if not emoji.isdigit():
+        if (res := discord.utils.get(ctx.guild.emojis, name=emoji)) is not None:
+            return f"<:_:{res.id}>"
+        return None
+    if (res := ctx.bot.get_emoji(int(emoji))) is not None:
+        return f"<:_:{res.id}>"
+    return None

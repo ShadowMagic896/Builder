@@ -1,3 +1,4 @@
+import asyncio
 import aiohttp
 from datetime import datetime
 import io
@@ -18,6 +19,8 @@ from src.utils.embeds import fmte
 from src.utils.subclass import BaseCog, BaseModal, BaseView
 from src.utils.converters import TimeConvert
 from src.utils.bot_types import Builder, BuilderContext
+from src.utils.checks import control_defer
+from src.utils.user_io import get_emoji
 
 warnings.filterwarnings("error")
 
@@ -339,6 +342,7 @@ class Utility(BaseCog):
 
     @commands.hybrid_command()
     @commands.has_permissions(manage_messages=True)
+    @control_defer(ephemeral=True)
     async def embed(self, ctx: BuilderContext):
         """
         Customize and send an embed. Not just for bots!
@@ -406,6 +410,7 @@ class EmbedView(BaseView):
     ):
         self.tinter: Optional[discord.Interaction] = None
         self.embed = embed
+        self.view: discord.ui.View = discord.ui.View()
         super().__init__(ctx, timeout)
 
     @discord.ui.button(label="Set Title")
@@ -441,7 +446,7 @@ class EmbedView(BaseView):
         await inter.response.send_modal(UpdateModal())
 
     @discord.ui.button(label="Set Color")
-    async def setcolor(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def set_color(self, inter: discord.Interaction, button: discord.ui.Button):
         class UpdateModal(BaseModal):
             def __init__(_self) -> None:
                 super().__init__(title="Set Color")
@@ -462,7 +467,7 @@ class EmbedView(BaseView):
         await inter.response.send_modal(UpdateModal())
 
     @discord.ui.button(label="Add Field")
-    async def addfield(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def add_field(self, inter: discord.Interaction, button: discord.ui.Button):
         class UpdateModal(BaseModal):
             def __init__(_self) -> None:
                 super().__init__(title="Add Field")
@@ -492,7 +497,7 @@ class EmbedView(BaseView):
         await inter.response.send_modal(UpdateModal())
 
     @discord.ui.button(label="Remove Field")
-    async def removefield(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def rem_field(self, inter: discord.Interaction, button: discord.ui.Button):
         class UpdateModal(BaseModal):
             def __init__(_self) -> None:
                 super().__init__(title="Remove Field")
@@ -518,7 +523,7 @@ class EmbedView(BaseView):
         await inter.response.send_modal(UpdateModal())
 
     @discord.ui.button(label="Set Image URL")
-    async def setimage(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def set_image(self, inter: discord.Interaction, button: discord.ui.Button):
         class UpdateModal(BaseModal):
             def __init__(_self) -> None:
                 super().__init__(title="Set Image")
@@ -534,7 +539,7 @@ class EmbedView(BaseView):
         await inter.response.send_modal(UpdateModal())
 
     @discord.ui.button(label="Set Thumbnail URL")
-    async def setthumbnail(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def set_thumb(self, inter: discord.Interaction, button: discord.ui.Button):
         class UpdateModal(BaseModal):
             def __init__(_self) -> None:
                 super().__init__(title="Set Thumbnail")
@@ -550,7 +555,7 @@ class EmbedView(BaseView):
         await inter.response.send_modal(UpdateModal())
 
     @discord.ui.button(label="Set Footer Text")
-    async def setfootertext(
+    async def set_footer_txt(
         self, inter: discord.Interaction, button: discord.ui.Button
     ):
         class UpdateModal(BaseModal):
@@ -573,7 +578,9 @@ class EmbedView(BaseView):
         await inter.response.send_modal(UpdateModal())
 
     @discord.ui.button(label="Set Footer Image URL")
-    async def setfooterurl(self, inter: discord.Interaction, button: discord.ui.Button):
+    async def set_footer_url(
+        self, inter: discord.Interaction, button: discord.ui.Button
+    ):
         class UpdateModal(BaseModal):
             def __init__(_self) -> None:
                 super().__init__(title="Set Footer Image URL")
@@ -593,14 +600,121 @@ class EmbedView(BaseView):
 
         await inter.response.send_modal(UpdateModal())
 
+    @discord.ui.button(label="Add Button", row=2)
+    async def add_button(self, inter: discord.Interaction, button: discord.ui.Button):
+        class UpdateModal(BaseModal):
+            def __init__(_self) -> None:
+                super().__init__(title="Add Button")
+
+            label = discord.ui.TextInput(
+                label="Please Input Button Label",
+                max_length=80,
+                placeholder="Optional",
+                required=False,
+            )
+
+            emoji = discord.ui.TextInput(
+                label="Please Input Button Emoji ID",
+                max_length=50,
+                placeholder="Please give the ID of the emoji",
+                required=False,
+            )
+
+            style = discord.ui.Select(
+                placeholder="Please Select a Style",
+                options=[
+                    discord.SelectOption(label=c, value=c)
+                    for c in [
+                        "blurple",
+                        "danger",
+                        "grey",
+                        "green",
+                        "primary",
+                        "red",
+                        "success",
+                        "secondary",
+                    ]
+                ],
+            )
+
+            type_ = discord.ui.Select(
+                placeholder="Please Select a Button Type",
+                options=[
+                    discord.SelectOption(label=c, value=c)
+                    for c in [
+                        "Counter",
+                        "Role Adder",
+                        "Blank",
+                    ]
+                ],
+            )
+
+            async def on_submit(self_, interaction: discord.Interaction) -> None:
+                if not (self_.emoji or self_.label):
+                    raise ValueError("Must include either name or emoji")
+
+                if self_.type_.values[0] == "Counter":
+                    label = f"{self_.label.value}: 0"
+                else:
+                    label = self_.label.value
+
+                if v := self_.emoji.value:
+                    emoji = await get_emoji(self.ctx, v)
+
+                    if emoji is None:
+                        raise ValueError("Could not find that emoji")
+
+                    emoji = f"<:{emoji.name}:{emoji.id}>"
+                else:
+                    emoji = None
+
+                new_button = discord.ui.Button(
+                    style=getattr(discord.ButtonStyle, self_.style.values[0]),
+                    label=label,
+                    emoji=emoji,
+                )
+                instance = EmbedButtonCallbacks(self.view, new_button)
+                new_button.callback = {
+                    "Counter": instance.counter,
+                    "Role Adder": instance.role_adder,
+                    "Blank": instance.blank,
+                }.get(self_.type_.values[0])
+
+                self.view.add_item(new_button)
+
+                embed = fmte(self.ctx, t=f"... and {len(self.view.children)} buttons")
+                await interaction.response.edit_message(embeds=[self.embed, embed])
+
+        await inter.response.send_modal(UpdateModal())
+
     @discord.ui.button(
         label="Send",
         emoji="\N{BLACK RIGHTWARDS ARROW}",
-        row=2,
+        row=3,
         style=discord.ButtonStyle.green,
     )
     async def send(self, inter: discord.Interaction, button: discord.ui.Button):
-        await inter.response.send_message(embed=self.embed)
+        await inter.response.send_message(embed=self.embed, view=self.view)
+
+
+class EmbedButtonCallbacks:
+    def __init__(self, view: discord.ui.View, button: discord.ui.Button):
+        self.view = view
+        self.button = button
+
+    async def counter(self, inter: discord.Interaction):
+        label: str = self.button.label
+        split: int = len(label) - label[::-1].index(":")
+        cur_label = label[: split - 1]
+        cur_co = int(label[split + 1 :])
+        self.button.label = f"{cur_label}: {cur_co+1}"
+        await inter.response.edit_message(view=self.view)
+
+    async def role_adder(self, inter: discord.Interaction):
+        pass
+
+    async def blank(self, inter: discord.Interaction):
+        await inter.response.defer()
 
 
 async def setup(bot):
