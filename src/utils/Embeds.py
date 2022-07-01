@@ -42,15 +42,6 @@ async def format(
         
     return embed
 
-def getReadableValues(seconds):
-    hours = round(seconds // 3600)
-    mins = round(seconds // 60 - hours * 60)
-    secs = round(seconds // 1 - hours * 3600 - mins * 60)
-    msec = str(round(seconds - hours * 3600 - mins * 60 - secs, 6))[2:]
-    msec += "0" * (6 - len(msec))
-
-    return (hours, mins, secs, msec)
-
 
 class Desc:
     user = "The target of this command."
