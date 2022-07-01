@@ -243,7 +243,8 @@ class AtomsView(Paginator):
 
     async def embed(self, inter: discord.Interaction):
         embed = await format(
-            self.ctx, title=f"{self.title}: Page `{self.position+1}` / `{self.maxpos+1}`"
+            self.ctx,
+            title=f"{self.title}: Page `{self.position+1}` / `{self.maxpos+1}`",
         )
         return embed
 

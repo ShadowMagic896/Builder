@@ -273,7 +273,9 @@ class ShopView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        embed = await format(self.ctx, title=f"Shops: Page `{self.position+1}` / `{self.maxpos+1}`")
+        embed = await format(
+            self.ctx, title=f"Shops: Page `{self.position+1}` / `{self.maxpos+1}`"
+        )
         return embed
 
 

@@ -664,24 +664,31 @@ class EmbedView(BaseView):
                     emoji=emoji,
                 )
                 if self_.type_.values[0] == "Counter":
-                    modal: discord.ui.Modal = Counter(self.ctx, self.embed, self.view, new_button, message=await inter.original_message())
+                    modal: discord.ui.Modal = Counter(
+                        self.ctx,
+                        self.embed,
+                        self.view,
+                        new_button,
+                        message=await inter.original_message(),
+                    )
                 else:
                     ...
 
                 # TODO Make this a "paged modal" (?) whenever it comes out
                 # Currently is just a workaround for not being able to send consecutive modals, so another interaction is required
                 view = BaseView(self.ctx)
-                intermediary = discord.ui.Button(style=discord.ButtonStyle.blurple, label="PRESS ME")
+                intermediary = discord.ui.Button(
+                    style=discord.ButtonStyle.blurple, label="PRESS ME"
+                )
+
                 async def send_modal(inter: discord.Interaction):
                     await inter.message.delete()
                     await inter.response.send_modal(modal)
+
                 intermediary.callback = send_modal
                 view.add_item(intermediary)
 
-                embed = await format(
-                    self.ctx,
-                    title="UwU click me zaddy :pleading:"
-                )
+                embed = await format(self.ctx, title="UwU click me zaddy :pleading:")
                 await interaction.response.send_message(embed=embed, view=view)
 
         await inter.response.send_modal(UpdateModal())
@@ -697,7 +704,12 @@ class EmbedView(BaseView):
 
 
 class EmbedButtonCallbacks:
-    def __init__(self, view: discord.ui.View, button: discord.ui.Button, extra: Mapping[str, Any] = {}):
+    def __init__(
+        self,
+        view: discord.ui.View,
+        button: discord.ui.Button,
+        extra: Mapping[str, Any] = {},
+    ):
         self.view = view
         self.button = button
         self.extra = extra
@@ -714,28 +726,41 @@ class EmbedButtonCallbacks:
     async def blank(self, inter: discord.Interaction):
         await inter.response.defer()
 
+
 class Counter(BaseModal):
-    def __init__(self, ctx: BuilderContext, embed: discord.Embed, view: discord.ui.View, button: discord.ui.Button, message: discord.Message):
+    def __init__(
+        self,
+        ctx: BuilderContext,
+        embed: discord.Embed,
+        view: discord.ui.View,
+        button: discord.ui.Button,
+        message: discord.Message,
+    ):
         self.ctx = ctx
         self.embed = embed
         self.view = view
         self.button = button
         self.message = message
         super().__init__(title="Format Counter")
-    
+
     formatting = discord.ui.TextInput(
         label="Use 'COUNT' to Format",
     )
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        instance = EmbedButtonCallbacks(self.view, self.button, extra={"formatting": self.formatting.value})
+        instance = EmbedButtonCallbacks(
+            self.view, self.button, extra={"formatting": self.formatting.value}
+        )
         self.button.callback = instance.counter
         self.view.add_item(self.button)
-        
-        embed = await format(self.ctx, title=f"... and {len(self.view.children)} buttons")
-        #TODO Fix this when code is updated to paginator
+
+        embed = await format(
+            self.ctx, title=f"... and {len(self.view.children)} buttons"
+        )
+        # TODO Fix this when code is updated to paginator
         await interaction.response.defer()
         await self.message.edit(embeds=[self.embed, embed])
+
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))

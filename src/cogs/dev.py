@@ -46,7 +46,9 @@ class Dev(BaseCog):
             for guild in DEVELOPMENT_GUILD_IDS:
                 cmds = await ctx.bot.tree.sync(guild=discord.Object(guild))
                 log += f"**~ GUILD {guild}:** {len(cmds)} BASE"
-        embed = await format(ctx, title=f"Synced Commands {type_}", desc=log or discord.utils.MISSING)
+        embed = await format(
+            ctx, title=f"Synced Commands {type_}", desc=log or discord.utils.MISSING
+        )
         await ctx.send(embed=embed)
         print(f"--- {'g' if glob else 'l'}_sync ---")
 

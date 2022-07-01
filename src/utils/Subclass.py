@@ -150,7 +150,9 @@ class Paginator(BaseView, Generic[SequenceT]):
         """
         Should be overwritten to provide custom labeling
         """
-        return await format(self.ctx, title=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`")
+        return await format(
+            self.ctx, title=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`"
+        )
 
     async def adjust(self, embed: discord.Embed):
         return embed
@@ -225,11 +227,13 @@ class Paginator(BaseView, Generic[SequenceT]):
 
 class BaseModal(discord.ui.Modal):
     def __init__(
-        self, *, title: str = discord.utils.MISSING, timeout: Optional[float] = None, custom_id: str = discord.utils.MISSING
+        self,
+        *,
+        title: str = discord.utils.MISSING,
+        timeout: Optional[float] = None,
+        custom_id: str = discord.utils.MISSING,
     ) -> None:
-        super().__init__(
-            title=title, timeout=timeout, custom_id=custom_id
-        )
+        super().__init__(title=title, timeout=timeout, custom_id=custom_id)
 
     async def on_error(
         self,

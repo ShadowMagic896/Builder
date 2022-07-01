@@ -47,7 +47,9 @@ class Currency(BaseCog):
         db = BalanceDatabase(ctx)
         rec = await db.get_balance(user)
 
-        embed = await format(ctx, title=f"`{user}`'s Balance: `{rec:,}`{Emojis.COIN_ID}")
+        embed = await format(
+            ctx, title=f"`{user}`'s Balance: `{rec:,}`{Emojis.COIN_ID}"
+        )
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -265,7 +267,9 @@ class Currency(BaseCog):
         """
         Take a quiz to earn some coins!
         """
-        embed = await format(ctx, title="Select Options", desc="Once you are finished, press `Start`")
+        embed = await format(
+            ctx, title="Select Options", desc="Once you are finished, press `Start`"
+        )
         view = StartQuizView(ctx)
         view.message = await ctx.send(embed=embed, view=view)
 
@@ -393,7 +397,9 @@ class GiveView(BaseView):
     )
     async def dec(self, inter: discord.Interaction, button: discord.Button):
         embed = await format(
-            self.ctx, title="Transaction Declined", desc="No currency has been transfered."
+            self.ctx,
+            title="Transaction Declined",
+            desc="No currency has been transfered.",
         )
         await inter.response.edit_message(content=None, embed=embed, view=None)
 
@@ -433,7 +439,9 @@ class RequestView(BaseView):
     )
     async def dec(self, inter: discord.Interaction, button: discord.Button):
         embed = await format(
-            self.ctx, title="Transaction Declined", desc="No currency has been transfered."
+            self.ctx,
+            title="Transaction Declined",
+            desc="No currency has been transfered.",
         )
         await inter.response.edit_message(embed=embed, view=None)
 
@@ -444,7 +452,8 @@ class RequestView(BaseView):
 class LeaderboardView(Paginator):
     async def embed(self, inter: discord.Interaction):
         return await format(
-            self.ctx, title=f"Leaderboard: Page `{self.position+1}` of `{self.maxpos+1}`"
+            self.ctx,
+            title=f"Leaderboard: Page `{self.position+1}` of `{self.maxpos+1}`",
         )
 
     async def adjust(self, embed: discord.Embed):
@@ -554,6 +563,7 @@ class MainQuizView(BaseView):
             title=f"Question `{self.pos}`:\n{q['question']}",
             desc=f"Category: `{self.cat}`\nDifficulty: `{self.dif}`",
         )
+
 
 class QuizAnsSelect(discord.ui.Select):
     def __init__(self, question: dict, ctx):

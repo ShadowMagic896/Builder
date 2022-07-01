@@ -743,7 +743,9 @@ class ImageManipulateView(BaseView):
         buffer.seek(0)
 
         embed = await format(
-            self.ctx, title="Effect Applied", desc=f"Total Effects: {', '.join(self.filters)}"
+            self.ctx,
+            title="Effect Applied",
+            desc=f"Total Effects: {', '.join(self.filters)}",
         )
         file = discord.File(fp=buffer, filename="image.png")
         embed.set_image(url="attachment://image.png")

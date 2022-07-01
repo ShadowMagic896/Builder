@@ -414,7 +414,9 @@ class TTT_GameView(discord.ui.View):
         else:
             for b in self._children:
                 b.disabled = True
-            embed = await format(ctx=self.ctx, title="It's a tie!", desc="Well played, both sides.")
+            embed = await format(
+                ctx=self.ctx, title="It's a tie!", desc="Well played, both sides."
+            )
             await interaction.message.edit(embed=embed, view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=0, custom_id="0")
@@ -511,7 +513,9 @@ class RPS_View(discord.ui.View):
             else:
                 embed = await format(
                     self.ctx,
-                    title="It's a tie! Both users guessed {}".format(self.choices[self.p1]),
+                    title="It's a tie! Both users guessed {}".format(
+                        self.choices[self.p1]
+                    ),
                 )
                 await interaction.message.edit(embed=embed, view=None)
         else:

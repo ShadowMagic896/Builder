@@ -155,7 +155,9 @@ class Client(BaseCog):
         Find out how long the bot has been online for
         """
         start = datetime.datetime.fromtimestamp(self.bot.start_unix)
-        embed = await format(ctx, title=f"Last Restart: <t:{round(self.bot.start_unix)}:R>")
+        embed = await format(
+            ctx, title=f"Last Restart: <t:{round(self.bot.start_unix)}:R>"
+        )
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
@@ -294,8 +296,7 @@ class ServerInformation(BaseView):
         for name, disk in values.items():
             embed.add_field(
                 name=name,
-                value=
-                f"ㅤㅤ**Read #:**: `{disk.read_count}`\n"
+                value=f"ㅤㅤ**Read #:**: `{disk.read_count}`\n"
                 f"ㅤㅤ**Read:** `{round(disk.read_bytes / 1000000, 2)}MB`\n"
                 f"ㅤㅤ**Write #:** `{disk.write_count}`\n"
                 f"ㅤㅤ**Write:** `{round(disk.write_bytes / 1000000, 2)}MB`\n"
