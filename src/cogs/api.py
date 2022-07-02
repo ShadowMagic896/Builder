@@ -1,24 +1,23 @@
 import time
 
 import aiohttp
-import asyncio
 import discord
-import functools
 from bs4 import BeautifulSoup, ResultSet, Tag
 from copy import copy
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from selenium import webdriver
-from src.utils.api import evaulate_response
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import Timers, URLs
-from src.utils.coro import run
-from src.utils.embeds import format
-from src.utils.errors import NoDocumentsFound
-from src.utils.subclass import BaseCog, Paginator
-from src.utils.types import RTFMCache
 from typing import List, Optional
 from urllib.parse import quote_plus
+
+from ..utils.api import evaulate_response
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.constants import Timers, URLs
+from ..utils.coro import run
+from ..utils.embeds import format
+from ..utils.errors import NoDocumentsFound
+from ..utils.subclass import BaseCog, Paginator
+from ..utils.types import RTFMCache
 
 
 class API(BaseCog):

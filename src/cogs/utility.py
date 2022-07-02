@@ -12,14 +12,15 @@ from datetime import datetime
 from discord.app_commands import describe
 from discord.ext import commands
 from settings import EVALUATION_TRUNCATION_THRESHOLD
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.checks import control_defer
-from src.utils.converters import TimeConvert
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog, BaseModal, BaseView
-from src.utils.user_io import get_emoji
 from textwrap import indent
 from typing import Any, List, Mapping, Optional, Tuple
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.checks import control_defer
+from ..utils.converters import TimeConvert
+from ..utils.embeds import format
+from ..utils.subclass import BaseCog, BaseModal, BaseView
+from ..utils.user_io import get_emoji
 
 
 warnings.filterwarnings("error")
@@ -140,8 +141,8 @@ class Utility(BaseCog):
         """
         Returns information about the bot.
         """
-        b = "\n~~"
-        bb = "\n~~~"
+        b = "\n\\~\\~"
+        bb = "\n\\~\\~\\~"
         embed = await format(
             ctx,
             title="Hello! I'm {}.".format(self.bot.user.name),

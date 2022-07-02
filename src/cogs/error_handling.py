@@ -1,7 +1,8 @@
 from settings import CATCH_ERRORS
-from src.utils.bot_types import Builder
-from src.utils.error_funcs import on_command_error, on_error, on_tree_error
-from src.utils.subclass import BaseCog
+
+from ..utils.bot_types import Builder
+from ..utils.error_funcs import on_command_error, on_error, on_tree_error
+from ..utils.subclass import BaseCog
 
 
 class ErrorHandling(BaseCog):

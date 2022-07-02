@@ -8,11 +8,12 @@ from copy import copy
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from matplotlib import pyplot as plt
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.converters import ListConverter
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog
 from typing import Callable, Literal, Optional, Union
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.converters import ListConverter
+from ..utils.embeds import format
+from ..utils.subclass import BaseCog
 
 
 class Graphing(BaseCog):

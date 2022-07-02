@@ -3,8 +3,9 @@ Contains functions used in .Images and .Colors for manipulating array-like RBG c
 """
 # fmt: off
 import numpy as np
-from src.utils.python_util import concat
 from typing import Set
+
+from .python_util import concat
 
 
 def merge(c1: np.ndarray, c2: np.ndarray, channels: Set[int]) -> np.ndarray:

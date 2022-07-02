@@ -6,6 +6,7 @@ import asyncpg
 import discord
 import logging
 import os
+import traceback
 import warnings
 from PIL import ImageFont
 from discord.ext import commands
@@ -27,16 +28,18 @@ from settings import (
     SOURCE_CODE_PATHS,
     START_DOCKER_ON_STARTUP,
 )
-from src.utils.bot_types import Builder
-from src.utils.coro import run
-from src.utils.errors import Fatal
-from src.utils.extensions import load_extensions
-from src.utils.external import snekbox_exec
-from src.utils.functions import explode
-from src.utils.stats import Stats
-from src.utils.types import Cache, Fonts
-from typing import Any, Callable, Literal, Optional
+from types import FrameType
+from typing import Any, Callable, Iterable, Iterator, Tuple
 from urllib.parse import quote_plus
+
+from .bot_types import Builder
+from .coro import run
+from .errors import Fatal
+from .extensions import load_extensions
+from .external import snekbox_exec
+from .functions import explode
+from .stats import Stats
+from .types import Cache, Fonts
 
 
 warnings.filterwarnings("error")
@@ -162,12 +165,13 @@ def start(main: Callable) -> None:
     freeze_support()
     setup_logging()
     inital: bool = True
+    last: str = ""
     last_error: Exception = ...
     while (
         inital
-        or input(
-            f"\nENDED WITH FATAL ERROR: {last_error}\nRestart bot? (Y/N)\n  | "
-        ).lower()
+        or (last := input(
+            f"\nENDED WITH FATAL ERROR: {last_error}\nRestart bot? (Y/N/V)\n  | "
+        ).lower())
         == "y"
     ):
         if inital:
@@ -179,7 +183,21 @@ def start(main: Callable) -> None:
             sys.exit()
         except Exception as err:
             last_error = err
+    if last == "v":
+        format_error_stack(traceback.walk_stack(None))
+    sys.exit()
 
+def format_error_stack(summary: Iterator[Tuple[FrameType, int]]):
+    for frame, line in summary:
+        msg: str = f"""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Frame:
+~~ {frame.f_code.co_filename}:{frame.f_lineno}
+~~ {frame.f_code.co_name} [{frame.f_code.co_firstlineno} -> {frame.f_code.co_firstlineno+len([line for line in frame.f_code.co_lines()])}]
+~~ {frame.f_lineno, line}
+"""
+        sys.stderr.write(msg)
 
 def setup_logging() -> None:
     format: str = "%(name)s @ %(asctime)s !%(levelno)s: %(message)s"

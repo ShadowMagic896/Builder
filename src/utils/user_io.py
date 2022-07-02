@@ -1,12 +1,12 @@
 import discord
 import re
 import unicodedata
-from codecs import unicode_escape_encode
 from discord.ext import commands
-from src.utils.bot_types import BuilderContext
-from src.utils.constants import Cogs
-from src.utils.functions import explode
 from typing import List
+
+from .bot_types import BuilderContext
+from .constants import Cogs
+from .functions import explode
 
 
 def iototime(userinput: str):

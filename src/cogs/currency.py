@@ -7,11 +7,12 @@ from discord import Interaction
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from discord.ext.commands import parameter
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import Emojis, Rates, URLs
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog, BaseModal, BaseView, Paginator
 from typing import Any, List, Optional, Union
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.constants import Emojis, Rates, URLs
+from ..utils.embeds import format
+from ..utils.subclass import BaseCog, BaseModal, BaseView, Paginator
 
 
 class Currency(BaseCog):
@@ -160,7 +161,7 @@ class Currency(BaseCog):
         Attempts to steal money from a user. You may gain some, but you may also lose some!
         """
         if user.bot:
-            raise TypeError("Cannot steal from src.utils.bot_typess!")
+            raise TypeError("Cannot steal from ..utils.bot_typess!")
         if user == ctx.author:
             raise ValueError("Cannot steal from yourself!")
 

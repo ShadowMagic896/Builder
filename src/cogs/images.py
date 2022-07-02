@@ -11,17 +11,18 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from io import BytesIO
-from src.utils import constants
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.colors import to_hex
-from src.utils.converters import RGB
-from src.utils.coro import run
-from src.utils.embeds import Desc, format
-from src.utils.functions import filter_similar
-from src.utils.static import parameters, typehints
-from src.utils.subclass import BaseCog, BaseView
 from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple
 from wand import image as wimage
+
+from ..utils import constants
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.colors import to_hex
+from ..utils.converters import RGB
+from ..utils.coro import run
+from ..utils.embeds import Desc, format
+from ..utils.functions import filter_similar
+from ..utils.static import parameters, typehints
+from ..utils.subclass import BaseCog, BaseView
 
 
 class Images(BaseCog):

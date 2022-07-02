@@ -2,13 +2,14 @@ import discord
 import json as js
 from discord.app_commands import describe
 from discord.ext import commands
-from src.utils import errors
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import URLs
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog, BaseView
 from typing import Callable, Optional
 from unidecode import unidecode_expect_nonascii
+
+from ..utils import errors
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.constants import URLs
+from ..utils.embeds import format
+from ..utils.subclass import BaseCog, BaseView
 
 
 class Misc(BaseCog):

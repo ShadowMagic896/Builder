@@ -1,6 +1,5 @@
 import discord
 import importlib
-import logging
 import os
 from discord.ext import commands
 from glob import glob, iglob

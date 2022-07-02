@@ -9,10 +9,11 @@ import openai
 from discord.ext import commands
 from environ import APPLICATION_ID, OPENAI_KEY
 from settings import BLACKLIST_USERS, PREFIXES
-from src.utils.extensions import full_reload
-from src.utils.types import Cache
 from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
 from webbrowser import Chrome
+
+from .extensions import full_reload
+from .types import Cache
 
 
 _Bot = Union[commands.Bot, commands.AutoShardedBot]

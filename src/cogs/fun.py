@@ -5,10 +5,11 @@ from discord.app_commands import Range, describe
 from discord.ext import commands
 from pyfiglet import Figlet
 from random import random
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.embeds import Desc, format
-from src.utils.subclass import BaseCog
 from typing import List
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.embeds import Desc, format
+from ..utils.subclass import BaseCog
 
 
 class Fun(BaseCog):

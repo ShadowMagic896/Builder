@@ -5,16 +5,18 @@ import numpy as np
 import re
 from discord.ext import commands
 from discord.ext.commands import Context
-from src.utils.constants import Cogs
-from src.utils.errors import (
+from typing import Any, List, Literal, Optional, Set, Type, Union
+
+from .constants import Cogs
+from .errors import (
     ForbiddenData,
     MissingCog,
     MissingCommand,
+    MissingGroup,
     ScopeError,
 )
-from src.utils.functions import find_url
-from src.utils.item_maps import Chemistry, get_atomic_name
-from typing import Any, List, Literal, Optional, Set, Type, Union
+from .functions import find_url
+from .item_maps import Chemistry, get_atomic_name
 
 
 class TimeConvert(commands.Converter):
@@ -208,7 +210,7 @@ class Group(commands.Converter):
         # grp = grp.lower()
         _grp: Optional[commands.HybridGroup] = ctx.bot.get_command(grp)
         if _grp is None or not isinstance(_grp, commands.HybridGroup):
-            raise MissingCog(f"Cannot find group: {grp}")
+            raise MissingGroup(f"Cannot find group: {grp}")
         if grp in Cogs.FORBIDDEN_GROUPS:
             raise ForbiddenData("Sorry! No help command is available for that.")
         return _grp

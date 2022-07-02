@@ -4,14 +4,15 @@ from discord.app_commands import Range, describe
 from discord.ext import commands
 from src.cogs.atoms import AtomsDatabase
 from src.cogs.currency import BalanceDatabase
-from src.utils.bot_types import BuilderContext
-from src.utils.constants import Emojis
-from src.utils.converters import Atom
-from src.utils.embeds import format
-from src.utils.errors import MissingFunds, MissingShopEntry, SelfAction, Unowned
-from src.utils.item_maps import Chemistry, get_atomic_name
-from src.utils.subclass import BaseCog, BaseView, Paginator
 from typing import Any, Iterable, List, Optional, Union
+
+from ..utils.bot_types import BuilderContext
+from ..utils.constants import Emojis
+from ..utils.converters import Atom
+from ..utils.embeds import format
+from ..utils.errors import MissingFunds, MissingShopEntry, SelfAction, Unowned
+from ..utils.item_maps import Chemistry, get_atomic_name
+from ..utils.subclass import BaseCog, BaseView, Paginator
 
 
 class Shop(BaseCog):

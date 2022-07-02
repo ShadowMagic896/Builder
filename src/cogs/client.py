@@ -7,18 +7,19 @@ import psutil
 from discord import Interaction, TextInput, ui
 from discord.app_commands import describe
 from discord.ext import commands
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import URLs
-from src.utils.converters import Cog, Command, Group
-from src.utils.embeds import format
-from src.utils.functions import explode
-from src.utils.subclass import BaseCog, BaseModal, BaseView
-from src.utils.user_io import (
+from typing import List, Optional
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.constants import URLs
+from ..utils.converters import Cog, Command, Group
+from ..utils.embeds import format
+from ..utils.functions import explode
+from ..utils.subclass import BaseCog, BaseModal, BaseView
+from ..utils.user_io import (
     cog_autocomplete,
     command_autocomplete,
     group_autocomplete,
 )
-from typing import List, Optional
 
 
 class Client(BaseCog):
@@ -294,18 +295,18 @@ class ServerInformation(BaseView):
         for name, disk in values.items():
             embed.add_field(
                 name=name,
-                value=f"~~**Read #:**: `{disk.read_count}`\n"
-                f"~~**Read:** `{round(disk.read_bytes / 1000000, 2)}MB`\n"
-                f"~~**Write #:** `{disk.write_count}`\n"
-                f"~~**Write:** `{round(disk.write_bytes / 1000000, 2)}MB`\n"
-                f"~~**Read Time:** `{disk.read_time}ms`\n"
-                f"~~**Write Time:** `{disk.write_time}ms`\n",
+                value=f"\\~\\~**Read #:**: `{disk.read_count}`\n"
+                f"\\~\\~**Read:** `{round(disk.read_bytes / 1000000, 2)}MB`\n"
+                f"\\~\\~**Write #:** `{disk.write_count}`\n"
+                f"\\~\\~**Write:** `{round(disk.write_bytes / 1000000, 2)}MB`\n"
+                f"\\~\\~**Read Time:** `{disk.read_time}ms`\n"
+                f"\\~\\~**Write Time:** `{disk.write_time}ms`\n",
             )
         embed.add_field(
             name="CPU",
-            value=f"~~**CPUs:** `{psutil.cpu_count(True)}`\n"
-            f"~~**Percents:** `{psutil.cpu_percent(percpu=False)}`\n"
-            f"~~**Frequency:** `{round(freq.current)}Mhz`\n",
+            value=f"\\~\\~**CPUs:** `{psutil.cpu_count(True)}`\n"
+            f"\\~\\~**Percents:** `{psutil.cpu_percent(percpu=False)}`\n"
+            f"\\~\\~**Frequency:** `{round(freq.current)}Mhz`\n",
         )
         view = ReturnToAbout(self.ctx)
         view.message = await inter.response.edit_message(embed=embed, view=view)

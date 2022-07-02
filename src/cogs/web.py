@@ -7,15 +7,16 @@ from discord import app_commands
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from io import BytesIO
-from src.utils import parse as utparse
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.converters import UrlFind, UrlGet
-from src.utils.coro import run
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog, Paginator
-from src.utils.types import DDGImageData, DDGSearchData, FeatureType
 from typing import List, Optional
 from urllib import parse as libparse
+
+from ..utils import parse as utparse
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.converters import UrlFind, UrlGet
+from ..utils.coro import run
+from ..utils.embeds import format
+from ..utils.subclass import BaseCog, Paginator
+from ..utils.types import DDGImageData, DDGSearchData, FeatureType
 
 
 class Web(BaseCog):

@@ -5,12 +5,13 @@ from chempy.util import periodic
 from discord.app_commands import describe
 from discord.ext import commands
 from discord.ext.commands import parameter
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.converters import Atom
-from src.utils.embeds import format
-from src.utils.item_maps import Chemistry, get_atomic_name
-from src.utils.subclass import BaseCog, Paginator
 from typing import List, Optional, Union
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.converters import Atom
+from ..utils.embeds import format
+from ..utils.item_maps import Chemistry, get_atomic_name
+from ..utils.subclass import BaseCog, Paginator
 
 
 chem = Chemistry()

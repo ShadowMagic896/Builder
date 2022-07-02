@@ -7,13 +7,14 @@ import random
 from bs4 import BeautifulSoup, ResultSet, Tag
 from discord.app_commands import Range, describe
 from discord.ext import commands
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import URLs
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog, Paginator
-from src.utils.types import NHSearchData, PHSearchData
 from typing import List, Literal, Optional
 from urllib.parse import quote_plus
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.constants import URLs
+from ..utils.embeds import format
+from ..utils.subclass import BaseCog, Paginator
+from ..utils.types import NHSearchData, PHSearchData
 
 
 class NSFW(BaseCog):

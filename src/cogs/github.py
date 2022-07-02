@@ -6,9 +6,10 @@ import os
 from asyncio.subprocess import Process
 from discord.ext import commands
 from environ import LIBRARY_KEY
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.constants import URLs
-from src.utils.embeds import format
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.constants import URLs
+from ..utils.embeds import format
 
 
 class GitHub(commands.Cog):

@@ -1,5 +1,6 @@
 from discord.ext.commands import parameter
-from src.utils import converters
+
+from ..utils import converters
 
 
 USER = parameter(default=lambda c: c.author, displayed_default=lambda c: str(c.author))

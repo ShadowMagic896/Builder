@@ -21,4 +21,3 @@ if __name__ == "__main__":
             raise Fatal(msg) from err
 
     start(main)
-discord.Webhook.from_url()

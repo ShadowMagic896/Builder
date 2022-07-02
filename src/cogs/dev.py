@@ -4,14 +4,15 @@ from discord import app_commands
 from discord.app_commands import describe
 from discord.ext import commands
 from settings import DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.embeds import format
-from src.utils.extensions import extend_dir
-from src.utils.functions import explode
-from src.utils.stats import Stats
-from src.utils.subclass import BaseCog
 from subprocess import Popen
 from typing import List
+
+from ..utils.bot_types import Builder, BuilderContext
+from ..utils.embeds import format
+from ..utils.extensions import extend_dir
+from ..utils.functions import explode
+from ..utils.stats import Stats
+from ..utils.subclass import BaseCog
 
 
 class Dev(BaseCog):
