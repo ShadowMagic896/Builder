@@ -1,6 +1,8 @@
 **/__pycache__/
-logs/*
-.dccache
+*.log
+build/*
+*.dccache
+*.spec
 
 environ.py
 pg_tests.py

@@ -24,6 +24,7 @@ from typing import Any, List, Mapping, Optional, Tuple
 
 warnings.filterwarnings("error")
 
+
 class Utility(BaseCog):
     """
     Helpful stuff
