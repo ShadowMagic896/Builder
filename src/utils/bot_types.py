@@ -1,19 +1,19 @@
-import datetime
-import logging
-import aiohttp
-import discord
-import openai
 import time
-import asyncpg
 
+import aiohttp
+import asyncpg
+import datetime
+import discord
+import logging
+import openai
 from discord.ext import commands
-from typing import Generic, Iterable, Mapping, TypeVar, Union, Optional
-from settings import PREFIXES, BLACKLIST_USERS
 from environ import APPLICATION_ID, OPENAI_KEY
+from settings import BLACKLIST_USERS, PREFIXES
+from src.utils.extensions import full_reload
+from src.utils.types import Cache
+from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
 from webbrowser import Chrome
 
-from src.utils.types import Cache
-from src.utils.extensions import full_reload
 
 _Bot = Union[commands.Bot, commands.AutoShardedBot]
 BotT = TypeVar("BotT", bound=_Bot, covariant=True)

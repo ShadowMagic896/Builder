@@ -1,13 +1,12 @@
-from glob import glob, iglob
+import discord
 import importlib
 import logging
 import os
 from discord.ext import commands
+from glob import glob, iglob
 from pathlib import Path
-from typing import Iterable, Optional, Mapping, Any
-import discord
-
 from settings import EXT_DIRECTORIES, NOLOAD_EXTS
+from typing import Any, Iterable, Mapping, Optional
 
 
 def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):

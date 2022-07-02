@@ -1,7 +1,7 @@
-from enum import Enum
-from typing import Any, Mapping, NamedTuple
-from src.utils.constants import Timers
 from PIL import ImageFont
+from enum import Enum
+from src.utils.constants import Timers
+from typing import Any, Mapping, NamedTuple
 
 
 class DDGSearchData(NamedTuple):

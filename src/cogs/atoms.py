@@ -1,18 +1,17 @@
-from asyncpg import Connection, Record
 import asyncpg
 import discord
+from asyncpg import Connection, Record
+from chempy.util import periodic
 from discord.app_commands import describe
 from discord.ext import commands
 from discord.ext.commands import parameter
-
-from typing import List, Optional, Union
-from chempy.util import periodic
-from src.utils.converters import Atom
-
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog, Paginator
-from src.utils.item_maps import get_atomic_name, Chemistry
 from src.utils.bot_types import Builder, BuilderContext
+from src.utils.converters import Atom
+from src.utils.embeds import format
+from src.utils.item_maps import Chemistry, get_atomic_name
+from src.utils.subclass import BaseCog, Paginator
+from typing import List, Optional, Union
+
 
 chem = Chemistry()
 

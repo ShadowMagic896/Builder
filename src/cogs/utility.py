@@ -1,29 +1,28 @@
-import asyncio
-import aiohttp
-from datetime import datetime
-import io
-from textwrap import indent
-import pytz
-from settings import EVALUATION_TRUNCATION_THRESHOLD
 import time
 
+import aiohttp
+import asyncio
 import discord
-from discord.app_commands import describe
-from discord.ext import commands
-
-from typing import Any, List, Mapping, Optional, Tuple
 import environ
+import io
+import pytz
 import requests
 import warnings
-from src.utils.embeds import format
-from src.utils.subclass import BaseCog, BaseModal, BaseView
-from src.utils.converters import TimeConvert
+from datetime import datetime
+from discord.app_commands import describe
+from discord.ext import commands
+from settings import EVALUATION_TRUNCATION_THRESHOLD
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.checks import control_defer
+from src.utils.converters import TimeConvert
+from src.utils.embeds import format
+from src.utils.subclass import BaseCog, BaseModal, BaseView
 from src.utils.user_io import get_emoji
+from textwrap import indent
+from typing import Any, List, Mapping, Optional, Tuple
+
 
 warnings.filterwarnings("error")
-
 
 class Utility(BaseCog):
     """
@@ -101,8 +100,8 @@ class Utility(BaseCog):
         """
         Gets information about the user requested.
         """
-        b = "\n{s}{s}".format(s="ㅤ")
-        bb = "\n{s}{s}{s}".format(s="ㅤ")
+        b = "\n{s}{s}".format(s="~")
+        bb = "\n{s}{s}{s}".format(s="~")
 
         user = user if user else ctx.author
         embed = await format(ctx, title="Information on {}".format(user))
@@ -140,8 +139,8 @@ class Utility(BaseCog):
         """
         Returns information about the bot.
         """
-        b = "\nㅤㅤ"
-        bb = "\nㅤㅤㅤ"
+        b = "\n~~"
+        bb = "\n~~~"
         embed = await format(
             ctx,
             title="Hello! I'm {}.".format(self.bot.user.name),

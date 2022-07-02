@@ -1,23 +1,20 @@
-import asyncio
-import logging
-import warnings
-from multiprocessing import freeze_support
-import os
-from pathlib import Path
 import sys
-from typing import Any, Callable, Literal, Optional
-from urllib.parse import quote_plus
+
 import aiohttp
+import asyncio
 import asyncpg
 import discord
+import logging
+import os
+import warnings
+from PIL import ImageFont
 from discord.ext import commands
 from environ import BOT_KEY, DB_PASSWORD, DB_USERNAME
-from PIL import ImageFont
-
+from multiprocessing import freeze_support
+from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-
 from settings import (
     EXT_DIRECTORIES,
     GLOBAL_CHECKS,
@@ -30,14 +27,17 @@ from settings import (
     SOURCE_CODE_PATHS,
     START_DOCKER_ON_STARTUP,
 )
+from src.utils.bot_types import Builder
+from src.utils.coro import run
+from src.utils.errors import Fatal
 from src.utils.extensions import load_extensions
 from src.utils.external import snekbox_exec
 from src.utils.functions import explode
 from src.utils.stats import Stats
-from src.utils.coro import run
 from src.utils.types import Cache, Fonts
-from src.utils.bot_types import Builder
-from src.utils.errors import Fatal
+from typing import Any, Callable, Literal, Optional
+from urllib.parse import quote_plus
+
 
 warnings.filterwarnings("error")
 

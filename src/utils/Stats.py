@@ -1,6 +1,6 @@
+import discord
 import os
 from typing import Iterator, List
-import discord
 
 
 class Stats:

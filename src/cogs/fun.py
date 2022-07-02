@@ -1,16 +1,14 @@
-from random import random
 import discord
+import pyfiglet
+import random
 from discord.app_commands import Range, describe
 from discord.ext import commands
-
-import random
-import pyfiglet
 from pyfiglet import Figlet
-from typing import List
-
-from src.utils.embeds import format, Desc
-from src.utils.subclass import BaseCog
+from random import random
 from src.utils.bot_types import Builder, BuilderContext
+from src.utils.embeds import Desc, format
+from src.utils.subclass import BaseCog
+from typing import List
 
 
 class Fun(BaseCog):

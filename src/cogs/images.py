@@ -1,41 +1,27 @@
+import aiohttp
 import asyncio
-import io
-from io import BytesIO
+import discord
+import environ
 import functools
+import io
+import numpy as np
 import os
 import re
-import aiohttp
-import discord
-from discord.app_commands import describe, Range
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from discord.app_commands import Range, describe
 from discord.ext import commands
-
-
-from PIL import Image, ImageDraw, ImageFilter, ImageEnhance, ImageFont
-from typing import (
-    Any,
-    Callable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Tuple,
-)
-import numpy as np
-from src.utils.functions import filter_similar
-from src.utils.colors import to_hex
-from src.utils.converters import RGB
-from src.utils.subclass import BaseCog, BaseView
-from src.utils.static import typehints
-from src.utils.coro import run
-
-from wand import image as wimage
-
-import environ
-
-from src.utils.embeds import format, Desc
+from io import BytesIO
 from src.utils import constants
 from src.utils.bot_types import Builder, BuilderContext
-from src.utils.static import parameters
+from src.utils.colors import to_hex
+from src.utils.converters import RGB
+from src.utils.coro import run
+from src.utils.embeds import Desc, format
+from src.utils.functions import filter_similar
+from src.utils.static import parameters, typehints
+from src.utils.subclass import BaseCog, BaseView
+from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple
+from wand import image as wimage
 
 
 class Images(BaseCog):

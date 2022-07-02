@@ -1,22 +1,20 @@
-import typing
 import discord
+import typing
 from discord import Interaction, utils
 from discord.app_commands import describe
 from discord.ext import commands
-
-from typing import Any, List, Optional, Union
 from settings import INVISIBLE_COGS
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.converters import Cog, Command, Group
-from src.utils.user_io import (
-    cog_autocomplete,
-    group_autocomplete,
-    command_autocomplete,
-)
-
 from src.utils.embeds import format
 from src.utils.functions import explode
 from src.utils.subclass import BaseCog, BaseView, Paginator
-from src.utils.bot_types import Builder, BuilderContext
+from src.utils.user_io import (
+    cog_autocomplete,
+    command_autocomplete,
+    group_autocomplete,
+)
+from typing import Any, List, Optional, Union
 
 
 class Help(BaseCog):
@@ -148,10 +146,10 @@ class Help(BaseCog):
                 (
                     f"**`{name}`:**",
                     f"""
-                    ㅤㅤ**Description:** `{command.app_command._params.get(param.name, FakeParam()).description}`
-                    ㅤㅤ**Type:** `{simplifyAnnotation(param)}`
-                    ㅤㅤ**Default:** `{await getDef(param)}`
-                    ㅤㅤ**Required:** `{str(param.required)}`""",
+                    ~~**Description:** `{command.app_command._params.get(param.name, FakeParam()).description}`
+                    ~~**Type:** `{simplifyAnnotation(param)}`
+                    ~~**Default:** `{await getDef(param)}`
+                    ~~**Required:** `{str(param.required)}`""",
                 )
                 for name, param in params
             ]:

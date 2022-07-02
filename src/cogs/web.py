@@ -1,24 +1,21 @@
 import asyncio
-from copy import copy
-from io import BytesIO
-import logging
-from typing import List, Optional
-from bs4 import BeautifulSoup, ResultSet, Tag
 import discord
+import logging
+from bs4 import BeautifulSoup, ResultSet, Tag
+from copy import copy
 from discord import app_commands
-from discord.app_commands import describe, Range
+from discord.app_commands import Range, describe
 from discord.ext import commands
-
-from urllib import parse as libparse
-
-from src.utils.converters import UrlGet, UrlFind
-from src.utils.embeds import format
-from src.utils.bot_types import Builder, BuilderContext
-from src.utils.subclass import BaseCog, Paginator
-from src.utils.types import DDGImageData, FeatureType, DDGSearchData
-from src.utils.coro import run
-
+from io import BytesIO
 from src.utils import parse as utparse
+from src.utils.bot_types import Builder, BuilderContext
+from src.utils.converters import UrlFind, UrlGet
+from src.utils.coro import run
+from src.utils.embeds import format
+from src.utils.subclass import BaseCog, Paginator
+from src.utils.types import DDGImageData, DDGSearchData, FeatureType
+from typing import List, Optional
+from urllib import parse as libparse
 
 
 class Web(BaseCog):

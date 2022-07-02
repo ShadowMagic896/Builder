@@ -1,35 +1,36 @@
+import sys
+
 import discord
+import traceback
+from discord.errors import Forbidden, NotFound
 from discord.ext import commands
-from discord.errors import NotFound, Forbidden
 from discord.ext.commands.errors import (
-    UserNotFound,
-    MemberNotFound,
+    BadArgument,
     CommandNotFound,
+    CommandOnCooldown,
     ExtensionNotFound,
+    MemberNotFound,
     MissingRequiredArgument,
     NSFWChannelRequired,
-    BadArgument,
-    CommandOnCooldown,
+    UserNotFound,
 )
-import traceback
-import sys
 from settings import (
     CATCH_ERRORS,
     MODERATE_JISHAKU_COMMANDS,
-    PRINT_EVENT_ERROR_TRACEACK,
     PRINT_COMMAND_ERROR_TRACKEBACK,
+    PRINT_EVENT_ERROR_TRACEACK,
 )
+from simpleeval import NumberTooHigh
+from src.utils.embeds import format
 from src.utils.errors import (
     InternalError,
-    Unowned,
+    MissingArguments,
     MissingFunds,
     MissingShopEntry,
     SelfAction,
-    MissingArguments,
     TooManyArguments,
+    Unowned,
 )
-from src.utils.embeds import format
-from simpleeval import NumberTooHigh
 from typing import Any, Union
 
 

@@ -2,9 +2,9 @@
 Contains functions used in .Images and .Colors for manipulating array-like RBG color values
 """
 # fmt: off
-from typing import Set
 import numpy as np
 from src.utils.python_util import concat
+from typing import Set
 
 
 def merge(c1: np.ndarray, c2: np.ndarray, channels: Set[int]) -> np.ndarray:

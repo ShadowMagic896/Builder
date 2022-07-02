@@ -1,21 +1,19 @@
-import asyncio
-from typing import List, Literal, Optional
-from urllib.parse import quote_plus
 import aiohttp
+import asyncio
 import bs4
 import discord
-from discord.app_commands import describe, Range
-from discord.ext import commands
-
 import os
 import random
 from bs4 import BeautifulSoup, ResultSet, Tag
-from src.utils.types import NHSearchData, PHSearchData
-
-from src.utils.subclass import BaseCog, Paginator
-from src.utils.embeds import format
+from discord.app_commands import Range, describe
+from discord.ext import commands
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import URLs
+from src.utils.embeds import format
+from src.utils.subclass import BaseCog, Paginator
+from src.utils.types import NHSearchData, PHSearchData
+from typing import List, Literal, Optional
+from urllib.parse import quote_plus
 
 
 class NSFW(BaseCog):

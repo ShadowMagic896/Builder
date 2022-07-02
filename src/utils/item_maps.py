@@ -1,5 +1,5 @@
-from typing import Mapping
 from chempy.util import periodic
+from typing import Mapping
 
 
 class Chemistry:

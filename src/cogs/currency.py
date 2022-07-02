@@ -1,19 +1,17 @@
 import aiohttp
 import asyncpg
 import discord
+import environ
+import random
 from discord import Interaction
-from discord.app_commands import describe, Range
+from discord.app_commands import Range, describe
 from discord.ext import commands
 from discord.ext.commands import parameter
-
-import random
-from typing import Any, List, Optional, Union
-import environ
-
-from src.utils.embeds import format
-from src.utils.constants import Rates, Emojis, URLs
-from src.utils.subclass import BaseCog, BaseModal, BaseView, Paginator
 from src.utils.bot_types import Builder, BuilderContext
+from src.utils.constants import Emojis, Rates, URLs
+from src.utils.embeds import format
+from src.utils.subclass import BaseCog, BaseModal, BaseView, Paginator
+from typing import Any, List, Optional, Union
 
 
 class Currency(BaseCog):
@@ -623,7 +621,7 @@ class QuizQuestionSubmit(discord.ui.Button):
             jr = ", ".join
             desc = "\n".join(
                 [
-                    f'ㅤ**Question:** *"{entry[0]}"*\nㅤ**Response:** {entry[4]}\nㅤ**Answer[s]:** {jr(entry[5])}\n'
+                    f'~**Question:** *"{entry[0]}"*\n~**Response:** {entry[4]}\n~**Answer[s]:** {jr(entry[5])}\n'
                     for entry in self._view.selected
                 ]
             )

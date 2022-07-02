@@ -1,18 +1,15 @@
-from copy import copy
-from typing import Optional
-from discord.ext import commands
-from discord.app_commands import Range, describe
-
-from src.utils.colors import channels_to_names, merge
-from src.utils.embeds import format
-from src.cogs.images import PILFN
-from src.utils.static.parameters import COLOR_CHANNEL_ALPHA
-from src.utils.converters import RGB
-
 from PIL import Image
-
+from copy import copy
+from discord.app_commands import Range, describe
+from discord.ext import commands
+from src.cogs.images import PILFN
 from src.utils.bot_types import Builder, BuilderContext
+from src.utils.colors import channels_to_names, merge
+from src.utils.converters import RGB
+from src.utils.embeds import format
+from src.utils.static.parameters import COLOR_CHANNEL_ALPHA
 from src.utils.subclass import BaseCog
+from typing import Optional
 
 
 class Colors(BaseCog):

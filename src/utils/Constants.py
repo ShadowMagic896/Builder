@@ -1,4 +1,4 @@
-from typing import Set, Final, final
+from typing import Final, Set, final
 
 
 @final

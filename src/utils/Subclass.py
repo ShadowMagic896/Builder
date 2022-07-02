@@ -1,15 +1,14 @@
-import logging
-import discord
-from discord.ext import commands
-from discord.app_commands import errors as app_errors
-
 import math
-from typing import Any, Coroutine, Generic, Optional, Sequence, TypeVar
-from src.utils.bot_types import Builder, BuilderContext
 
-from src.utils.embeds import format
+import discord
+import logging
+from discord.app_commands import errors as app_errors
+from discord.ext import commands
+from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import Emojis
+from src.utils.embeds import format
 from src.utils.error_funcs import _interaction_error_handler, handle_modal_error
+from typing import Any, Coroutine, Generic, Optional, Sequence, TypeVar
 
 
 SequenceT = TypeVar("SequenceT", bound=Sequence)

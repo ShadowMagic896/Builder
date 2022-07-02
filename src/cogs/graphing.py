@@ -1,20 +1,18 @@
-from copy import copy
 import math
+
 import discord
-from discord.app_commands import describe, Range
-from discord.ext import commands
-
-from src.utils.embeds import format
-from src.utils.converters import ListConverter
-
 import io
-import simpleeval
 import numpy as np
-from typing import Callable, Literal, Optional, Union
+import simpleeval
+from copy import copy
+from discord.app_commands import Range, describe
+from discord.ext import commands
 from matplotlib import pyplot as plt
-
 from src.utils.bot_types import Builder, BuilderContext
+from src.utils.converters import ListConverter
+from src.utils.embeds import format
 from src.utils.subclass import BaseCog
+from typing import Callable, Literal, Optional, Union
 
 
 class Graphing(BaseCog):

@@ -1,12 +1,11 @@
 import aiohttp
-import logging
-
 import discord
-
+import logging
 from environ import BOT_KEY
 from src.utils.bot_types import Builder
 from src.utils.errors import Fatal
 from src.utils.startup import prepare, start
+
 
 if __name__ == "__main__":
 

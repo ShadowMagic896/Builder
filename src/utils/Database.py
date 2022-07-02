@@ -1,9 +1,9 @@
 from chempy.util import periodic
 from discord.ext import commands
+from settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
 from typing import List, Mapping, Tuple
 
-from settings import STARTUP_ENSURE_DEFAULT_ATOMS, STARTUP_UPDATE_COMMANDS
-from src.utils.functions import explode
+from .functions import explode
 
 
 async def ensure_db(

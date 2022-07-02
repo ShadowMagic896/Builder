@@ -2,7 +2,7 @@ import datetime
 import discord
 from typing import Optional, Union
 
-from src.utils.bot_types import BuilderContext
+from .bot_types import BuilderContext
 
 
 async def getv(inter) -> Union[BuilderContext, None]:

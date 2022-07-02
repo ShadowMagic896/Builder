@@ -1,6 +1,7 @@
 import discord
 from typing import Literal
 
+
 USER = discord.User
 MEMBER = discord.Member
 COLOR_CHANNEL_ALPHA = Literal[

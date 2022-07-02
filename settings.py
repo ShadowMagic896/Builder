@@ -1,8 +1,8 @@
 import logging
 from os import PathLike
+from src.utils.checks import inter_choke
 from typing import Any, Callable, List, Set
 
-from src.utils.checks import inter_choke
 
 # Directories to look for cogs in
 EXT_DIRECTORIES: List[PathLike] = ["./src/cogs"]

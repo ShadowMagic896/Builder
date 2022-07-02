@@ -1,11 +1,8 @@
 import asyncio
-from asyncio.subprocess import Process
-import os
-
 import ctypes
-
+import os
 import psutil
-
+from asyncio.subprocess import Process
 from settings import DOCKER_DESKTOP_LOCATION
 
 

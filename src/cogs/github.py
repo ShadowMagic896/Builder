@@ -1,13 +1,13 @@
-import asyncio
-from asyncio.subprocess import Process
-import os
 import time
-import discord
-from discord.ext import commands
 
+import asyncio
+import discord
+import os
+from asyncio.subprocess import Process
+from discord.ext import commands
+from environ import LIBRARY_KEY
 from src.utils.bot_types import Builder, BuilderContext
 from src.utils.constants import URLs
-from environ import LIBRARY_KEY
 from src.utils.embeds import format
 
 

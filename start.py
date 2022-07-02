@@ -1,8 +1,10 @@
 """
 Runs a small script to install all requirements
 """
-import os
 import sys
+
+import os
+
 
 ask_for_install: bool = False
 ver = sys.version_info
