@@ -12,7 +12,7 @@ from settings import BLACKLIST_USERS, PREFIXES
 from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
 from webbrowser import Chrome
 
-from .extensions import full_reload
+from .extensions import full_reload, load_extensions
 from .types import Cache
 
 
@@ -51,7 +51,7 @@ class Builder(commands.Bot):
         self.tree: BuilderTree
 
     async def reload_source(self) -> str:
-        return await full_reload(self)
+        return await load_extensions(self)
 
     async def setup_hook(self) -> None:
         print("--- online ---")

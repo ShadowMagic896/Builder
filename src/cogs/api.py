@@ -143,22 +143,6 @@ class API(BaseCog):
     @commands.hybrid_group()
     async def api(self, ctx: BuilderContext):
         pass
-    
-
-    @api.group()
-    async def wfmarket(self, ctx: BuilderContext):
-        pass
-
-    @wfmarket.command()
-    async def item(self, ctx: BuilderContext, item: str, platform: Optional[Literal["xbox", "pc", "ps4", "switch"]] = "pc"):
-        url = f"{URLs.WFMARKET}/items/{quote(item)}"
-        headers = {"Platform": platform}
-        response = await self.bot.session.get(url, headers=headers)
-        response.raise_for_status()
-
-        data = [WFItem(i) for i in await response.json()["payload"]["item"]["items_in_set"]]
-        embed.url = f"https://warframe.market/items/{quote(item)}"
-        commands.Bot().tree.error()
 
 
     @api.group()
