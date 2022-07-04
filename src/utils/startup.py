@@ -157,7 +157,7 @@ async def prepare(bot: Builder) -> Builder:
     logging.info("Databases Verified")
     
     if LOAD_COGS_ON_STARTUP:
-        await bot.rel
+        await bot.reload_source()
         logging.info("Startup Cogs Loaded")
 
     return bot
