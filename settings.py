@@ -44,7 +44,7 @@ STARTUP_ENSURE_DEFAULT_ATOMS: bool = False
 STARTUP_UPDATE_COMMANDS: bool = True
 
 # Whether to apply all error-catching functions to the bot
-CATCH_ERRORS: bool = True
+CATCH_ERRORS: bool = False
 
 # Errors on events / event listeners
 PRINT_EVENT_ERROR_TRACEACK: bool = True and CATCH_ERRORS
@@ -76,8 +76,7 @@ EVALUATION_TRUNCATION_THRESHOLD = 20000
 
 # Guils to enable dev commands in
 DEVELOPMENT_GUILD_IDS: List[int] = [
-    871913539936329768,
-    816348537800753182,
+    871913539936329768
 ]
 
 BLACKLIST_USERS: List[int] = []

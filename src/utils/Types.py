@@ -1,6 +1,6 @@
 from PIL import ImageFont
 from enum import Enum
-from typing import Any, Mapping, NamedTuple
+from typing import Mapping, NamedTuple
 
 from .constants import Timers
 

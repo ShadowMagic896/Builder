@@ -48,23 +48,18 @@ async def ensure_db(
             FOREIGN KEY (atomid) REFERENCES atoms (atomid) ON DELETE CASCADE,
             UNIQUE (userid, atomid)
         );
-
-        CREATE TABLE IF NOT EXISTS disabled_commands (
+        
+        CREATE TABLE IF NOT EXISTS config (
             guildid BIGINT NOT NULL,
-            commandname TEXT UNIQUE NOT NULL,
-            FOREIGN KEY (commandname) REFERENCES commands (commandname) ON DELETE CASCADE
-        );
-
-        CREATE TABLE IF NOT EXISTS commands (
-            commandname TEXT PRIMARY KEY,
-            parents TEXT[]
+            key TEXT NOT NULL,
+            value TEXT NOT NULL,
+            CONSTRAINT g_unique UNIQUE (guildid),
+            CONSTRAINT gk_unique UNIQUE (guildid, key)
         )
     """
-    print("CREATING DATABASES...")
     await bot.apg.execute(command)
 
     if STARTUP_ENSURE_DEFAULT_ATOMS:
-        print("ENSURING DEFAULT ITEMS...")
         command = """
             DELETE FROM atoms;
         """

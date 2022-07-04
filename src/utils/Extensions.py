@@ -64,16 +64,16 @@ def extend_dir(path: str):
     return glob(f"{path}/**/*.py", recursive=True)
 
 
+def format_file(fn: str):
+    _imp = fn.strip("./")[fn.index("src") :].replace("\\", ".")
+    return _imp[:-3]
+
 async def full_reload(bot: commands.Bot):
     log: str = ""
     for file in extend_dir("./src"):
 
-        def format_file(fn: str):
-            _imp = fn.strip("./")[fn.index("src") :].replace("\\", ".")
-            return _imp[:-3]
-
         as_import = format_file(file)
-        if as_import in bot.extensions:
+        if as_import in bot.extensions.keys():
             log += f"\n**[EXT] {as_import}**"
             await bot.reload_extension(as_import)
         else:

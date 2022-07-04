@@ -8,7 +8,7 @@ from typing import Optional
 from unidecode import UnidecodeError
 
 from ..utils import errors as berrors
-from ..utils.bot_types import BuilderContext
+from ..utils.bot_types import Builder, BuilderContext
 from ..utils.subclass import BaseCog
 
 
@@ -34,3 +34,7 @@ class MarkDown(BaseCog):
 
         render: str = md(text=text)
         print(render)
+    
+
+async def setup(bot: Builder):
+    await bot.add_cog(MarkDown(bot))

@@ -70,12 +70,13 @@ async def _interaction_error_handler(
         de.CommandNotFound: "I couldn't find that command. Try `/help`",
         de.CommandOnCooldown: "Slow down! You can't use that right now",
         de.ExtensionNotFound: "I couldn't find that cog. Try `/help`",
-        de.Forbidden: "I'm not allowed to do that",
         de.MemberNotFound: "That member was not found in this server",
         de.MissingRequiredArgument: "You need to supply more information to use that command",
-        de.NotFound: "I couldn't find that. Try `/help`, or check the error for more info",
         de.NSFWChannelRequired: "You must be in an NSFW channel to use that",
         de.UserNotFound: "That user was not found in discord",
+
+        discord.Forbidden: "I'm not allowed to do that",
+        discord.NotFound: "I couldn't find that. Try `/help`, or check the error for more info",
 
         be.ContainerAlreadyRunning: "You are already running a container",
         be.Fatal: "A fatal error has occurred. Ouch",

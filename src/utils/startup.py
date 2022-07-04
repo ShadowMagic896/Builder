@@ -10,14 +10,13 @@ import traceback
 import warnings
 from PIL import ImageFont
 from discord.ext import commands
-from environ import BOT_KEY, DB_PASSWORD, DB_USERNAME
+from environ import DB_PASSWORD, DB_USERNAME
 from multiprocessing import freeze_support
 from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from settings import (
-    EXT_DIRECTORIES,
     GLOBAL_CHECKS,
     IGNORED_GLOBALLY_CHECKED_COMMANDS,
     IGNORED_INHERITED_GROUP_CHECKS,
@@ -34,6 +33,7 @@ from urllib.parse import quote_plus
 
 from .bot_types import Builder
 from .coro import run
+from .database import ensure_db
 from .errors import Fatal
 from .extensions import load_extensions
 from .external import snekbox_exec
@@ -49,7 +49,7 @@ async def aquire_fonts() -> Fonts:
     return Fonts(bookosbi=ImageFont.FreeTypeFont(f"assets/fonts/bookosbi.ttf", size=20))
 
 
-async def aquire_activity(bot: commands.Bot) -> discord.Activity:
+async def aquire_activity(bot: Builder) -> discord.Activity:
 
     activity: discord.Activity = discord.Activity(
         type=discord.ActivityType.watching,
@@ -105,7 +105,7 @@ async def aquire_connection() -> aiohttp.ClientSession:
     )
 
 
-async def apply_inherit_checks(bot: commands.Bot) -> None:
+async def apply_inherit_checks(bot: Builder) -> None:
     if not INHERIT_GROUP_CHECKS:
         return
     for group in [
@@ -118,28 +118,23 @@ async def apply_inherit_checks(bot: commands.Bot) -> None:
             command.checks.extend(checks)
 
 
-async def apply_to_global(bot: commands.Bot, check: Callable[[Any], bool]) -> None:
+async def apply_to_global(bot: Builder, check: Callable[[Any], bool]) -> None:
     for command in explode(bot.commands):
         if command.qualified_name in IGNORED_GLOBALLY_CHECKED_COMMANDS:
             continue
         command.add_check(check)
 
 
-async def apply_global_checks(bot: commands.Bot) -> None:
+async def apply_global_checks(bot: Builder) -> None:
     for check in GLOBAL_CHECKS:
         await apply_to_global(bot, check)
 
 
-async def prepare(bot: commands.Bot) -> commands.Bot:
+async def prepare(bot: Builder) -> Builder:
     if LOAD_JISHAKU:
         await bot.load_extension("jishaku")
         logging.info("Cog Loaded: Jishaku")
 
-    if LOAD_COGS_ON_STARTUP:
-        await load_extensions(
-            bot, EXT_DIRECTORIES, spaces=20, ignore_errors=False, print_log=False
-        )
-        logging.info("Startup Cogs Loaded")
 
     if START_DOCKER_ON_STARTUP:
         await snekbox_exec()
@@ -158,6 +153,13 @@ async def prepare(bot: commands.Bot) -> commands.Bot:
     logging.info("Caches Aquired")
     bot.session = await aquire_connection()
     logging.info("Session Aquired")
+    await ensure_db(bot)
+    logging.info("Databases Verified")
+    
+    if LOAD_COGS_ON_STARTUP:
+        await bot.rel
+        logging.info("Startup Cogs Loaded")
+
     return bot
 
 

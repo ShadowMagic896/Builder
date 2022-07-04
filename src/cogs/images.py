@@ -1,13 +1,11 @@
 import aiohttp
 import asyncio
 import discord
-import environ
 import functools
 import io
 import numpy as np
-import os
 import re
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from io import BytesIO

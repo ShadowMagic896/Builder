@@ -1,5 +1,4 @@
 import aiohttp
-import discord
 import logging
 from environ import BOT_KEY
 from src.utils.bot_types import Builder

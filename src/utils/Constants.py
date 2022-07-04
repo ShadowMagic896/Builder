@@ -53,6 +53,7 @@ class URLs:
     QUIZ_API: Final[str] = "https://quizapi.io/api/v1/questions"
     LIBRARY_API: Final[str] = "https://libraries.io/api"
     RTD: Final[str] = "https://readthedocs.org"
+    WFMARKET: Final[str] = "https://api.warframe.market/v1"
 
     RULE_34: Final[str] = "https://rule34.xxx/"
     NEKO_LIFE: Final[str] = "https://nekos.life/"

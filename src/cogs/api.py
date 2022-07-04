@@ -7,8 +7,9 @@ from copy import copy
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from selenium import webdriver
-from typing import List, Optional
+from typing import List, Literal, Optional
 from urllib.parse import quote_plus
+from zmq import ctx_opt_names
 
 from ..utils.api import evaulate_response
 from ..utils.bot_types import Builder, BuilderContext
@@ -16,6 +17,7 @@ from ..utils.constants import Timers, URLs
 from ..utils.coro import run
 from ..utils.embeds import format
 from ..utils.errors import NoDocumentsFound
+from ..utils.parse import quote
 from ..utils.subclass import BaseCog, Paginator
 from ..utils.types import RTFMCache
 
@@ -137,8 +139,29 @@ class API(BaseCog):
             results.append(discord.app_commands.Choice(name="en", value="en"))
 
         return results
-
+    
     @commands.hybrid_group()
+    async def api(self, ctx: BuilderContext):
+        pass
+    
+
+    @api.group()
+    async def wfmarket(self, ctx: BuilderContext):
+        pass
+
+    @wfmarket.command()
+    async def item(self, ctx: BuilderContext, item: str, platform: Optional[Literal["xbox", "pc", "ps4", "switch"]] = "pc"):
+        url = f"{URLs.WFMARKET}/items/{quote(item)}"
+        headers = {"Platform": platform}
+        response = await self.bot.session.get(url, headers=headers)
+        response.raise_for_status()
+
+        data = [WFItem(i) for i in await response.json()["payload"]["item"]["items_in_set"]]
+        embed.url = f"https://warframe.market/items/{quote(item)}"
+        commands.Bot().tree.error()
+
+
+    @api.group()
     async def openai(self, ctx: BuilderContext):
         pass
 
@@ -371,5 +394,14 @@ class RTFMPaginator(Paginator):
         return embed
 
 
+class WFMarketItemPaginator(Paginator):
+    def __init__(self, ctx: commands.Context, data: dict):
+        super().__init__(ctx, data["items_in_set"], 1)
+    
+    async def embed(self, inter: discord.Interaction):
+        return await format(
+            self.ctx,
+            title=f"{self.position + 1}: {self.values[self.position]}"
+        )
 async def setup(bot: Builder):
     await bot.add_cog(API(bot))
