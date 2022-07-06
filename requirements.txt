@@ -322,7 +322,7 @@ langdetect==1.0.9
 language-data==1.1
   - marisa-trie [required: >=0.7.7,<0.8.0, installed: 0.7.7]
     - setuptools [required: Any, installed: 58.1.0]
-lxml==4.8.0
+lxml==4.9.1
 morse-code==0.0.2
 motor==3.0.0
   - pymongo [required: >=4.1,<5, installed: 4.1.1]
