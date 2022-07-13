@@ -1,8 +1,9 @@
+import datetime
 import time
+import tkinter
 
 import aiohttp
 import asyncpg
-import datetime
 import discord
 import logging
 import openai
@@ -12,7 +13,7 @@ from settings import BLACKLIST_USERS, PREFIXES
 from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
 from webbrowser import Chrome
 
-from .extensions import full_reload, load_extensions
+from .extensions import load_extensions
 from .types import Cache
 
 
@@ -49,18 +50,42 @@ class Builder(commands.Bot):
         self.driver: Chrome
         self.session: aiohttp.ClientSession
         self.tree: BuilderTree
+        self.tkroot: tkinter.Tk
 
     async def reload_source(self) -> str:
         return await load_extensions(self)
 
     async def setup_hook(self) -> None:
         print("--- online ---")
+    
+    async def get_context(self, origin: Union[discord.Message, discord.Interaction], *, cls = None) -> Union[commands.Context, "BuilderContext"]:
+        print(cls, "getting context")
+        return await super().get_context(origin, cls=cls or BuilderContext)
 
 
 class BuilderContext(commands.Context, Generic[BotT]):
     def __init__(self, **data):
         self.bot: Builder = data["bot"]
         super().__init__(**data)
+    
+    async def format(self, title: str, desc: Optional[str] = None, color: discord.Color = discord.Color.teal()) -> discord.Embed:
+        delay: str = f"{round(self.bot.latency, 3) * 1000}ms"
+        author_name = str(self.author)
+        author_url: str = f"https://discord.com/users/{self.author.id}"
+        author_icon_url: str = self.author.display_avatar.url
+
+        embed = discord.Embed(
+            color=color,
+            title=title,
+            description=desc,
+            type="rich",
+            timestamp=datetime.datetime.now(),
+        )
+        embed.set_author(name=author_name, url=author_url, icon_url=author_icon_url)
+
+        embed.set_footer(text=f"{self.prefix}{self.command}  •  {delay}")
+
+        return embed
 
 
 class BuilderTree(discord.app_commands.CommandTree):
@@ -74,6 +99,8 @@ class BuilderTree(discord.app_commands.CommandTree):
                 "thinking": True,
                 "ephemeral": False,
             }
+            if interaction.command is None:
+                return True
             settings: Mapping[str, bool] = getattr(
                 interaction.command.callback, "defer", default
             )
@@ -87,6 +114,14 @@ class BuilderTree(discord.app_commands.CommandTree):
             for name, param in interaction.command._params.items():
                 if param.type == discord.AppCommandOptionType.attachment:
                     obj: discord.Attachment = getattr(interaction.namespace, name)
-                    if obj.size > 2**22:  # ~4MB
-                        raise commands.errors.BadArgument("Image is too large.")
+                    if obj is not None:
+                        if obj.size > 2**22:  # ~4MB
+                            raise commands.errors.BadArgument("Image is too large.")
         return interaction.user not in BLACKLIST_USERS
+    
+    async def format(self, title: str, desc: Optional[str] = None, color: discord.Color = discord.Color.teal()) -> discord.Embed | None:
+        try:
+            ctx = BuilderContext.from_interaction(self)
+        except ValueError:
+            return None
+        return await ctx.format(title, desc, color)

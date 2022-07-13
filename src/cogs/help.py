@@ -8,7 +8,7 @@ from typing import Any, List, Optional, Union
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import Cog, Command, Group
-from ..utils.embeds import format
+
 from ..utils.functions import explode
 from ..utils.subclass import BaseCog, BaseView, Paginator
 from ..utils.user_io import (
@@ -74,8 +74,7 @@ class Help(BaseCog):
             view.message = message
 
         else:
-            embed = await format(
-                ctx,
+            embed = await ctx.format(
                 title="Help",
                 desc="*%s*" % (await self.bot.application_info()).description,
             )
@@ -103,8 +102,7 @@ class Help(BaseCog):
         return await command_autocomplete(self.bot, inter, current)
 
     async def main_embed(self, ctx: BuilderContext, bot: Builder):
-        return await format(
-            ctx,
+        return await ctx.format(
             title="Help",
             desc="Hello there! {}\n**Cogs:** `{}`\n**Commands:** `{}`".format(
                 (await self.bot.application_info()).description,
@@ -161,8 +159,7 @@ class Help(BaseCog):
         as_strings.sort(key=str.__len__)
 
         parents = ", ".join(as_strings) or None
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title=f"`{command.qualified_name}`\nCog: `{command.cog_name}`\nGroup[s]: `{parents}`",
             desc=f"`/{command.qualified_name} {command.signature}`\n*{command.short_doc}*",
         )
@@ -187,8 +184,7 @@ class CommandView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return await format(
-            self.ctx, title=f"Commands: Page `{self.position+1}` of `{self.maxpos+1}`"
+        return await self.ctx.format( title=f"Commands: Page `{self.position+1}` of `{self.maxpos+1}`"
         )
 
     async def adjust(self, embed: discord.Embed):
@@ -211,8 +207,7 @@ class GroupView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return await format(
-            self.ctx,
+        return await self.ctx.format(
             title=f"`{self.group.name}`: Page `{self.position+1}` of `{self.maxpos+1}`",
         )
 

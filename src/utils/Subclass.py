@@ -27,7 +27,7 @@ class BaseCog(commands.Cog):
         logging.debug(f"Cog Loaded: {self.__class__.__module__}")
 
     async def cog_unload(self) -> None:
-        pass
+        logging.debug(f"Cog Unloaded: {self.__class__.__module__}")
 
     async def cog_command_error(
         self, ctx: BuilderContext[Builder], error: Exception
@@ -35,7 +35,7 @@ class BaseCog(commands.Cog):
         return await _interaction_error_handler(ctx.interaction, error)
 
     async def cog_check(self, ctx: BuilderContext[Builder]) -> bool:
-        return 1
+        return True
 
 
 class BaseView(discord.ui.View):
@@ -78,7 +78,7 @@ class BaseView(discord.ui.View):
 class Paginator(BaseView, Generic[SequenceT]):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: BuilderContext,
         values: SequenceT,
         pagesize: int,
         *,
@@ -150,8 +150,7 @@ class Paginator(BaseView, Generic[SequenceT]):
         """
         Should be overwritten to provide custom labeling
         """
-        return await format(
-            self.ctx, title=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`"
+        return await self.ctx.format( title=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`"
         )
 
     async def adjust(self, embed: discord.Embed):

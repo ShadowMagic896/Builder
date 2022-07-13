@@ -1,4 +1,5 @@
 import sys
+import tkinter
 
 import aiohttp
 import asyncio
@@ -153,10 +154,12 @@ async def prepare(bot: Builder) -> Builder:
     logging.info("Caches Aquired")
     bot.session = await aquire_connection()
     logging.info("Session Aquired")
+    bot.tkroot = tkinter.Tk()
+    logging.info("Tkinter Root Aquired")
     await ensure_db(bot)
     logging.info("Databases Verified")
     
-    await bot.reload_source()
+    await load_extensions(bot)
     logging.info("Startup Cogs Loaded")
 
     return bot

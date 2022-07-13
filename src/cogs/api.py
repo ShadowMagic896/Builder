@@ -7,17 +7,15 @@ from copy import copy
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from selenium import webdriver
-from typing import List, Literal, Optional
+from typing import List, Optional
 from urllib.parse import quote_plus
-from zmq import ctx_opt_names
 
 from ..utils.api import evaulate_response
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import Timers, URLs
 from ..utils.coro import run
-from ..utils.embeds import format
+
 from ..utils.errors import NoDocumentsFound
-from ..utils.parse import quote
 from ..utils.subclass import BaseCog, Paginator
 from ..utils.types import RTFMCache
 
@@ -161,21 +159,18 @@ class API(BaseCog):
         response: dict = await run(self.bot.openai.Completion.create, **preset)
         code: int = int(evaulate_response(response))
         if code == 0:
-            embed = await format(
-                ctx,
+            embed = await ctx.format(
                 title="This Text is Safe",
                 color=discord.Color.teal(),
             )
         elif code == 1:
-            embed = await format(
-                ctx,
+            embed = await ctx.format(
                 title="This text is sensitive.",
                 desc="This means that the text could be talking about a sensitive topic, something political, religious, or talking about a protected class such as race or nationality.",
                 color=discord.Color.yellow(),
             )
         else:
-            embed = await format(
-                ctx,
+            embed = await ctx.format(
                 title="This text is unsafe.",
                 desc="This means that the text contains profane language, prejudiced or hateful language, something that could be NSFW, or text that portrays certain groups/people in a harmful manner.",
                 color=discord.Color.red(),
@@ -195,7 +190,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.complete(message, stochasticism)
         response: dict = await run(self.bot.openai.Completion.create, **preset)
-        embed = await format(ctx, title="Completion Finished")
+        embed = await ctx.format(title="Completion Finished")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
@@ -217,7 +212,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.grammar(message, edits, stochasticism)
         response: dict = await run(self.bot.openai.Edit.create, **preset)
-        embed = await format(ctx, title="Checking Completed")
+        embed = await ctx.format(title="Checking Completed")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
@@ -242,7 +237,7 @@ class API(BaseCog):
         """
         preset = APIPresets.OpenAI.gen_edit(message, instructions, edits, stochasticism)
         response: dict = await run(self.bot.openai.Edit.create, **preset)
-        embed = await format(ctx, title="Editing Completed")
+        embed = await ctx.format(title="Editing Completed")
         for choice in response["choices"]:
             embed.add_field(name=f"Choice {choice['index']+1}:", value=choice["text"])
         await ctx.send(embed=embed)
@@ -361,8 +356,7 @@ class RTFMPaginator(Paginator):
         super().__init__(self.meta.ctx, self.meta.values, pagesize, timeout=timeout)
 
     async def embed(self, inter: discord.Interaction):
-        return await format(
-            self.ctx,
+        return await self.ctx.format(
             title=f"`{self.meta.project}`/`{self.meta.version}`: `{self.meta.query_raw}`\nPage `{self.position+1}` of `{self.maxpos+1}` [`{len(self.meta.values)}` Results]",
         )
 
@@ -383,8 +377,7 @@ class WFMarketItemPaginator(Paginator):
         super().__init__(ctx, data["items_in_set"], 1)
     
     async def embed(self, inter: discord.Interaction):
-        return await format(
-            self.ctx,
+        return await self.ctx.format(
             title=f"{self.position + 1}: {self.values[self.position]}"
         )
 async def setup(bot: Builder):

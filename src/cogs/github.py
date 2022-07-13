@@ -9,7 +9,7 @@ from environ import LIBRARY_KEY
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-from ..utils.embeds import format
+
 
 
 class GitHub(commands.Cog):
@@ -32,7 +32,7 @@ class GitHub(commands.Cog):
         json: dict = await response.json()
         if json.pop("error", None) is not None:
             raise commands.errors.BadArgument("Cannot find user")
-        embed = await format(ctx, title=f"Information on: {query}")
+        embed = await ctx.format(title=f"Information on: {query}")
 
         def at(x: str):
             parts = (
@@ -80,8 +80,7 @@ class GitHub(commands.Cog):
             filename="repo.diff",
             description="Builder's GitHub repository log",
         )
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Showing Git Log",
         )
         await ctx.send(embed=embed, file=file)

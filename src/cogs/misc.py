@@ -8,7 +8,7 @@ from unidecode import unidecode_expect_nonascii
 from ..utils import errors
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-from ..utils.embeds import format
+
 from ..utils.subclass import BaseCog, BaseView
 
 
@@ -27,7 +27,7 @@ class Misc(BaseCog):
         Converts a message into plain latin characters
         """
         decoded = unidecode_expect_nonascii(message, errors="ignore")
-        embed = await format(ctx, title="Message Decancered")
+        embed = await ctx.format(title="Message Decancered")
         embed.add_field(name="Before", value=message, inline=False)
         embed.add_field(name="After", value=decoded, inline=False)
         await ctx.send(embed=embed)
@@ -42,7 +42,7 @@ class Misc(BaseCog):
         json: dict = await response.json()
         quote: str = json["affirmation"]
 
-        embed = await format(ctx, title=quote)
+        embed = await ctx.format(title=quote)
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
@@ -63,7 +63,7 @@ class Misc(BaseCog):
 
         id_, advice = json["slip"]["id"], json["slip"]["advice"]
 
-        embed = await format(ctx, title=advice, desc=f"ID: `{id_}`")
+        embed = await ctx.format(title=advice, desc=f"ID: `{id_}`")
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
@@ -77,7 +77,7 @@ class Misc(BaseCog):
         if json["status"] != "success":
             raise errors.InternalError("Cannot reach API")
         view = NewImgView(ctx, url, lambda x: x["message"])
-        embed = await format(ctx)
+        embed = await ctx.format()
         embed.set_image(url=json["message"])
 
         view.message = await ctx.send(embed=embed, view=view)
@@ -92,7 +92,7 @@ class Misc(BaseCog):
         json = await response.json()
 
         view = NewImgView(ctx, url, lambda x: f"{URLs.CAT_API}/{x['url']}")
-        embed = await format(ctx)
+        embed = await ctx.format()
         embed.set_image(url=f"{URLs.CAT_API}/{json['url']}")
 
         view.message = await ctx.send(embed=embed, view=view)
@@ -106,7 +106,7 @@ class Misc(BaseCog):
         response = await self.bot.session.get(url, ssl=False)
         json = await response.json()
         view = NewImgView(ctx, url, lambda x: x["image"])
-        embed = await format(ctx)
+        embed = await ctx.format()
         embed.set_image(url=json["image"])
 
         view.message = await ctx.send(embed=embed, view=view)
@@ -120,7 +120,7 @@ class Misc(BaseCog):
         response = await self.bot.session.get(url, ssl=False)
         json = await response.json()
         view = NewImgView(ctx, url, lambda x: x["url"])
-        embed = await format(ctx)
+        embed = await ctx.format()
         embed.set_image(url=json["url"])
 
         view.message = await ctx.send(embed=embed, view=view)

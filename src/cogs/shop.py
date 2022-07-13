@@ -9,7 +9,7 @@ from typing import Any, Iterable, List, Optional, Union
 from ..utils.bot_types import BuilderContext
 from ..utils.constants import Emojis
 from ..utils.converters import Atom
-from ..utils.embeds import format
+
 from ..utils.errors import MissingFunds, MissingShopEntry, SelfAction, Unowned
 from ..utils.item_maps import Chemistry, get_atomic_name
 from ..utils.subclass import BaseCog, BaseView, Paginator
@@ -56,8 +56,7 @@ class Shop(BaseCog):
         identity = rec["identity"]
         await AtomsDatabase(ctx).give_atom(ctx.author, atom, -amount)
 
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Shop Listing Created!",
             desc=f"**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{Emojis.COIN_ID}\n**Listing ID:** `{identity}`",
         )
@@ -82,8 +81,7 @@ class Shop(BaseCog):
         atom = res["atomid"]
         amount = res["amount"]
         price = res["price"]
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Listing Successfully Removed",
             desc=f"***__Listing Information__***\n**Atom:** `{atomname}` [ID: `{atom}`]\n**Amount:** `{amount:,}`\n**Price:** `{price:,}`{Emojis.COIN_ID}\n**Listing ID:** `{listing}`",
         )
@@ -151,8 +149,7 @@ class Shop(BaseCog):
                 "A shop with this ID does not exist. Maybe it was deleted, or you misspelled something."
             )
 
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             desc=listing_information(shop),
         )
         view = PurchaseView(ctx, shop)
@@ -273,8 +270,7 @@ class ShopView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        embed = await format(
-            self.ctx, title=f"Shops: Page `{self.position+1}` / `{self.maxpos+1}`"
+        embed = await self.ctx.format( title=f"Shops: Page `{self.position+1}` / `{self.maxpos+1}`"
         )
         return embed
 
@@ -307,8 +303,7 @@ class PersonalShopView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        embed = await format(
-            self.ctx,
+        embed = await self.ctx.format(
             title=f"`{self.user}`'s Shops: Page `{self.position+1}` / `{self.maxpos+1}`",
         )
         return embed
@@ -343,8 +338,7 @@ class PurchaseView(BaseView):
         atoms = await adb.give_atom(self.ctx.author, rec["atomid"], rec["amount"])
         atomname = get_atomic_name(atoms["atomid"])
 
-        embed = await format(
-            self.ctx,
+        embed = await self.ctx.format(
             title="Shop Purchased!",
             desc=listing_information(rec)
             + f"\n**New balance:** `{new_balance:,}` [Before: `{bal:,}`{Emojis.COIN_ID}]\n**New Amount:** `{atomname}: {atoms['amount']}`",
@@ -363,8 +357,7 @@ class PurchaseView(BaseView):
         if result is None:
             raise MissingShopEntry("Cannot find shop, it was most likely deleted.")
         else:
-            embed = await format(
-                self.ctx,
+            embed = await ctx.format(
                 title="Listing Successfully Removed",
                 desc=listing_information(result),
             )

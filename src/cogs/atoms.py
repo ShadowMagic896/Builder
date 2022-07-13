@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import Atom
-from ..utils.embeds import format
+
 from ..utils.item_maps import Chemistry, get_atomic_name
 from ..utils.subclass import BaseCog, Paginator
 
@@ -56,8 +56,7 @@ class Atoms(BaseCog):
             [v for v in old if v["atomid"] == atom][0]["count"] if len(old) != 0 else 0
         )
         await AtomsDatabase(ctx).give_atom(user, atom, amount)
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title=f"Resources Given to `{user}`",
             desc=f"**Resource Name:** `{atomname}`\n**Resource ID:** `{atom}`\n**Old Amount:** `{old_amount:,}`\n**New Amount:** `{max(old_amount+amount, 0):,}`",
         )
@@ -242,8 +241,7 @@ class AtomsView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        embed = await format(
-            self.ctx,
+        embed = await self.ctx.format(
             title=f"{self.title}: Page `{self.position+1}` / `{self.maxpos+1}`",
         )
         return embed

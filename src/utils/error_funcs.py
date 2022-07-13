@@ -99,8 +99,7 @@ async def _interaction_error_handler(
     default: str = "An unknown error has occurred. Please use `/bug` to report this"
     hint: str = err_dir.get(type(error), default)
 
-    embed = await format(
-        commands.Context.from_interaction(inter),
+    embed = await (await BuilderContext.from_interaction(inter)).format(
         title=hint,
         desc=f"**Error:**\n`{error}`",
         color=discord.Color.red(),

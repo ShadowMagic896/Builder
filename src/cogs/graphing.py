@@ -12,7 +12,7 @@ from typing import Callable, Literal, Optional, Union
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import ListConverter
-from ..utils.embeds import format
+
 from ..utils.subclass import BaseCog
 
 
@@ -147,7 +147,7 @@ class Graphing(BaseCog):
         plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = await format(ctx, title="Data Loaded and Graphed")
+        embed = await ctx.format(title="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()
@@ -213,7 +213,7 @@ class Graphing(BaseCog):
         plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = await format(ctx, title="Data Loaded and Graphed")
+        embed = await ctx.format(title="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()
@@ -319,7 +319,7 @@ class Graphing(BaseCog):
             plt.savefig(buffer)
 
         buffer.seek(0)
-        embed = await format(ctx, title="Data Loaded and Graphed")
+        embed = await ctx.format(title="Data Loaded and Graphed")
         file = discord.File(buffer, filename="graph.png")
         await ctx.send(embed=embed, file=file)
         plt.cla()

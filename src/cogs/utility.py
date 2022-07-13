@@ -18,7 +18,7 @@ from typing import Any, List, Mapping, Optional, Tuple
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.checks import control_defer
 from ..utils.converters import TimeConvert
-from ..utils.embeds import format
+
 from ..utils.subclass import BaseCog, BaseModal, BaseView
 from ..utils.user_io import get_emoji
 
@@ -85,7 +85,7 @@ class Utility(BaseCog):
         )
 
         # print(results)
-        embed = await format(ctx, title="\N{Table Tennis Paddle and Ball} Pong!")
+        embed = await ctx.format(title="\N{Table Tennis Paddle and Ball} Pong!")
         for c, res in enumerate(results):
             embed.add_field(
                 name=f"**{res[0]}**",
@@ -106,7 +106,7 @@ class Utility(BaseCog):
         bb = "\n{s}{s}{s}".format(s="~")
 
         user = user if user else ctx.author
-        embed = await format(ctx, title="Information on {}".format(user))
+        embed = await ctx.format(title="Information on {}".format(user))
         made = (
             round(user.created_at.timestamp())
             if user.created_at is not None
@@ -143,8 +143,7 @@ class Utility(BaseCog):
         """
         b = "\n\\~\\~"
         bb = "\n\\~\\~\\~"
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Hello! I'm {}.".format(self.bot.user.name),
         )
         embed.add_field(
@@ -191,8 +190,7 @@ class Utility(BaseCog):
             if isinstance(found, discord.PartialMessage):
                 name = found.jump_url
 
-            embed = await format(
-                ctx,
+            embed = await ctx.format(
                 title="Object Found!",
             )
             embed.add_field(
@@ -225,8 +223,7 @@ class Utility(BaseCog):
 
         response = requests.request("GET", url, headers=headers, params=params)
         res = response.json()["list"]
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="`{}`: {} Definitions {}".format(
                 term, len(res), "[Showing 5]" if len(res) > 5 else ""
             ),
@@ -276,8 +273,7 @@ class Utility(BaseCog):
             dates.append(defi.get("date", "Unknown"))
             types.append(defi.get("fl", "Unknown"))
 
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
         )
         if len(defs) < 1:
             raise ValueError("Word not found/no definition")
@@ -309,8 +305,7 @@ class Utility(BaseCog):
             raise commands.errors.BadArgument(zone)
         else:
             time = pytz.timezone(zone)
-            embed = await format(
-                ctx=ctx,
+            embed = await ctx.format(
                 title="Current datetime in zone {}:".format(time.zone),
                 desc="```{}```".format(datetime.now(pytz.timezone(zone))),
             )
@@ -348,7 +343,7 @@ class Utility(BaseCog):
         """
         Customize and send an embed. Not just for bots!
         """
-        embed: discord.Embed = await format(ctx, title="Untitled")
+        embed: discord.Embed = await ctx.format(title="Untitled")
         embed.remove_footer()
         view = EmbedView(ctx, embed)
         view.message = await ctx.send(embed=embed, view=view, ephemeral=True)
@@ -391,8 +386,7 @@ else:
         buffer.write(bytes(data["stdout"][:EVALUATION_TRUNCATION_THRESHOLD], "UTF-8"))
         buffer.seek(0)
         file: discord.File = discord.File(buffer, filename="result.py")
-        embed = await format(
-            self.ctx,
+        embed = await self.ctx.format(
             title="Successful!" if data["returncode"] == 0 else "Error!",
             desc=f"```py\n{self.code.value}\n```",
             color=color,
@@ -697,8 +691,8 @@ class EmbedView(BaseView):
                     intermediary.callback = send_modal
                     view.add_item(intermediary)
 
-                    embed = await format(
-                        self.ctx, title="UwU click me zaddy :pleading:"
+                    embed = await self.ctx.format(
+                        title="UwU click me zaddy :pleading:"
                     )
                     await interaction.response.send_message(embed=embed, view=view)
                 else:
@@ -706,8 +700,8 @@ class EmbedView(BaseView):
                     new_button.callback = instance.blank
                     self.view.add_item(new_button)
 
-                    embed = await format(
-                        self.ctx, title=f"... and {len(self.view.children)} buttons"
+                    embed = await self.ctx.format(
+                        title=f"... and {len(self.view.children)} buttons"
                     )
                     await interaction.response.edit_message(embeds=[self.embed, embed])
 
@@ -746,8 +740,7 @@ class EmbedButtonCallbacks:
         await inter.user.add_roles(
             self.extra["role"], reason=f"Poll Button by {self.extra['author']}"
         )
-        embed = await format(
-            self.ctx, title="Role Added", desc=f"+ {self.extra['role'].name}"
+        embed = await self.ctx.format( title="Role Added", desc=f"+ {self.extra['role'].name}"
         )
         await inter.response.send_message(embed=embed, ephemeral=True)
 
@@ -786,8 +779,7 @@ class Counter(BaseModal):
         self.button.label = self.formatting.value.replace("COUNT", "0")
         self.view.add_item(self.button)
 
-        embed = await format(
-            self.ctx, title=f"... and {len(self.view.children)} buttons"
+        embed = await self.ctx.format( title=f"... and {len(self.view.children)} buttons"
         )
         # TODO Fix this when code is updated to paginator
         await inter.response.defer()
@@ -829,8 +821,7 @@ class RoleAdder(BaseModal):
         self.button.callback = instance.role_adder
         self.view.add_item(self.button)
 
-        embed = await format(
-            self.ctx, title=f"... and {len(self.view.children)} buttons"
+        embed = await self.ctx.format( title=f"... and {len(self.view.children)} buttons"
         )
         # TODO Fix this when code is updated to paginator
         await inter.response.defer()

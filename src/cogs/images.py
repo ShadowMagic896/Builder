@@ -61,8 +61,7 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "resize", (width, height)
         )
 
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Image successfully resized!",
             desc="File of dimensions (%s, %s) converted to file of dimensions (%s, %s)"
             % (ogsize[0], ogsize[1], width, height),
@@ -94,8 +93,7 @@ class Images(BaseCog):
         e: discord.Emoji = await ctx.guild.create_custom_emoji(
             name=name, image=buffer.read(), reason=reason
         )
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Emoji created!",
             desc="**Emoji:** %s\n**Name:** %s\n**Reason:** %s"
             % ("<:{}:{}>".format(e.name, e.id), e.name, reason),
@@ -129,7 +127,7 @@ class Images(BaseCog):
             (left, upper, right, lower),
         )
 
-        embed = await format(ctx, title="Image Cropped")
+        embed = await ctx.format(title="Image Cropped")
         file = discord.File(buffer, "crop.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -141,8 +139,7 @@ class Images(BaseCog):
         """
         Retrieves information about the image
         """
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Gathered Information",
         )
         embed.add_field(
@@ -190,7 +187,7 @@ class Images(BaseCog):
             expand=True,
         )
 
-        embed = await format(ctx, title="Image Rotated")
+        embed = await ctx.format(title="Image Rotated")
         file = discord.File(buffer, "rotate.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -221,7 +218,7 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "filter", filter
         )
 
-        embed = await format(ctx, title="Image Filter Applied")
+        embed = await ctx.format(title="Image Filter Applied")
         file = discord.File(buffer, "filter.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -245,7 +242,7 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "convert", "L"
         )
 
-        embed = await format(ctx, title="Conversion Complete")
+        embed = await ctx.format(title="Conversion Complete")
         file = discord.File(buffer, "gs.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -277,7 +274,7 @@ class Images(BaseCog):
             await PILFN.apply, await PILFN.buffer(image), "convert", mode
         )
 
-        embed = await format(ctx, title="Image Successfully Converted")
+        embed = await ctx.format(title="Image Successfully Converted")
         file = discord.File(buffer, "conv.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -297,7 +294,7 @@ class Images(BaseCog):
         array = np.array(img)
         array = 255 - array
         img = Image.frombuffer("RGB", (image.width, image.height), array)
-        embed = await format(ctx, title="Image Successfully Inverted")
+        embed = await ctx.format(title="Image Successfully Inverted")
         embed, file = await PILFN.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
 
@@ -312,8 +309,7 @@ class Images(BaseCog):
         """Enciphers an image using a passphrase, which can be deciphered later."""
         img = await WandImageFunctions.fromAttachment(image)
         await WandImageFunctions.apply(img.encipher, phrase)
-        embed = await format(
-            ctx, title="Image Enciphered", desc=f"Passphrase to decipher: ||{phrase}||"
+        embed = await ctx.format( title="Image Enciphered", desc=f"Passphrase to decipher: ||{phrase}||"
         )
         embed, file = await WandImageFunctions.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)
@@ -329,8 +325,7 @@ class Images(BaseCog):
         """Deciphers an image from a passphrase."""
         img = await WandImageFunctions.fromAttachment(image)
         await WandImageFunctions.apply(img.decipher, phrase)
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="Image Deciphered",
             desc=f"Passphrase used to decipher: ||{phrase}||\nIf it didn't come out correctly, remember to save, not copy, the image to decipher and that the passphase is case-sensitive.",
         )
@@ -346,7 +341,7 @@ class Images(BaseCog):
         buffer: BytesIO = await PILFN.buffer(image)
 
         view = ImageManipulateView(ctx, buffer)
-        embed = await format(ctx, title="Currently Applied Filters")
+        embed = await ctx.format(title="Currently Applied Filters")
         url = image.url or image.proxy_url or None
         if url is None:
             raise commands.errors.MessageNotFound("Cannot find image for message.")
@@ -419,7 +414,7 @@ class Images(BaseCog):
 
             await run(base.paste, im=im, box=box)
 
-        embed = await format(ctx, title="Colors Retrieved")
+        embed = await ctx.format(title="Colors Retrieved")
         embed, file = await PILFN.local_embed(embed, base)
         embed.set_thumbnail(url=image.url)
 
@@ -447,7 +442,7 @@ class Images(BaseCog):
         array[...] = array
         img = Image.fromarray(array, mode="RGBA")
 
-        embed = await format(ctx, title="Colors Swapped")
+        embed = await ctx.format(title="Colors Swapped")
         embed.add_field(name="From:", value=fromcolor)
         embed.add_field(name="To:", value=tocolor)
         embed, file = await PILFN.local_embed(embed, img)
@@ -473,7 +468,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Contrast", factor)
 
-        embed = await format(ctx, title="Image Successfully Edited")
+        embed = await ctx.format(title="Image Successfully Edited")
         file = discord.File(buffer, "cntr.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -493,7 +488,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Brightness", factor)
 
-        embed = await format(ctx, title="Image Successfully Edited")
+        embed = await ctx.format(title="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -513,7 +508,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Color", factor)
 
-        embed = await format(ctx, title="Image Successfully Edited")
+        embed = await ctx.format(title="Image Successfully Edited")
         file = discord.File(buffer, "brht.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -533,7 +528,7 @@ class Images(BaseCog):
         """
         buffer: BytesIO = PILFN.enhance(await PILFN.buffer(image), "Sharpness", factor)
 
-        embed = await format(ctx, title="Image Successfully Edited")
+        embed = await ctx.format(title="Image Successfully Edited")
         file = discord.File(buffer, "shrp.%s" % image.filename)
         await ctx.send(embed=embed, file=file)
 
@@ -546,8 +541,7 @@ class Images(BaseCog):
         Gets the avatar / profile picture of a member.
         """
         user = user if user else ctx.author
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title="%s's Avatar" % user.display_name,
             desc="[View Link](%s)" % user.display_avatar.url,
         )
@@ -561,8 +555,7 @@ class Images(BaseCog):
             async def get(self, inter: discord.Interaction, button: discord.ui.Button):
                 if inter.user.avatar is None:
                     inter.user.avatar = inter.user.default_avatar
-                embed = await format(
-                    ctx,
+                embed = await ctx.format(
                     title="%s's Avatar" % user,
                     desc=f"[View Link]({(user.avatar or inter.user.default_avatar).url})",
                 )
@@ -586,8 +579,7 @@ class Images(BaseCog):
             async def get(self, inter: discord.Interaction, button: discord.ui.Button):
                 if inter.user.avatar is None:
                     inter.user.avatar = inter.user.default_avatar
-                embed = await format(
-                    ctx,
+                embed = await ctx.format(
                     title="%s's Avatar" % user,
                     desc=f"[View Link]({user.display_avatar.url})",
                 )
@@ -727,8 +719,7 @@ class ImageManipulateView(BaseView):
         self.img.save(buffer)
         buffer.seek(0)
 
-        embed = await format(
-            self.ctx,
+        embed = await self.ctx.format(
             title="Effect Applied",
             desc=f"Total Effects: {', '.join(self.filters)}",
         )

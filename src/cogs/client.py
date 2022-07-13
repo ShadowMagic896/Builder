@@ -12,7 +12,7 @@ from typing import List, Optional
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
 from ..utils.converters import Cog, Command, Group
-from ..utils.embeds import format
+
 from ..utils.functions import explode
 from ..utils.subclass import BaseCog, BaseModal, BaseView
 from ..utils.user_io import (
@@ -44,7 +44,7 @@ class Client(BaseCog):
             permissions=discord.Permissions(0),
             scopes=["bot", "applications.commands"],
         )
-        embed = await format(ctx, title="Click the Button Below to Invite Me!")
+        embed = await ctx.format(title="Click the Button Below to Invite Me!")
         view = InviteView(link)
 
         await ctx.send(embed=embed, view=view)
@@ -93,8 +93,7 @@ class Client(BaseCog):
         Gets the source code for any of the bot's commands.
         """
         if not command and not group and not cog:
-            embed = await format(
-                ctx,
+            embed = await ctx.format(
                 title="Source Code!",
                 desc=f"[View on GitHub]({URLs.REPO})",
             )
@@ -107,7 +106,7 @@ class Client(BaseCog):
             src = inspect.getsource(src)
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
-            embed = await format(ctx, title=f"Source for Command: {command}")
+            embed = await ctx.format(title=f"Source for Command: {command}")
             file = discord.File(buffer, f"builder.{command}.py")
             await ctx.send(embed=embed, file=file)
         elif group:
@@ -118,7 +117,7 @@ class Client(BaseCog):
             buffer.write(src.encode("UTF-8"))
             buffer.seek(0)
 
-            embed = await format(ctx, title=f"Source for Group: {group.qualified_name}")
+            embed = await ctx.format(title=f"Source for Group: {group.qualified_name}")
             file = discord.File(buffer, f"builder.{group.qualified_name}.py")
             await ctx.send(embed=embed, file=file)
         elif cog:
@@ -126,7 +125,7 @@ class Client(BaseCog):
             buffer.write((inspect.getsource(cog.__class__)).encode("UTF-8"))
             buffer.seek(0)
 
-            embed = await format(ctx, title=f"Source for Cog: `{cog.name}`")
+            embed = await ctx.format(title=f"Source for Cog: `{cog.name}`")
             file = discord.File(buffer, f"builder.{cog.name}.py")
             await ctx.send(embed=embed, file=file)
 
@@ -154,8 +153,7 @@ class Client(BaseCog):
         Find out how long the bot has been online for
         """
         start = datetime.datetime.fromtimestamp(self.bot.start_unix)
-        embed = await format(
-            ctx, title=f"Last Restart: <t:{round(self.bot.start_unix)}:R>"
+        embed = await ctx.format( title=f"Last Restart: <t:{round(self.bot.start_unix)}:R>"
         )
         await ctx.send(embed=embed)
 
@@ -168,8 +166,7 @@ class Client(BaseCog):
         view.message = await ctx.send(embed=await Client.getAboutEmbed(ctx), view=view)
 
     async def getAboutEmbed(ctx: BuilderContext):
-        embed = await format(
-            ctx,
+        embed = await ctx.format(
             title=f"About: {ctx.bot.user}",
             desc=f"*{(await ctx.bot.application_info()).description}*",
         )
@@ -289,7 +286,7 @@ class ServerInformation(BaseView):
 
     @discord.ui.button(label="Server Information", emoji="\N{DESKTOP COMPUTER}")
     async def server_info(self, inter: discord.Interaction, button: discord.ui.Button):
-        embed = await format(self.ctx, title="Server Information")
+        embed = await self.ctx.format(title="Server Information")
         freq = psutil.cpu_freq(percpu=False)
         values = psutil.disk_io_counters(perdisk=True)
         for name, disk in values.items():

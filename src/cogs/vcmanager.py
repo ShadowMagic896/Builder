@@ -4,7 +4,7 @@ from settings import DEVELOPMENT_GUILD_IDS
 from typing import Dict, List, NamedTuple
 
 from ..utils.bot_types import BuilderContext
-from ..utils.embeds import format
+
 from ..utils.subclass import BaseCog
 
 

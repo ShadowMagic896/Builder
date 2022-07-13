@@ -22,7 +22,7 @@ def format_path(path: str):
 
 
 async def load_extensions(
-    bot: Any, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, **opts
+    bot: commands.Bot, ext_dirs: Iterable[Path] = EXT_DIRECTORIES, **opts
 ) -> str:
     ignore: bool = opts.get("ignore_errors", True)
 
@@ -36,9 +36,11 @@ async def load_extensions(
         if path.startswith("_"):
             continue
         try:
+            print(f"load {path}")
             await bot.load_extension(path)
 
         except discord.ext.commands.errors.ExtensionAlreadyLoaded:
+            print("reload")
             await bot.reload_extension(path)
 
         except BaseException as e:

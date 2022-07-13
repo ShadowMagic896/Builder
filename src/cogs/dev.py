@@ -8,7 +8,7 @@ from subprocess import Popen
 from typing import List
 
 from ..utils.bot_types import Builder, BuilderContext
-from ..utils.embeds import format
+
 from ..utils.extensions import extend_dir
 from ..utils.functions import explode
 from ..utils.stats import Stats
@@ -45,8 +45,7 @@ class Dev(BaseCog):
             for guild in DEVELOPMENT_GUILD_IDS:
                 cmds = await ctx.bot.tree.sync(guild=discord.Object(guild))
                 log += f"**~ GUILD {guild}:** {len(cmds)} BASE"
-        embed = await format(
-            ctx, title=f"Synced Commands {type_}", desc=log or discord.utils.MISSING
+        embed = await ctx.format( title=f"Synced Commands {type_}", desc=log or discord.utils.MISSING
         )
         await ctx.send(embed=embed)
         print(f"--- {'g' if glob else 'l'}_sync ---")
@@ -56,7 +55,7 @@ class Dev(BaseCog):
     async def reload(self, ctx: BuilderContext):
         log: str = await self.bot.reload_source()
 
-        embed = await format(ctx, title="All Files Reloaded.", desc=log)
+        embed = await ctx.format(title="All Files Reloaded.", desc=log)
 
         activity: discord.Activity = discord.Activity(
             type=discord.ActivityType.watching,
