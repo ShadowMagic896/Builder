@@ -380,5 +380,6 @@ class WFMarketItemPaginator(Paginator):
         return await self.ctx.format(
             title=f"{self.position + 1}: {self.values[self.position]}"
         )
+        
 async def setup(bot: Builder):
     await bot.add_cog(API(bot))

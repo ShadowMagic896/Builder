@@ -29,7 +29,7 @@ from settings import (
     START_DOCKER_ON_STARTUP,
 )
 from types import FrameType
-from typing import Any, Callable, Iterable, Iterator, Tuple
+from typing import Any, Callable, Coroutine, Iterable, Iterator, Tuple
 from urllib.parse import quote_plus
 
 from .bot_types import Builder
@@ -165,7 +165,7 @@ async def prepare(bot: Builder) -> Builder:
     return bot
 
 
-def start(main: Callable) -> None:
+def start(main: Coroutine) -> None:
     freeze_support()
     setup_logging()
     inital: bool = True

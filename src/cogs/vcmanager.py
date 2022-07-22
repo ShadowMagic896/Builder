@@ -3,7 +3,7 @@ from discord.ext import commands
 from settings import DEVELOPMENT_GUILD_IDS
 from typing import Dict, List, NamedTuple
 
-from ..utils.bot_types import BuilderContext
+from ..utils.bot_types import Builder, BuilderContext
 
 from ..utils.subclass import BaseCog
 
@@ -19,12 +19,12 @@ class Emojis:
 class ActiveChannel(NamedTuple):
     channel: discord.TextChannel
     owner_id: int
-
-active_channels: List[ActiveChannel] = []
-
 class VCManager(BaseCog):
+    def __init__(self, bot: Builder):
+        self.active_channels: List[ActiveChannel] = []
+
     @commands.Cog.listener()
-    async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         if after.channel is not None and after.channel.id == STARTER: # Moved to starter channel
             overwrites = discord.PermissionOverwrite()
             overwrites.speak = True
@@ -34,11 +34,11 @@ class VCManager(BaseCog):
                 overwrites={member: overwrites}
             )
             await member.move_to(channel)
-            active_channels.append(ActiveChannel(channel, member.id))
-        elif active := [c for c in active_channels if c.channel == before.channel]:
+            self.active_channels.append(ActiveChannel(channel, member.id))
+        elif active := [c for c in self.active_channels if c.channel == before.channel]:
             if len(active[0].channel.members) == 0:
                 await active[0].channel.delete()
-                active_channels.remove(active[0])
+                self.active_channels.remove(active[0])
 
     @commands.hybrid_command()
     @commands.is_owner()
@@ -112,7 +112,7 @@ class ControllerView(discord.ui.View):
         # Assuming I have the correct ID here, this will never be None
 
         active = discord.utils.get(
-            active_channels,
+            self.active_channels,
             owner_id=inter.user.id,
         )
         if active is None:
@@ -130,4 +130,5 @@ class ControllerView(discord.ui.View):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(VCManager(bot))
+    pass
+    # await bot.add_cog(VCManager(bot))
