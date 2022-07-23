@@ -1,27 +1,26 @@
-import time
-
-import aiohttp
 import asyncio
-import discord
-import environ
 import io
-import pytz
-import requests
+import time
 import warnings
 from datetime import datetime
-from discord.app_commands import describe
-from discord.ext import commands
-from settings import EVALUATION_TRUNCATION_THRESHOLD
 from textwrap import indent
 from typing import Any, List, Mapping, Optional, Tuple
+
+import aiohttp
+import discord
+import pytz
+import requests
+from discord.app_commands import describe
+from discord.ext import commands
+
+import environ
+from settings import EVALUATION_TRUNCATION_THRESHOLD
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.checks import control_defer
 from ..utils.converters import TimeConvert
-
 from ..utils.subclass import BaseCog, BaseModal, BaseView
 from ..utils.user_io import get_emoji
-
 
 warnings.filterwarnings("error")
 
@@ -273,8 +272,7 @@ class Utility(BaseCog):
             dates.append(defi.get("date", "Unknown"))
             types.append(defi.get("fl", "Unknown"))
 
-        embed = await ctx.format(
-        )
+        embed = await ctx.format()
         if len(defs) < 1:
             raise ValueError("Word not found/no definition")
 
@@ -691,9 +689,7 @@ class EmbedView(BaseView):
                     intermediary.callback = send_modal
                     view.add_item(intermediary)
 
-                    embed = await self.ctx.format(
-                        title="UwU click me zaddy :pleading:"
-                    )
+                    embed = await self.ctx.format(title="UwU click me zaddy :pleading:")
                     await interaction.response.send_message(embed=embed, view=view)
                 else:
                     instance = EmbedButtonCallbacks(self.ctx, self.view, self.embed, {})
@@ -740,7 +736,8 @@ class EmbedButtonCallbacks:
         await inter.user.add_roles(
             self.extra["role"], reason=f"Poll Button by {self.extra['author']}"
         )
-        embed = await self.ctx.format( title="Role Added", desc=f"+ {self.extra['role'].name}"
+        embed = await self.ctx.format(
+            title="Role Added", desc=f"+ {self.extra['role'].name}"
         )
         await inter.response.send_message(embed=embed, ephemeral=True)
 
@@ -779,7 +776,8 @@ class Counter(BaseModal):
         self.button.label = self.formatting.value.replace("COUNT", "0")
         self.view.add_item(self.button)
 
-        embed = await self.ctx.format( title=f"... and {len(self.view.children)} buttons"
+        embed = await self.ctx.format(
+            title=f"... and {len(self.view.children)} buttons"
         )
         # TODO Fix this when code is updated to paginator
         await inter.response.defer()
@@ -821,7 +819,8 @@ class RoleAdder(BaseModal):
         self.button.callback = instance.role_adder
         self.view.add_item(self.button)
 
-        embed = await self.ctx.format( title=f"... and {len(self.view.children)} buttons"
+        embed = await self.ctx.format(
+            title=f"... and {len(self.view.children)} buttons"
         )
         # TODO Fix this when code is updated to paginator
         await inter.response.defer()

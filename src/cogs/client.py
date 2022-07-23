@@ -1,25 +1,22 @@
-import aiofiles
 import datetime
-import discord
 import inspect
 import io
+from typing import List, Optional
+
+import aiofiles
+import discord
 import psutil
 from discord import Interaction, TextInput, ui
 from discord.app_commands import describe
 from discord.ext import commands
-from typing import List, Optional
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
 from ..utils.converters import Cog, Command, Group
-
 from ..utils.functions import explode
 from ..utils.subclass import BaseCog, BaseModal, BaseView
-from ..utils.user_io import (
-    cog_autocomplete,
-    command_autocomplete,
-    group_autocomplete,
-)
+from ..utils.user_io import (cog_autocomplete, command_autocomplete,
+                             group_autocomplete)
 
 
 class Client(BaseCog):
@@ -153,7 +150,8 @@ class Client(BaseCog):
         Find out how long the bot has been online for
         """
         start = datetime.datetime.fromtimestamp(self.bot.start_unix)
-        embed = await ctx.format( title=f"Last Restart: <t:{round(self.bot.start_unix)}:R>"
+        embed = await ctx.format(
+            title=f"Last Restart: <t:{round(self.bot.start_unix)}:R>"
         )
         await ctx.send(embed=embed)
 

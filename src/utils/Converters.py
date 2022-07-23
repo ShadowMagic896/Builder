@@ -1,20 +1,16 @@
-import aiohttp
 import asyncio
-import discord
-import numpy as np
 import re
-from discord.ext import commands
-from discord.ext.commands import Context
 from typing import Any, List, Literal, Optional, Set, Type, Union
 
+import aiohttp
+import discord
+import numpy as np
+from discord.ext import commands
+from discord.ext.commands import Context
+
 from .constants import Cogs
-from .errors import (
-    ForbiddenData,
-    MissingCog,
-    MissingCommand,
-    MissingGroup,
-    ScopeError,
-)
+from .errors import (ForbiddenData, MissingCog, MissingCommand, MissingGroup,
+                     ScopeError)
 from .functions import find_url
 from .item_maps import Chemistry, get_atomic_name
 

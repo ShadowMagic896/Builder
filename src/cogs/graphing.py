@@ -1,18 +1,17 @@
+import io
 import math
+from copy import copy
+from typing import Callable, Literal, Optional, Union
 
 import discord
-import io
 import numpy as np
 import simpleeval
-from copy import copy
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from matplotlib import pyplot as plt
-from typing import Callable, Literal, Optional, Union
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import ListConverter
-
 from ..utils.subclass import BaseCog
 
 

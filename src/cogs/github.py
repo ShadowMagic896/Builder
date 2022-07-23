@@ -1,15 +1,15 @@
-import time
-
 import asyncio
-import discord
 import os
+import time
 from asyncio.subprocess import Process
+
+import discord
 from discord.ext import commands
+
 from environ import LIBRARY_KEY
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-
 
 
 class GitHub(commands.Cog):

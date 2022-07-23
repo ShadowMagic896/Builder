@@ -4,12 +4,10 @@ class InternalError(BaseException):
     """
 
 
-
 class TooManyArguments(BaseException):
     """
     Raised internally for when too many kwargs are speficied for a method.
     """
-
 
 
 class MissingArguments(BaseException):
@@ -18,12 +16,10 @@ class MissingArguments(BaseException):
     """
 
 
-
 class MissingShopEntry(BaseException):
     """
     Raised when a shop is not found, is but attempted to be acted upon.
     """
-
 
 
 class MissingFunds(BaseException):
@@ -32,12 +28,10 @@ class MissingFunds(BaseException):
     """
 
 
-
 class SelfAction(BaseException):
     """
     Raised when a user tries to do an invalid action on themselves.
     """
-
 
 
 class Unowned(BaseException):
@@ -46,12 +40,10 @@ class Unowned(BaseException):
     """
 
 
-
 class MissingCog(BaseException):
     """
     Raised when a user inputs an invalid cog.
     """
-
 
 
 class MissingGroup(BaseException):
@@ -66,12 +58,10 @@ class MissingCommand(BaseException):
     """
 
 
-
 class ForbiddenData(BaseException):
     """
     Raised when a user tries to access forbidden commands or cogs
     """
-
 
 
 class ContainerAlreadyRunning(BaseException):
@@ -80,12 +70,10 @@ class ContainerAlreadyRunning(BaseException):
     """
 
 
-
 class ScopeError(BaseException):
     """
     Raised when a user tries to run a command in the incorrect place
     """
-
 
 
 class SessionInProgress(BaseException):
@@ -94,16 +82,13 @@ class SessionInProgress(BaseException):
     """
 
 
-
 class NoDocumentsFound(BaseException):
     """
     Raised when no results for a RTFM search are found
     """
 
 
-
 class Fatal(BaseException):
     """
     Raised when a fatal internal exception occurs
     """
-

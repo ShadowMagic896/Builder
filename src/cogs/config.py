@@ -1,4 +1,6 @@
-import discord
+from typing import Any
+
+import asyncpg
 from discord.app_commands import describe
 from discord.ext import commands
 
@@ -7,37 +9,39 @@ from ..utils.subclass import BaseCog
 
 
 class Config(BaseCog):
+    """Change the bot's configuration"""
+
     def __init__(self, bot: Builder) -> None:
         self.cfdb = ConfigureDatabase(bot)
         super().__init__(bot)
-    """Change the bot's configuration"""
+
     def ge(self) -> str:
         return "\N{GEAR}"
-    
+
     @commands.hybrid_group()
     async def config(self, ctx: BuilderContext):
         pass
 
-    @config.group()
+    @config.group(name="set")
     @commands.has_permissions(administrator=True)
-    async def change(self, ctx: BuilderContext):
+    async def set_(self, ctx: BuilderContext):
         pass
 
-    @change.command()
-    @describe(toggle="New value")
-    async def nsfw(self, ctx: BuilderContext, toggle: bool):
+    @set_.command(name="nsfw")
+    @describe(toggle="New value for the setting")
+    async def set_nsfw(self, ctx: BuilderContext, toggle: bool):
         """
         Whether to allow NSFW commands to be used in this server. Never allowed in non-nsfw channels
         """
         value = await self.cfdb.set_value(ctx.guild.id, "nsfw", str(toggle))
         await ctx.send(str(value))
 
-    @config.group()
+    @config.group(name="get")
     async def get(self, ctx: BuilderContext):
         pass
 
-    @get.command()
-    async def nsfw(self, ctx: BuilderContext):
+    @get.command(name="nsfw")
+    async def get_nsfw(self, ctx: BuilderContext):
         """
         Whether to allow NSFW commands to be used in this server. Never allowed in non-nsfw channels
         """
@@ -50,7 +54,7 @@ class ConfigureDatabase:
         self.bot = bot
         self.apg = bot.apg
 
-    async def set_value(self, guild_id: int, key: str, value: str):
+    async def set_value(self, guild_id: int, key: str, value: str) -> asyncpg.Record:
         command = """
             INSERT INTO config
             VALUES (
@@ -64,15 +68,16 @@ class ConfigureDatabase:
                 WHERE guildid=$1
             RETURNING *
         """
-        return await self.apg.fetchrow(command, guild_id, key, value)  
+        return await self.apg.fetchrow(command, guild_id, key, value)
 
-    async def get_value(self, guild_id: int, key: str):
+    async def get_value(self, guild_id: int, key: str) -> Any:
         command = """
             SELECT value
             FROM config
             WHERE guildid=$1 AND key=$2
         """
         return await self.apg.fetchrow(command, guild_id, key)
+
 
 async def setup(bot: Builder):
     await bot.add_cog(Config(bot))

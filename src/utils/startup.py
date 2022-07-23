@@ -1,36 +1,31 @@
-import sys
-import tkinter
-
-import aiohttp
 import asyncio
-import asyncpg
-import discord
 import logging
 import os
+import sys
+import tkinter
 import traceback
 import warnings
-from PIL import ImageFont
-from discord.ext import commands
-from environ import DB_PASSWORD, DB_USERNAME
 from multiprocessing import freeze_support
 from pathlib import Path
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from settings import (
-    GLOBAL_CHECKS,
-    IGNORED_GLOBALLY_CHECKED_COMMANDS,
-    IGNORED_INHERITED_GROUP_CHECKS,
-    INHERIT_GROUP_CHECKS,
-    LOAD_COGS_ON_STARTUP,
-    LOAD_JISHAKU,
-    LOGGING_LEVEL,
-    SOURCE_CODE_PATHS,
-    START_DOCKER_ON_STARTUP,
-)
 from types import FrameType
 from typing import Any, Callable, Coroutine, Iterable, Iterator, Tuple
 from urllib.parse import quote_plus
+
+import aiohttp
+import asyncpg
+import discord
+import pytenno
+from discord.ext import commands
+from PIL import ImageFont
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+
+from environ import DB_PASSWORD, DB_USERNAME
+from settings import (GLOBAL_CHECKS, IGNORED_GLOBALLY_CHECKED_COMMANDS,
+                      IGNORED_INHERITED_GROUP_CHECKS, INHERIT_GROUP_CHECKS,
+                      LOAD_COGS_ON_STARTUP, LOAD_JISHAKU, LOGGING_LEVEL,
+                      SOURCE_CODE_PATHS, START_DOCKER_ON_STARTUP)
 
 from .bot_types import Builder
 from .coro import run
@@ -41,7 +36,6 @@ from .external import snekbox_exec
 from .functions import explode
 from .stats import Stats
 from .types import Cache, Fonts
-
 
 warnings.filterwarnings("error")
 
@@ -136,7 +130,6 @@ async def prepare(bot: Builder) -> None:
         await bot.load_extension("jishaku")
         logging.info("Cog Loaded: Jishaku")
 
-
     if START_DOCKER_ON_STARTUP:
         await snekbox_exec()
         logging.info("Snekbox Executed")
@@ -158,11 +151,12 @@ async def prepare(bot: Builder) -> None:
     logging.info("Tkinter Root Aquired")
     await ensure_db(bot)
     logging.info("Databases Verified")
-    
+    bot.tenno = await pytenno.PyTenno().__aenter__()
+    logging.info("Tenno Aquired")
     await load_extensions(bot)
     logging.info("Startup Cogs Loaded")
 
-    logging.info("Startup Complete")
+    logging.info("\nStartup Complete")
 
 
 def start(main: Coroutine) -> None:
@@ -172,9 +166,11 @@ def start(main: Coroutine) -> None:
     last_error: Exception = ...
     while (
         inital
-        or (last := input(
-            f"\nENDED WITH FATAL ERROR: {last_error}\nRestart bot? (Y/N/V)\n  | "
-        ).lower())
+        or (
+            last := input(
+                f"\nENDED WITH FATAL ERROR: {last_error}\nRestart bot? (Y/N/V)\n  | "
+            ).lower()
+        )
         == "y"
     ):
         if inital:
@@ -190,6 +186,7 @@ def start(main: Coroutine) -> None:
         format_error_stack(traceback.walk_stack(None))
     sys.exit()
 
+
 def format_error_stack(summary: Iterator[Tuple[FrameType, int]]):
     for frame, line in summary:
         msg: str = f"""
@@ -201,6 +198,7 @@ Frame:
 ~~ {frame.f_lineno, line}
 """
         sys.stderr.write(msg)
+
 
 def setup_logging() -> None:
     format: str = "%(name)s @ %(asctime)s !%(levelno)s: %(message)s"

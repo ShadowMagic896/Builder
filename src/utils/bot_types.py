@@ -1,21 +1,22 @@
 import datetime
+import logging
 import time
 import tkinter
+from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
+from webbrowser import Chrome
 
 import aiohttp
 import asyncpg
 import discord
-import logging
 import openai
+import pytenno
 from discord.ext import commands
+
 from environ import APPLICATION_ID, OPENAI_KEY
 from settings import BLACKLIST_USERS, PREFIXES
-from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
-from webbrowser import Chrome
 
 from .extensions import load_extensions
 from .types import Cache
-
 
 _Bot = Union[commands.Bot, commands.AutoShardedBot]
 BotT = TypeVar("BotT", bound=_Bot, covariant=True)
@@ -25,8 +26,13 @@ class BuilderContext(commands.Context, Generic[BotT]):
     def __init__(self, **data):
         self.bot: Builder = data["bot"]
         super().__init__(**data)
-    
-    async def format(self, title: str, desc: Optional[str] = None, color: discord.Color = discord.Color.teal()) -> discord.Embed:
+
+    async def format(
+        self,
+        title: str,
+        desc: Optional[str] = None,
+        color: discord.Color = discord.Color.teal(),
+    ) -> discord.Embed:
         delay: str = f"{round(self.bot.latency, 3) * 1000}ms"
         author_name = str(self.author)
         author_url: str = f"https://discord.com/users/{self.author.id}"
@@ -41,7 +47,9 @@ class BuilderContext(commands.Context, Generic[BotT]):
         )
         embed.set_author(name=author_name, url=author_url, icon_url=author_icon_url)
 
-        embed.set_footer(text=f"{self.prefix}{self.command}  •  {delay}")
+        embed.set_footer(
+            text=f"{self.message.content or self.prefix + self.command.qualified_name}  •  {delay}"
+        )
 
         return embed
 
@@ -76,14 +84,17 @@ class Builder(commands.Bot):
         self.session: aiohttp.ClientSession
         self.tree: BuilderTree
         self.tkroot: tkinter.Tk
+        self.tenno: pytenno.PyTenno
 
     async def reload_source(self) -> str:
         return await load_extensions(self)
 
     async def setup_hook(self) -> None:
         print("--- online ---")
-    
-    async def get_context(self, origin: Union[discord.Message, discord.Interaction], *, cls = BuilderContext) -> Union[commands.Context, BuilderContext]:
+
+    async def get_context(
+        self, origin: Union[discord.Message, discord.Interaction], *, cls=BuilderContext
+    ) -> Union[commands.Context, BuilderContext]:
         return await super().get_context(origin, cls=cls)
 
 
@@ -117,8 +128,13 @@ class BuilderTree(discord.app_commands.CommandTree):
                         if obj.size > 2**22:  # ~4MB
                             raise commands.errors.BadArgument("Image is too large.")
         return interaction.user not in BLACKLIST_USERS
-    
-    async def format(self, title: str, desc: Optional[str] = None, color: discord.Color = discord.Color.teal()) -> discord.Embed | None:
+
+    async def format(
+        self,
+        title: str,
+        desc: Optional[str] = None,
+        color: discord.Color = discord.Color.teal(),
+    ) -> discord.Embed | None:
         try:
             ctx = BuilderContext.from_interaction(self)
         except ValueError:

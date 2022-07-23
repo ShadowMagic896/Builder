@@ -1,17 +1,16 @@
+import difflib
 import sys
+import traceback
+from typing import Any, Optional, Union
 
 import discord
-import traceback
 from discord.ext import commands
 from discord.ext.commands import errors as de
-from settings import (
-    CATCH_ERRORS,
-    MODERATE_JISHAKU_COMMANDS,
-    PRINT_COMMAND_ERROR_TRACKEBACK,
-    PRINT_EVENT_ERROR_TRACEACK,
-)
 from simpleeval import NumberTooHigh
-from typing import Any, Optional, Union
+
+from settings import (CATCH_ERRORS, MODERATE_JISHAKU_COMMANDS,
+                      PRINT_COMMAND_ERROR_TRACKEBACK,
+                      PRINT_EVENT_ERROR_TRACEACK)
 
 from . import errors as be
 from .bot_types import BuilderContext
@@ -28,9 +27,11 @@ async def on_command_error(ctx: commands.Context, error: Exception):
     print("on_command_error")
     if PRINT_COMMAND_ERROR_TRACKEBACK:
         sys.stderr.write(
-            f"[COMMAND ERROR]\n{ctx.command.qualified_name} with {ctx.args}"
+            f"[COMMAND ERROR]\n{(ctx.command or type('x', (), {'qualified_name': None})).qualified_name} with {ctx.args}"
         )
         traceback.print_tb(error.__traceback__, file=sys.stderr)
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send(embed=await did_you_mean(ctx))
     return await _interaction_error_handler(ctx.interaction, error)
 
 
@@ -40,9 +41,12 @@ async def on_tree_error(interaction: discord.Interaction, error: Exception):
 
 
 async def _interaction_error_handler(
-    inter: discord.Interaction, error: Exception = None
+    inter: discord.Interaction | None, error: Exception = None
 ):
+    print("Type:", type(error))
     print("_interaction_error_handler")
+    if inter is None:
+        return
     if not CATCH_ERRORS:
         raise error
     if not MODERATE_JISHAKU_COMMANDS and "jishaku" in str(error):
@@ -64,7 +68,6 @@ async def _interaction_error_handler(
         IOError: "You gave an incorrect parameter for a file",
         TimeoutError: "This has timed out. Next time, try to be quicker",
         NumberTooHigh: "Your number is too big for me to compute",
-        
         de.BadArgument: "You passed an invalid option",
         de.CommandNotFound: "I couldn't find that command. Try `/help`",
         de.CommandOnCooldown: "Slow down! You can't use that right now",
@@ -73,10 +76,8 @@ async def _interaction_error_handler(
         de.MissingRequiredArgument: "You need to supply more information to use that command",
         de.NSFWChannelRequired: "You must be in an NSFW channel to use that",
         de.UserNotFound: "That user was not found in discord",
-
         discord.Forbidden: "I'm not allowed to do that",
         discord.NotFound: "I couldn't find that. Try `/help`, or check the error for more info",
-
         be.ContainerAlreadyRunning: "You are already running a container",
         be.Fatal: "A fatal error has occurred. Ouch",
         be.ForbiddenData: "You cannot access this data",
@@ -114,12 +115,21 @@ async def handle_modal_error(interaction: discord.Interaction, error: Exception)
 
 
 class GetCogHelp(discord.ui.View):
-    def __init__(self, ctx: BuilderContext, command: commands.Command, error_embed: discord.Embed, timeout: Optional[float] = 900):
+    def __init__(
+        self,
+        ctx: BuilderContext,
+        command: commands.Command,
+        error_embed: discord.Embed,
+        timeout: Optional[float] = 900,
+    ):
         self.embed = error_embed
         self.command = command
         super().__init__(ctx, timeout)
-    
-    @discord.ui.button(label="View Help", style=discord.ButtonStyle.blurple,)
+
+    @discord.ui.button(
+        label="View Help",
+        style=discord.ButtonStyle.blurple,
+    )
     async def view_help(self, inter: discord.Interaction, button: discord.ui.Button):
         cog = self.ctx.bot.cogs["Help"]
         ext = self.ctx.bot.extensions["help"]
@@ -127,3 +137,21 @@ class GetCogHelp(discord.ui.View):
         view = await ext.CommandView(self.ctx, self.command.cog)
 
         await inter.response.edit_message(embeds=[embed, self.embed], view=view)
+
+
+async def did_you_mean(ctx: BuilderContext):
+    print(ctx.message.content.lstrip(ctx.prefix))
+    matches = difflib.get_close_matches(
+        ctx.message.content.lstrip(ctx.prefix),  # Remove the leading `/`
+        [c.qualified_name for c in ctx.bot.commands],
+        n=10,
+        cutoff=0.25,
+    )
+
+    names = "\n".join([f"{ctx.prefix}{match}" for match in matches])
+    embed = await ctx.format(
+        title="Command Not Found",
+        desc=f"Did you mean...\n{names}",
+        color=discord.Color.red(),
+    )
+    return embed

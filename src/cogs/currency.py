@@ -1,17 +1,18 @@
+import random
+from typing import Any, List, Optional, Union
+
 import aiohttp
 import asyncpg
 import discord
-import environ
-import random
 from discord import Interaction
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from discord.ext.commands import parameter
-from typing import Any, List, Optional, Union
+
+import environ
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import Emojis, Rates, URLs
-
 from ..utils.subclass import BaseCog, BaseModal, BaseView, Paginator
 
 
@@ -46,8 +47,7 @@ class Currency(BaseCog):
         db = BalanceDatabase(ctx)
         rec = await db.get_balance(user)
 
-        embed = await ctx.format( title=f"`{user}`'s Balance: `{rec:,}`{Emojis.COIN_ID}"
-        )
+        embed = await ctx.format(title=f"`{user}`'s Balance: `{rec:,}`{Emojis.COIN_ID}")
         await ctx.send(embed=embed)
 
     @cur.command()
@@ -257,7 +257,8 @@ class Currency(BaseCog):
         """
         Take a quiz to earn some coins!
         """
-        embed = await ctx.format( title="Select Options", desc="Once you are finished, press `Start`"
+        embed = await ctx.format(
+            title="Select Options", desc="Once you are finished, press `Start`"
         )
         view = StartQuizView(ctx)
         view.message = await ctx.send(embed=embed, view=view)

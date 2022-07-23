@@ -1,14 +1,15 @@
-import discord
-import pyfiglet
 import random
-from discord.app_commands import Range, describe
-from discord.ext import commands
-from pyfiglet import Figlet
 from random import random
 from typing import List
 
+import discord
+import pyfiglet
+from discord.app_commands import Range, describe
+from discord.ext import commands
+from pyfiglet import Figlet
+
 from ..utils.bot_types import Builder, BuilderContext
-from ..utils.embeds import Desc, format
+from ..utils.embeds import Desc
 from ..utils.subclass import BaseCog
 
 
@@ -263,7 +264,12 @@ class Fun(BaseCog):
 
 
 class TTT_GameView(discord.ui.View):
-    def __init__(self, ctx: BuilderContext, players: List[discord.Member], current: discord.Member):
+    def __init__(
+        self,
+        ctx: BuilderContext,
+        players: List[discord.Member],
+        current: discord.Member,
+    ):
         super().__init__(timeout=45)
         self.ctx = ctx
         self.bot = ctx.bot
@@ -399,7 +405,9 @@ class TTT_GameView(discord.ui.View):
         else:
             for b in self._children:
                 b.disabled = True
-            embed = await self.ctx.format(title="It's a tie!", desc="Well played, both sides.")
+            embed = await self.ctx.format(
+                title="It's a tie!", desc="Well played, both sides."
+            )
             await interaction.message.edit(embed=embed, view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.grey, label=" ", row=0, custom_id="0")

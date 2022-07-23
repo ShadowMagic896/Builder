@@ -1,12 +1,13 @@
 import asyncio
-import discord
 import inspect
 import os
 import re
 from asyncio.subprocess import PIPE, Process
-from discord.ext import commands
 from importlib import import_module
 from typing import List
+
+import discord
+from discord.ext import commands
 
 
 def explode(l: List[commands.HybridCommand]) -> List[commands.HybridCommand]:

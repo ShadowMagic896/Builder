@@ -1,15 +1,16 @@
+from typing import Any, Iterable, List, Optional, Union
+
 import asyncpg
 import discord
 from discord.app_commands import Range, describe
 from discord.ext import commands
+
 from src.cogs.atoms import AtomsDatabase
 from src.cogs.currency import BalanceDatabase
-from typing import Any, Iterable, List, Optional, Union
 
 from ..utils.bot_types import BuilderContext
 from ..utils.constants import Emojis
 from ..utils.converters import Atom
-
 from ..utils.errors import MissingFunds, MissingShopEntry, SelfAction, Unowned
 from ..utils.item_maps import Chemistry, get_atomic_name
 from ..utils.subclass import BaseCog, BaseView, Paginator
@@ -270,7 +271,8 @@ class ShopView(Paginator):
         return embed
 
     async def embed(self, inter: discord.Interaction):
-        embed = await self.ctx.format( title=f"Shops: Page `{self.position+1}` / `{self.maxpos+1}`"
+        embed = await self.ctx.format(
+            title=f"Shops: Page `{self.position+1}` / `{self.maxpos+1}`"
         )
         return embed
 

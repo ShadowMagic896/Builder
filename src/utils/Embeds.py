@@ -1,6 +1,7 @@
 import datetime
-import discord
 from typing import Optional, Union
+
+import discord
 
 from .bot_types import BuilderContext
 
@@ -10,6 +11,7 @@ async def getv(inter) -> Union[BuilderContext, None]:
         return await BuilderContext.from_interaction(inter)
     except ValueError:
         return None
+
 
 class Desc:
     user = "The target of this command."

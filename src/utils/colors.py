@@ -1,9 +1,10 @@
 """
 Contains functions used in .Images and .Colors for manipulating array-like RBG color values
 """
+from typing import Set
+
 # fmt: off
 import numpy as np
-from typing import Set
 
 from .python_util import concat
 

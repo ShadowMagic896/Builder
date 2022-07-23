@@ -11,5 +11,6 @@ def main():
         print("\n--- FORMATTING [IMPORT] ---\n", file=log)
     os.system("py -m importanize -v . 2>> logs/format.log")
 
+
 if __name__ == "__main__":
     main()

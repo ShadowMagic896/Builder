@@ -1,15 +1,16 @@
-import aiohttp
 import asyncio
-import discord
 import functools
 import io
-import numpy as np
 import re
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
-from discord.app_commands import Range, describe
-from discord.ext import commands
 from io import BytesIO
 from typing import Any, Callable, List, Literal, Mapping, Optional, Tuple
+
+import aiohttp
+import discord
+import numpy as np
+from discord.app_commands import Range, describe
+from discord.ext import commands
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from wand import image as wimage
 
 from ..utils import constants
@@ -17,7 +18,7 @@ from ..utils.bot_types import Builder, BuilderContext
 from ..utils.colors import to_hex
 from ..utils.converters import RGB
 from ..utils.coro import run
-from ..utils.embeds import Desc, format
+from ..utils.embeds import Desc
 from ..utils.functions import filter_similar
 from ..utils.static import parameters, typehints
 from ..utils.subclass import BaseCog, BaseView
@@ -309,7 +310,8 @@ class Images(BaseCog):
         """Enciphers an image using a passphrase, which can be deciphered later."""
         img = await WandImageFunctions.fromAttachment(image)
         await WandImageFunctions.apply(img.encipher, phrase)
-        embed = await ctx.format( title="Image Enciphered", desc=f"Passphrase to decipher: ||{phrase}||"
+        embed = await ctx.format(
+            title="Image Enciphered", desc=f"Passphrase to decipher: ||{phrase}||"
         )
         embed, file = await WandImageFunctions.local_embed(embed, img)
         await ctx.send(embed=embed, file=file)

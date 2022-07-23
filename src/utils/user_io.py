@@ -1,8 +1,9 @@
-import discord
 import re
 import unicodedata
-from discord.ext import commands
 from typing import List
+
+import discord
+from discord.ext import commands
 
 from .bot_types import BuilderContext
 from .constants import Cogs

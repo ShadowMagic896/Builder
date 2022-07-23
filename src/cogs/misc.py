@@ -1,14 +1,14 @@
-import discord
 import json as js
+from typing import Callable, Optional
+
+import discord
 from discord.app_commands import describe
 from discord.ext import commands
-from typing import Callable, Optional
 from unidecode import unidecode_expect_nonascii
 
 from ..utils import errors
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-
 from ..utils.subclass import BaseCog, BaseView
 
 

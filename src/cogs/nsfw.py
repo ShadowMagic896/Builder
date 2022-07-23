@@ -1,18 +1,18 @@
-import aiohttp
 import asyncio
-import bs4
-import discord
 import os
 import random
-from bs4 import BeautifulSoup, ResultSet, Tag
-from discord.app_commands import Range, describe
-from discord.ext import commands
 from typing import List, Literal, Optional
 from urllib.parse import quote_plus
 
+import aiohttp
+import bs4
+import discord
+from bs4 import BeautifulSoup, ResultSet, Tag
+from discord.app_commands import Range, describe
+from discord.ext import commands
+
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-
 from ..utils.subclass import BaseCog, Paginator
 from ..utils.types import NHSearchData, PHSearchData
 
@@ -96,8 +96,7 @@ class NSFW(BaseCog):
         await ctx.send(embed=embed)
 
         for l in data:
-            embed = await ctx.format(
-            )
+            embed = await ctx.format()
             embed.set_image(url=l)
             await ctx.author.send(embed=embed)
 

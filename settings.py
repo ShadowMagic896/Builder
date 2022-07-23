@@ -1,8 +1,10 @@
 import logging
 from os import PathLike
-from src.utils.checks import inter_choke
 from typing import Any, Callable, List, Set
 
+from discord.ext import commands
+
+from src.utils.checks import inter_choke
 
 # Directories to look for cogs in
 EXT_DIRECTORIES: List[PathLike] = ["./src/cogs"]
@@ -47,17 +49,17 @@ STARTUP_UPDATE_COMMANDS: bool = True
 CATCH_ERRORS: bool = False
 
 # Errors on events / event listeners
-PRINT_EVENT_ERROR_TRACEACK: bool = True and CATCH_ERRORS
+PRINT_EVENT_ERROR_TRACEACK: bool = False and CATCH_ERRORS
 
 # Errors in text commands / hybrid commands
-PRINT_COMMAND_ERROR_TRACKEBACK: bool = True and CATCH_ERRORS
+PRINT_COMMAND_ERROR_TRACKEBACK: bool = False and CATCH_ERRORS
 
 # Errors in app commands
-PRINT_COMMAND_TREE_ERROR_TRACKEBACK: bool = True and CATCH_ERRORS
+PRINT_COMMAND_TREE_ERROR_TRACKEBACK: bool = False and CATCH_ERRORS
 
 
 # Checks that are applied on every command
-GLOBAL_CHECKS: List[Callable[[Any], bool]] = [
+GLOBAL_CHECKS: List[Callable[[commands.Context], bool]] = [
     inter_choke,
 ]
 
@@ -75,9 +77,7 @@ IGNORED_INHERITED_GROUP_CHECKS: List[Callable[[Any], bool]] = []
 EVALUATION_TRUNCATION_THRESHOLD = 20000
 
 # Guils to enable dev commands in
-DEVELOPMENT_GUILD_IDS: List[int] = [
-    871913539936329768
-]
+DEVELOPMENT_GUILD_IDS: List[int] = [871913539936329768]  # Bot Testing Server
 
 BLACKLIST_USERS: List[int] = []
 

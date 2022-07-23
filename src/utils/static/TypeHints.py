@@ -1,6 +1,6 @@
-import discord
 from typing import Literal
 
+import discord
 
 USER = discord.User
 MEMBER = discord.Member

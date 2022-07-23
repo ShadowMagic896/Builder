@@ -1,6 +1,7 @@
 import re
-from discord.ext import commands
 from typing import Callable
+
+from discord.ext import commands
 
 
 def inter_choke(ctx: commands.Context):

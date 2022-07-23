@@ -1,21 +1,19 @@
-import discord
 import typing
+from typing import Any, List, Optional, Union
+
+import discord
 from discord import Interaction, utils
 from discord.app_commands import describe
 from discord.ext import commands
+
 from settings import INVISIBLE_COGS
-from typing import Any, List, Optional, Union
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import Cog, Command, Group
-
 from ..utils.functions import explode
 from ..utils.subclass import BaseCog, BaseView, Paginator
-from ..utils.user_io import (
-    cog_autocomplete,
-    command_autocomplete,
-    group_autocomplete,
-)
+from ..utils.user_io import (cog_autocomplete, command_autocomplete,
+                             group_autocomplete)
 
 
 class Help(BaseCog):
@@ -43,7 +41,7 @@ class Help(BaseCog):
             embed = await self.command_embed(ctx, command)
             message = await ctx.send(embed=embed, view=view)
             view.message = message
-            
+
         elif group:
             view = GroupView(ctx, group)
             embed = await view.page_zero(ctx.interaction)
@@ -185,7 +183,8 @@ class CommandView(Paginator):
         super().__init__(ctx, values, 5, timeout=45)
 
     async def embed(self, inter: discord.Interaction):
-        return await self.ctx.format( title=f"Commands: Page `{self.position+1}` of `{self.maxpos+1}`"
+        return await self.ctx.format(
+            title=f"Commands: Page `{self.position+1}` of `{self.maxpos+1}`"
         )
 
     async def adjust(self, embed: discord.Embed):

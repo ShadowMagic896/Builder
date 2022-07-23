@@ -1,20 +1,19 @@
 import time
+from copy import copy
+from typing import List, Optional
+from urllib.parse import quote_plus
 
 import aiohttp
 import discord
 from bs4 import BeautifulSoup, ResultSet, Tag
-from copy import copy
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from selenium import webdriver
-from typing import List, Optional
-from urllib.parse import quote_plus
 
 from ..utils.api import evaulate_response
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import Timers, URLs
 from ..utils.coro import run
-
 from ..utils.errors import NoDocumentsFound
 from ..utils.subclass import BaseCog, Paginator
 from ..utils.types import RTFMCache
@@ -137,11 +136,10 @@ class API(BaseCog):
             results.append(discord.app_commands.Choice(name="en", value="en"))
 
         return results
-    
+
     @commands.hybrid_group()
     async def api(self, ctx: BuilderContext):
         pass
-
 
     @api.group()
     async def openai(self, ctx: BuilderContext):
@@ -375,11 +373,12 @@ class RTFMPaginator(Paginator):
 class WFMarketItemPaginator(Paginator):
     def __init__(self, ctx: commands.Context, data: dict):
         super().__init__(ctx, data["items_in_set"], 1)
-    
+
     async def embed(self, inter: discord.Interaction):
         return await self.ctx.format(
             title=f"{self.position + 1}: {self.values[self.position]}"
         )
-        
+
+
 async def setup(bot: Builder):
     await bot.add_cog(API(bot))

@@ -1,11 +1,13 @@
-import discord
 import importlib
 import os
-from discord.ext import commands
 from glob import glob, iglob
 from pathlib import Path
-from settings import EXT_DIRECTORIES, NOLOAD_EXTS
 from typing import Any, Iterable, Mapping, Optional
+
+import discord
+from discord.ext import commands
+
+from settings import EXT_DIRECTORIES, NOLOAD_EXTS
 
 
 def GIE(d: Mapping[Any, Any], k: Any, default: Optional[Any] = None):
@@ -67,6 +69,7 @@ def extend_dir(path: str):
 def format_file(fn: str):
     _imp = fn.strip("./")[fn.index("src") :].replace("\\", ".")
     return _imp[:-3]
+
 
 async def full_reload(bot: commands.Bot):
     log: str = ""

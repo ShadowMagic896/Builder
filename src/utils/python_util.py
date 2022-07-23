@@ -1,5 +1,6 @@
-import numpy as np
 from typing import Iterable
+
+import numpy as np
 
 
 def concat(a1: Iterable, a2: Iterable):
