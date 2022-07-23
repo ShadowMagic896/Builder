@@ -87,7 +87,7 @@ class Paginator(BaseView, Generic[SequenceT]):
 
         self.position = 0
 
-        self.values: SequenceT = values
+        self.values = values
         self.message: Optional[discord.Message] = None
 
         self.maxpos = math.ceil((len(self.values) / pagesize)) - 1
@@ -144,7 +144,7 @@ class Paginator(BaseView, Generic[SequenceT]):
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    async def embed(self, inter: discord.Interaction):
+    async def embed(self, inter: discord.Interaction) -> discord.Embed:
         """
         Should be overwritten to provide custom labeling
         """
@@ -152,12 +152,12 @@ class Paginator(BaseView, Generic[SequenceT]):
             title=f"Pages: `{self.position+1}` of `{self.maxpos or 1}`"
         )
 
-    async def adjust(self, embed: discord.Embed):
+    async def adjust(self, embed: discord.Embed) -> discord.Embed:
         return embed
 
     async def page_zero(
         self, interaction: discord.Interaction
-    ) -> Coroutine[Any, Any, discord.Embed]:
+    ) -> discord.Embed:
         self.position = 0
         return await self.adjust(await self.embed(interaction))
 
