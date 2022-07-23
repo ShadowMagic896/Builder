@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     async def main() -> None:
         bot: Builder = Builder()
-        bot: Builder = await prepare(bot)
+        await prepare(bot)
         try:
             await bot.start(BOT_KEY)
         except aiohttp.ClientConnectionError as err:

@@ -263,7 +263,7 @@ class Fun(BaseCog):
 
 
 class TTT_GameView(discord.ui.View):
-    def __init__(self, ctx, players: List[discord.Member], current: discord.Member):
+    def __init__(self, ctx: BuilderContext, players: List[discord.Member], current: discord.Member):
         super().__init__(timeout=45)
         self.ctx = ctx
         self.bot = ctx.bot
@@ -390,11 +390,9 @@ class TTT_GameView(discord.ui.View):
         elif state in [1, 2]:
             for b in self._children:
                 b.disabled = True
+            winner = self.players[0] if state == 1 else self.players[1]
             embed = await self.ctx.format(
-                title="{} has won!",
-                title="{} has won!".format(
-                    self.players[0] if state == 1 else self.players[1]
-                ),
+                title=f"{winner} has won!",
                 desc="Well played, both sides.",
             )
             await interaction.message.edit(embed=embed, view=self)

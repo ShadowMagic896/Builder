@@ -52,9 +52,10 @@ class Atoms(BaseCog):
         """
         atomname = periodic.names[atom - 1]
         old = await AtomsDatabase(ctx).get_atoms(user)
-        old_amount = (
-            [v for v in old if v["atomid"] == atom][0]["count"] if len(old) != 0 else 0
-        )
+        if (old_atoms := [value for value in old if value["atomid"] == atom]) != []:
+            old_amount = old_atoms[0]["count"]
+        else:
+            old_amount = 0
         await AtomsDatabase(ctx).give_atom(user, atom, amount)
         embed = await ctx.format(
             title=f"Resources Given to `{user}`",

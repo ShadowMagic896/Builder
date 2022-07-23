@@ -8,7 +8,6 @@ from typing import Any, Coroutine, Generic, Optional, Sequence, TypeVar
 
 from .bot_types import Builder, BuilderContext
 from .constants import Emojis
-from .embeds import format
 from .error_funcs import _interaction_error_handler, handle_modal_error
 
 

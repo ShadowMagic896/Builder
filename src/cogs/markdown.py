@@ -62,9 +62,10 @@ class MarkDown(BaseCog):
             )
             await ctx.send(file=file, embed=embed)
         else:
+            text = text.replace("\\", "")
             embed = await ctx.format(
                 title="Unescaped Markdown",
-                desc=f"```\n{text.replace('\\', '')}\n```",
+                desc=f"```\n{text}\n```",
             )
             await ctx.send(embed=embed)
     

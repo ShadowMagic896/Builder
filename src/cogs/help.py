@@ -35,6 +35,7 @@ class Help(BaseCog):
         """
         Creates a menu to navigate all of the bot's commands
         """
+
         if command:
             view = BaseView(ctx)
             view.add_item(CogSelect(ctx))
@@ -42,7 +43,7 @@ class Help(BaseCog):
             embed = await self.command_embed(ctx, command)
             message = await ctx.send(embed=embed, view=view)
             view.message = message
-
+            
         elif group:
             view = GroupView(ctx, group)
             embed = await view.page_zero(ctx.interaction)

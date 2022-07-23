@@ -11,7 +11,6 @@ async def getv(inter) -> Union[BuilderContext, None]:
     except ValueError:
         return None
 
-
 class Desc:
     user = "The target of this command."
     ephemeral = "Whether to publicly show the response to the command."

@@ -15,7 +15,6 @@ from typing import Any, Optional, Union
 
 from . import errors as be
 from .bot_types import BuilderContext
-from .embeds import format
 
 
 async def on_error(event_method: str, /, *args: Any, **kwargs: Any) -> None:

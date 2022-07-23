@@ -786,30 +786,9 @@ class ImageManipulateView(BaseView):
         await self.apply(self.img.contrast, True)
         await self.update(inter, button)
 
-    @discord.ui.button(label="Decipher")
-    async def decipher(self, inter: discord.Interaction, button: discord.ui.Button):
-        prompt = "Please enter a **PASSPHRASE:**"
-        passphrase = (
-            await self.getUserInput(
-                self.ctx,
-                ((), {"embed": format(self.ctx, prompt)}),
-            )
-        ).content
-        await self.apply(self.img.decipher, passphrase)
-        await self.update(inter, button)
-
     @discord.ui.button(label="Emboss")
     async def emboss(self, inter: discord.Interaction, button: discord.ui.Button):
         await self.apply(self.img.emboss)
-        await self.update(inter, button)
-
-    @discord.ui.button(label="Encipher")
-    async def encipher(self, inter: discord.Interaction, button: discord.ui.Button):
-        prompt = "Please enter a **PASSPHRASE:**"
-        passphrase = (
-            await self.getUserInput(self.ctx, ((), {"embed": format(self.ctx, prompt)}))
-        ).content
-        await self.apply(self.img.encipher, passphrase)
         await self.update(inter, button)
 
     @discord.ui.button(label="Equalize")
@@ -845,7 +824,7 @@ class ImageManipulateView(BaseView):
         )
         img: wimage.Image = await self.getUserInput(
             self.ctx,
-            ((), {"embed": format(self.ctx, prompt, ext_data)}),
+            ((), {"embed": await self.ctx.format(prompt, ext_data)}),
             post_process=ImageManipulateView.getImageFrom,
             post_process_arguments=([self.ctx], {}),
         )
@@ -856,7 +835,7 @@ class ImageManipulateView(BaseView):
         )
         op: str = await self.getUserInput(
             self.ctx,
-            ((), {"embed": format(self.ctx, prompt, ext_data)}),
+            ((), {"embed": await self.ctx.format(prompt, ext_data)}),
             post_process=lambda m: m.content.lower(),
         )
         if op not in wimage.COMPOSITE_OPERATORS:
@@ -865,7 +844,7 @@ class ImageManipulateView(BaseView):
         prompt = "Please send the **X VALUE** for where to paste, from the top-left corner of the image."
         x = await self.getUserInput(
             self.ctx,
-            ((), {"embed": format(self.ctx, prompt)}),
+            ((), {"embed": await self.ctx.format(prompt)}),
             post_process=self.uint_check,
         )
         if x > self.img.width:
@@ -874,7 +853,7 @@ class ImageManipulateView(BaseView):
         prompt = "Please send the **Y VALUE** for where to paste, from the top-left corner of the image."
         y = await self.getUserInput(
             self.ctx,
-            ((), {"embed": format(self.ctx, prompt)}),
+            ((), {"embed": await self.ctx.format(prompt)}),
             post_process=self.uint_check,
         )
         if y > self.img.height:
@@ -888,14 +867,14 @@ class ImageManipulateView(BaseView):
         prompt: str = "Please enter a new **WIDTH** value:"
         w = await self.getUserInput(
             self.ctx,
-            ((), {"embed": format(self.ctx, prompt)}),
+            ((), {"embed": await self.ctx.format(prompt)}),
             post_process=self.uint_check,
         )
 
         prompt: str = "Please enter a new **HEIGHT** value:"
         h = await self.getUserInput(
             self.ctx,
-            ((), {"embed": format(self.ctx, prompt)}),
+            ((), {"embed": await self.ctx.format(prompt)}),
             post_process=self.uint_check,
         )
 
@@ -907,7 +886,7 @@ class ImageManipulateView(BaseView):
         prompt: str = "Please enter a **DEGREES** value:"
         degs = await self.getUserInput(
             self.ctx,
-            ((), {"embed": format(self.ctx, prompt)}),
+            ((), {"embed": await self.ctx.format(prompt)}),
             post_process=self.degs_check,
         )
 

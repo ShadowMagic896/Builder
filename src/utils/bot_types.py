@@ -21,6 +21,31 @@ _Bot = Union[commands.Bot, commands.AutoShardedBot]
 BotT = TypeVar("BotT", bound=_Bot, covariant=True)
 
 
+class BuilderContext(commands.Context, Generic[BotT]):
+    def __init__(self, **data):
+        self.bot: Builder = data["bot"]
+        super().__init__(**data)
+    
+    async def format(self, title: str, desc: Optional[str] = None, color: discord.Color = discord.Color.teal()) -> discord.Embed:
+        delay: str = f"{round(self.bot.latency, 3) * 1000}ms"
+        author_name = str(self.author)
+        author_url: str = f"https://discord.com/users/{self.author.id}"
+        author_icon_url: str = self.author.display_avatar.url
+
+        embed = discord.Embed(
+            color=color,
+            title=title,
+            description=desc,
+            type="rich",
+            timestamp=datetime.datetime.now(),
+        )
+        embed.set_author(name=author_name, url=author_url, icon_url=author_icon_url)
+
+        embed.set_footer(text=f"{self.prefix}{self.command}  •  {delay}")
+
+        return embed
+
+
 class Builder(commands.Bot):
     def __init__(self):
         command_prefix: Iterable[str] = PREFIXES
@@ -58,34 +83,8 @@ class Builder(commands.Bot):
     async def setup_hook(self) -> None:
         print("--- online ---")
     
-    async def get_context(self, origin: Union[discord.Message, discord.Interaction], *, cls = None) -> Union[commands.Context, "BuilderContext"]:
-        print(cls, "getting context")
-        return await super().get_context(origin, cls=cls or BuilderContext)
-
-
-class BuilderContext(commands.Context, Generic[BotT]):
-    def __init__(self, **data):
-        self.bot: Builder = data["bot"]
-        super().__init__(**data)
-    
-    async def format(self, title: str, desc: Optional[str] = None, color: discord.Color = discord.Color.teal()) -> discord.Embed:
-        delay: str = f"{round(self.bot.latency, 3) * 1000}ms"
-        author_name = str(self.author)
-        author_url: str = f"https://discord.com/users/{self.author.id}"
-        author_icon_url: str = self.author.display_avatar.url
-
-        embed = discord.Embed(
-            color=color,
-            title=title,
-            description=desc,
-            type="rich",
-            timestamp=datetime.datetime.now(),
-        )
-        embed.set_author(name=author_name, url=author_url, icon_url=author_icon_url)
-
-        embed.set_footer(text=f"{self.prefix}{self.command}  •  {delay}")
-
-        return embed
+    async def get_context(self, origin: Union[discord.Message, discord.Interaction], *, cls = BuilderContext) -> Union[commands.Context, BuilderContext]:
+        return await super().get_context(origin, cls=cls)
 
 
 class BuilderTree(discord.app_commands.CommandTree):

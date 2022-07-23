@@ -131,7 +131,7 @@ async def apply_global_checks(bot: Builder) -> None:
         await apply_to_global(bot, check)
 
 
-async def prepare(bot: Builder) -> Builder:
+async def prepare(bot: Builder) -> None:
     if LOAD_JISHAKU:
         await bot.load_extension("jishaku")
         logging.info("Cog Loaded: Jishaku")
@@ -162,11 +162,10 @@ async def prepare(bot: Builder) -> Builder:
     await load_extensions(bot)
     logging.info("Startup Cogs Loaded")
 
-    return bot
+    logging.info("Startup Complete")
 
 
 def start(main: Coroutine) -> None:
-    freeze_support()
     setup_logging()
     inital: bool = True
     last: str = ""
