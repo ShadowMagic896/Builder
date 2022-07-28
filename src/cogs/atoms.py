@@ -11,7 +11,7 @@ from discord.ext.commands import parameter
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import Atom
 from ..utils.item_maps import Chemistry, get_atomic_name
-from ..utils.subclass import BaseCog, Paginator
+from ..utils.abc import BaseCog, Paginator
 
 chem = Chemistry()
 
@@ -71,7 +71,7 @@ class Atoms(BaseCog):
 
         view = AtomsView(ctx, values=values, title="All Atoms", sort="atomid")
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
 
         message = await ctx.send(embed=embed, view=view)
         view.message = message
@@ -102,7 +102,7 @@ class Atoms(BaseCog):
         values: Union[List[Record], List] = await AtomsDatabase(ctx).get_atoms(user)
         view = AtomsView(ctx, values=values, title=f"`{user}`'s Atoms", sort=sort)
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
 
         message = await ctx.send(embed=embed, view=view)
         view.message = message

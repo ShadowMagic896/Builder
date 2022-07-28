@@ -13,7 +13,7 @@ from ..utils.constants import Emojis
 from ..utils.converters import Atom
 from ..utils.errors import MissingFunds, MissingShopEntry, SelfAction, Unowned
 from ..utils.item_maps import Chemistry, get_atomic_name
-from ..utils.subclass import BaseCog, BaseView, Paginator
+from ..utils.abc import BaseCog, BaseView, Paginator
 
 
 class Shop(BaseCog):
@@ -135,7 +135,7 @@ class Shop(BaseCog):
             vals = sorted(vals, key=lambda r: r["price"] / r["amount"])
             view = PersonalShopView(ctx, user, vals, 10)
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
         msg = await ctx.send(embed=embed, view=view)
         view.message = msg
 

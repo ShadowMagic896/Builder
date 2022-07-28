@@ -15,7 +15,7 @@ from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import Timers, URLs
 from ..utils.coro import run
 from ..utils.errors import NoDocumentsFound
-from ..utils.subclass import BaseCog, Paginator
+from ..utils.abc import BaseCog, Paginator
 from ..utils.types import RTFMCache
 
 
@@ -51,7 +51,7 @@ class API(BaseCog):
         )
         view = RTFMPaginator(meta, 10)
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
         view.message = await ctx.send(embed=embed, view=view)
 
     @rtfm.autocomplete("project")

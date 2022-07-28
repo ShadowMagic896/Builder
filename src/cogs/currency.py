@@ -13,7 +13,7 @@ import environ
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import Emojis, Rates, URLs
-from ..utils.subclass import BaseCog, BaseModal, BaseView, Paginator
+from ..utils.abc import BaseCog, BaseModal, BaseView, Paginator
 
 
 class Currency(BaseCog):
@@ -147,7 +147,7 @@ class Currency(BaseCog):
         view.value_range
         view.values
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
         view.message = await ctx.send(embed=embed, view=view)
 
     @cur.command()

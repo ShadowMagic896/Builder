@@ -10,7 +10,7 @@ from pyfiglet import Figlet
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.embeds import Desc
-from ..utils.subclass import BaseCog
+from ..utils.abc import BaseCog
 
 
 class Fun(BaseCog):

@@ -15,7 +15,7 @@ from ..utils import parse as utparse
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import UrlFind, UrlGet
 from ..utils.coro import run
-from ..utils.subclass import BaseCog, Paginator
+from ..utils.abc import BaseCog, Paginator
 from ..utils.types import DDGImageData, DDGSearchData, FeatureType
 
 
@@ -111,7 +111,7 @@ class Web(BaseCog):
         meta = await DDGSearchMeta.create(ctx, query)
         view = DDGSearchView(meta)
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
         view.message = await ctx.send(embed=embed, view=view)
 
     @web.command()
@@ -123,7 +123,7 @@ class Web(BaseCog):
         meta = await DDGImageMeta.create(ctx, query)
         view = DDGImageView(meta)
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
         view.message = await ctx.send(embed=embed, view=view)
 
 

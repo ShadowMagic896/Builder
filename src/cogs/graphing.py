@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import ListConverter
-from ..utils.subclass import BaseCog
+from ..utils.abc import BaseCog
 
 
 class Graphing(BaseCog):

@@ -14,7 +14,7 @@ from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
 from ..utils.converters import Cog, Command, Group
 from ..utils.functions import explode
-from ..utils.subclass import BaseCog, BaseModal, BaseView
+from ..utils.abc import BaseCog, BaseModal, BaseView
 from ..utils.user_io import (cog_autocomplete, command_autocomplete,
                              group_autocomplete)
 

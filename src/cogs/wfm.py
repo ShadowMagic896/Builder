@@ -7,7 +7,7 @@ from discord.ext import commands
 from pytenno.models.enums import Platform
 
 from ..utils.bot_types import Builder, BuilderContext
-from ..utils.subclass import BaseCog, Paginator
+from ..utils.abc import BaseCog, Paginator
 
 
 class WFM(BaseCog):
@@ -25,14 +25,21 @@ class WFM(BaseCog):
         pass
 
     @items.command()
+    @describe(
+        item_name="The name of the item to get",
+        order_type="The type of the order",
+        platform="The platform of the orders",
+        sort_type="Sort the orders by price. 'ascending' is lowest to highest, 'descending' is highest to lowest",
+    )
     async def get_orders(
         self,
         ctx: BuilderContext,
         item_name: str,
         order_type: Literal["buy", "sell"] = "buy",
         platform: Literal["pc", "ps4", "switch", "xbox"] = "pc",
+        sort_type: Literal["ascending", "descending"] = "ascending",
     ):
-        """Get the current orders for an item"""
+        """Get all orders for a specific item"""
         orders = await self.bot.tenno.items.get_orders(
             item_name=item_name,
             include_items=False,
@@ -40,28 +47,30 @@ class WFM(BaseCog):
         )
         view = ItemOrdersView(
             ctx,
-            [o for o in orders if o.order_type.name == order_type],
+            sorted(filter(lambda o: o.order_type.name==order_type, orders), key=lambda o: o.platinum, reverse=sort_type == "descending"),
             order_type,
             item_name,
         )
+        await view.update()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
-        self.bot.tenno.items.get_item()
 
     @items.command()
-    async def get_data(
+    @describe(
+        language="The language of the item data"
+    )
+    async def all(
         self,
         ctx: BuilderContext,
-        item_name: str,
-        platform: Literal["pc", "ps4", "switch", "xbox"] = "pc",
         language: Literal[
             "en", "ru", "ko", "fr", "sv", "de", "zh_hans", "zh_hant", "pt", "es", "pl"
         ] = "en",
     ):
-        items = await self.bot.tenno.items.get_item(
-            item_name=item_name, platform=Platform[platform]
-        )
-        view = ItemDataView(ctx, items, item_name, language)
+        """Fetch limited data on all (tradeable) items"""
+        items = await self.bot.tenno.items.get_items(language=language)
+        items.sort(key=lambda i: i.url_name)
+        view = AllItemDataView(ctx, items)
+        await view.update()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
 
@@ -84,7 +93,8 @@ class ItemOrdersView(Paginator):
             order: pytenno.models.orders.OrderRow
             embed.add_field(
                 name=f"`{order.user.ingame_name}`: `{order.platinum}`<:_:1000247886862372965>",
-                value=f"ㅤ**Created At:** <t:{int(order.creation_date.timestamp())}:R>\n"
+                value=
+                f"ㅤ**Created At:** <t:{int(order.creation_date.timestamp())}:R>\n"
                 f"ㅤ**Last Updated:** <t:{int(order.last_update.timestamp())}:R>\n"
                 f"ㅤ**Order Quantity:** `{order.quantity}`\n",
                 inline=False,
@@ -97,47 +107,30 @@ class ItemOrdersView(Paginator):
         )
 
 
-class ItemDataView(Paginator):
+class AllItemDataView(Paginator):
     def __init__(
         self,
         ctx: BuilderContext,
-        items: list[pytenno.models.items.ItemFull],
-        item_name: str,
-        language: str,
+        items: list[pytenno.models.items.ItemShort],
     ):
         self.items = items
-        self.item_name = item_name
-        self.language = language
-        super().__init__(ctx, items, pagesize=1)
+        super().__init__(ctx, items, pagesize=5)
 
     async def adjust(self, embed: discord.Embed):
-        item: pytenno.models.items.ItemFull = self.value_range[0]
-        tr: pytenno.models.items.LangInItem = getattr(item, self.language)
-        embed.description = f"**`{item.url_name}`**"
-        embed.add_field(name="**Name**", value=f"`{tr.item_name}`", inline=False)
-        embed.add_field(
-            name="**Description**", value=f"`{tr.description}`", inline=False
-        )
-        embed.add_field(
-            name="**Required Mastery Rank**",
-            value=f"`{item.mastery_level}`",
-            inline=False,
-        )
-        embed.add_field(
-            name="**Is Set Root**", value=f"`{item.set_root}`", inline=False
-        )
-        embed.add_field(
-            name="**# Needed for Set**",
-            value=f"`{item.quantity_for_set}`",
-            inline=False,
-        )
-        embed.url = tr.wiki_link
-        embed.set_image(url=item.sub_icon)
+        items: list[pytenno.models.items.ItemShort] = self.value_range
+        for item in items:
+            embed.add_field(
+                name=f"**`{item.item_name}`** [`{item.url_name}`]",
+                value=
+                f"**WFM ID:** `{item.id}`\n"
+                f"**Icon:** [View Image]({item.thumb})\n",
+                inline=False,
+            )
         return embed
 
     async def embed(self, inter: discord.Interaction):
         return await self.ctx.format(
-            title=f"Item Data: `{self.item_name}` [Page `{self.position+1}` of `{self.maxpos+1}`]"
+            title=f"All Item Data [Page `{self.position+1}` of `{self.maxpos+1}`]"
         )
 
 

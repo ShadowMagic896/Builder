@@ -11,7 +11,7 @@ from ..utils.bot_types import Builder, BuilderContext
 from ..utils.colors import channels_to_names, merge
 from ..utils.converters import RGB
 from ..utils.static.parameters import COLOR_CHANNEL_ALPHA
-from ..utils.subclass import BaseCog
+from ..utils.abc import BaseCog
 
 
 class Colors(BaseCog):

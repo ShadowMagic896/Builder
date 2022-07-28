@@ -11,7 +11,7 @@ from settings import INVISIBLE_COGS
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import Cog, Command, Group
 from ..utils.functions import explode
-from ..utils.subclass import BaseCog, BaseView, Paginator
+from ..utils.abc import BaseCog, BaseView, Paginator
 from ..utils.user_io import (cog_autocomplete, command_autocomplete,
                              group_autocomplete)
 
@@ -53,7 +53,7 @@ class Help(BaseCog):
                     discord.utils.get(sel.options, label=group.cog.qualified_name)
                 )
                 view.add_item(sel)
-            await view.check_buttons()
+            await view.update()
 
             message = await ctx.send(embed=embed, view=view)
             view.message = message
@@ -67,7 +67,7 @@ class Help(BaseCog):
             sel.placeholder = "%s Cog Selection..." % cog.ge()
             sel.options.remove(discord.utils.get(sel.options, label=cog.qualified_name))
             view.add_item(sel)
-            await view.check_buttons()
+            await view.update()
 
             message = await ctx.send(embed=embed, view=view)
             view.message = message
@@ -254,7 +254,7 @@ class CogSelect(discord.ui.Select):  # Shows all cogs in the bot
 
         view = CommandView(self.ctx, obj)
         embed = await view.page_zero(interaction)
-        await view.check_buttons()
+        await view.update()
         view.add_item(self)
 
         await interaction.response.edit_message(embed=embed, view=view)

@@ -13,7 +13,7 @@ from discord.ext import commands
 
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-from ..utils.subclass import BaseCog, Paginator
+from ..utils.abc import BaseCog, Paginator
 from ..utils.types import NHSearchData, PHSearchData
 
 
@@ -115,14 +115,14 @@ class NSFW(BaseCog):
         meta: NHGetMeta = await NHGetMeta.create(ctx, code)
         view = NHGetView(meta=meta)
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
         await ctx.send(embed=embed, view=view)
 
-    @nhentai.command()
+    @nhentai.command(name="search")
     @describe(
         query="The keyword to search for.",
     )
-    async def search(
+    async def nh_search(
         self,
         ctx: BuilderContext,
         query: str,
@@ -133,7 +133,7 @@ class NSFW(BaseCog):
         """
         meta = await NHSearchMeta.create(ctx, query, sort)
         view = NHSearchView(meta)
-        await view.check_buttons()
+        await view.update()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
 
@@ -141,16 +141,16 @@ class NSFW(BaseCog):
     async def pornhub(self, ctx: BuilderContext):
         pass
 
-    @pornhub.command()
+    @pornhub.command(name="search")
     @describe(query="What to search for")
-    async def search(self, ctx: BuilderContext, query: str):
+    async def ph_search(self, ctx: BuilderContext, query: str):
         """
         Searches PorhHub
         """
         meta: PHSeachMeta = await PHSeachMeta.create(ctx, query)
         view = PHSearchView(meta)
         embed = await view.page_zero(ctx.interaction)
-        await view.check_buttons()
+        await view.update()
         view.message = await ctx.send(embed=embed, view=view)
 
 
@@ -165,7 +165,7 @@ class NHSearchMeta:
         }
         sort = fmt_dict.get(query, "")
         url = URLs.NHENTAI + f"search/?q={query}{sort}"
-        res: aiohttp.ClientResponse = await ctx.bot.session.session.get(url)
+        res: aiohttp.ClientResponse = await ctx.bot.session.get(url)
         res.raise_for_status()
         parse: BeautifulSoup = BeautifulSoup(await res.text(), "html.parser")
 
@@ -176,9 +176,9 @@ class NHSearchMeta:
             nparse: BeautifulSoup = BeautifulSoup(str(image), "html.parser")
             code: int = nparse.select_one("div > a")["href"][3:-1]
             thumbnail: str = nparse.select_one("div > a > img")["src"]
-            name: str = nparse.select_one("div > a > div").text
+            title: str = nparse.select_one("div > a > div").text
 
-            cls.data.append(NHSearchData(code, thumbnail, name))
+            cls.data.append(NHSearchData(title=title, code=code, thumbnail=thumbnail))
 
         cls.ctx = ctx
         cls.query = query
@@ -211,14 +211,14 @@ class NHSearchView(Paginator):
             f"NHentai Search Results for `{self.meta.query}`: `{self.position+1}` / `{self.maxpos+1}`",
         )
 
-    @discord.ui.button(label="Select This", emoji="\N{BLACK RIGHTWARDS ARROW}")
+    @discord.ui.button(label="Select This", emoji="\N{BLACK RIGHTWARDS ARROW}", style=discord.ButtonStyle.blurple)
     async def viewthis(self, inter: discord.Interaction, button: discord.ui.Button):
         meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position].code)
         view = NHGetView(meta)
         embed = await view.page_zero(inter)
-        await view.check_buttons()
-        view.message = await self.meta.ctx.interaction.followup.send(
-            embed=embed, view=view, wait=True
+        await view.update()
+        view.message = await self.meta.ctx.interaction.edit_original_message(
+            embed=embed, view=view
         )
 
 

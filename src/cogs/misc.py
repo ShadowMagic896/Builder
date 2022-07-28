@@ -9,7 +9,7 @@ from unidecode import unidecode_expect_nonascii
 from ..utils import errors
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-from ..utils.subclass import BaseCog, BaseView
+from ..utils.abc import BaseCog, BaseView
 
 
 class Misc(BaseCog):

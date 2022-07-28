@@ -5,7 +5,7 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from ..utils.bot_types import Builder, BuilderContext
-from ..utils.subclass import BaseCog
+from ..utils.abc import BaseCog
 
 
 class Config(BaseCog):

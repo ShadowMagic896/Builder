@@ -95,26 +95,26 @@ class Paginator(BaseView, Generic[SequenceT]):
 
         super().__init__(ctx, timeout=timeout)
 
-    @discord.ui.button(emoji=Emojis.BBARROW_ID, custom_id="bb")
+    @discord.ui.button(emoji=Emojis.BBARROW_ID, custom_id="bb", row=0)
     async def fullback(
         self, inter: discord.Interaction, button: discord.ui.Button
     ) -> None:
         self.position = 0
-        await self.check_buttons(button)
+        await self.update(button)
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=Emojis.BARROW_ID, custom_id="b")
+    @discord.ui.button(emoji=Emojis.BARROW_ID, custom_id="b", row=0)
     async def back(self, inter: discord.Interaction, button: discord.ui.Button) -> None:
         self.position -= 1
-        await self.check_buttons(button)
+        await self.update(button)
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(
-        emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x"
+        emoji="\N{CROSS MARK}", style=discord.ButtonStyle.red, custom_id="x", row=0
     )
     async def close(
         self, inter: discord.Interaction, button: discord.ui.Button
@@ -125,21 +125,32 @@ class Paginator(BaseView, Generic[SequenceT]):
             await inter.response.edit_message(view=self)
         except (discord.NotFound, AttributeError):
             pass
+        self.stop()
 
-    @discord.ui.button(emoji=Emojis.FARROW_ID, custom_id="f")
+    @discord.ui.button(emoji=Emojis.FARROW_ID, custom_id="f", row=0)
     async def next(self, inter: discord.Interaction, button: discord.ui.Button) -> None:
         self.position += 1
-        await self.check_buttons(button)
+        await self.update(button)
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(emoji=Emojis.FFARROW_ID, custom_id="ff")
+    @discord.ui.button(emoji=Emojis.FFARROW_ID, custom_id="ff", row=0)
     async def fullnext(
         self, inter: discord.Interaction, button: discord.ui.Button
     ) -> None:
         self.position = self.maxpos
-        await self.check_buttons(button)
+        await self.update(button)
+
+        embed = await self.adjust(await self.embed(inter))
+        await inter.response.edit_message(embed=embed, view=self)
+
+    @discord.ui.select(custom_id="page_selector", min_values=1, max_values=1, placeholder="Select Page", options=[], row=1) # Options are set in .update(), which is called before the view is sent
+    async def page_selector(
+        self, inter: discord.Interaction, select: discord.ui.Select
+    ) -> None:
+        self.position = int(select.values[0])
+        await self.update()
 
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
@@ -161,10 +172,25 @@ class Paginator(BaseView, Generic[SequenceT]):
         self.position = 0
         return await self.adjust(await self.embed(interaction))
 
-    async def check_buttons(self, button: discord.Button = None) -> None:
+    async def update(self, button: discord.Button = None) -> None:
         """
         Can be overwritten if necessary.
         """
+        options = [
+            discord.SelectOption(
+                label=f"Page: {page+1}" if page != self.position else f"Page: {page+1} [Current]",
+                value=page
+            ) for page in range(
+                max(self.position-12, 0), min(self.position+12+1, self.maxpos+1) # Account for the current page
+            )
+        ]
+
+        # Find the page selector and update its options
+        for child in self.children:
+            if isinstance(child, discord.ui.Select) and child.custom_id == "page_selector":
+                child.options = options
+
+
         if self.maxpos <= 0:
             for b in self.children:
                 if isinstance(b, discord.ui.Button) and b.custom_id != "x":

@@ -13,7 +13,7 @@ from ..utils.bot_types import Builder, BuilderContext
 from ..utils.extensions import extend_dir
 from ..utils.functions import explode
 from ..utils.stats import Stats
-from ..utils.subclass import BaseCog
+from ..utils.abc import BaseCog
 
 
 class Dev(BaseCog):

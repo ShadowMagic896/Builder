@@ -21,7 +21,7 @@ from ..utils.coro import run
 from ..utils.embeds import Desc
 from ..utils.functions import filter_similar
 from ..utils.static import parameters, typehints
-from ..utils.subclass import BaseCog, BaseView
+from ..utils.abc import BaseCog, BaseView
 
 
 class Images(BaseCog):
