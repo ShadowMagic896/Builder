@@ -9,7 +9,7 @@ from src.cogs.atoms import AtomsDatabase
 from src.cogs.currency import BalanceDatabase
 
 from ..utils.abc import BaseCog, BaseView, Paginator
-from ..utils.bot_types import BuilderContext
+from ..utils.bot_abc import BuilderContext
 from ..utils.constants import Emojis
 from ..utils.converters import Atom
 from ..utils.errors import MissingFunds, MissingShopEntry, SelfAction, Unowned
@@ -359,7 +359,7 @@ class PurchaseView(BaseView):
         if result is None:
             raise MissingShopEntry("Cannot find shop, it was most likely deleted.")
         else:
-            embed = await ctx.format(
+            embed = await self.ctx.format(
                 title="Listing Successfully Removed",
                 desc=listing_information(result),
             )
