@@ -88,8 +88,16 @@ async def aquire_db() -> asyncpg.Connection:
     return connection
 
 
-async def aquire_caches() -> Cache:
-    return Cache(RTFM={}, fonts=await aquire_fonts())
+async def aquire_caches(bot: Builder) -> Cache:
+    return Cache(
+        RTFM={}, 
+        fonts=await aquire_fonts(),
+        WFM_items=await aquire_items(bot)
+    )
+
+
+async def aquire_items(bot: Builder) -> list[str]:
+    return [item.item_name for item in await bot.tenno.items.get_items(language="en")]
 
 
 async def aquire_connection() -> aiohttp.ClientSession:
@@ -139,11 +147,13 @@ async def prepare(bot: Builder) -> None:
     await apply_inherit_checks(bot)
     logging.info("Inherit Checks Applied")
 
+    bot.tenno = await pytenno.PyTenno().__aenter__()
+    logging.info("Tenno Aquired")
     bot.apg = await aquire_db()
     logging.info("Database Aquired")
     bot.driver = await aquire_driver()
     logging.info("Web Driver Aquired")
-    bot.caches = await aquire_caches()
+    bot.caches = await aquire_caches(bot)
     logging.info("Caches Aquired")
     bot.session = await aquire_connection()
     logging.info("Session Aquired")
@@ -151,8 +161,6 @@ async def prepare(bot: Builder) -> None:
     logging.info("Tkinter Root Aquired")
     await ensure_db(bot)
     logging.info("Databases Verified")
-    bot.tenno = await pytenno.PyTenno().__aenter__()
-    logging.info("Tenno Aquired")
     await load_extensions(bot)
     logging.info("Startup Cogs Loaded")
 

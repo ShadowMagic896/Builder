@@ -29,15 +29,17 @@ class WFM(BaseCog):
         item_name="The name of the item to get",
         order_type="The type of the order",
         platform="The platform of the orders",
-        sort_type="Sort the orders by price. 'ascending' is lowest to highest, 'descending' is highest to lowest",
+        sort_type="What to sort the results by",
+        sort_method="How to sort the results. 'ascending' is lowest to highest, 'descending' is highest to lowest",
     )
     async def get_orders(
         self,
         ctx: BuilderContext,
         item_name: str,
-        order_type: Literal["buy", "sell"] = "buy",
+        order_type: Literal["buy", "sell", "any"] = "buy",
         platform: Literal["pc", "ps4", "switch", "xbox"] = "pc",
-        sort_type: Literal["ascending", "descending"] = "ascending",
+        sort_type: Literal["platinum", "creation_date", "last_update"]="platinum",
+        sort_method: Literal["ascending", "descending"] = "ascending",
     ):
         """Get all orders for a specific item"""
         orders = await self.bot.tenno.items.get_orders(
@@ -47,13 +49,37 @@ class WFM(BaseCog):
         )
         view = ItemOrdersView(
             ctx,
-            sorted(filter(lambda o: o.order_type.name==order_type, orders), key=lambda o: o.platinum, reverse=sort_type == "descending"),
+            sorted(
+                filter(
+                    lambda o: (o.order_type.name==order_type) if (order_type != "any") else (True), orders
+                ), 
+                key=lambda o: getattr(o, sort_type), 
+                reverse=sort_method == "descending"
+            ),
             order_type,
             item_name,
         )
         await view.update()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
+    
+
+    @get_orders.autocomplete("item_name")
+    async def get_orders_item_name_autocomplete(self, ctx: BuilderContext, current: str):
+
+        # I could do listcomp here, but then I'll iterate over the entire list of items, even if I already have 25 selections
+        # For other autocompletes this effect is negligable, but bot.caches.WFM_items is about 2875 items
+        items = []
+        for cached in self.bot.caches.WFM_items:
+            if len(items) >= 25:
+                break
+            if (cu:=current.lower()) in (ca:=cached.lower()) or ca in cu:
+                items.append(discord.app_commands.Choice(
+                    name=cached,
+                    value=cached,
+                ))
+
+        return items
 
     @items.command()
     @describe(
@@ -118,9 +144,9 @@ class AllItemDataView(Paginator):
 
     async def adjust(self, embed: discord.Embed):
         items: list[pytenno.models.items.ItemShort] = self.value_range
-        for item in items:
+        for c, item in enumerate(items):
             embed.add_field(
-                name=f"**`{item.item_name}`** [`{item.url_name}`]",
+                name=f"`{self.format_absoloute(c)}`: **`{item.item_name}`** [`{item.url_name}`]",
                 value=
                 f"**WFM ID:** `{item.id}`\n"
                 f"**Icon:** [View Image]({item.thumb})\n",

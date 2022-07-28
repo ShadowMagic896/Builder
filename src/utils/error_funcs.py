@@ -5,15 +5,16 @@ from typing import Any, Optional, Union
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import errors as de
+from discord.ext.commands import errors as disc_err
 from simpleeval import NumberTooHigh
 
 from settings import (CATCH_ERRORS, MODERATE_JISHAKU_COMMANDS,
                       PRINT_COMMAND_ERROR_TRACKEBACK,
                       PRINT_EVENT_ERROR_TRACEACK)
 
-from . import errors as be
+from . import errors as bot_err
 from .bot_types import BuilderContext
+from pytenno import errors as tenno_err
 
 
 async def on_error(event_method: str, /, *args: Any, **kwargs: Any) -> None:
@@ -43,7 +44,6 @@ async def on_tree_error(interaction: discord.Interaction, error: Exception):
 async def _interaction_error_handler(
     inter: discord.Interaction | None, error: Exception = None
 ):
-    print("Type:", type(error))
     print("_interaction_error_handler")
     if inter is None:
         return
@@ -63,37 +63,59 @@ async def _interaction_error_handler(
         error = error.original
 
     err_dir = {
+        # Builtin errors
         ValueError: "You gave something of the wrong value or type. Check the error for more information",
         TypeError: "You gave something of the wrong value or type. Check the error for more information",
         IOError: "You gave an incorrect parameter for a file",
         TimeoutError: "This has timed out. Next time, try to be quicker",
+
+        # SimpleEval errors
         NumberTooHigh: "Your number is too big for me to compute",
-        de.BadArgument: "You passed an invalid option",
-        de.CommandNotFound: "I couldn't find that command. Try `/help`",
-        de.CommandOnCooldown: "Slow down! You can't use that right now",
-        de.ExtensionNotFound: "I couldn't find that cog. Try `/help`",
-        de.MemberNotFound: "That member was not found in this server",
-        de.MissingRequiredArgument: "You need to supply more information to use that command",
-        de.NSFWChannelRequired: "You must be in an NSFW channel to use that",
-        de.UserNotFound: "That user was not found in discord",
+
+        # Command errors
+        disc_err.BadArgument: "You passed an invalid option",
+        disc_err.CommandNotFound: "I couldn't find that command. Try `/help`",
+        disc_err.CommandOnCooldown: "Slow down! You can't use that right now",
+        disc_err.ExtensionNotFound: "I couldn't find that cog. Try `/help`",
+        disc_err.MemberNotFound: "That member was not found in this server",
+        disc_err.MissingRequiredArgument: "You need to supply more information to use that command",
+        disc_err.NSFWChannelRequired: "You must be in an NSFW channel to use that",
+        disc_err.UserNotFound: "That user was not found in discord",
+
+        # Discord errors
         discord.Forbidden: "I'm not allowed to do that",
         discord.NotFound: "I couldn't find that. Try `/help`, or check the error for more info",
-        be.ContainerAlreadyRunning: "You are already running a container",
-        be.Fatal: "A fatal error has occurred. Ouch",
-        be.ForbiddenData: "You cannot access this data",
-        be.InternalError: "An internal error occurred",
-        be.MissingArguments: "You didn't input enough arguments",
-        be.MissingCog: "Cannot find that Cog",
-        be.MissingGroup: "Cannot find that Group",
-        be.MissingCommand: "Cannot find that Command",
-        be.MissingFunds: "You don't have enough money for this",
-        be.MissingShopEntry: "I cannot find this shop",
-        be.NoDocumentsFound: "Cannot find anything with those parameters",
-        be.ScopeError: "You cannot use that command here",
-        be.SelfAction: "You cannot do this to something you own",
-        be.SessionInProgress: "You are already running an eval session",
-        be.TooManyArguments: "You gave too many arguments",
-        be.Unowned: "You do not own this, so you can't interact with it",
+
+        # PyTenno errors
+        tenno_err.BadRequest: "Something that you send was not properly formatted, or I couldn't understand it",
+        tenno_err.Unauthorized: "You aren't authorized to do that",
+        tenno_err.Forbidden: "You cannot do that",
+        tenno_err.NotFound: "Cannot find that",
+        # tenno_err.Conflict: "There's a conflict in your request. Please try it differently" # Won't happen
+        tenno_err.InternalServerError: "I'm having trouble with my server. Try again later",
+        tenno_err.BadGateway: "I'm having trouble with my gateway. Try again later",
+        tenno_err.NotImplemented: "I don't know how to do that",
+        tenno_err.ServiceUnavailable: "I'm having trouble with my server. Try again later",
+        tenno_err.GatewayTimeout: "I'm having trouble with my gateway. Try again later",
+
+
+        # Custom Errors
+        bot_err.ContainerAlreadyRunning: "You are already running a container",
+        bot_err.Fatal: "A fatal error has occurred. Ouch",
+        bot_err.ForbiddenData: "You cannot access this data",
+        bot_err.InternalError: "An internal error occurred",
+        bot_err.MissingArguments: "You didn't input enough arguments",
+        bot_err.MissingCog: "Cannot find that Cog",
+        bot_err.MissingGroup: "Cannot find that Group",
+        bot_err.MissingCommand: "Cannot find that Command",
+        bot_err.MissingFunds: "You don't have enough money for this",
+        bot_err.MissingShopEntry: "I cannot find this shop",
+        bot_err.NoDocumentsFound: "Cannot find anything with those parameters",
+        bot_err.ScopeError: "You cannot use that command here",
+        bot_err.SelfAction: "You cannot do this to something you own",
+        bot_err.SessionInProgress: "You are already running an eval session",
+        bot_err.TooManyArguments: "You gave too many arguments",
+        bot_err.Unowned: "You do not own this, so you can't interact with it",
     }
 
     default: str = "An unknown error has occurred. Please use `/bug` to report this"

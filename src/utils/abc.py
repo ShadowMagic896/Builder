@@ -125,7 +125,7 @@ class Paginator(BaseView, Generic[SequenceT]):
             await inter.response.edit_message(view=self)
         except (discord.NotFound, AttributeError):
             pass
-        self.stop()
+        super().stop()
 
     @discord.ui.button(emoji=Emojis.FARROW_ID, custom_id="f", row=0)
     async def next(self, inter: discord.Interaction, button: discord.ui.Button) -> None:
@@ -183,6 +183,8 @@ class Paginator(BaseView, Generic[SequenceT]):
             ) for page in range(
                 max(self.position-12, 0), min(self.position+12+1, self.maxpos+1) # Account for the current page
             )
+        ] or [
+            discord.SelectOption(label=f"Page: 1 [Current]", value=1)
         ]
 
         # Find the page selector and update its options
