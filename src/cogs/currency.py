@@ -446,7 +446,7 @@ class LeaderboardView(Paginator):
             user, bal = list(entry.keys())[0], list(entry.values())[0]
             embed.add_field(
                 name=f"`{self.format_absoloute(place)}`: `{user}`",
-                value=f"`{bal:,}`",
+                value=f"`{bal:,}`<:_:972565900110745630>",
                 inline=False,
             )
         return embed

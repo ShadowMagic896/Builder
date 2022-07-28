@@ -22,7 +22,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 
 from environ import DB_PASSWORD, DB_USERNAME
-from settings import (GLOBAL_CHECKS, IGNORED_GLOBALLY_CHECKED_COMMANDS,
+from settings import (GLOBAL_CHECKS, GLOBAL_COOLDOWN, IGNORED_GLOBALLY_CHECKED_COMMANDS,
                       IGNORED_INHERITED_GROUP_CHECKS, INHERIT_GROUP_CHECKS,
                       LOAD_COGS_ON_STARTUP, LOAD_JISHAKU, LOGGING_LEVEL,
                       SOURCE_CODE_PATHS, START_DOCKER_ON_STARTUP)
@@ -159,9 +159,14 @@ async def prepare(bot: Builder) -> None:
     logging.info("Databases Verified")
     await load_extensions(bot)
     logging.info("Startup Cogs Loaded")
+    await add_global_cooldowns(bot)
+    logging.info("Global Cooldown Added")
 
     logging.info("\nStartup Complete")
 
+async def add_global_cooldowns(bot: Builder) -> None:
+    for command in explode(bot.commands):
+        command = commands.cooldown(*GLOBAL_COOLDOWN, commands.BucketType.user)(command)
 
 def start(main: Coroutine) -> None:
     setup_logging()

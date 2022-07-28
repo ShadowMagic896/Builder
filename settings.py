@@ -82,3 +82,6 @@ DEVELOPMENT_GUILD_IDS: List[int] = [871913539936329768]  # Bot Testing Server
 BLACKLIST_USERS: List[int] = []
 
 LOGGING_LEVEL: int = logging.DEBUG
+
+# 1 use per 5 seconds
+GLOBAL_COOLDOWN = (1, 5)
