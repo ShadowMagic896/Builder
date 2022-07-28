@@ -14,6 +14,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from wand import image as wimage
 
 from ..utils import constants
+from ..utils.abc import BaseCog, BaseView
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.colors import to_hex
 from ..utils.converters import RGB
@@ -21,7 +22,6 @@ from ..utils.coro import run
 from ..utils.embeds import Desc
 from ..utils.functions import filter_similar
 from ..utils.static import parameters, typehints
-from ..utils.abc import BaseCog, BaseView
 
 
 class Images(BaseCog):

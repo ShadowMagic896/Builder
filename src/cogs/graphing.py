@@ -10,9 +10,9 @@ from discord.app_commands import Range, describe
 from discord.ext import commands
 from matplotlib import pyplot as plt
 
+from ..utils.abc import BaseCog
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import ListConverter
-from ..utils.abc import BaseCog
 
 
 class Graphing(BaseCog):

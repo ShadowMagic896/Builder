@@ -89,11 +89,7 @@ async def aquire_db() -> asyncpg.Connection:
 
 
 async def aquire_caches(bot: Builder) -> Cache:
-    return Cache(
-        RTFM={}, 
-        fonts=await aquire_fonts(),
-        WFM_items=await aquire_items(bot)
-    )
+    return Cache(RTFM={}, fonts=await aquire_fonts(), WFM_items=await aquire_items(bot))
 
 
 async def aquire_items(bot: Builder) -> list[str]:

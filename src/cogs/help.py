@@ -8,10 +8,10 @@ from discord.ext import commands
 
 from settings import INVISIBLE_COGS
 
+from ..utils.abc import BaseCog, BaseView, Paginator
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.converters import Cog, Command, Group
 from ..utils.functions import explode
-from ..utils.abc import BaseCog, BaseView, Paginator
 from ..utils.user_io import (cog_autocomplete, command_autocomplete,
                              group_autocomplete)
 

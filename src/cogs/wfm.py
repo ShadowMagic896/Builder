@@ -6,8 +6,8 @@ from discord.app_commands import describe
 from discord.ext import commands
 from pytenno.models.enums import Platform
 
-from ..utils.bot_types import Builder, BuilderContext
 from ..utils.abc import BaseCog, Paginator
+from ..utils.bot_types import Builder, BuilderContext
 
 
 class WFM(BaseCog):
@@ -38,7 +38,7 @@ class WFM(BaseCog):
         item_name: str,
         order_type: Literal["buy", "sell", "any"] = "buy",
         platform: Literal["pc", "ps4", "switch", "xbox"] = "pc",
-        sort_type: Literal["platinum", "creation_date", "last_update"]="platinum",
+        sort_type: Literal["platinum", "creation_date", "last_update"] = "platinum",
         sort_method: Literal["ascending", "descending"] = "ascending",
     ):
         """Get all orders for a specific item"""
@@ -51,10 +51,13 @@ class WFM(BaseCog):
             ctx,
             sorted(
                 filter(
-                    lambda o: (o.order_type.name==order_type) if (order_type != "any") else (True), orders
-                ), 
-                key=lambda o: getattr(o, sort_type), 
-                reverse=sort_method == "descending"
+                    lambda o: (o.order_type.name == order_type)
+                    if (order_type != "any")
+                    else (True),
+                    orders,
+                ),
+                key=lambda o: getattr(o, sort_type),
+                reverse=sort_method == "descending",
             ),
             order_type,
             item_name,
@@ -62,10 +65,11 @@ class WFM(BaseCog):
         await view.update()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
-    
 
     @get_orders.autocomplete("item_name")
-    async def get_orders_item_name_autocomplete(self, ctx: BuilderContext, current: str):
+    async def get_orders_item_name_autocomplete(
+        self, ctx: BuilderContext, current: str
+    ):
 
         # I could do listcomp here, but then I'll iterate over the entire list of items, even if I already have 25 selections
         # For other autocompletes this effect is negligable, but bot.caches.WFM_items is about 2875 items
@@ -73,18 +77,18 @@ class WFM(BaseCog):
         for cached in self.bot.caches.WFM_items:
             if len(items) >= 25:
                 break
-            if (cu:=current.lower()) in (ca:=cached.lower()) or ca in cu:
-                items.append(discord.app_commands.Choice(
-                    name=cached,
-                    value=cached,
-                ))
+            if (cu := current.lower()) in (ca := cached.lower()) or ca in cu:
+                items.append(
+                    discord.app_commands.Choice(
+                        name=cached,
+                        value=cached,
+                    )
+                )
 
         return items
 
     @items.command()
-    @describe(
-        language="The language of the item data"
-    )
+    @describe(language="The language of the item data")
     async def all(
         self,
         ctx: BuilderContext,
@@ -119,8 +123,7 @@ class ItemOrdersView(Paginator):
             order: pytenno.models.orders.OrderRow
             embed.add_field(
                 name=f"`{order.user.ingame_name}`: `{order.platinum}`<:_:1000247886862372965>",
-                value=
-                f"ㅤ**Created At:** <t:{int(order.creation_date.timestamp())}:R>\n"
+                value=f"ㅤ**Created At:** <t:{int(order.creation_date.timestamp())}:R>\n"
                 f"ㅤ**Last Updated:** <t:{int(order.last_update.timestamp())}:R>\n"
                 f"ㅤ**Order Quantity:** `{order.quantity}`\n",
                 inline=False,
@@ -147,8 +150,7 @@ class AllItemDataView(Paginator):
         for c, item in enumerate(items):
             embed.add_field(
                 name=f"`{self.format_absoloute(c)}`: **`{item.item_name}`** [`{item.url_name}`]",
-                value=
-                f"**WFM ID:** `{item.id}`\n"
+                value=f"**WFM ID:** `{item.id}`\n"
                 f"**Icon:** [View Image]({item.thumb})\n",
                 inline=False,
             )

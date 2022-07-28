@@ -4,8 +4,8 @@ import asyncpg
 from discord.app_commands import describe
 from discord.ext import commands
 
-from ..utils.bot_types import Builder, BuilderContext
 from ..utils.abc import BaseCog
+from ..utils.bot_types import Builder, BuilderContext
 
 
 class Config(BaseCog):

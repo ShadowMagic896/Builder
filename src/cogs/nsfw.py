@@ -11,9 +11,9 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 from discord.app_commands import Range, describe
 from discord.ext import commands
 
+from ..utils.abc import BaseCog, Paginator
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.constants import URLs
-from ..utils.abc import BaseCog, Paginator
 from ..utils.types import NHSearchData, PHSearchData
 
 
@@ -211,7 +211,11 @@ class NHSearchView(Paginator):
             f"NHentai Search Results for `{self.meta.query}`: `{self.position+1}` / `{self.maxpos+1}`",
         )
 
-    @discord.ui.button(label="Select This", emoji="\N{BLACK RIGHTWARDS ARROW}", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(
+        label="Select This",
+        emoji="\N{BLACK RIGHTWARDS ARROW}",
+        style=discord.ButtonStyle.blurple,
+    )
     async def viewthis(self, inter: discord.Interaction, button: discord.ui.Button):
         meta = await NHGetMeta.create(self.ctx, self.meta.data[self.position].code)
         view = NHGetView(meta)

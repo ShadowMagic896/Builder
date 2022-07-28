@@ -145,7 +145,14 @@ class Paginator(BaseView, Generic[SequenceT]):
         embed = await self.adjust(await self.embed(inter))
         await inter.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.select(custom_id="page_selector", min_values=1, max_values=1, placeholder="Select Page", options=[], row=1) # Options are set in .update(), which is called before the view is sent
+    @discord.ui.select(
+        custom_id="page_selector",
+        min_values=1,
+        max_values=1,
+        placeholder="Select Page",
+        options=[],
+        row=1,
+    )  # Options are set in .update(), which is called before the view is sent
     async def page_selector(
         self, inter: discord.Interaction, select: discord.ui.Select
     ) -> None:
@@ -166,9 +173,7 @@ class Paginator(BaseView, Generic[SequenceT]):
     async def adjust(self, embed: discord.Embed) -> discord.Embed:
         return embed
 
-    async def page_zero(
-        self, interaction: discord.Interaction
-    ) -> discord.Embed:
+    async def page_zero(self, interaction: discord.Interaction) -> discord.Embed:
         self.position = 0
         return await self.adjust(await self.embed(interaction))
 
@@ -178,20 +183,26 @@ class Paginator(BaseView, Generic[SequenceT]):
         """
         options = [
             discord.SelectOption(
-                label=f"Page: {page+1}" if page != self.position else f"Page: {page+1} [Current]",
-                value=page
-            ) for page in range(
-                max(self.position-12, 0), min(self.position+12+1, self.maxpos+1) # Account for the current page
+                label=f"Page: {page+1}"
+                if page != self.position
+                else f"Page: {page+1} [Current]",
+                value=page,
             )
-        ] or [
-            discord.SelectOption(label=f"Page: 1 [Current]", value=1)
-        ]
+            for page in range(
+                max(self.position - 12, 0),
+                min(
+                    self.position + 12 + 1, self.maxpos + 1
+                ),  # Account for the current page
+            )
+        ] or [discord.SelectOption(label=f"Page: 1 [Current]", value=1)]
 
         # Find the page selector and update its options
         for child in self.children:
-            if isinstance(child, discord.ui.Select) and child.custom_id == "page_selector":
+            if (
+                isinstance(child, discord.ui.Select)
+                and child.custom_id == "page_selector"
+            ):
                 child.options = options
-
 
         if self.maxpos <= 0:
             for b in self.children:

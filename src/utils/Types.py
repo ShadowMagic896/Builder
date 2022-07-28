@@ -39,9 +39,9 @@ class PHSearchData(NamedTuple):
 
 
 class Cache(NamedTuple):
-    RTFM: Mapping["RTFMCache", "RTFMMeta"] # type: ignore
+    RTFM: Mapping["RTFMCache", "RTFMMeta"]  # type: ignore
     fonts: "Fonts"
-    WFM_items: list[str] # list of all tradeable items
+    WFM_items: list[str]  # list of all tradeable items
 
 
 class Fonts(NamedTuple):

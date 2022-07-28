@@ -9,11 +9,11 @@ from discord.ext import commands
 
 from settings import DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
 
+from ..utils.abc import BaseCog
 from ..utils.bot_types import Builder, BuilderContext
 from ..utils.extensions import extend_dir
 from ..utils.functions import explode
 from ..utils.stats import Stats
-from ..utils.abc import BaseCog
 
 
 class Dev(BaseCog):
