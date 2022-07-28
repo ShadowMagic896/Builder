@@ -1,6 +1,6 @@
 @@ -1,29 +0,0 @@
 # Builder
-A WIP Discord Bot, developed and maintained by [Ryan Peckham](https://github.com/ShadowMagic896), written in [Python](https://python.org), 
+A WIP Discord Bot, developed and maintained by [Ryan P.](https://github.com/ShadowMagic896), written in [Python](https://python.org), 
 using the [discord.py](https://discordpy.readthedocs.io/en/latest/index.html) library.
 
 ## Background
