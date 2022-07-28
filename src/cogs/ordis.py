@@ -10,17 +10,17 @@ from ..utils.abc import BaseCog, Paginator
 from ..utils.bot_types import Builder, BuilderContext
 
 
-class WFM(BaseCog):
+class Ordis(BaseCog):
     """Cog for interacting with warframe.market"""
 
     def ge(self):
         return "\N{CROSSED SWORDS}"
 
     @commands.hybrid_group()
-    async def wfm(self, ctx: BuilderContext):
+    async def ordis(self, ctx: BuilderContext):
         pass
 
-    @wfm.group()
+    @ordis.group()
     async def items(self, ctx: BuilderContext):
         pass
 
@@ -163,4 +163,4 @@ class AllItemDataView(Paginator):
 
 
 async def setup(bot: Builder):
-    await bot.add_cog(WFM(bot))
+    await bot.add_cog(Ordis(bot))
