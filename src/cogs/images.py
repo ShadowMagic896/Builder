@@ -15,7 +15,7 @@ from wand import image as wimage
 
 from ..utils import constants
 from ..utils.abc import BaseCog, BaseView
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.colors import to_hex
 from ..utils.converters import RGB
 from ..utils.coro import run

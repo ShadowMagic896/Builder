@@ -9,7 +9,7 @@ from discord.ext import commands
 from pyfiglet import Figlet
 
 from ..utils.abc import BaseCog
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.embeds import Desc
 
 

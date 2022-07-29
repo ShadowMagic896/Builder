@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.ext.commands import parameter
 
 from ..utils.abc import BaseCog, Paginator
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.converters import Atom
 from ..utils.item_maps import Chemistry, get_atomic_name
 

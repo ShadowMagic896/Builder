@@ -11,7 +11,7 @@ from discord.ext import commands
 from matplotlib import pyplot as plt
 
 from ..utils.abc import BaseCog
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.converters import ListConverter
 
 

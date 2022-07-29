@@ -6,7 +6,7 @@ import discord
 from discord.app_commands import errors as app_errors
 from discord.ext import commands
 
-from .bot_types import Builder, BuilderContext
+from .bot_abc import Builder, BuilderContext
 from .constants import Emojis
 from .error_funcs import _interaction_error_handler, handle_modal_error
 

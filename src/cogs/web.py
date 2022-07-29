@@ -13,7 +13,7 @@ from discord.ext import commands
 
 from ..utils import parse as utparse
 from ..utils.abc import BaseCog, Paginator
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.converters import UrlFind, UrlGet
 from ..utils.coro import run
 from ..utils.types import DDGImageData, DDGSearchData, FeatureType

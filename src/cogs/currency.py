@@ -12,7 +12,7 @@ from discord.ext.commands import parameter
 import environ
 
 from ..utils.abc import BaseCog, BaseModal, BaseView, Paginator
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.constants import Emojis, Rates, URLs
 
 

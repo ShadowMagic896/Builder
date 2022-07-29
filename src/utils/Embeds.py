@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 import discord
 
-from .bot_types import BuilderContext
+from .bot_abc import BuilderContext
 
 
 async def getv(inter) -> Union[BuilderContext, None]:

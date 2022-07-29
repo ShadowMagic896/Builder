@@ -3,7 +3,7 @@ import logging
 import aiohttp
 
 from environ import BOT_KEY
-from src.utils.bot_types import Builder
+from src.utils.bot_abc import Builder
 from src.utils.errors import Fatal
 from src.utils.startup import prepare, start
 

@@ -5,7 +5,7 @@ from typing import List
 import discord
 from discord.ext import commands
 
-from .bot_types import BuilderContext
+from .bot_abc import BuilderContext
 from .constants import Cogs
 from .functions import explode
 

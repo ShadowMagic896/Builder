@@ -46,7 +46,7 @@ STARTUP_ENSURE_DEFAULT_ATOMS: bool = False
 STARTUP_UPDATE_COMMANDS: bool = True
 
 # Whether to apply all error-catching functions to the bot
-CATCH_ERRORS: bool = True
+CATCH_ERRORS: bool = False
 
 # Errors on events / event listeners
 PRINT_EVENT_ERROR_TRACEACK: bool = False and CATCH_ERRORS

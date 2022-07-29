@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from environ import LIBRARY_KEY
 
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.constants import URLs
 
 

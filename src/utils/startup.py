@@ -27,7 +27,7 @@ from settings import (GLOBAL_CHECKS, GLOBAL_COOLDOWN, IGNORED_GLOBALLY_CHECKED_C
                       LOAD_COGS_ON_STARTUP, LOAD_JISHAKU, LOGGING_LEVEL,
                       SOURCE_CODE_PATHS, START_DOCKER_ON_STARTUP)
 
-from .bot_types import Builder
+from .bot_abc import Builder
 from .coro import run
 from .database import ensure_db
 from .errors import Fatal
@@ -93,7 +93,8 @@ async def aquire_caches(bot: Builder) -> Cache:
 
 
 async def aquire_items(bot: Builder) -> list[str]:
-    return [item.item_name for item in await bot.tenno.items.get_items(language="en")]
+    print()
+    return [item.url_name for item in await bot.tenno.items.get_items(language="en")]
 
 
 async def aquire_connection() -> aiohttp.ClientSession:

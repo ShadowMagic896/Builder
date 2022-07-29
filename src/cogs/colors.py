@@ -8,7 +8,7 @@ from PIL import Image
 from src.cogs.images import PILFN
 
 from ..utils.abc import BaseCog
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.colors import channels_to_names, merge
 from ..utils.converters import RGB
 from ..utils.static.parameters import COLOR_CHANNEL_ALPHA

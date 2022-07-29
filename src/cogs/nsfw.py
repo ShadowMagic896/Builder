@@ -12,7 +12,7 @@ from discord.app_commands import Range, describe
 from discord.ext import commands
 
 from ..utils.abc import BaseCog, Paginator
-from ..utils.bot_types import Builder, BuilderContext
+from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.constants import URLs
 from ..utils.types import NHSearchData, PHSearchData
 

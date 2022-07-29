@@ -14,7 +14,7 @@ from settings import (CATCH_ERRORS, MODERATE_JISHAKU_COMMANDS,
                       PRINT_EVENT_ERROR_TRACEACK)
 
 from . import errors as bot_err
-from .bot_types import BuilderContext
+from .bot_abc import BuilderContext
 
 
 async def on_error(event_method: str, /, *args: Any, **kwargs: Any) -> None:
