@@ -1,5 +1,8 @@
+from copy import copy
 import datetime
+from enum import Enum
 import logging
+import random
 import time
 import tkinter
 from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
@@ -11,11 +14,12 @@ import discord
 import openai
 import pytenno
 from discord.ext import commands
+import wavelink
 
 from environ import APPLICATION_ID, OPENAI_KEY
 from settings import BLACKLIST_USERS, PREFIXES
 
-from .extensions import load_extensions
+from .extensions import full_reload
 from .types import Cache
 
 _Bot = Union[commands.Bot, commands.AutoShardedBot]
@@ -24,8 +28,9 @@ BotT = TypeVar("BotT", bound=_Bot, covariant=True)
 
 class BuilderContext(commands.Context, Generic[BotT]):
     def __init__(self, **data):
-        self.bot: Builder = data["bot"]
         super().__init__(**data)
+        self.bot: Builder
+        self.voice_client: BuilderWave | None
 
     async def format(
         self,
@@ -85,9 +90,10 @@ class Builder(commands.Bot):
         self.tree: BuilderTree
         self.tkroot: tkinter.Tk
         self.tenno: pytenno.PyTenno
+        self.wavelink: wavelink.NodePool
 
     async def reload_source(self) -> str:
-        return await load_extensions(self)
+        return await full_reload(self)
 
     async def setup_hook(self) -> None:
         print("--- online ---")
@@ -96,7 +102,6 @@ class Builder(commands.Bot):
         self, origin: Union[discord.Message, discord.Interaction], *, cls=BuilderContext
     ) -> Union[commands.Context, BuilderContext]:
         return await super().get_context(origin, cls=cls)
-
 
 class BuilderTree(discord.app_commands.CommandTree):
     def __init__(self, client: discord.Client):
@@ -140,3 +145,36 @@ class BuilderTree(discord.app_commands.CommandTree):
         except ValueError:
             return None
         return await ctx.format(title, desc, color)
+
+
+class QueueType(Enum):
+    default = 0
+    shuffle = 1
+    loop = 2
+
+class BuilderWave(wavelink.Player):
+    def __init__(self, mod: discord.Member, queue_type: QueueType):
+        self.mod = mod
+        self.queue_type = queue_type
+        super().__init__()
+    
+    async def play_next(self) -> wavelink.Track | None:
+        if self.queue.is_empty:
+            return
+        if self.queue_type == QueueType.default:
+            track = copy(self.queue[0])
+            await self.play(track)
+            del self.queue[0]
+            return track
+        elif self.queue_type == QueueType.loop:
+            track = self.queue.get()
+            await self.play(track)
+            self.queue.put(track)
+            return track
+        elif self.queue_type == QueueType.shuffle:
+            track = random.choice(self.queue)
+            await self.play(track)
+            self.queue.put(track)
+            return track
+
+

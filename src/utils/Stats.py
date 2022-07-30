@@ -6,7 +6,7 @@ import discord
 
 class Stats:
     def _get_lines(path: os.PathLike) -> Iterator:
-        with open(path) as file:
+        with open(path, errors="ignore") as file:
             return len(file.readlines())
 
     def line_count(files: List[os.PathLike]):

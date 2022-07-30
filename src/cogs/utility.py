@@ -101,8 +101,7 @@ class Utility(BaseCog):
         """
         Gets information about the user requested.
         """
-        b = "\n{s}{s}".format(s="~")
-        bb = "\n{s}{s}{s}".format(s="~")
+        b = "\n\\~\\~"
 
         user = user if user else ctx.author
         embed = await ctx.format(title="Information on {}".format(user))
@@ -124,7 +123,7 @@ class Utility(BaseCog):
 
         embed.add_field(
             name="***__General Info__***",
-            value=f"**Name:** `{user}`{b}**Nickname:** `{user.nick}`{b}**ID:** `{user.id}`{b}**Nitro Since:** {prem}{b}",
+            value=f"**Name:** `{user}`{b}**Nickname:** `{user.nick}`{b}**ID:** `{user.id}`{b}**Nitro Since:** {prem}",
             inline=False,
         )
         embed.add_field(

@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import sys
+import threading
 import tkinter
 import traceback
 import warnings
@@ -20,6 +21,7 @@ from PIL import ImageFont
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+import wavelink
 
 from environ import DB_PASSWORD, DB_USERNAME
 from settings import (GLOBAL_CHECKS, GLOBAL_COOLDOWN, IGNORED_GLOBALLY_CHECKED_COMMANDS,
@@ -131,6 +133,7 @@ async def apply_global_checks(bot: Builder) -> None:
 
 
 async def prepare(bot: Builder) -> None:
+    await bot.wait_until_ready()
     if LOAD_JISHAKU:
         await bot.load_extension("jishaku")
         logging.info("Cog Loaded: Jishaku")
@@ -162,7 +165,6 @@ async def prepare(bot: Builder) -> None:
     logging.info("Startup Cogs Loaded")
     await add_global_cooldowns(bot)
     logging.info("Global Cooldown Added")
-
     logging.info("\nStartup Complete")
 
 async def add_global_cooldowns(bot: Builder) -> None:

@@ -161,16 +161,13 @@ class UrlGet(commands.Converter):
         try:
             res: aiohttp.ClientResponse = await ctx.bot.session.get(result[0])
         except aiohttp.InvalidURL:
-            await asyncio.sleep(0)
             raise commands.errors.BadArgument("Invalid URL")
         except (
             aiohttp.client_exceptions.ClientConnectorCertificateError,
             aiohttp.client_exceptions.ClientConnectorError,
         ) as e:
-            await asyncio.sleep(0)
             raise commands.errors.BadArgument(f"Invalid URL Endpoint: {e}")
 
-        await asyncio.sleep(0)
         return res
 
 

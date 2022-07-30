@@ -92,3 +92,19 @@ class Fatal(BaseException):
     """
     Raised when a fatal internal exception occurs
     """
+
+
+class AlreadyConnected(BaseException):
+    """
+    Raised when the bot is already connected to a VC
+    """
+
+class NotConnected(BaseException):
+    """
+    Raised when the bot is not currently connected to a Voice/VC
+    """
+
+class AlreadyPlaying(BaseException):
+    """
+    Raised when the bot is already playing something
+    """

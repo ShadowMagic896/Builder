@@ -40,15 +40,15 @@ class Web(BaseCog):
         data = libparse.urlsplit(url[0])
 
         embed = await ctx.format(title="URL Information")
-        embed.add_field(name="Scheme", value=f"`{data.scheme or None}`")
-        embed.add_field(name="NetLoc", value=f"`{data.netloc or None}`")
-        embed.add_field(name="Path", value=f"`{data.path or None}`")
-        embed.add_field(name="Query", value=f"`{data.query or None}`")
-        embed.add_field(name="Fragment", value=f"`{data.fragment or None}`")
-        embed.add_field(name="Host Name", value=f"`{data.hostname or None}`")
-        embed.add_field(name="Port #", value=f"`{data.port or None}`")
-        embed.add_field(name="Username", value=f"`{data.username or None}`")
-        embed.add_field(name="Password", value=f"`{data.password or None}`")
+        embed.add_field(name="Scheme", value=f"`{data.scheme}`")
+        embed.add_field(name="NetLoc", value=f"`{data.netloc}`")
+        embed.add_field(name="Path", value=f"`{data.path}`")
+        embed.add_field(name="Query", value=f"`{data.query}`")
+        embed.add_field(name="Fragment", value=f"`{data.fragment}`")
+        embed.add_field(name="Host Name", value=f"`{data.hostname}`")
+        embed.add_field(name="Port #", value=f"`{data.port}`")
+        embed.add_field(name="Username", value=f"`{data.username}`")
+        embed.add_field(name="Password", value=f"`{data.password}`")
 
         await ctx.send(embed=embed)
 
@@ -67,10 +67,10 @@ class Web(BaseCog):
         url = str(response.url)
         if fmt == "Auto":
             path = libparse.urlsplit(url).path
-            rev: str = str(path)[::-1]
+            rev = str(path)[::-1]
 
             if "." not in rev or rev.index("/") < rev.index("."):  # No format attached
-                ext: str = "txt"
+                ext = "txt"
             else:
                 ext = path[(len(rev) - rev.index(".")) :]
         else:

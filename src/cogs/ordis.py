@@ -109,7 +109,8 @@ class Ordis(BaseCog):
                 f"**Intact:** `{d.rates.intact}%`\n"
                 f"**Flawless:** `{d.rates.flawless}%`\n"
                 f"**Exceptional:** `{d.rates.exceptional}%`\n"
-                f"**Radiant:** `{d.rates.radiant}%`\n"
+                f"**Radiant:** `{d.rates.radiant}%`\n",
+                inline=False,
             )
         await ctx.send(embed=embed)
 
