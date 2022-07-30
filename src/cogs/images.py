@@ -625,7 +625,6 @@ class PILFN:
     async def buffer(image: discord.Attachment, check: bool = True) -> io.BytesIO:
         if check:
             pass
-            # self.checkAttachment(image)
 
         buffer: io.BytesIO = io.BytesIO()
         await image.save(buffer)

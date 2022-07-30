@@ -1,14 +1,19 @@
+import pathlib
 import time
 from copy import copy
 from typing import List, Optional
 from urllib.parse import quote_plus
 
 import aiohttp
+import bs4
 import discord
 from bs4 import BeautifulSoup, ResultSet, Tag
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from selenium import webdriver
+from urllib import parse
+
+from ..utils.converters import UrlGet
 
 from ..utils.abc import BaseCog, Paginator
 from ..utils.api import evaulate_response
@@ -241,6 +246,7 @@ class API(BaseCog):
         await ctx.send(embed=embed)
 
 
+
 class APIPresets:
     class OpenAI:
         def detect(text: str):
@@ -363,22 +369,13 @@ class RTFMPaginator(Paginator):
             name = value.select_one("a").text
             link = value.select_one("a")["href"]
 
+            if embed.description is None:
+                embed.description = ""
             embed.description += f"**`{self.format_absoloute(co)}`:** [`{name}`]({self.meta.ref + link})\n"
 
         if self.was_cached:
             embed.description += f"This result was cached. It will in decache in {Timers.RTFM_CACHE_CLEAR - round(time.time() % Timers.RTFM_CACHE_CLEAR)} seconds"
         return embed
-
-
-class WFMarketItemPaginator(Paginator):
-    def __init__(self, ctx: commands.Context, data: dict):
-        super().__init__(ctx, data["items_in_set"], 1)
-
-    async def embed(self, inter: discord.Interaction):
-        return await self.ctx.format(
-            title=f"{self.position + 1}: {self.values[self.position]}"
-        )
-
 
 async def setup(bot: Builder):
     await bot.add_cog(API(bot))

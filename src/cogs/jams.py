@@ -234,6 +234,10 @@ class Jams(BaseCog):
         else:
             player.queue.put(track)
 
+
+        if not player.is_paused():
+            await player.play_next()
+
         embed = await fmt_track_info(ctx, track)
         embed.title = "Track Added to Queue"
 
@@ -273,6 +277,18 @@ class Jams(BaseCog):
             desc=f"Cleared `{len(queue)}` tracks"
         )
         await ctx.send(embed=embed)
+    
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        client = member.guild.voice_client
+        voice = member.guild.me.voice
+        if before.channel is not None and voice is not None: # The user left a voice channel and we are in one
+            if voice.channel == before.channel: # They left the channel I am in
+                if len(voice.channel.members) == 1: # The only member in the channel is me
+                    # Cleanup VoiceClient and leave channel
+                    client.cleanup()
+                    await client.disconnect()
 
 def fmt_time(time: int, div_by: bool = False) -> str:
     if div_by:

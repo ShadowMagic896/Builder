@@ -160,7 +160,7 @@ class BuilderWave(wavelink.Player):
     
     async def play_next(self) -> wavelink.Track | None:
         if self.queue.is_empty:
-            return
+            return None
         if self.queue_type == QueueType.default:
             track = copy(self.queue[0])
             await self.play(track)
@@ -176,5 +176,6 @@ class BuilderWave(wavelink.Player):
             await self.play(track)
             self.queue.put(track)
             return track
+        return None
 
 
