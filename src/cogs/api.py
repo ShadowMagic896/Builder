@@ -2,6 +2,7 @@ import pathlib
 import time
 from copy import copy
 from typing import List, Optional
+from urllib import parse
 from urllib.parse import quote_plus
 
 import aiohttp
@@ -11,14 +12,12 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 from discord.app_commands import Range, describe
 from discord.ext import commands
 from selenium import webdriver
-from urllib import parse
-
-from ..utils.converters import UrlGet
 
 from ..utils.abc import BaseCog, Paginator
 from ..utils.api import evaulate_response
 from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.constants import Timers, URLs
+from ..utils.converters import UrlGet
 from ..utils.coro import run
 from ..utils.errors import NoDocumentsFound
 from ..utils.types import RTFMCache
@@ -246,7 +245,6 @@ class API(BaseCog):
         await ctx.send(embed=embed)
 
 
-
 class APIPresets:
     class OpenAI:
         def detect(text: str):
@@ -339,7 +337,7 @@ class RTFMMeta:
             RTFMCache.round_to_track(time.time()),
         )
 
-        if (cache := ctx.bot.caches.RTFM.get(searcher, None)) is None:
+        if (cache := ctx.bot.cache.RTFM.get(searcher, None)) is None:
             results = await retrieve(project, query, version, lang)
             searcher = RTFMCache(
                 results.project.lower().replace(".", ""),
@@ -348,7 +346,7 @@ class RTFMMeta:
                 results.lang.lower(),
                 RTFMCache.round_to_track(time.time()),
             )
-            ctx.bot.caches.RTFM[searcher] = results
+            ctx.bot.cache.RTFM[searcher] = results
             return results, 1
         return cache, 0
 
@@ -376,6 +374,7 @@ class RTFMPaginator(Paginator):
         if self.was_cached:
             embed.description += f"This result was cached. It will in decache in {Timers.RTFM_CACHE_CLEAR - round(time.time() % Timers.RTFM_CACHE_CLEAR)} seconds"
         return embed
+
 
 async def setup(bot: Builder):
     await bot.add_cog(API(bot))

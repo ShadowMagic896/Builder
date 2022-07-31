@@ -99,10 +99,12 @@ class AlreadyConnected(BaseException):
     Raised when the bot is already connected to a VC
     """
 
+
 class NotConnected(BaseException):
     """
     Raised when the bot is not currently connected to a Voice/VC
     """
+
 
 class AlreadyPlaying(BaseException):
     """

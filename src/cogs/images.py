@@ -391,7 +391,7 @@ class Images(BaseCog):
 
             draw = ImageDraw.ImageDraw(result, mode="RGBA")
             as_hex = to_hex(color[:-1])
-            font = self.bot.caches.fonts.bookosbi
+            font = self.bot.cache.fonts.bookosbi
             inverse = 255 - np.array(color)
             draw.text(
                 (round(result.width / 4), round(result.height / 2)),

@@ -1,8 +1,10 @@
 from typing import Any
 
-import asyncpg
+import discord
 from discord.app_commands import describe
 from discord.ext import commands
+
+import settings_config_default as default
 
 from ..utils.abc import BaseCog
 from ..utils.bot_abc import Builder, BuilderContext
@@ -10,10 +12,6 @@ from ..utils.bot_abc import Builder, BuilderContext
 
 class Config(BaseCog):
     """Change the bot's configuration"""
-
-    def __init__(self, bot: Builder) -> None:
-        self.cfdb = ConfigureDatabase(bot)
-        super().__init__(bot)
 
     def ge(self) -> str:
         return "\N{GEAR}"
@@ -23,60 +21,88 @@ class Config(BaseCog):
         pass
 
     @config.group(name="set")
-    @commands.has_permissions(administrator=True)
-    async def set_(self, ctx: BuilderContext):
+    async def set_(
+        self,
+        ctx: BuilderContext,
+    ) -> None:
         pass
+
+    @set_.command(name="prefix")
+    @describe(prefix="The new prefix used to invoke text commands")
+    @commands.has_permissions(manage_guild=True)
+    async def set_prefix(self, ctx: BuilderContext, prefix: str) -> None:
+        """Set the guild's prefix for the bot"""
+        await self.bot.cfdb.set_value(ctx.guild.id, "prefix", prefix)
+        embed = await ctx.format(
+            title="Prefix Changed",
+            desc=f"New Prefix: `{prefix}`",
+        )
+        await ctx.send(embed=embed)
 
     @set_.command(name="nsfw")
-    @describe(toggle="New value for the setting")
-    async def set_nsfw(self, ctx: BuilderContext, toggle: bool):
-        """
-        Whether to allow NSFW commands to be used in this server. Never allowed in non-nsfw channels
-        """
-        value = await self.cfdb.set_value(ctx.guild.id, "nsfw", str(toggle))
-        await ctx.send(str(value))
+    @describe(toggle="The new toggle for NSFW commands")
+    @commands.has_permissions(manage_channels=True)
+    async def set_nsfw(self, ctx: BuilderContext, toggle: bool) -> None:
+        discord.Permissions().man
+        """Whether to enable NSFW commands in the guild"""
+        await self.bot.cfdb.set_value(ctx.guild.id, "nsfw", toggle)
+        embed = await ctx.format(
+            title="NSFW Changed",
+            desc=f"New NSFW Toggle: `{toggle}`",
+        )
+        await ctx.send(embed=embed)
 
-    @config.group(name="get")
-    async def get(self, ctx: BuilderContext):
+    @set_.command(name="colorroles")
+    @describe(toggle="The new toggle for color roles")
+    @commands.has_permissions(manage_roles=True)
+    async def set_colorroles(self, ctx: BuilderContext, toggle: bool) -> None:
+        """Whether to enable color roles in the guild"""
+        await self.bot.cfdb.set_value(ctx.guild.id, "colorroles", toggle)
+        embed = await ctx.format(
+            title="Color Roles Changed",
+            desc=f"New Color Roles Toggle: `{toggle}`",
+        )
+        await ctx.send(embed=embed)
+
+    @config.group()
+    async def get(self, ctx: BuilderContext) -> None:
         pass
 
+    @get.command(name="prefix")
+    async def get_prefix(self, ctx: BuilderContext) -> None:
+        """Get the guild's prefix for the bot"""
+        record: Any | None = await self.bot.cfdb.get_value(ctx.guild.id, "prefix")
+        embed = await ctx.format(
+            title="Prefix Retrieved",
+            desc=f"Prefix: `{record['value'] if record is not None else default.PREFIX}`"
+            + (f" [DEFAULT]" if record is None else ""),
+        )
+        await ctx.send(embed=embed)
+
     @get.command(name="nsfw")
-    async def get_nsfw(self, ctx: BuilderContext):
-        """
-        Whether to allow NSFW commands to be used in this server. Never allowed in non-nsfw channels
-        """
-        value = await self.cfdb.get_value(ctx.guild.id, "nsfw")
-        await ctx.send(str(value))
+    async def get_nsfw(self, ctx: BuilderContext) -> None:
+        """Whether  NSFW commands are enabled in the guild"""
+        record: Any | None = await self.bot.cfdb.get_value(
+            ctx.guild.id, "nsfw"
+        )  # values are converted to strings for the database, so we need to convert them back to booleans
 
+        embed = await ctx.format(
+            title="NSFW Retrieved",
+            desc=f"NSFW Toggle: `{record['value'] if record is not None else default.NSFW}`"
+            + (f" [DEFAULT]" if record is None else ""),
+        )
+        await ctx.send(embed=embed)
 
-class ConfigureDatabase:
-    def __init__(self, bot: Builder):
-        self.bot = bot
-        self.apg = bot.apg
-
-    async def set_value(self, guild_id: int, key: str, value: str) -> asyncpg.Record:
-        command = """
-            INSERT INTO config
-            VALUES (
-                $1, $2, $3   
-            )
-            ON CONFLICT (gk_unique) DO UPDATE
-                SET value=$3
-                WHERE guild_id=$1 AND key=$2
-            ON CONFLICT (g_unique) DO UPDATE
-                SET key=$2, value=$3
-                WHERE guildid=$1
-            RETURNING *
-        """
-        return await self.apg.fetchrow(command, guild_id, key, value)
-
-    async def get_value(self, guild_id: int, key: str) -> Any:
-        command = """
-            SELECT value
-            FROM config
-            WHERE guildid=$1 AND key=$2
-        """
-        return await self.apg.fetchrow(command, guild_id, key)
+    @get.command(name="colorroles")
+    async def get_colorroles(self, ctx: BuilderContext) -> None:
+        """Whether color roles are enabled in the guild"""
+        record: Any | None = await self.bot.cfdb.get_value(ctx.guild.id, "colorroles")
+        embed = await ctx.format(
+            title="Color Roles Retrieved",
+            desc=f"Color Roles Toggle: `{record['value'] if record is not None else default.COLOR_ROLES}`"
+            + (f" [DEFAULT]" if record is None else ""),
+        )
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: Builder):

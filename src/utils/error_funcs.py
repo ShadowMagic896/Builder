@@ -82,6 +82,10 @@ async def _interaction_error_handler(
         # Discord errors
         discord.Forbidden: "I'm not allowed to do that",
         discord.NotFound: "I couldn't find that. Try `/help`, or check the error for more info",
+        # Audio Errors
+        bot_err.NotConnected: "I'm not connected to the voice channel",
+        bot_err.AlreadyConnected: "I'm already connected to a voice channel",
+        bot_err.AlreadyPlaying: "I'm already playing music",
         # PyTenno errors
         tenno_err.BadRequest: "Something that you send was not properly formatted, or I couldn't understand it",
         tenno_err.Unauthorized: "You aren't authorized to do that",

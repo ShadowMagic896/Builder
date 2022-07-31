@@ -16,20 +16,21 @@ import aiohttp
 import asyncpg
 import discord
 import pytenno
+import wavelink
 from discord.ext import commands
 from PIL import ImageFont
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-import wavelink
 
 from environ import DB_PASSWORD, DB_USERNAME
-from settings import (GLOBAL_CHECKS, GLOBAL_COOLDOWN, IGNORED_GLOBALLY_CHECKED_COMMANDS,
+from settings import (GLOBAL_CHECKS, GLOBAL_COOLDOWN,
+                      IGNORED_GLOBALLY_CHECKED_COMMANDS,
                       IGNORED_INHERITED_GROUP_CHECKS, INHERIT_GROUP_CHECKS,
                       LOAD_COGS_ON_STARTUP, LOAD_JISHAKU, LOGGING_LEVEL,
                       SOURCE_CODE_PATHS, START_DOCKER_ON_STARTUP)
 
-from .bot_abc import Builder
+from .bot_abc import Builder, ConfigureDatabase
 from .coro import run
 from .database import ensure_db
 from .errors import Fatal
@@ -55,7 +56,7 @@ async def aquire_activity(bot: Builder) -> discord.Activity:
     return activity
 
 
-async def aquire_driver() -> webdriver.Chrome:
+async def aquire_driver(bot: Builder) -> webdriver.Chrome:
     executable_path = Path("assets/drivers/chromedriver.exe").absolute()
     binary_location: str = (
         "C:\\Program Files\\Google\\Chrome Beta\\Application\\chrome.exe"
@@ -78,33 +79,42 @@ async def aquire_driver() -> webdriver.Chrome:
         webdriver.Chrome, options=options, service=service
     )
     driver.set_window_size(1920, 1080)
-    return driver
+    bot.driver = driver
 
 
-async def aquire_db() -> asyncpg.Connection:
+async def aquire_asyncpg(bot: Builder) -> None:
     user = quote_plus(DB_USERNAME)
     password = quote_plus(DB_PASSWORD)
     connection: asyncpg.connection.Connection = await asyncpg.connect(
         user=user, password=password
     )
-    return connection
+    bot.apg = connection
 
 
 async def aquire_caches(bot: Builder) -> Cache:
-    return Cache(RTFM={}, fonts=await aquire_fonts(), WFM_items=await aquire_items(bot))
+    bot.cache = Cache(
+        RTFM={}, fonts=await aquire_fonts(), WFM_items=await aquire_items(bot)
+    )
 
 
 async def aquire_items(bot: Builder) -> list[str]:
-    print()
     return [item.url_name for item in await bot.tenno.items.get_items(language="en")]
 
 
-async def aquire_connection() -> aiohttp.ClientSession:
-    return aiohttp.ClientSession(
+async def aquire_session(bot: Builder) -> aiohttp.ClientSession:
+    bot.session = aiohttp.ClientSession(
         headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0"
         },
     )
+
+
+async def aquire_tkroot(bot: Builder):
+    bot.tkroot = tkinter.Tk()
+
+
+async def aquire_cfdb(bot: Builder) -> None:
+    bot.cfdb = ConfigureDatabase(bot)
 
 
 async def apply_inherit_checks(bot: Builder) -> None:
@@ -132,6 +142,10 @@ async def apply_global_checks(bot: Builder) -> None:
         await apply_to_global(bot, check)
 
 
+async def aquire_tenno(bot: Builder) -> None:
+    bot.tenno = await pytenno.PyTenno().__aenter__()
+
+
 async def prepare(bot: Builder) -> None:
     await bot.wait_until_ready()
     if LOAD_JISHAKU:
@@ -142,34 +156,49 @@ async def prepare(bot: Builder) -> None:
         await snekbox_exec()
         logging.info("Snekbox Executed")
 
-    await apply_global_checks(bot)
-    logging.info("Global Checks Applied")
-    await apply_inherit_checks(bot)
-    logging.info("Inherit Checks Applied")
-
-    bot.tenno = await pytenno.PyTenno().__aenter__()
+    await aquire_tenno(bot)
     logging.info("Tenno Aquired")
-    bot.apg = await aquire_db()
+
+    await aquire_asyncpg(bot)
     logging.info("Database Aquired")
-    bot.driver = await aquire_driver()
+
+    await aquire_driver(bot)
     logging.info("Web Driver Aquired")
-    bot.caches = await aquire_caches(bot)
+
+    await aquire_caches(bot)
     logging.info("Caches Aquired")
-    bot.session = await aquire_connection()
+
+    await aquire_session(bot)
     logging.info("Session Aquired")
-    bot.tkroot = tkinter.Tk()
+
+    await aquire_tkroot(bot)
     logging.info("Tkinter Root Aquired")
+
     await ensure_db(bot)
     logging.info("Databases Verified")
+
+    await aquire_cfdb(bot)
+    logging.info("Configuration Database Manager Aquired")
+
     await load_extensions(bot)
     logging.info("Startup Cogs Loaded")
+
     await add_global_cooldowns(bot)
     logging.info("Global Cooldown Added")
-    logging.info("\nStartup Complete")
+
+    await apply_global_checks(bot)
+    logging.info("Global Checks Applied")
+
+    # await apply_inherit_checks(bot)
+    # logging.info("Inherit Checks Applied")
+
+    logging.info("Startup Complete")
+
 
 async def add_global_cooldowns(bot: Builder) -> None:
     for command in explode(bot.commands):
         command = commands.cooldown(*GLOBAL_COOLDOWN, commands.BucketType.user)(command)
+
 
 def start(main: Coroutine) -> None:
     setup_logging()

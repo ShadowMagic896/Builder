@@ -15,8 +15,8 @@ NOLOAD_EXTS: List[str] = []
 # ALl cogs to load on startup
 SOURCE_CODE_PATHS: List[PathLike] = ["."]
 
-# All command prefixes that the bot should respond to
-PREFIXES: Set[str] = {">>"}
+# Default command prefix
+DEFAULT_PREFIX: str = ">>"
 
 # Whether to execute load_extensions on startup
 LOAD_COGS_ON_STARTUP: bool = True
@@ -77,7 +77,10 @@ IGNORED_INHERITED_GROUP_CHECKS: List[Callable[[Any], bool]] = []
 EVALUATION_TRUNCATION_THRESHOLD = 20000
 
 # Guils to enable dev commands in
-DEVELOPMENT_GUILD_IDS: List[int] = [871913539936329768]  # Bot Testing Server
+DEVELOPMENT_GUILD_IDS: List[int] = [
+    871913539936329768,  # Bot Tests Server
+    816348537800753182,  # Noudidnt's server
+]
 
 BLACKLIST_USERS: List[int] = []
 

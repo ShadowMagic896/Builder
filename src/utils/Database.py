@@ -55,8 +55,7 @@ async def ensure_db(
             guildid BIGINT NOT NULL,
             key TEXT NOT NULL,
             value TEXT NOT NULL,
-            CONSTRAINT g_unique UNIQUE (guildid),
-            CONSTRAINT gk_unique UNIQUE (guildid, key)
+            UNIQUE (guildid, key)
         )
     """
     await bot.apg.execute(command)

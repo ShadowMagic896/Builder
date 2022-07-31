@@ -1,11 +1,11 @@
-from copy import copy
 import datetime
-from enum import Enum
 import logging
 import random
 import time
 import tkinter
-from typing import Generic, Iterable, Mapping, Optional, TypeVar, Union
+from copy import copy
+from enum import Enum
+from typing import Any, Generic, Mapping, Optional, TypeVar, Union
 from webbrowser import Chrome
 
 import aiohttp
@@ -13,11 +13,12 @@ import asyncpg
 import discord
 import openai
 import pytenno
-from discord.ext import commands
 import wavelink
+from discord.ext import commands
 
+import settings_config_default as default
 from environ import APPLICATION_ID, OPENAI_KEY
-from settings import BLACKLIST_USERS, PREFIXES
+from settings import BLACKLIST_USERS
 
 from .extensions import full_reload
 from .types import Cache
@@ -61,7 +62,6 @@ class BuilderContext(commands.Context, Generic[BotT]):
 
 class Builder(commands.Bot):
     def __init__(self):
-        command_prefix: Iterable[str] = PREFIXES
         help_command: Optional[commands.HelpCommand] = None
         tree_cls: type = BuilderTree
         intents: discord.Intents = discord.Intents.default()
@@ -84,7 +84,8 @@ class Builder(commands.Bot):
         self.start_unix: float = time.time()
 
         self.apg: asyncpg.Connection
-        self.caches: Cache
+        self.cache: Cache
+        self.cfdb: ConfigureDatabase
         self.driver: Chrome
         self.session: aiohttp.ClientSession
         self.tree: BuilderTree
@@ -102,6 +103,7 @@ class Builder(commands.Bot):
         self, origin: Union[discord.Message, discord.Interaction], *, cls=BuilderContext
     ) -> Union[commands.Context, BuilderContext]:
         return await super().get_context(origin, cls=cls)
+
 
 class BuilderTree(discord.app_commands.CommandTree):
     def __init__(self, client: discord.Client):
@@ -125,13 +127,13 @@ class BuilderTree(discord.app_commands.CommandTree):
                         thinking=settings["thinking"], ephemeral=settings["ephemeral"]
                     )
                 except (discord.NotFound, discord.InteractionResponded):
-                    logging.error("Message not found for deferring")
+                    logging.warning("Message not found for deferring")
             for name, param in interaction.command._params.items():
                 if param.type == discord.AppCommandOptionType.attachment:
                     obj: discord.Attachment = getattr(interaction.namespace, name)
-                    if obj is not None:
-                        if obj.size > 2**22:  # ~4MB
-                            raise commands.errors.BadArgument("Image is too large.")
+                    if obj is not None and obj.size > 2**22:  # ~4MB
+                        raise commands.errors.BadArgument("Image is too large.")
+
         return interaction.user not in BLACKLIST_USERS
 
     async def format(
@@ -152,12 +154,13 @@ class QueueType(Enum):
     shuffle = 1
     loop = 2
 
+
 class BuilderWave(wavelink.Player):
-    def __init__(self, mod: discord.Member, queue_type: QueueType):
-        self.mod = mod
+    def __init__(self, ctx: BuilderContext, queue_type: QueueType):
+        self.ctx = ctx
         self.queue_type = queue_type
         super().__init__()
-    
+
     async def play_next(self) -> wavelink.Track | None:
         if self.queue.is_empty:
             return None
@@ -176,6 +179,42 @@ class BuilderWave(wavelink.Player):
             await self.play(track)
             self.queue.put(track)
             return track
+        print("didn't do anything")
         return None
 
 
+class ConfigureDatabase:
+    def __init__(self, bot: Builder):
+        self.bot = bot
+        self.apg = bot.apg
+
+    async def set_value(self, guild_id: int, key: str, value: str) -> None:
+        command = """
+            INSERT INTO config
+            VALUES (
+                $1, $2, $3   
+            )
+            ON CONFLICT (guildid, key) DO UPDATE
+                SET value=$3
+                WHERE config.guildid=$1 AND config.key=$2
+        """
+        await self.apg.fetchrow(command, guild_id, str(key), str(value))
+
+    async def get_value(self, guild_id: int, key: str) -> str | None:
+        command = """
+            SELECT *
+            FROM config
+            WHERE guildid=$1 AND key=$2
+        """
+        return await self.apg.fetchrow(command, guild_id, str(key))
+
+
+async def command_prefix(bot: Builder, message: discord.Message) -> str:
+    query = """
+        SELECT *
+        FROM config
+        WHERE guildid = $1 AND key = $2"""
+    config = await bot.apg.fetchrow(query, message.guild.id, "prefix")
+    if config is None:
+        return default.PREFIX
+    return config["value"]

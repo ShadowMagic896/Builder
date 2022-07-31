@@ -88,7 +88,6 @@ class Ordis(BaseCog):
         await view.update()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
-    
 
     @items.command()
     async def drops(
@@ -98,22 +97,20 @@ class Ordis(BaseCog):
         language: LangChoice = "en",
     ):
         """Get the drop chances from different relics for an item"""
-        drops: list[DropSource] = await self.bot.tenno.items.get_dropsources(item_name, include_items=False, language=language)
-        embed = await ctx.format(
-            title=f"Drops for `{item_name}`"
+        drops: list[DropSource] = await self.bot.tenno.items.get_dropsources(
+            item_name, include_items=False, language=language
         )
+        embed = await ctx.format(title=f"Drops for `{item_name}`")
         for d in drops:
             embed.add_field(
                 name=f"Relic ID `{d.relic}`",
-                value=
-                f"**Intact:** `{d.rates.intact}%`\n"
+                value=f"**Intact:** `{d.rates.intact}%`\n"
                 f"**Flawless:** `{d.rates.flawless}%`\n"
                 f"**Exceptional:** `{d.rates.exceptional}%`\n"
                 f"**Radiant:** `{d.rates.radiant}%`\n",
                 inline=False,
             )
         await ctx.send(embed=embed)
-
 
     @get_orders.autocomplete("item_name")
     @drops.autocomplete("item_name")
@@ -124,10 +121,12 @@ class Ordis(BaseCog):
         # I could do listcomp here, but then I'll iterate over the entire list of items, even if I already have 25 selections
         # For other autocompletes this effect is negligable, but .caches.WFM_items is about 2875 items
         items = []
-        for cached in self.bot.caches.WFM_items:
+        for cached in self.bot.cache.WFM_items:
             if len(items) >= 25:
                 break
-            if (cu := current.lower()) in (ttl := cached.replace("_", " ").lower()) or ttl in cu:
+            if (cu := current.lower()) in (
+                ttl := cached.replace("_", " ").lower()
+            ) or ttl in cu:
                 items.append(
                     discord.app_commands.Choice(
                         name=ttl.title(),
@@ -151,7 +150,7 @@ class Ordis(BaseCog):
         await view.update()
         embed = await view.page_zero(ctx.interaction)
         view.message = await ctx.send(embed=embed, view=view)
-    
+
     @items.command()
     async def data(
         self,
@@ -162,7 +161,9 @@ class Ordis(BaseCog):
     ):
 
         """Fetch detailed data for an item"""
-        items = await self.bot.tenno.items.get_item(item_name, platform=Platform[platform])
+        items = await self.bot.tenno.items.get_item(
+            item_name, platform=Platform[platform]
+        )
         view = ItemDataView(ctx, items, language)
         await view.update()
         embed = await view.page_zero(ctx.interaction)
@@ -224,14 +225,14 @@ class AllItemDataView(Paginator):
         return await self.ctx.format(
             title=f"All Item Data [Page `{self.position+1}` of `{self.maxpos+1}`]"
         )
-    
+
 
 class ItemDataView(Paginator):
     def __init__(
         self,
         ctx: BuilderContext,
         items: list[pytenno.models.items.ItemFull],
-        language: str
+        language: str,
     ):
         self.items = items
         self.language = language
@@ -240,29 +241,32 @@ class ItemDataView(Paginator):
     async def adjust(self, embed: discord.Embed):
         item: pytenno.models.items.ItemFull = self.value_range[0]
         tr: pytenno.models.items.LangInItem = getattr(item, self.language)
-        embed.description =\
-            f"**Name:** `{tr.item_name}` [`{item.url_name}`]\n"\
-            f"**Description:** `{tr.description}`\n"\
-            f"**Drops:** `{', '.join([f'[{d.name}]({d.link})' for d in tr.drop])}`\n"\
-            f"**Wiki Link:** {f'`[View Wiki]({tr.wiki_link})' if tr.wiki_link is not None else ''}\n"\
+        embed.description = (
+            f"**Name:** `{tr.item_name}` [`{item.url_name}`]\n"
+            f"**Description:** `{tr.description}`\n"
+            f"**Drops:** `{', '.join([f'[{d.name}]({d.link})' for d in tr.drop])}`\n"
+            f"**Wiki Link:** {f'`[View Wiki]({tr.wiki_link})' if tr.wiki_link is not None else ''}\n"
             f"**WFM ID:** `{item.id}`\n"
+        )
 
         embed.set_image(url=item.sub_icon or item.icon)
         return embed
-        
 
     async def embed(self, inter: discord.Interaction):
         return await self.ctx.format(
             title=f"Item Data [Page `{self.position+1}` of `{self.maxpos+1}`]"
         )
+
+
 class DropSourcesView(BaseView):
     def __init__(self, ctx: BuilderContext, table: pytenno.models.droptable.DropTable):
         self.table = table
         super().__init__(ctx)
-    
+
     @discord.ui.button(label="View Item Details", emoji="❓")
     async def item_details(self, inter: discord.Interaction, button: discord.ui.Button):
         pass
+
 
 async def setup(bot: Builder):
     await bot.add_cog(Ordis(bot))

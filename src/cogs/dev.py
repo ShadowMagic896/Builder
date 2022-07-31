@@ -1,6 +1,7 @@
 import io
+import textwrap
 from subprocess import Popen
-from typing import List
+from typing import Callable
 
 import discord
 from discord import app_commands
@@ -73,6 +74,15 @@ class Dev(BaseCog):
     async def embe(self, ctx: BuilderContext, code: str):
         file = discord.File(io.BytesIO(bytes(str(eval(code)), "UTF-8")), "untitled.txt")
         await ctx.send(file=file)
+
+    @commands.hybrid_command()
+    @app_commands.guilds(*DEVELOPMENT_GUILD_IDS)
+    @commands.is_owner()
+    async def sql(self, ctx: BuilderContext, *, query: str):
+        """
+        Runs a raw SQL query
+        """
+        await ctx.send(await self.bot.apg.fetch(query))
 
 
 async def setup(bot):
