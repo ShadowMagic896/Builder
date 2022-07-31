@@ -21,7 +21,7 @@ class ColorRoles(BaseCog):
         async def predicate(ctx: BuilderContext) -> bool:
             value = await ctx.bot.cfdb.get_value(ctx.guild.id, "colorroles")
             if value is None:  # Config not set, assume default
-                return default.COLOR_ROLES
+                return default.COLORROLES
             return bool(value)
 
         return predicate

@@ -2,11 +2,9 @@ import pathlib
 import time
 from copy import copy
 from typing import List, Optional
-from urllib import parse
 from urllib.parse import quote_plus
 
 import aiohttp
-import bs4
 import discord
 from bs4 import BeautifulSoup, ResultSet, Tag
 from discord.app_commands import Range, describe
@@ -17,7 +15,6 @@ from ..utils.abc import BaseCog, Paginator
 from ..utils.api import evaulate_response
 from ..utils.bot_abc import Builder, BuilderContext
 from ..utils.constants import Timers, URLs
-from ..utils.converters import UrlGet
 from ..utils.coro import run
 from ..utils.errors import NoDocumentsFound
 from ..utils.types import RTFMCache

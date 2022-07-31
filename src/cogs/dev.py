@@ -1,17 +1,15 @@
 import io
-import textwrap
 from subprocess import Popen
-from typing import Callable
 
 import discord
 from discord import app_commands
 from discord.app_commands import describe
 from discord.ext import commands
 
-from settings import DEVELOPMENT_GUILD_IDS, SOURCE_CODE_PATHS
+from settings import DEVELOPMENT_GUILD_IDS
 
 from ..utils.abc import BaseCog
-from ..utils.bot_abc import Builder, BuilderContext
+from ..utils.bot_abc import BuilderContext
 from ..utils.extensions import extend_dir
 from ..utils.functions import explode
 from ..utils.stats import Stats

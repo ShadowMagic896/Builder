@@ -5,7 +5,7 @@ import time
 import tkinter
 from copy import copy
 from enum import Enum
-from typing import Any, Generic, Mapping, Optional, TypeVar, Union
+from typing import Generic, Mapping, Optional, TypeVar, Union
 from webbrowser import Chrome
 
 import aiohttp

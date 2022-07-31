@@ -3,4 +3,4 @@
 
 PREFIX: str = ">>"  # Prefix for text commands
 NSFW: bool = True  # Whether to enable NSFW commands in the guild
-COLOR_ROLES: bool = True  # Whether to enable color roles in the guild
+COLORROLES: bool = True  # Whether to enable color roles in the guild

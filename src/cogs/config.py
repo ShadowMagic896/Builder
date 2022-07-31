@@ -99,7 +99,7 @@ class Config(BaseCog):
         record: Any | None = await self.bot.cfdb.get_value(ctx.guild.id, "colorroles")
         embed = await ctx.format(
             title="Color Roles Retrieved",
-            desc=f"Color Roles Toggle: `{record['value'] if record is not None else default.COLOR_ROLES}`"
+            desc=f"Color Roles Toggle: `{record['value'] if record is not None else default.COLORROLES}`"
             + (f" [DEFAULT]" if record is None else ""),
         )
         await ctx.send(embed=embed)

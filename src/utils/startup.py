@@ -2,14 +2,12 @@ import asyncio
 import logging
 import os
 import sys
-import threading
 import tkinter
 import traceback
 import warnings
-from multiprocessing import freeze_support
 from pathlib import Path
 from types import FrameType
-from typing import Any, Callable, Coroutine, Iterable, Iterator, Tuple
+from typing import Any, Callable, Coroutine, Iterator, Tuple
 from urllib.parse import quote_plus
 
 import aiohttp
@@ -27,7 +25,7 @@ from environ import DB_PASSWORD, DB_USERNAME
 from settings import (GLOBAL_CHECKS, GLOBAL_COOLDOWN,
                       IGNORED_GLOBALLY_CHECKED_COMMANDS,
                       IGNORED_INHERITED_GROUP_CHECKS, INHERIT_GROUP_CHECKS,
-                      LOAD_COGS_ON_STARTUP, LOAD_JISHAKU, LOGGING_LEVEL,
+                      LOAD_JISHAKU, LOGGING_LEVEL,
                       SOURCE_CODE_PATHS, START_DOCKER_ON_STARTUP)
 
 from .bot_abc import Builder, ConfigureDatabase

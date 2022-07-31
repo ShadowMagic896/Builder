@@ -1,6 +1,5 @@
-import asyncio
 import re
-from typing import Any, List, Literal, Optional, Set, Type, Union
+from typing import Any, List, Optional, Set, Type, Union
 
 import aiohttp
 import discord
